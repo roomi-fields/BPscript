@@ -52,7 +52,6 @@ for (const file of files) {
     let frequencies = [];
     let description = '';
     let comma = null;
-    let intervalTypes = [];
 
     // Parse fields until next scale or end
     while (i < lines.length && !lines[i].match(/^"/)) {
@@ -85,7 +84,6 @@ for (const file of files) {
 
       // Interval types: sp h p h ... ps
       else if (line.startsWith('sp') && line.endsWith('ps')) {
-        intervalTypes = line.slice(2, -2).trim().split(/\s+/);
       }
 
       // Base octave: |N|
@@ -137,7 +135,12 @@ for (const file of files) {
 
     if (comma) scale.comma = `${comma.num}/${comma.den}`;
     if (description) scale.description = description;
-    if (intervalTypes.length > 0) scale.intervalTypes = intervalTypes;
+    // ⛔ `intervalTypes` NE S'ÉCRIT PLUS — le champ est sorti de la donnée le 2026-08-21 (Romain :
+    // « si non alors on le supprime »). Mesure avant retrait : CINQ zéros sur cinq périmètres
+    // nommés — bpscript, bp3-frontend, kanopi, kairos, bpx — aucun lecteur, aucun invocateur, et
+    // le moteur natif lui-même le lit puis le JETTE par un aiguillage.
+    // ⚠️ ET C'EST ICI QUE LE RETRAIT SE TIENT : un producteur qui continue d'écrire un champ retiré
+    // le réintroduit à la prochaine conversion, en silence. C'est la voie parallèle qu'on s'interdit.
     if (baseOctave !== 4) scale.baseOctave = baseOctave;
 
     // Deduplicate: keep the version with most data

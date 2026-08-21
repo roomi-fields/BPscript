@@ -303,20 +303,7 @@
       "9/5",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "h",
-      "p",
-      "h",
-      "p",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Abmin": {
     "description": "This is a reduction to 12 grades of scale \"Ma08\" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:09:51 Scale aligned ratio 1.0125 (2022-03-11 07:56:59)",
@@ -337,20 +324,7 @@
       "3645/2048",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Amaj": {
     "description": "This is a reduction to 12 grades of scale \"Ma10\" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'B' Created 2021-01-05 18:56:02",
@@ -371,20 +345,7 @@
       "16/9",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "h",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Amin": {
     "description": "This is a reduction to 12 grades of scale \"Ma01\" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:00:08",
@@ -468,20 +429,7 @@
       "16/9",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "h",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Bmin": {
     "description": "This is a reduction to 12 grades of scale \"Ma11\" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:12:50",
@@ -523,20 +471,7 @@
       "16/9",
       "15/8"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "p",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "p",
-      "h",
-      "p",
-      "h"
-    ]
+    "comma": "81/80"
   },
   "bp3_Cmin": {
     "description": "This is a reduction to 12 grades of scale \"Ma04\" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 17:49:25",
@@ -578,20 +513,7 @@
       "3645/2048",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "h",
-      "p",
-      "h",
-      "p",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Dbmin": {
     "description": "This is a reduction to 12 grades of scale \"Ma09\" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:10:26 Scale aligned ratio 1.0125 (2022-03-11 07:59:30)",
@@ -612,20 +534,7 @@
       "3645/2048",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Dmaj": {
     "description": "This is a reduction to 12 grades of scale \"Ma11\" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'E' Created 2021-01-05 18:48:23",
@@ -646,20 +555,7 @@
       "16/9",
       "15/8"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "h",
-      "p",
-      "p",
-      "p",
-      "p",
-      "h"
-    ]
+    "comma": "81/80"
   },
   "bp3_Dmin": {
     "description": "This is a reduction to 12 grades of scale \"Ma02\" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:06:48",
@@ -701,20 +597,7 @@
       "9/5",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ebmin": {
     "description": "This is a reduction to 12 grades of scale \"Ma07\" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:09:20 Scale aligned ratio 1.0125 (2022-03-11 07:59:38)",
@@ -735,20 +618,7 @@
       "3645/2048",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "h",
-      "p",
-      "p",
-      "p",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Emaj": {
     "description": "This is a reduction to 12 grades of scale \"Ma09\" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'F#' Created 2021-01-05 19:38:38",
@@ -769,20 +639,7 @@
       "16/9",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Emin": {
     "description": "This is a reduction to 12 grades of scale \"Ma12\" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:13:25",
@@ -824,20 +681,7 @@
       "16/9",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "h",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "h",
-      "p",
-      "p",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_F_min": {
     "description": "This is a reduction to 12 grades of scale \"Ma10\" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:10:57",
@@ -900,20 +744,7 @@
       "3645/2048",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "h",
-      "p",
-      "h",
-      "p",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Gmaj": {
     "description": "This is a reduction to 12 grades of scale \"Ma12\" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'A' Created 2021-01-05 18:49:22",
@@ -955,20 +786,7 @@
       "9/5",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ma01": {
     "description": "Scale \"Ma01\" from Bernard Bel / Bol Processor",
@@ -1000,31 +818,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ma02": {
     "description": "This is a transposition of scale \"Ma01\" (23 grades). From ‘C’ to ‘F’. Created 2020-11-28 16:51:26",
@@ -1056,31 +850,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ma03": {
     "description": "This is a transposition of scale \"Ma2\" (23 grades) From ‘C’ to ‘F’ Created 2020-11-27 18:26:51",
@@ -1336,31 +1106,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ma11": {
     "description": "This is a transposition of scale \"Ma10\" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:42:40",
@@ -1488,31 +1234,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Sa01": {
     "description": "This is a derivation of scale \"Ma01\" (23 grades) in major tonality. Sensitive note = 'D' Created 2020-12-05 21:18:01",
@@ -1859,31 +1581,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "h",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "h",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Sa12": {
     "description": "This is a transposition of scale \"Sa11\" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:51:22",
@@ -1947,31 +1645,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "h",
-      "h",
-      "p",
-      "h",
-      "h",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "h",
-      "h",
-      "p",
-      "h",
-      "h",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_base": {
     "description": "A \"5-limit\" tuning framework for constructing chromatic scales using exclusively ratios of integers 2, 3, 5. Read: http://www.tonalsoft.com/enc/j/just.aspx",
@@ -2034,31 +1708,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_2_cycles_of_fifths": {
     "description": "Two series of perfect fifths including ascending major thirds (Asselin 2000 p.62) Created 2021-01-08 09:02:23",
@@ -2096,37 +1746,7 @@
       "243/128",
       "160/81"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "h",
-      "p",
-      "h",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "h",
-      "h",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "h",
-      "p",
-      "h"
-    ]
+    "comma": "81/80"
   },
   "bp3_3_cycles_of_fifths": {
     "description": "Three series of perfect fifths including ascending and descending major thirds (Asselin 2000 p.62) Created 2021-01-08 09:02:23",
@@ -2176,49 +1796,7 @@
       "48/25",
       "160/81"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "h",
-      "h",
-      "p",
-      "h",
-      "h",
-      "h",
-      "p",
-      "h",
-      "h",
-      "p",
-      "h",
-      "h",
-      "h",
-      "p",
-      "h",
-      "h",
-      "p",
-      "h",
-      "h",
-      "h",
-      "h",
-      "h",
-      "h",
-      "p",
-      "h",
-      "h",
-      "p",
-      "h",
-      "h",
-      "h",
-      "p",
-      "h",
-      "h",
-      "p",
-      "h",
-      "h",
-      "h",
-      "p",
-      "h",
-      "h"
-    ]
+    "comma": "81/80"
   },
   "bp3_Zarlino_temp": {
     "description": "Created meantone upwards notes “do, sol, re, la, mi, si, fa#, do#, sol#” ratio 3/2 -2/7 comma (2021-01-11 18:00:22) Created meantone downwards notes “do, fa, sib, mib” ratio 3/2 -2/7 comma (2021-01-11 18:05:45) Created meantone upwards notes “do, sol” ratio 3/2 -2/7 comma (2021-01-11 18:06:40)",
@@ -2239,20 +1817,7 @@
       1.79,
       1.865
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Zarlino_temp2": {
     "description": "Created 2021-01-14 09:31:50 Created meantone upward notes “do,mi,sol2#” fraction 5/4 (2021-01-14 09:32:46) Created meantone downward notes “sol2#,do#” fraction 3/2 (2021-01-14 09:33:55) Equalized intervals over series “do,sol,re,la,mi,si,fa#,do#” approx fraction 3/2 adjusted -6.1 cents to ratio = 1.495 (2021-01-14 09:34:42) Created meantone downward notes “sol,mib” fraction 5/4 (2021-01-14 09:37:02) Equalized intervals over series “mib,sib,fa,do” approx fraction 3/2 adjusted -5.2 cents to ratio = 1.495 (2021-01-14 09:38:54)",
@@ -2274,21 +1839,7 @@
       1.789,
       1.865
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_BACH": {
     "description": "Kellner's BACH meantone temperament (Asselin 2000 p.101) Created 2021-01-15 16:02:04Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/5 comma (2021-01-15 16:10:04) Added fifths down: “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-15 16:11:48) Created meantone upward notes “mi,si” fraction 3/2 (2021-01-15 16:13:36)",
@@ -2309,20 +1860,7 @@
       1.778,
       1.88
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_barca": {
     "description": "Barca meantone temperament (Asselin 2000 p.106) Created 2021-01-16 17:56:02 Added fifths down: “do,fa,sib” starting fraction 1/1 (2021-01-16 17:57:57) Created meantone upward notes “do,sol,re,la,mi,si,fa#” fraction 3/2 adjusted -1/6 comma (2021-01-16 18:02:25) Created meantone upward notes “fa#,do#,sol#,re#” fraction 3/2 (2021-01-16 18:03:49)",
@@ -2343,20 +1881,7 @@
       1.778,
       1.879
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_bethisy": {
     "description": "Béthisy meantone temperament (Asselin 2000 p.121) Created 2021-01-16 19:21:57 Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 19:23:36) Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted 1/12 comma (2021-01-16 19:25:49) Created meantone downward notes “mib,sol#” fraction 3/2 (2021-01-16 19:26:26) Equalized intervals over series “mi,si,fa#,do#,sol#” approx fraction 3/2 adjusted -1.7 cents to ratio = 1.499 (2021-01-16 19:28:09)",
@@ -2377,20 +1902,7 @@
       1.774,
       1.873
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_chaumont": {
     "description": "Chaumont meantone temperament (Asselin 2000 p.109) Created 2021-01-16 18:06:34 Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:08:41) Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:09:41)",
@@ -2411,20 +1923,7 @@
       1.789,
       1.869
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_classic": {
     "description": "This is an equal-tempered scale for BP3 + Csound. Created 2021-01-14 15:38:08 Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:20) Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:57) Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted -1/4 comma (2021-01-14 15:43:44)",
@@ -2445,20 +1944,7 @@
       1.789,
       1.869
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_corrette": {
     "description": "Corrette meantone temperament (Asselin 2000 p.111) Created 2021-01-16 18:13:10 Created meantone upward notes “fa,do,sol,re,la,mi,si,fa#,do#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:16:40) Created meantone downward notes “fa,sib,mib” fraction 3/2 adjusted 1/12 comma (2021-01-16 18:34:13) Created meantone upward notes “do#,sol#” fraction 3/2 adjusted 1/12 comma (2021-01-16 18:38:14) Base note reset to ‘do’ (2021-01-16 18:40:53)",
@@ -2479,20 +1965,7 @@
       1.782,
       1.87
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "p",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_d_alembert_rousseau": {
     "description": "D'Alembert-Rousseau meantone temperament (Asselin 2000 p.119) Created 2021-01-16 19:04:44 Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 19:12:08) Created meantone downward notes “do,fa,sib,mib,sol#” fraction 3/2 adjusted 1/12 comma (2021-01-16 19:17:25) Equalized intervals over series “sol#,do#,fa#,si,mi” approx fraction 2/3 adjusted 2.2 cents to ratio = 0.668 (2021-01-16 19:19:34)",
@@ -2513,20 +1986,7 @@
       1.774,
       1.873
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_kirnberger_2": {
     "description": "Kirnberger II meantone temperament (Asselin 2000 p. 90) Created 2021-01-16 11:52:39 Added fifths down: “do,fa,sib,mib,lab,reb” starting fraction 1/1 (2021-01-16 11:54:59) Added fifths up: “do,sol,re” starting fraction 1/1 (2021-01-16 11:55:59) Created meantone upward notes “re,la,mi” fraction 3/2 adjusted -1/2 comma (2021-01-16 11:57:13) Created meantone upward notes “mi,si,fa#” fraction 3/2 (2021-01-16 11:58:24)",
@@ -2547,20 +2007,7 @@
       1.778,
       1.875
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_kirnberger_3": {
     "description": "Kirnberger III meantone temperament (Asselin 2000 p.92) Created 2021-01-16 12:02:11 Added fifths down: “do,fa,sib,mib,lab,reb” starting fraction 1/1 (2021-01-16 12:03:52) Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 12:05:20) Created meantone upward notes “mi,si,fa#” fraction 3/2 (2021-01-16 12:06:10)",
@@ -2581,20 +2028,7 @@
       1.778,
       1.875
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_marpourg": {
     "description": "Marpourg meantone temperament (Asselin 2000 p.117) Created 2021-01-16 18:58:49 Created meantone upward notes “fa,do,sol,re,la,mi,si,fa#” fraction 3/2 adjusted -1/4 comma (2021-01-16 19:00:42) Equalized intervals over series “fa,la#,re#,sol#,do#,fa#” approx fraction 2/3 adjusted -2.8 cents to ratio = 0.666 (2021-01-16 19:02:32) Base note reset to ‘do’ (2021-01-16 19:03:15)",
@@ -2615,20 +2049,7 @@
       1.781,
       1.87
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_pure_minor-thirds": {
     "description": "Pure minor-thirds temperament (Asselin 2000 p.82) Created 2021-01-15 15:13:09 Created meantone upward notes “mib,sib,fa,do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/3 comma (2021-01-15 15:15:22) Base note reset to ‘do’ (2021-01-15 15:16:00)",
@@ -2649,20 +2070,7 @@
       1.792,
       1.86
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "p",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_rameau_en_do": {
     "description": "Rameau meantone in C temperament (Asselin 2000 p.113) Created 2021-01-16 18:41:56 Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:44:03) Added fifths down: “do,fa” starting fraction 1/1 (2021-01-16 18:49:25) Created meantone upward notes “do#,sol#” fraction 3/2 adjusted -1/12 comma (2021-01-16 18:51:19) Created meantone downward notes “fa,la#” fraction 3/2 (2021-01-16 18:54:20) Equalized intervals over series “sol#,re#,la#” approx fraction 3/2 adjusted 7.5 cents to ratio = 1.506 (2021-01-16 18:55:25)",
@@ -2683,20 +2091,7 @@
       1.777,
       1.869
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_sauveur": {
     "description": "Sauveur meantone temperament (Asselin 2000 p. 81) Created 2021-01-16 10:37:52 Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted -1/5 comma (2021-01-16 10:44:41) Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/5 comma (2021-01-16 10:48:56)",
@@ -2717,20 +2112,7 @@
       1.787,
       1.875
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_schlick": {
     "description": "Schlick meantone temperament (Asselin 2000 p.88) Created 2021-01-16 10:56:35 Created meantone downward notes “la,re,sol,do,fa” fraction 3/2 adjusted -1/4 comma (2021-01-16 10:58:50) Created meantone upward notes “la,mi,si” fraction 3/2 adjusted -1/4 comma (2021-01-16 10:59:48) Created meantone upward notes “la,do#” fraction 5/4 (2021-01-16 11:04:11) Equalized intervals over series “si,fa#,do#” approx fraction 3/2 adjusted -5.4 cents to ratio = 1.495 (2021-01-16 11:05:59) Created meantone downward notes “sol,mib” fraction 5/4 (2021-01-16 11:07:31) Equalized intervals over series “mib,sib,fa” approx fraction 3/2 adjusted -5.3 cents to ratio = 1.495 (2021-01-16 11:08:47) Created meantone downward notes “do,lab” fraction 5/4 (2021-01-16 11:13:58) Created meantone upward notes “mi,sol#” fraction 5/4 adjusted 2/3 comma (2021-01-16 11:23:39) [estimation] Base note reset to ‘do’ (2021-01-16 11:25:48)",
@@ -2752,21 +2134,7 @@
       1.789,
       1.87
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "p",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_tartini-vallotti": {
     "description": "Tartini-Vallotti meantone temperament (Asselin 2000 p.104) Created 2021-01-16 17:45:36 Added fifths down: “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-16 17:47:11) Created meantone upward notes “do,sol,re,la,mi,si” fraction 3/2 adjusted -1/6 comma (2021-01-16 17:48:49)",
@@ -2787,20 +2155,7 @@
       1.778,
       1.879
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_werckmeister_3": {
     "description": "Werckmeister III meantone temperament (Asselin 2000 p.94) Created 2021-01-16 16:53:15 Added fifths down: “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-16 16:55:35) Created meantone upward notes “do,sol,re,la” fraction 3/2 adjusted -1/4 comma (2021-01-16 16:57:00) Created meantone upward notes “la,mi,si” fraction 3/2 (2021-01-16 16:58:34)",
@@ -2821,20 +2176,7 @@
       1.778,
       1.881
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_werckmeister_4": {
     "description": "Werckmeister IV meantone temperament (Asselin 2000 p.96) Created 2021-01-16 17:02:48 Added fifths down: “do,fa” starting fraction 1/1 (2021-01-16 17:07:10) Created meantone downward notes “fa,sib” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:08:04) Created meantone downward notes “sib,mib,sol#” fraction 3/2 adjusted 1/3 comma (2021-01-16 17:09:18) Created meantone downward notes “sol#,do#” fraction 3/2 (2021-01-16 17:11:01) Created meantone downward notes “do#,fa#” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:12:07) Created meantone downward notes “fa#,si” fraction 3/2 (2021-01-16 17:13:21) Created meantone downward notes “si,mi” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:14:45) Created meantone downward notes “mi,la” fraction 3/2 (2021-01-16 17:16:07) Created meantone upward notes “do,sol” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:17:11) Created meantone upward notes “sol,re” fraction 3/2 (2021-01-16 17:17:49)",
@@ -2855,20 +2197,7 @@
       1.785,
       1.872
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_werckmeister_5": {
     "description": "Werckmeister V meantone temperament (Asselin 2000 p.99) Created 2021-01-16 17:29:54 Added fifths up: “do,sol,re” starting fraction 1/1 (2021-01-16 17:31:53) Created meantone upward notes “re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 17:33:19) Created meantone upward notes “mi,si,fa#” fraction 3/2 (2021-01-16 17:34:05) Created meantone upward notes “fa#,do#,lab” fraction 3/2 adjusted -1/4 comma (2021-01-16 17:35:20) Created meantone downward notes “do,fa” fraction 3/2 adjusted -1/4 comma (2021-01-16 17:36:08) Created meantone downward notes “fa,sib,mib” fraction 3/2 (2021-01-16 17:37:05)",
@@ -2889,20 +2218,7 @@
       1.783,
       1.887
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_zarlino": {
     "description": "Zarlino meantone temperament (Asselin 2000 p.85) Created meantone upwards notes “do, sol, re, la, mi, si, fa#, do#, sol#” ratio 3/2 -2/7 comma (2021-01-11 18:00:22) Created meantone downwards notes “do, fa, sib, mib” ratio 3/2 -2/7 comma (2021-01-11 18:05:45) Created meantone upwards notes “do, sol” ratio 3/2 -2/7 comma (2021-01-11 18:06:40)",
@@ -2923,20 +2239,7 @@
       1.79,
       1.865
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_piano": {
     "description": "Tuning of a piano with perfect fifths and stretched octave",
@@ -2998,20 +2301,7 @@
       1.778,
       1.88
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_pure_minor-third_meantone": {
     "description": "This is an equal-tempered scale for BP3 + Csound. Created 2021-01-15 15:13:09 Created meantone upward notes “mib,sib,fa,do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/3 comma (2021-01-15 15:15:22) Base note reset to ‘do’ (2021-01-15 15:16:00)",
@@ -3032,20 +2322,7 @@
       1.792,
       1.86
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "p",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_just_intonation": {
     "description": "A traditional scale constructed with 'simple' integer ratios",
@@ -3066,20 +2343,7 @@
       "16/9",
       "15/8"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "h",
-      "p",
-      "h",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "h",
-      "p",
-      "h"
-    ]
+    "comma": "81/80"
   },
   "bp3_rameau_en_sib": {
     "description": "Rameau meantone in B flat temperament (Asselin 2000 p.115) Created 2021-01-16 18:41:56 Created meantone upward notes “do,sol,re,la,mi,si” fraction 3/2 adjusted -1/4 comma (2022-02-04 16:38:50) Created meantone downward notes “do,fa,sib” fraction 3/2 adjusted -1/4 comma (2022-02-04 16:40:08) Created meantone downward notes “sib,mib” fraction 3/2 (2022-02-04 16:58:49) Created meantone upward notes “si,fa#” fraction 3/2 adjusted -1/4 comma (2022-02-04 17:10:32) Created meantone downward notes “mib,lab” fraction 3/2 (2022-02-04 17:16:00) Equalized intervals over series “fa#,reb,lab” approx fraction 3/2 adjusted 10.6 cents to ratio = 1.509 (2022-02-04 17:20:39)",
@@ -3100,20 +2364,7 @@
       1.789,
       1.869
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Dha1_murcchana": {
     "description": "This is a transposition of scale \"Sa_murcchana\" (12 grades). From ‘dhak’ to ‘sa’. Created 2020-12-17 17:19:51",
@@ -3134,20 +2385,7 @@
       "16/9",
       "15/8"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "h",
-      "p",
-      "p",
-      "p",
-      "p",
-      "h"
-    ]
+    "comma": "81/80"
   },
   "bp3_Dha3_murcchana": {
     "description": "This is a transposition of scale \"Sa_murcchana\" (12 grades). From ‘dha’ to ‘sa’. Created 2020-12-17 17:55:10",
@@ -3189,20 +2427,7 @@
       "16/9",
       "15/8"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "p",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "p",
-      "p",
-      "p",
-      "h"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ga3_murcchana": {
     "description": "This is a transposition of scale \"Sa_murcchana\" (12 grades). From ‘ga’ to ‘sa’. Created 2020-12-17 17:52:29",
@@ -3244,20 +2469,7 @@
       "16/9",
       "15/8"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "p",
-      "h",
-      "p",
-      "h"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ma3_murcchana": {
     "description": "This is a transposition of scale \"Sa_murcchana\" (12 grades). From ‘ma#’ to ‘sa’. Created 2020-12-17 19:45:32",
@@ -3278,20 +2490,7 @@
       "16/9",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "h",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ma_grama_full": {
     "description": "This is a derivation of scale \"Ma01\" (23 grades) in ‘-cs.raga’ Created 2020-12-07 09:27:54",
@@ -3323,31 +2522,7 @@
       "15/8",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p",
-      "p",
-      "h",
-      "h",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ni1_murcchana": {
     "description": "This is a transposition of scale \"Sa_murcchana\" (12 grades). From ‘nik’ to ‘sa’. Created 2020-12-17 17:09:41",
@@ -3368,20 +2543,7 @@
       "16/9",
       "15/8"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "p",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "p",
-      "h",
-      "p",
-      "h"
-    ]
+    "comma": "81/80"
   },
   "bp3_Ni3_murcchana": {
     "description": "This is a transposition of scale \"Sa_murcchana\" (12 grades). From ‘ni’ to ‘sa’. Created 2020-12-17 17:43:30",
@@ -3444,20 +2606,7 @@
       "16/9",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "h",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_Re3_murcchana": {
     "description": "This is a transposition of scale \"Sa_murcchana\" (12 grades). From ‘re’ to ‘sa’. Created 2020-12-17 18:00:02",
@@ -3499,20 +2648,7 @@
       "16/9",
       "15/8"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h",
-      "h",
-      "p",
-      "h",
-      "p",
-      "h"
-    ]
+    "comma": "81/80"
   },
   "bp3_asavari1": {
     "description": "This is a reduction to 7 grades of scale \"Dha3_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:57:24",
@@ -3592,15 +2728,7 @@
       "128/81",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "p",
-      "p",
-      "p",
-      "p",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_bhairao2": {
     "description": "This is a reduction to 7 grades of scale \"Ni3_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:51:30",
@@ -3889,16 +3017,7 @@
       "128/81",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "p",
-      "p",
-      "h",
-      "p",
-      "p",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_lalit2": {
     "description": "This is a reduction to 8 grades of scale \"Ni3_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:50:24",
@@ -4059,15 +3178,7 @@
       "128/81",
       "243/128"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "p",
-      "p",
-      "h",
-      "p",
-      "p",
-      "p"
-    ]
+    "comma": "81/80"
   },
   "bp3_todi4": {
     "description": "This is a reduction to 7 grades of scale \"Ga3_murcchana\" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:53:30",
@@ -4093,14 +3204,6 @@
     "ratios": [
       1,
       "3/2"
-    ],
-    "intervalTypes": [
-      "p",
-      "p",
-      "h",
-      "p",
-      "p",
-      "p"
     ]
   },
   "bp3_todi_aak_3": {
@@ -4111,14 +3214,6 @@
     "ratios": [
       1,
       "3/2"
-    ],
-    "intervalTypes": [
-      "p",
-      "p",
-      "h",
-      "p",
-      "p",
-      "p"
     ]
   },
   "bp3_todi_ka_3": {
@@ -4130,14 +3225,6 @@
       1,
       "3/2",
       "243/128"
-    ],
-    "intervalTypes": [
-      "p",
-      "p",
-      "h",
-      "p",
-      "h",
-      "p"
     ]
   },
   "bp3_todi_ka_4": {
@@ -4150,14 +3237,6 @@
       "3/2",
       "128/81",
       "243/128"
-    ],
-    "intervalTypes": [
-      "p",
-      "p",
-      "h",
-      "p",
-      "p",
-      "p"
     ]
   },
   "bp3_Bohlen-Pierce": {
@@ -4180,21 +3259,7 @@
       "63/25",
       "25/9"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "h",
-      "•",
-      "•",
-      "•",
-      "h",
-      "h",
-      "h",
-      "•",
-      "•",
-      "p",
-      "h",
-      "h"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone_try": {
     "description": "This is a new scale for BP3.  Creation 2020-11-17 22:55:31 This scale has been imported from a SCALA file. Created 2024-08-22 07:14:33",
@@ -4265,28 +3330,7 @@
       1.92,
       1.977
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_meantone1": {
     "description": "Mesotonique au quart de comma syntonique (Pietro Aron, 1523) : la quinte est diminuee d'un quart de comma, la tierce majeure 5/4 et la sixte mineure 8/5 sont pures. Douze degres sur la table C Db D Eb E F Gb G Ab A Bb B.",
@@ -4327,20 +3371,7 @@
       1.778,
       1.88
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_Zarlino_natural": {
     "description": "A traditional scale constructed with simple integer ratios",
@@ -4381,20 +3412,7 @@
       1.778,
       1.879
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_bethisy": {
     "description": "Béthisy temperament (Asselin 2000 p.121) Created 2021-01-16 19:21:57 Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 19:23:36) Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted 1/12 comma (2021-01-16 19:25:49) Created meantone downward notes “mib,sol#” fraction 3/2 (2021-01-16 19:26:26) Equalized intervals over series “mi,si,fa#,do#,sol#” approx fraction 3/2 adjusted -1.7 cents to ratio = 1.499 (2021-01-16 19:28:09)",
@@ -4415,20 +3433,7 @@
       1.774,
       1.873
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_chaumont": {
     "description": "Chaumont temperament (Asselin 2000 p.109) Created 2021-01-16 18:06:34 Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:08:41) Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:09:41)",
@@ -4449,20 +3454,7 @@
       1.789,
       1.869
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_classic": {
     "description": "Classic temperament (Asselin 2000 p.76) Equivalent to Chaumont (p.109) Created 2021-01-14 15:38:08 Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:20) Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:57)",
@@ -4483,20 +3475,7 @@
       1.789,
       1.869
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_corrette": {
     "description": "Corrette temperament (Asselin 2000 p.111) Created 2021-01-16 18:13:10 Created meantone upward notes “fa,do,sol,re,la,mi,si,fa#,do#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:16:40) Created meantone downward notes “fa,sib,mib” fraction 3/2 adjusted 1/12 comma (2021-01-16 18:34:13) Created meantone upward notes “do#,sol#” fraction 3/2 adjusted 1/12 comma (2021-01-16 18:38:14) Base note reset to ‘do’ (2021-01-16 18:40:53)",
@@ -4517,20 +3496,7 @@
       1.782,
       1.87
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "p",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_d_alembert_rousseau": {
     "description": "D'Alembert-Rousseau temperament (Asselin 2000 p.119) Created 2021-01-16 19:04:44 Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 19:12:08) Created meantone downward notes “do,fa,sib,mib,sol#” fraction 3/2 adjusted 1/12 comma (2021-01-16 19:17:25) Equalized intervals over series “sol#,do#,fa#,si,mi” approx fraction 2/3 adjusted 2.2 cents to ratio = 0.668 (2021-01-16 19:19:34)",
@@ -4551,20 +3517,7 @@
       1.774,
       1.873
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_equal_tempered": {
     "description": "This is an equal-tempered scale for BP3 + Csound. Created 2021-02-13 19:09:08",
@@ -4585,20 +3538,7 @@
       1.782,
       1.888
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_kirnberger_2": {
     "description": "Kirnberger II temperament (Asselin 2000 p. 90) Created 2021-01-16 11:52:39 Added fifths down: “do,fa,sib,mib,lab,reb” starting fraction 1/1 (2021-01-16 11:54:59) Added fifths up: “do,sol,re” starting fraction 1/1 (2021-01-16 11:55:59) Created meantone upward notes “re,la,mi” fraction 3/2 adjusted -1/2 comma (2021-01-16 11:57:13) Created meantone upward notes “mi,si,fa#” fraction 3/2 (2021-01-16 11:58:24)",
@@ -4619,20 +3559,7 @@
       1.778,
       1.875
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_kirnberger_3": {
     "description": "Kirnberger III temperament (Asselin 2000 p.93) Created 2021-01-16 12:02:11 Added fifths down: “do,fa,sib,mib,lab,reb” starting fraction 1/1 (2021-01-16 12:03:52) Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 12:05:20) Created meantone upward notes “mi,si,fa#” fraction 3/2 (2021-01-16 12:06:10)",
@@ -4653,20 +3580,7 @@
       1.778,
       1.875
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_marpourg": {
     "description": "Marpourg temperament (Asselin 2000 p.117) Created 2021-01-16 18:58:49 Created meantone upward notes “fa,do,sol,re,la,mi,si,fa#” fraction 3/2 adjusted -1/4 comma (2021-01-16 19:00:42) Equalized intervals over series “fa,la#,re#,sol#,do#,fa#” approx fraction 2/3 adjusted -2.8 cents to ratio = 0.666 (2021-01-16 19:02:32) Base note reset to ‘do’ (2021-01-16 19:03:15)",
@@ -4687,20 +3601,7 @@
       1.781,
       1.87
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_pure_minor-thirds": {
     "description": "Pure minor-thirds temperament (Asselin 2000 p.82) Created 2021-01-15 15:13:09 Created meantone upward notes “mib,sib,fa,do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/3 comma (2021-01-15 15:15:22) Base note reset to ‘do’ (2021-01-15 15:16:00)",
@@ -4721,20 +3622,7 @@
       1.792,
       1.86
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "p",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_rameau_en_do": {
     "description": "Rameau meantone in C temperament (Asselin 2000 p.113) Created 2021-01-16 18:41:56 Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:44:03) Added fifths down: “do,fa” starting fraction 1/1 (2021-01-16 18:49:25) Created meantone upward notes “do#,sol#” fraction 3/2 adjusted -1/4 comma (2022-02-04 18:09:16) Created meantone downward notes “fa,la#” fraction 3/2 (2021-01-16 18:54:20) Equalized intervals over series “sol#,re#,la#” approx fraction 3/2 adjusted 9.1 cents to ratio = 1.508 (2022-02-04 18:10:27)",
@@ -4755,20 +3643,7 @@
       1.777,
       1.869
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_sauveur": {
     "description": "Sauveur temperament (Asselin 2000 p. 81) Created 2021-01-16 10:37:52 Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted -1/5 comma (2021-01-16 10:44:41) Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/5 comma (2021-01-16 10:48:56)",
@@ -4789,20 +3664,7 @@
       1.787,
       1.875
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_scale_1": {
     "description": "Two series of perfect fifths including ascending major thirds (Asselin 2000 p.62) Created 2021-01-08 09:02:23",
@@ -4861,21 +3723,7 @@
       1.789,
       1.87
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "p",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_tartini-vallotti": {
     "description": "Tartini-Vallotti temperament (Asselin 2000 p.104) Created 2021-01-16 17:45:36 Added fifths down: “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-16 17:47:11) Created meantone upward notes “do,sol,re,la,mi,si” fraction 3/2 adjusted -1/6 comma (2021-01-16 17:48:49)",
@@ -4896,20 +3744,7 @@
       1.778,
       1.879
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_werckmeister_3": {
     "description": "Werckmeister III temperament (Asselin 2000 p.94) Created 2021-01-16 16:53:15 Added fifths down: “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-16 16:55:35) Created meantone upward notes “do,sol,re,la” fraction 3/2 adjusted -1/4 comma (2021-01-16 16:57:00) Created meantone upward notes “la,mi,si” fraction 3/2 (2021-01-16 16:58:34)",
@@ -4930,20 +3765,7 @@
       1.778,
       1.881
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_werckmeister_4": {
     "description": "Werckmeister IV temperament (Asselin 2000 p.96) Created 2021-01-16 17:02:48 Added fifths down: “do,fa” starting fraction 1/1 (2021-01-16 17:07:10) Created meantone downward notes “fa,sib” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:08:04) Created meantone downward notes “sib,mib,sol#” fraction 3/2 adjusted 1/3 comma (2021-01-16 17:09:18) Created meantone downward notes “sol#,do#” fraction 3/2 (2021-01-16 17:11:01) Created meantone downward notes “do#,fa#” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:12:07) Created meantone downward notes “fa#,si” fraction 3/2 (2021-01-16 17:13:21) Created meantone downward notes “si,mi” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:14:45) Created meantone downward notes “mi,la” fraction 3/2 (2021-01-16 17:16:07) Created meantone upward notes “do,sol” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:17:11) Created meantone upward notes “sol,re” fraction 3/2 (2021-01-16 17:17:49)",
@@ -4964,20 +3786,7 @@
       1.785,
       1.872
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_werckmeister_5": {
     "description": "Werckmeister V temperament (Asselin 2000 p.99) Created 2021-01-16 17:29:54 Added fifths up: “do,sol,re” starting fraction 1/1 (2021-01-16 17:31:53) Created meantone upward notes “re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 17:33:19) Created meantone upward notes “mi,si,fa#” fraction 3/2 (2021-01-16 17:34:05) Created meantone upward notes “fa#,do#,lab” fraction 3/2 adjusted -1/4 comma (2021-01-16 17:35:20) Created meantone downward notes “do,fa” fraction 3/2 adjusted -1/4 comma (2021-01-16 17:36:08) Created meantone downward notes “fa,sib,mib” fraction 3/2 (2021-01-16 17:37:05)",
@@ -4998,20 +3807,7 @@
       1.783,
       1.887
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_zarlino": {
     "description": "Zarlino temperament (Asselin 2000 p.85) Created meantone upwards notes “do, sol, re, la, mi, si, fa#, do#, sol#” ratio 3/2 -2/7 comma (2021-01-11 18:00:22) Created meantone downwards notes “do, fa, sib, mib” ratio 3/2 -2/7 comma (2021-01-11 18:05:45) Created meantone upwards notes “do, sol” ratio 3/2 -2/7 comma (2021-01-11 18:06:40)",
@@ -5032,20 +3828,7 @@
       1.79,
       1.865
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_johnston_unt3": {
     "description": "Johnston final lattice for \"The Un-tempered Pianos\" and \"K\" This scale has been imported from a SCALA file. Created 2024-08-22 07:44:18",
@@ -5090,20 +3873,7 @@
       "5/4",
       "25/16"
     ],
-    "comma": "81/80",
-    "intervalTypes": [
-      "•",
-      "•",
-      "•",
-      "h",
-      "•",
-      "•",
-      "•",
-      "h",
-      "•",
-      "•",
-      "•"
-    ]
+    "comma": "81/80"
   },
   "bp3_shruti23_native": {
     "description": "Table native 22-shruti de -to.tryShruti (BP3, 23 ratios sur 23 degrés). Convention pythagoricienne au degré 12 (729/512). DISTINCT de bp3_grama (édition savante d'Arnold par B. Bel, 64/45 au même degré) — deux systèmes valides, celui-ci est la table du moteur natif.",

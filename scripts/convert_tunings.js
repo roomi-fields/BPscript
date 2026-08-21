@@ -72,7 +72,8 @@ for (const [name, scale] of Object.entries(legacy.scales)) {
   if (scale.comma) entry.comma = scale.comma;
 
   // Preserve interval types if present
-  if (scale.intervalTypes) entry.intervalTypes = scale.intervalTypes;
+  // `intervalTypes` retiré de la donnée le 2026-08-21 — il ne se recopie plus d'une entrée à
+  // l'autre. Cf. scripts/convert-tonality.js pour la mesure des cinq périmètres.
 
   // Preserve baseHz
   if (scale.baseHz) entry.baseHz = scale.baseHz;
