@@ -188,11 +188,67 @@ ok(juger(['a.v', 'b.v', 'c.v'], { 'c.v': 'a.v' }), '6. (mord) une réalisation n
 ok(!juger(['a.v', 'b.v', 'c.v'], { 'b.v': 'a.v', 'c.v': 'a.v' }), '6. (se tait) deux réalisations, une interface');
 ok(juger(['a.v', 'b.v'], { 'a.v': 'z.v', 'b.v': 'z.v' }), '6. (mord) aucune interface en portée');
 
+// ── 7. ⛔ LA SORTIE, PAS LE CHEMIN — le compilateur REFUSE-T-IL, ET NOMME-T-IL LES DEUX ? ─────
+//
+// ⛔ CE VOLET MANQUAIT, ET SON ABSENCE ÉTAIT INVISIBLE. Les six volets ci-dessus mesurent le
+// CHARGEUR : ils vérifient que `ambiguousControls` est peuplé. Aucun n'appelait le compilateur.
+// Le jour où le refus disparaîtrait du parseur — ou où son message cesserait de nommer les
+// candidats — TOUT SERAIT RESTÉ VERT : la table serait toujours peuplée, et rien ne compilait une
+// scène pour regarder ce qui sort. Un banc qui prouve la table ne prouve pas le branchement.
+//
+// ⚠️ ET LA DONNÉE RÉELLE NE PEUT PAS SERVIR DE TÉMOIN : `ambiguousControls` est VIDE aujourd'hui
+// (volet 5f), donc ce chemin n'est jamais exercé par les librairies vivantes. Un mécanisme qui
+// n'a aucun cas et un mécanisme mort ont exactement la même empreinte — on FABRIQUE le cas.
+//
+// Décision Romain, `2026-08-02-prefixe-de-librairie-optionnel-resolution-par-unicite.md` : « s'il
+// est porté par deux, LA COMPILATION S'ARRÊTE et NOMME LES DEUX CANDIDATS ». Ce volet mesure les
+// deux moitiés de cette phrase, à la sortie.
+{
+  clearRegistry();
+  registerAll(LIBS);
+  registerLib('zzface', interfaceLib());
+  registerLib('zzmidi', implementationLib(null));   // AUCUN `implements` : deux vrais candidats
+  const { compileToBPxAST } = require('../src/transpiler/index.js');
+  const SOCLE = 'core\nalphabet.western\nzzface\nzzmidi\n';
+  const compiler = (ecrit) => {
+    try { return (compileToBPxAST(`${SOCLE}-----\nS -> C4(${ecrit})`).errors || []).map((x) => x.message); }
+    catch (e) { return [`EXCEPTION ${e.message}`]; }
+  };
+
+  const nu = compiler('zzvolume:64');
+  ok(nu.length >= 1,
+    "7a. ⛔ le nom NU d'un contrôle porté par deux librairies doit ARRÊTER la compilation — "
+    + `reçu : ${nu.length ? nu[0] : 'AUCUNE erreur, la décision du 2026-08-02 n\'est pas câblée'}`);
+  const msg = nu[0] || '';
+  ok(msg.includes('zzface') && msg.includes('zzmidi'),
+    "7b. ⛔ et le refus doit NOMMER LES DEUX CANDIDATS — un message qui dit « ambigu » sans dire "
+    + `ENTRE QUOI oblige l'auteur à deviner. Reçu : ${JSON.stringify(msg.slice(0, 140))}`);
+
+  // ⛔ ET LE COMPLÉMENT : les deux formes préfixées PASSENT. Sans lui, un parseur qui refuserait
+  // toute écriture de ce contrôle passerait 7a et 7b sans distinction.
+  const parA = compiler('zzface.zzvolume:64');
+  const parB = compiler('zzmidi.zzvolume:64');
+  ok(parA.length === 0 && parB.length === 0,
+    `7c. les DEUX formes préfixées doivent compiler — c'est la réécriture que le refus propose. `
+    + `zzface : ${parA[0] || 'ok'} · zzmidi : ${parB[0] || 'ok'}`);
+
+  // ⛔ ET AVEC `implements`, LA MÊME ÉCRITURE NUE PASSE : il n'y a plus deux candidats. C'est le
+  // témoin qui distingue « le refus mord » de « le refus mord toujours ».
+  clearRegistry();
+  registerAll(LIBS);
+  registerLib('zzface', interfaceLib());
+  registerLib('zzmidi', implementationLib('zzface.zzvolume'));
+  const avecInterface = compiler('zzvolume:64');
+  ok(avecInterface.length === 0,
+    `7d. TÉMOIN — avec \`implements\`, le nom nu résout et COMPILE : une interface n'est pas une `
+    + `ambiguïté. Reçu : ${avecInterface[0] || 'ok'}`);
+}
+
 restaurer();
 
 // Le compte des vérifications EXÉCUTÉES, hors ce bilan lui-même : un garde qui refuse d'avoir
 // examiné zéro doit aussi refuser d'en avoir examiné douze parce qu'un bloc s'est tu.
-const TOTAL_ATTENDU = 25;
+const TOTAL_ATTENDU = 29;
 ok(passe + echecs.length === TOTAL_ATTENDU,
    `bilan : ${TOTAL_ATTENDU} vérifications attendues, ${passe + echecs.length} exécutées`);
 
