@@ -74,8 +74,14 @@ const transportRef = (a) => a?.references?.find((x) => x.category === 'transport
 
 // ── forme host : {acteur:{device, channel}} reconstructible depuis transport.params ─
 {
+  // ⚠️ DEUX ACTEURS POSSÈDENT `C4`, donc la forme NUE est AMBIGUË — « Ambiguous symbol "C4" ».
+  // Ce banc l'ignorait : il lisait `.ast.actors` sans regarder `errors`, et l'arbre d'un refus
+  // sortait complet. Ce qu'il éprouve — deux adresses OSC reconstruites depuis `transport.params` —
+  // ne dépend pas de la forme du flux ; la notation pointée lève l'ambiguïté sans rien changer aux
+  // acteurs.
   const r = compileToBPxAST(
-    'actor v1 out.osc(device:d1, ch:1)\nactor v2 out.osc(device:d2, ch:2)\n-----\nAq -> C4');
+    'actor v1 out.osc(device:d1, ch:1)\nactor v2 out.osc(device:d2, ch:2)\n-----\nAq -> v1.C4 v2.C4');
+  assert('la scène d essai COMPILE', (r.errors || []).length === 0, JSON.stringify(r.errors));
   const out = {};
   for (const a of r.ast.actors) {
     const p = a.properties?.transport?.params;

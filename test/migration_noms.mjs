@@ -52,6 +52,18 @@ import path from 'node:path';
 import { importerBPx } from './bpx_dist.mjs';
 import { pathToFileURL } from 'node:url';
 import { compileToBPxAST } from '../src/transpiler/index.js';
+// ⛔ L'OUTIL S'ARRÊTE À L'ÉTAGE DE RÉSOLUTION, PAS À LA PORTE. Son entrée est PAR DÉFINITION une
+// source que le compilateur refuse : la collision définition/terminal qu'il répare est refusée
+// depuis ac6fe6a. Depuis que la porte ne livre plus d'arbre sur un refus (décision Romain
+// 2026-08-19), passer par elle rendrait cet outil aveugle à son propre sujet.
+//
+// ⚠️ ET `parse(tokenize(…))` SEUL NE SUFFIT PAS — mesuré : un volet sur quatre tombe. La détection
+// de collisions a besoin des annotations que la résolution POSE SUR l'arbre. C'est pour ça que
+// l'étage existe : analyser puis résoudre, sans rendre de verdict.
+//
+// Il est importé du module INTERNE, jamais de la porte publiée : ma surface expose le verdict, pas
+// mes étages. Cet outil vit dans mon dépôt, donc il y a accès.
+import { resoudreSource } from '../src/transpiler/bpxAst.js';
 import { expandAlphabetTerminals } from '../src/transpiler/actorResolver.js';
 import { resolveActorAlphabet } from '../src/transpiler/libs.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
@@ -368,11 +380,13 @@ function migrerAmalgame(source, ast, suffixe) {
  * d'écrire — c'est l'appelant qui écrit, et seulement sur `ok:true`.
  */
 export function migrerSource(source, suffixe = '_r') {
-  const { ast } = compileToBPxAST(source);
-  // Une scène qui ne compile PAS n'a rien à migrer : elle est HORS SUJET, pas refusée. La
-  // distinction n'est pas cosmétique — un outil qui sort en erreur pour une raison qui n'est pas
-  // la sienne apprend à son propriétaire à ignorer son code de sortie, et le jour où il refuse
-  // pour une vraie raison, personne ne le lit.
+  const { ast } = resoudreSource(source);
+  // ⛔ CE COMMENTAIRE DISAIT L'INVERSE DE SON SUJET, et c'était sans effet tant que la porte livrait
+  // un arbre au refus. Il disait « une scène qui ne compile pas n'a rien à migrer, elle est HORS
+  // SUJET » — or une scène refusée POUR UNE COLLISION est exactement celle que cet outil répare.
+  //
+  // Ce qui reste vrai, et c'est ce que la ligne teste maintenant : une source qui NE PARSE PAS n'a
+  // rien à migrer. Là il n'y a pas d'arbre du tout, et aucun outil ne peut rien en tirer.
   if (!ast) return { ok: true, horsSujet: true, renommages: [] };
   const enCollision = collisions(ast);
   const amalgame = migrerAmalgame(source, ast, suffixe);
@@ -460,7 +474,10 @@ export function migrerSource(source, suffixe = '_r') {
   // L'amalgame doit avoir DISPARU, pas seulement les collisions de noms : sans ce contrôle, une
   // migration qui renomme la tête sans poser le tag passerait pour un succès — or c'est justement
   // la moitié qui casse la scène.
-  const astApres = compileToBPxAST(migre).ast || {};
+  // MÊME ÉTAGE : on cherche des collisions RESTANTES dans une source qui peut encore en porter.
+  // `|| {}` masquait un arbre absent — un objet vide rend « zéro collision restante », c'est-à-dire
+  // le verdict d'un succès sur une source illisible.
+  const astApres = resoudreSource(migre).ast || {};
   if (migrerAmalgame(migre, astApres, suffixe)) {
     return { ok: false, renommages, motif: "l'amalgame acteur/tête de règle subsiste après migration" };
   }

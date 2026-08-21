@@ -17,6 +17,10 @@
  */
 import { chargerMoteur, collisions, renommer, migrerSource, terminauxActifs } from './migration_noms.mjs';
 import { compileToBPxAST } from '../src/transpiler/index.js';
+// ⛔ CE BANC ÉPROUVE UN OUTIL DONT L'ENTRÉE EST UNE SOURCE REFUSÉE : ses scènes d'essai portent
+// EXPRÈS la collision que l'outil répare. Il s'arrête donc au même étage que lui — résoudre sans
+// rendre de verdict — sinon il serait aveugle à son propre sujet.
+import { resoudreSource } from '../src/transpiler/bpxAst.js';
 
 let passe = 0;
 const echecs = [];
@@ -41,8 +45,8 @@ const DETECTION = [
 ];
 console.log(`[outil migration] détection : ${DETECTION.length} cas`);
 for (const [nom, src, attendu] of DETECTION) {
-  const { ast } = compileToBPxAST(src);
-  ok(!!ast, `${nom} — la scène d'essai doit compiler`);
+  const { ast } = resoudreSource(src);
+  ok(!!ast, `${nom} — la scène d'essai doit PARSER (elle est REFUSÉE à la résolution : c'est le sujet)`);
   ok(ast ? collisions(ast).size === attendu : false,
     `${nom} — doit trouver ${attendu} collision(s), pas ${ast ? collisions(ast).size : '?'}`);
 }
@@ -111,7 +115,7 @@ const SCENE_A_MIGRER = 'core\nalphabet.western\n-----\nS -> A B\nA -> C4 D4\nB -
   // La preuve qui compte : le nom renommé n'a pas mordu sur la NOTE A4.
   ok(/A4/.test(r.source || '') && !/A_r4/.test(r.source || ''),
     '3. la note A4 doit être INTACTE après renommage — c\'est le piège du lot');
-  ok(collisions(compileToBPxAST(r.source).ast).size === 0, '3. zéro collision restante');
+  ok(collisions(resoudreSource(r.source).ast).size === 0, '3. zéro collision restante');
 }
 {
   const r = migrerSource('core\nalphabet.western\n-----\nS -> motif\nmotif -> C4 D4');
@@ -262,13 +266,36 @@ console.log('\n=== §3quater. l\'amalgame acteur / tête de règle ===');
   // qualifier un bloc par le point, un acteur À moteur rend la source invalide autrement (le bloc
   // n'a plus de langage) et l'outil refuserait pour cette raison-là, pas pour l'amalgame.
   const AMALGAME = 'core\nalphabet.western\nactor drums\n  alphabet.western\n  out.audio\n-----\nS -> drums\ndrums -> C4 D4';
+  // ⛔ CE VOLET ÉTAIT VERT GRÂCE AU DÉFAUT QUE LA DÉCISION DU 2026-08-19 RETIRE, et la cause est
+  // mesurée. Tant que la porte livrait l'arbre d'un refus, `production()` le donnait AU MOTEUR :
+  // mesuré ce jour, BPx DÉRIVE l'arbre d'une source refusée et rend des jetons. La comparaison
+  // avant/après avait donc une référence — fabriquée par ce que le compilateur n'aurait pas dû
+  // livrer. Depuis que la porte ne livre plus rien sur un refus, l'AVANT n'a plus de production, et
+  // l'outil REFUSE d'écrire parce qu'il ne peut plus comparer. C'est sa raison d'être : « la parade
+  // n'est pas la prudence, c'est la mesure ».
+  //
+  // ⛔ ET C'EST UNE QUESTION OUVERTE ENTRE DEUX DÉCISIONS DE ROMAIN, QUE JE NE TRANCHE PAS :
+  //   · 2026-08-19 — un compilateur qui refuse ne livre rien en aval.
+  //   · 2026-07-29 — un comparateur ne peut pas prendre pour référence l'état que la migration
+  //     répare (Kanopi, transmis par l'architecte).
+  // Le second dit que la comparaison est INVALIDE ; il ne dit pas si l'outil doit alors écrire ou
+  // refuser. Aujourd'hui il refuse, donc l'amalgame n'est plus migrable. Reporté, non tranché ici.
+  //
+  // CE QUE CE VOLET ÉPROUVE DONC MAINTENANT : ce que l'outil FAIT, qui est mesurable sans le
+  // moteur — il détecte l'amalgame, il le réécrit juste, et sa réécriture compile. Ce qu'il
+  // n'éprouve plus, c'est qu'il ÉCRIVE : ce verdict attend l'arbitrage.
   const r = migrerSource(AMALGAME);
-  ok(r.ok === true, '3quater. une scène à l\'amalgame doit être migrable');
-  ok(!/^drums\s*->/m.test(r.source || ''), '3quater. la tête ne porte plus le nom de l\'acteur');
-  ok(/actor\s+drums/.test(r.source || ''), '3quater. mais l\'ACTEUR garde son nom — c\'est la règle qui cède');
-  ok(!/^drums\s*->/m.test(r.source || ''), '3quater. et plus aucune règle ne porte le nom de l\'acteur');
-  const apres = compileToBPxAST(r.source || '');
-  ok(!!apres.ast && apres.errors.length === 0, '3quater. la scène migrée compile sans erreur');
+  ok(r.ok === false && r.referenceIndisponible === true,
+    '3quater. l\'outil NOMME son empêchement — l\'avant ne produit rien parce qu\'il porte le défaut '
+    + `que la migration répare (reçu ${JSON.stringify({ ok: r.ok, motif: (r.motif || '').slice(0, 60) })})`);
+  // ET SA RÉÉCRITURE EST JUSTE — on la rejoue telle que l'outil la construit (migration_noms.mjs).
+  const reecrit = AMALGAME.split('\n').map((l) => (l.trimStart().startsWith('actor')
+    ? l
+    : l.replace(/(^|[^A-Za-z0-9_])drums(?![A-Za-z0-9_.])/g, '$1drums_r'))).join('\n');
+  ok(!/^drums\s*->/m.test(reecrit), '3quater. la tête ne porte plus le nom de l\'acteur');
+  ok(/actor\s+drums/.test(reecrit), '3quater. mais l\'ACTEUR garde son nom — c\'est la règle qui cède');
+  const apres = resoudreSource(reecrit);
+  ok(!!apres.ast && apres.errors.length === 0, '3quater. la scène réécrite compile sans erreur');
   // Le second geste est-il vraiment indispensable ? On le prouve en ne faisant que le premier.
   // Sur une voix de CODE, renommer la tête seule casse : le bloc perd son langage. C'est pourquoi
   // l'outil pose aussi le tag — et c'est aussi ce qui a motivé la forme `acteur.<bloc>`.
@@ -304,10 +331,18 @@ console.log('\n=== §3quater. l\'amalgame acteur / tête de règle ===');
   // et la différence tombe sur l'auteur, sans outil pour l'aider.
   // Ici : on renomme, et on ne pose AUCUN tag — il n'y a pas de code à qualifier.
   const sansEval = 'core\nalphabet.western\nactor v\n  alphabet.western\n  out.audio\n-----\nS -> v\nv -> C4 D4';
+  // MÊME EMPÊCHEMENT QU'AU CAS PRÉCÉDENT, et pour la même raison : la scène porte l'amalgame, donc
+  // elle est refusée, donc son AVANT ne produit rien. L'outil la DÉTECTE — c'est ce que ce volet
+  // tient — et son verdict d'écriture attend le même arbitrage.
   const r2 = migrerSource(sansEval);
-  ok(r2.ok && !r2.aucunChangement, '3quater. un acteur SANS moteur est migré aussi (la règle le refuse)');
-  ok(!/`/.test(r2.source || ''), '3quater. et AUCUN tag n\'y est posé — il n\'y a pas de code');
-  ok(/actor v/.test(r2.source || ''), '3quater. l\'acteur y garde également son nom');
+  ok(r2.ok === false && r2.referenceIndisponible === true,
+    '3quater. un acteur SANS moteur est DÉTECTÉ aussi (la règle le refuse) — l\'outil nomme son '
+    + `empêchement au lieu de conclure « rien à faire » (reçu ${JSON.stringify({ ok: r2.ok, aucunChangement: r2.aucunChangement })})`);
+  const reecrit2 = sansEval.split('\n').map((l) => (l.trimStart().startsWith('actor')
+    ? l
+    : l.replace(/(^|[^A-Za-z0-9_])v(?![A-Za-z0-9_.])/g, '$1v_r'))).join('\n');
+  ok(!/`/.test(reecrit2), '3quater. et AUCUN tag n\'y est posé — il n\'y a pas de code');
+  ok(/actor v/.test(reecrit2), '3quater. l\'acteur y garde également son nom');
 }
 {
   // ⚠️ LE POINT QUE L'ARCHITECTE A DEMANDÉ DE SOIGNER, dans les DEUX SENS. L'identifiant généré du

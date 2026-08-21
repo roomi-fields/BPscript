@@ -2893,7 +2893,30 @@ function retirerArdoiseAlphabet(ast) {
   }
 }
 
-export function compileToBPxAST(source, environnement) {
+/**
+ * ⛔ L'ÉTAGE DE RÉSOLUTION — ANALYSER puis RÉSOUDRE, sans rendre de verdict.
+ *
+ * Tous les langages ont trois étages : analyser, résoudre, vérifier. Les trois existaient ici et
+ * tournaient à chaque compilation ; rien ne permettait de s'ARRÊTER au second. Cette fonction est
+ * cet arrêt — elle n'ajoute aucun calcul, elle rend atteignable ce qui se faisait déjà.
+ *
+ * CE QU'ELLE REND, ET C'EST TOUTE LA DIFFÉRENCE AVEC LA PORTE :
+ *   · la source NE PARSE PAS  → `ast: null`. Il n'y a pas d'arbre, personne ne peut rien en tirer.
+ *   · la résolution REFUSE    → `ast` PRÉSENT, `errors` peuplé. Le refus de SENS est une INFORMATION
+ *     SUR l'arbre, pas sa disparition.
+ *
+ * ⛔ POURQUOI CE SECOND CAS EXISTE. Un outil de migration, un formateur, un outil de renommage
+ * travaillent sur du code que le compilateur refuse — c'est leur raison d'être. Le nôtre répare les
+ * collisions définition/terminal, refusées depuis ac6fe6a : son entrée est PAR DÉFINITION une source
+ * rejetée. Mesuré le 2026-08-20 : la même source rend une erreur par la porte et un arbre de seize
+ * clés par le parseur — deux questions, deux réponses justes.
+ *
+ * ⚠️ ET IL NE SUFFIT PAS DE PARSER. Basculer l'outil sur `parse(tokenize(…))` seul fait tomber un
+ * volet sur quatre : la détection de collisions a besoin d'annotations que la résolution POSE SUR
+ * l'arbre — terminaux d'alphabet étendus, acteur attribué. La résolution ne s'applique pas À CÔTÉ du
+ * parse, elle s'applique DESSUS. C'est ce qui fait de ceci un étage et non un chemin de service.
+ */
+export function resoudreSource(source, environnement) {
   const result = { ast: null, errors: [], warnings: [] };
   try {
     const ast = parse(tokenize(source), { onWarning: (w) => result.warnings.push(w),
@@ -3004,5 +3027,32 @@ export function compileToBPxAST(source, environnement) {
   }
   return result;
 }
+
+/**
+ * LA PORTE — le VERDICT par-dessus l'étage de résolution.
+ *
+ * ⛔ UN COMPILATEUR QUI REFUSE NE LIVRE RIEN EN AVAL (décision Romain 2026-08-19). Ce qui établit le
+ * succès est l'ABSENCE D'ERREUR, jamais la présence d'un arbre. Rust n'émet aucun binaire quand il
+ * échoue, GCC aucun objet ; TypeScript peut émettre malgré les erreurs, c'est une OPTION, et celle
+ * qu'on recommande est de ne pas le faire.
+ *
+ * ⚠️ CE QUE ÇA CORRIGE, ET C'ÉTAIT MUET. Un refus de SENS laissait sortir un arbre COMPLET et
+ * plausible à côté des erreurs. BPx l'a mesuré sur les 51 clés de la structure : AUCUNE n'évoque un
+ * état de compilation, donc rien ne distinguait l'arbre d'un refus de celui d'un succès. Trois de
+ * ses refus ont dérivé sans un mot, sortie identique au témoin.
+ *
+ * ⛔ ET ÇA AVEUGLAIT MES PROPRES GARDES AVANT CEUX DES AUTRES : quatre de mes bancs affirmaient des
+ * choses sur des scènes que ce compilateur refuse, verts depuis toujours. L'un d'eux était invalidé
+ * par un cri posé le matin même, et le portillon est resté vert toute la journée.
+ *
+ * QUI A BESOIN DE L'ARBRE D'UN REFUS passe par `resoudreSource` — c'est l'étage, il est juste
+ * au-dessus, et il ne refait aucun calcul.
+ */
+export function compileToBPxAST(source, environnement) {
+  const result = resoudreSource(source, environnement);
+  if (result.errors.length) result.ast = null;
+  return result;
+}
+
 
 export default compileToBPxAST;

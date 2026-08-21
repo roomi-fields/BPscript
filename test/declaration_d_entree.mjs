@@ -19,6 +19,9 @@
  *     identité implicite rendrait indistinguables « je n'ai pas de table » et « ma table ne fait rien ».
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
+// L'étage de résolution — le module INTERNE, jamais la porte publiée : la surface expose le verdict,
+// pas les étages. Ce banc vit dans le dépôt, donc il y a accès.
+import { resoudreSource } from '../src/transpiler/bpxAst.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
 
 let passe = 0;
@@ -28,6 +31,23 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const EN_TETE = 'core\nalphabet.western:midi\n';
 const compile = (corps) => {
   try { return compileToBPxAST(`${EN_TETE}${corps}\n`); }
+  catch (e) { return { errors: [{ message: e.message }], ast: null }; }
+};
+/**
+ * ⛔ CE BANC POSE DEUX QUESTIONS, ET DEPUIS LE 2026-08-19 ELLES N'ONT PLUS LE MÊME JUGE.
+ *
+ * « la table inexistante CRIE-t-elle ? » se demande à LA PORTE — c'est un verdict.
+ * « la déclaration est-elle LUE telle qu'écrite ? » se demande à L'ÉTAGE DE RÉSOLUTION — c'est une
+ * question sur la FORME, et elle vaut sur une source que le compilateur refuse.
+ *
+ * La séparation était déjà écrite ici (§2, « on sépare donc les deux questions »), et elle tenait
+ * par un défaut : la porte livrait l'arbre d'un refus, donc une seule fonction servait les deux. Un
+ * compilateur qui refuse ne livre plus rien en aval ; la seconde question passe donc par l'étage,
+ * qui est fait pour elle. `lib/mapping.json` est VIDE par décision de Romain (2026-07-27), donc
+ * TOUTE table invoquée crie — et sans l'étage, aucune scène qui en nomme une ne serait mesurable.
+ */
+const resoudre = (corps) => {
+  try { return resoudreSource(`${EN_TETE}${corps}\n`); }
   catch (e) { return { errors: [{ message: e.message }], ast: null }; }
 };
 
@@ -65,7 +85,9 @@ for (const [corps, quoi, attendu, crie] of [
   } else {
     ok(msgs.length === 0, `2. ${quoi} doit compiler — reçu : ${msgs.join(' | ')}`);
   }
-  const e = (r.ast?.inputs || [])[0];
+  // LA FORME SE LIT À L'ÉTAGE : une scène qui nomme une table est refusée, et la porte ne livre
+  // plus d'arbre. La question posée ici n'est pas « est-ce valide » mais « est-ce lu tel qu'écrit ».
+  const e = (resoudre(corps).ast?.inputs || [])[0];
   ok(e && e.name === attendu.name && e.transport === attendu.transport && (e.mapping ?? null) === attendu.mapping,
      `2. ${quoi} : l'entrée doit ARRIVER telle qu'écrite — reçu : ${JSON.stringify(e)}`);
 }
@@ -117,10 +139,13 @@ for (const [corps, quoi, mot] of [
 // ─── 4. LA TABLE EST UNE INVOCATION DE LIBRAIRIE — son adresse doit SORTIR ───────────────────
 // Sinon la scène « déclare » une table que l'aval ne voit jamais : accepter n'est pas transmettre.
 {
-  const r = compile('in.midi pedale mapping.fcb_std\nmode:ord\n-----\nS -> C4');
+  const r = resoudre('in.midi pedale mapping.fcb_std\nmode:ord\n-----\nS -> C4');
   // L'ADRESSE SORT MÊME QUAND LA RÉFÉRENCE CRIE, et c'est voulu : émission et validation sont deux
   // questions distinctes. Confondre les deux ferait disparaître la trace de ce que la scène a écrit
   // au moment précis où on en a le plus besoin pour comprendre le refus.
+  // ⛔ ET C'EST L'ÉTAGE QUI RÉPOND, PAS LA PORTE. « L'adresse sort même quand la référence crie »
+  // n'est mesurable que là où un arbre existe malgré le refus — la porte, elle, n'en livre plus.
+  // La phrase ci-dessus était vraie et sans juge depuis le 2026-08-19.
   ok((r.ast?.libRefs || []).includes('mapping.fcb_std'),
      `4. l'adresse de la table doit être ÉMISE — libRefs = ${JSON.stringify(r.ast?.libRefs ?? null)}`);
 }
