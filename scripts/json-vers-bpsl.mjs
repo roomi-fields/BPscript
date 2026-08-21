@@ -50,7 +50,7 @@ function rendValeur(cle, v, ou) {
       // ⚠️ CE QUI PASSE NU EST UN MOT, ET RIEN D'AUTRE. Un signe hors de ce jeu a un SENS dans le
       // langage : `^` marque un registre dans `octaves`, et rendu nu il sort « caractère inattendu ».
       // Le jeu est donc écrit en positif — ce qui passe — jamais en liste de ce qui ne passe pas.
-      return /^[A-Za-z0-9_/#.+-]+$/.test(s) && !/^-?[0-9.]+$/.test(s) ? s : `\`txt: ${s}\``;
+      return /^[A-Za-z0-9_/#.+-]+$/.test(s) && !/^-?[0-9.]+$/.test(s) ? s : JSON.stringify(s);
     }).join(' ');
   }
   if (typeof v === 'object' && v !== null) throw new Error(`${ou}.${cle} : objet imbriqué, non rendu`);
@@ -61,7 +61,7 @@ function rendValeur(cle, v, ou) {
   // pas rendable, et se refuse au lieu d'être tronquée en silence.
   if (s.includes('`')) throw new Error(`${ou}.${cle} : la valeur contient un accent grave`);
   if (s === '' || CLES_LISTES.has(cle) || !/^[A-Za-z0-9_/#.+-]+$/.test(s) || /^-?[0-9.]+$/.test(s)) {
-    return `\`txt: ${s}\``;
+    return JSON.stringify(s);
   }
   return s;
 }

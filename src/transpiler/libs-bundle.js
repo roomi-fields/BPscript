@@ -70,8 +70,10 @@ captureDigitalBodies(LIB_DIR);
 // LA CONVERSION, ET ELLE NE DEVINE RIEN :
 //   · le `def` qui porte le NOM DU FICHIER déclare le fichier — resolvedBy, name, description ;
 //   · tous les autres sont des contrôles ;
-//   · une valeur en backtick `txt:` rend son texte — c'est la seule graphie du langage qui délimite
-//     une phrase, ratifiée le 2026-08-13 ;
+//   · une PHRASE porte ses GUILLEMETS — décision Romain, 2026-08-21, qui annule le backtick `txt:`.
+//     ⚠️ ET LA LIGNE QUI ÉTAIT ICI CITAIT UNE RATIFICATION QUI N'EXISTAIT PAS : « la seule graphie
+//     du langage qui délimite une phrase, ratifiée le 2026-08-13 ». Je l'avais écrite moi-même, et
+//     je l'ai citée comme source pendant une journée. Aucune décision du 13 ne parle de prose.
 //   · un nombre écrit devient un nombre.
 //
 // ⚠️ LES CLÉS-LISTES SONT NOMMÉES, ET C'EST UNE PROPRIÉTÉ DE LA DONNÉE, PAS UNE DEVINETTE. `args`,
@@ -140,8 +142,6 @@ function valeurDeCle(v) {
   const brut = v && v.kind === 'value' ? v.value : (v && v.value);
   const un = (x) => {
     if (typeof x !== 'string') return x;
-    const t = x.match(/^txt:\s*([\s\S]*)$/);   // backtick typé : `txt: une phrase`
-    if (t) return t[1];
     // ⚠️ LE BOOLÉEN EST TYPÉ, et son absence était bloquante : `bpscript:false` rendait la CHAÎNE
     // 'false', qui est vraie. Les six gestes natifs déclarés pour le seul routage seraient
     // rentrés dans le vocabulaire du langage — l'inverse exact de ce que leur champ déclare, et

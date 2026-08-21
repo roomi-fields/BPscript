@@ -31,16 +31,31 @@ const valeur = (ligne) => {
 
 console.log('[étiquette] l\'étiquette d\'un backtick se lit là où il est écrit');
 
-// ── A. `txt:` DÉLIMITE UNE PHRASE — sa valeur est son TEXTE, sans son étiquette ──────────────
+// ── A. ⛔ `txt:` N'EST PLUS UNE ÉTIQUETTE — il nomme un LANGAGE comme les autres ─────────────
+//
+// Décision Romain, 2026-08-21 : « on doit annuler la décision sur les backticks typés, elle est
+// mauvaise. On est repartis sur les guillemets, c'est la dernière qui vaut. » Une phrase porte ses
+// GUILLEMETS ; le backtick ne délimite plus que du CODE, et son étiquette nomme un interprète.
+//
+// ⚠️ ET LA GRAPHIE RETIRÉE N'AVAIT JAMAIS EU DE SOURCE. Je la citais comme « ratifiée le
+// 2026-08-13 » — la seule trace était une phrase que j'avais écrite moi-même dans `libs-bundle.js`.
+// Aucune des quatorze décisions de ce jour-là ne parle de prose, et les trois spécifications
+// l'ignoraient. Elle avait pourtant 26 sites et quatre lecteurs : UNE INVENTION DEVIENT UN FAIT PAR
+// SON USAGE, PAS PAR SA SOURCE.
+//
+// CE VOLET NE DISPARAÎT PAS, IL CHANGE DE SUJET : `txt` doit désormais se lire comme n'importe
+// quelle autre étiquette. Le jour où un lecteur lui redonnerait un traitement à part, il rougit.
 {
   const t = valeur('def f (x:`txt: une phrase, avec virgule`)');
-  ok(t.erreurs.length === 0, `A. la phrase doit compiler — ${t.erreurs[0]}`);
-  ok(t.v === 'une phrase, avec virgule',
-    `A. et rendre son TEXTE, l'étiquette RETIRÉE — reçu ${JSON.stringify(t.v)}`);
-  ok(typeof t.v === 'string' && !t.v.startsWith('txt:'),
-    'A. l\'étiquette ne doit JAMAIS rester collée à la phrase — c\'est ce qui se publiait');
-  // La virgule et le deux-points appartiennent à la phrase : le délimiteur les protège.
-  ok(t.v.includes(',') , 'A. la virgule interne est un caractère de la phrase, pas un séparateur');
+  ok(t.erreurs.length === 0, `A. la forme doit compiler — ${t.erreurs[0]}`);
+  ok(t.v?.type === 'BacktickInline' && t.v?.tag === 'txt',
+    `A. ⛔ 'txt' n'a plus de traitement à part : il nomme un langage comme 'js' ou 'sc'. Reçu `
+    + `${JSON.stringify(t.v)}`);
+  ok(t.v?.code === 'une phrase, avec virgule',
+    `A. et son contenu reste intact, virgule comprise — reçu ${JSON.stringify(t.v?.code)}`);
+  ok(typeof t.v !== 'string',
+    "A. ⛔ il ne doit PLUS rendre une chaîne nue : c'était le traitement à part, et c'est lui qui "
+    + 'sort. Une phrase s\'écrit désormais entre guillemets.');
 }
 
 // ── B. TOUTE AUTRE ÉTIQUETTE NOMME UN LANGAGE — la valeur porte le CODE et son interprète ───
@@ -63,10 +78,11 @@ console.log('[étiquette] l\'étiquette d\'un backtick se lit là où il est éc
   ok(valeur('def f (x:"")').v === '', 'C. TÉMOIN — le texte vide reste une valeur');
 }
 
-// ── D. LA DONNÉE PUBLIÉE N'A PAS BOUGÉ ──────────────────────────────────────────────────────
-// ⛔ LE VOLET QUI COMPTE : la bascule déplace un travail d'un étage, elle ne change pas ce que les
-// consommateurs reçoivent. Une description publiée qui porterait encore son étiquette prouverait
-// que le générateur et le parseur font le même travail DEUX FOIS, ou aucun.
+// ── D. ⛔ ET AUCUNE VALEUR PUBLIÉE NE PORTE `txt:` — L'ANTI-RETOUR DE LA GRAPHIE ANNULÉE ─────
+// Ce volet gardait la bascule d'un travail d'un étage à l'autre. Depuis le 2026-08-21 il garde
+// plus que ça : la graphie `txt:` est SORTIE du langage, et 26 valeurs ont migré vers les
+// guillemets. Une valeur publiée qui la porterait de nouveau dirait qu'un outil de conversion la
+// réintroduit en silence — c'est la voie parallèle qu'on s'interdit, et c'est ici qu'elle rougit.
 {
   let vues = 0;
   const fautives = [];

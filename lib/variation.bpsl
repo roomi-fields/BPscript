@@ -50,44 +50,44 @@
 // librairies : ils s'écrivent partout où un réglage de jeu s'écrit — sur un symbole, sur un
 // groupe, sur une règle, et dans le flux.
 
-def variation (resolves:variation, resolvedBy:"Kairos", name:variation, description:`txt: Modes de variation DISCRETS des paramètres de jeu — fixe et paliers. Entre deux valeurs écrites d'un même paramètre, le mode dit si la première TIENT jusqu'à la seconde (fixe) ou si elle GLISSE de note en note (paliers). Ces deux modes se résolvent à la note, donc avant qu'un son ne soit émis : ils appartiennent à Kairos. Le troisième mode — continu — glisse PENDANT les notes, par messages intermédiaires : il ne peut être rendu que par celui qui émet, et il vit donc dans la librairie de son paramètre.`, version:0.1.0, section:controls)
+def variation (resolves:variation, resolvedBy:"Kairos", name:variation, description:"Modes de variation DISCRETS des paramètres de jeu — fixe et paliers. Entre deux valeurs écrites d'un même paramètre, le mode dit si la première TIENT jusqu'à la seconde (fixe) ou si elle GLISSE de note en note (paliers). Ces deux modes se résolvent à la note, donc avant qu'un son ne soit émis : ils appartiennent à Kairos. Le troisième mode — continu — glisse PENDANT les notes, par messages intermédiaires : il ne peut être rendu que par celui qui émet, et il vit donc dans la librairie de son paramètre.", version:0.1.0, section:controls)
 
 // _comment : Modes discrets — un mot par (paramètre, mode), sans argument. Le mot natif est
 // porté verbatim par `bp3`.
 
-def velfixed (bp3:_velfixed, description:`txt: Vélocité en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.`, scope(symbol, group, rule, flow))
+def velfixed (bp3:_velfixed, description:"Vélocité en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
 
-def velstep (bp3:_velstep, description:`txt: Vélocité PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.`, scope(symbol, group, rule, flow))
+def velstep (bp3:_velstep, description:"Vélocité PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
 
-def modfixed (bp3:_modfixed, description:`txt: Modulation en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.`, scope(symbol, group, rule, flow))
+def modfixed (bp3:_modfixed, description:"Modulation en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
 
-def modstep (bp3:_modstep, description:`txt: Modulation PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.`, scope(symbol, group, rule, flow))
+def modstep (bp3:_modstep, description:"Modulation PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
 
-def pitchfixed (bp3:_pitchfixed, description:`txt: Pitchbend en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.`, scope(symbol, group, rule, flow))
+def pitchfixed (bp3:_pitchfixed, description:"Pitchbend en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
 
-def pitchstep (bp3:_pitchstep, description:`txt: Pitchbend PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.`, scope(symbol, group, rule, flow))
+def pitchstep (bp3:_pitchstep, description:"Pitchbend PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
 
-def pressfixed (bp3:_pressfixed, description:`txt: Pression en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.`, scope(symbol, group, rule, flow))
+def pressfixed (bp3:_pressfixed, description:"Pression en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
 
-def presstep (bp3:_presstep, description:`txt: Pression PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.`, scope(symbol, group, rule, flow))
+def presstep (bp3:_presstep, description:"Pression PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
 
-def volumefixed (bp3:_volumefixed, description:`txt: Volume en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.`, scope(symbol, group, rule, flow))
+def volumefixed (bp3:_volumefixed, description:"Volume en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
 
-def volumestep (bp3:_volumestep, description:`txt: Volume PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.`, scope(symbol, group, rule, flow))
+def volumestep (bp3:_volumestep, description:"Volume PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
 
-def articulfixed (bp3:_articulfixed, description:`txt: Articulation en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net. L'articulation se pose par legato et staccato.`, scope(symbol, group, rule, flow))
+def articulfixed (bp3:_articulfixed, description:"Articulation en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net. L'articulation se pose par legato et staccato.", scope(symbol, group, rule, flow))
 
-def articulstep (bp3:_articulstep, description:`txt: Articulation PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.`, scope(symbol, group, rule, flow))
+def articulstep (bp3:_articulstep, description:"Articulation PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
 
-def panfixed (bp3:_panfixed, description:`txt: Panoramique en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.`, scope(symbol, group, rule, flow))
+def panfixed (bp3:_panfixed, description:"Panoramique en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
 
-def panstep (bp3:_panstep, description:`txt: Panoramique PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.`, scope(symbol, group, rule, flow))
+def panstep (bp3:_panstep, description:"Panoramique PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
 
-def mapfixed (bp3:_mapfixed, description:`txt: Carte de touches en mode FIXE — la carte écrite tient jusqu'à la suivante, saut net.`, scope(symbol, group, rule, flow))
+def mapfixed (bp3:_mapfixed, description:"Carte de touches en mode FIXE — la carte écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
 
-def mapstep (bp3:_mapstep, description:`txt: Carte de touches PAR PALIERS — la carte glisse de note en note entre deux cartes écrites.`, scope(symbol, group, rule, flow))
+def mapstep (bp3:_mapstep, description:"Carte de touches PAR PALIERS — la carte glisse de note en note entre deux cartes écrites.", scope(symbol, group, rule, flow))
 
-def transposefixed (bp3:_transposefixed, description:`txt: Transposition en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.`, scope(symbol, group, rule, flow))
+def transposefixed (bp3:_transposefixed, description:"Transposition en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
 
-def transposestep (bp3:_transposestep, description:`txt: Transposition PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.`, scope(symbol, group, rule, flow))
+def transposestep (bp3:_transposestep, description:"Transposition PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
 

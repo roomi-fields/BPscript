@@ -5475,11 +5475,19 @@ function parse(tokens, opts = {}) {
         let val;
         if (jetons === 1 && backtickSeul !== null) {
           const t = tryBacktickTag(backtickSeul);
-          // `txt:` DÉLIMITE UNE PHRASE — sa valeur est son texte. Toute autre étiquette nomme un
-          // LANGAGE : la valeur porte alors le code et son interprète, comme partout ailleurs.
-          val = !t ? backtickSeul
-            : (t.tag === 'txt' ? t.code
-              : { type: 'BacktickInline', code: t.code, tag: t.tag });
+          // ⛔ L'ÉTIQUETTE `txt:` EST SORTIE LE 2026-08-21 — Romain : « on doit annuler la décision
+          // sur les backticks typés, elle est mauvaise. On est repartis sur les guillemets, c'est
+          // la dernière qui vaut. » Une phrase porte ses GUILLEMETS, et le backtick ne nomme plus
+          // qu'un LANGAGE : la valeur porte le code et son interprète.
+          //
+          // ⚠️ ET CETTE GRAPHIE N'AVAIT JAMAIS EU DE SOURCE. Je l'ai citée pendant une journée
+          // comme « ratifiée le 2026-08-13 » — la seule trace de cette ratification était une
+          // phrase que j'avais écrite moi-même dans `libs-bundle.js`. Aucune des quatorze décisions
+          // de ce jour-là ne parle de prose, et les trois spécifications l'ignorent. UNE DATE DONNE
+          // L'AIR D'UN RELEVÉ ; c'est l'accessoire de preuve qui rend crédible, pas le contenu.
+          // Elle avait quand même 26 sites et quatre lecteurs — une invention devient un fait par
+          // son USAGE, pas par sa source, et c'est pour ça que son retrait fut une migration.
+          val = !t ? backtickSeul : { type: 'BacktickInline', code: t.code, tag: t.tag };
         } else {
           val = texteSeul !== null && jetons === 1 ? texteSeul
             : (/^-?\d+(\.\d+)?$/.test(brut) ? Number(brut) : brut);
