@@ -17,5 +17,6 @@
       "unicite": "metronome"
     }
   },
-  "resolvedBy": "Kronos"
+  "resolvedBy": "Kronos",
+  "resolves": "time"
 }

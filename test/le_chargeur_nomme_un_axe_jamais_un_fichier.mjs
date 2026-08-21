@@ -36,9 +36,15 @@ ok(AXES.size > 0, 'la donnée doit déclarer des mots d\'invocation — sans eux
  * on l'ajoute ici avec sa raison, ou on le branche sur son axe.
  */
 const ADMIS = new Map([
-  ['core', "point d'entrée — quelque chose doit nommer le premier fichier pour que la donnée dise le reste"],
+  // ⛔ `core` EST SORTI D'ICI LE 2026-08-21, ET C'EST CE GARDE QUI L'A EXIGÉ. Il portait « point
+  // d'entrée — quelque chose doit nommer le premier fichier ». Le jour où `core.json` a déclaré son
+  // mot (`resolves:core`, régularisation des onze), le garde a rougi en disant exactement quoi
+  // faire : « un axe le porte maintenant, le brancher dessus et le retirer d'ADMIS ». Une
+  // dérogation dont le motif a disparu est un trou, pas une tolérance.
+  //
+  // ⛔ `language` EST SORTI AVEC LE SCHÉMA DE SYNTAXE, le même jour : il ne se charge plus par le
+  // registre des librairies mais par sa propre porte, `syntaxe-data.js`.
   ['modulation', "ne déclare aucun mot d'invocation — décision ouverte chez Romain"],
-  ['language', "ne déclare aucun mot d'invocation — décision ouverte chez Romain"],
 ]);
 
 const source = readFileSync(new URL('../src/transpiler/libs.js', import.meta.url), 'utf8');

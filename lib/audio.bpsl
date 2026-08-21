@@ -24,7 +24,7 @@
 // forme n existe ni au moteur d origine, ni dans une seule des 274 scenes, et l arbre ne l
 // appliquait nulle part. Romain l a supprimee. L axe tombe avec elle.
 
-def audio (name:audio, resolvedBy:"runtime-audio", description:"Contrôles spécifiques au transport Web Audio — match EXACT LIBRAIRIES.md:173.", section:controls)
+def audio (resolves:audio, name:audio, resolvedBy:"runtime-audio", description:"Contrôles spécifiques au transport Web Audio — match EXACT LIBRAIRIES.md:173.", section:controls)
 
 // Audio (Web Audio) specific controls — groupe renommé webaudio→audio (canon 2026-07-16)
 def wave (args(type), values(sine, triangle, square, sawtooth), default:triangle, description:"Oscillator waveform (Web Audio)", scope(symbol, group, rule, flow), transportGroup:audio)

@@ -1,14 +1,21 @@
 // LES PROTOTYPES DES CATALOGUES.
 //
-// Ce fichier ne déclare AUCUN mot d'invocation : rien de ce qu'il porte n'est adressable par un
-// axe, et une scène ne peut donc pas écrire le nom d'un prototype à la place d'une gamme. C'est
-// ce qui distingue un modèle d'une donnée musicale, et c'est mesuré chez le consommateur — la
-// liste des axes y est fermée, un fichier sans mot d'invocation n'y entre pas.
+// ⛔ CE FICHIER DÉCLARE SON MOT — `resolves:types`. Décision Romain, 2026-08-21 : « je comprends
+// qu'il faut mettre des `resolves` dans toutes les librairies, parce que MÊME `types` peut être
+// invoqué en déclaratif ». `lib/scales.bpsl` l'écrit d'ailleurs en tête depuis sa conversion.
+//
+// ⚠️ ET L'EN-TÊTE DISAIT L'INVERSE — « ce fichier ne déclare AUCUN mot d'invocation : rien de ce
+// qu'il porte n'est adressable par un axe ». MESURÉ LE 2026-08-21, LES DEUX MOITIÉS ÉTAIENT
+// FAUSSES : `core` + `types` compile, et `types.gamut` aussi. La phrase décrivait une intention,
+// pas ce que le compilateur fait — et elle se lisait comme une mesure parce qu'elle citait un
+// consommateur. Une affirmation fausse sur mon code se retire de mon code.
 //
 // LA LIGNE DE PARTAGE DES GAMMES est la FAÇON DE DIRE LES HAUTEURS : par intervalles exacts, par
 // degrés dans un tempérament, ou par assemblage. Trois manières de définir une échelle.
 // `directional` dérive de `degree` : une échelle dont la montée diffère de la descente EST une
 // échelle à degrés, avec une propriété en plus.
+
+def types (resolves:types)
 
 object gamut (description)
 gamut interval (ratios)

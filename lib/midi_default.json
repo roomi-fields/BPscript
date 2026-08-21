@@ -3,6 +3,7 @@
   "description": "L'ENVIRONNEMENT MIDI PAR DÉFAUT — la valeur que porte chaque mot de `midi` tant qu'une scène n'en écrit pas d'autre.",
   "version": "0.2.0",
   "resolvedBy": "runtime-MIDI",
+  "resolves": "midi_default",
   "_gestes_doc": "LES QUATRE GESTES SONT DES PAIRES, ET LES HUIT MOTS SONT DÉCLARÉS ICI, chacun avec sa valeur. Écrire les deux côtés plutôt que le seul mot actif rend le fichier lisible sans le déplier mentalement, et un garde exige qu'exactement UN mot par paire soit vrai.\n\n⛔ `resetcontrols` VAUT FAUX, ET LA CAUSE COMPTE AUTANT QUE LA VALEUR. `Inits.c:212` le met à VRAI au démarrage, puis `SaveLoads1.c:584` le remet à FAUX au début de CHAQUE chargement de réglages — et une scène charge toujours ses réglages. Le cas VRAI n'existe donc que dans une exécution qui n'en charge aucun, ce qui n'arrive pas en usage. Sans cette phrase, quelqu'un relira `Inits.c:212` dans six mois et « corrigera » cette ligne en croyant réparer.\n\n`resetnotes` vaut FAUX aussi : aucun site du moteur ne l'arme (`Inits.c:207`, périmètre les 54 fichiers de source/BP3). C'est la mesure qui a fait tomber la première règle de découpage des paires — celle qui réservait une paire aux seuls gestes vrais au natif.",
   "controlDefaults": {
     "chan": 1,

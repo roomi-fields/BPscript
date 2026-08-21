@@ -59,7 +59,7 @@
 // BPScript est ailleurs -- le parametre est la cle et le mode s y colle (`!(slide:101)`,
 // `!(slidecont)`), arbitrage Romain du 2026-08-13. Les ecrire dans une scene reste REFUSE.
 
-def expression (resolvedBy:"toutes les sorties", name:expression, description:"Contrôles qui décrivent COMMENT on joue une note, valables pour TOUTE sortie — pas un transport précis (LIBRAIRIES.md:171,217-219 : « expression ne fait pas exception… c'est UNE destination, une classe nommée par ce qu'elle décrit »).", section:controls)
+def expression (resolves:expression, resolvedBy:"toutes les sorties", name:expression, description:"Contrôles qui décrivent COMMENT on joue une note, valables pour TOUTE sortie — pas un transport précis (LIBRAIRIES.md:171,217-219 : « expression ne fait pas exception… c'est UNE destination, une classe nommée par ce qu'elle décrit »).", section:controls)
 
 // _comment : Sound object parameter controls — transport-agnostic, forwarded as-is
 
