@@ -17,6 +17,22 @@
  * quatrieme generateur rouvrir le trou en silence. Ce garde LIT `package.json`, extrait TOUTE cible
  * `.tmp` que ses scripts ecrivent, et exige que git l'ignore. Un script ajoute demain est couvert
  * sans que personne y pense.
+ *
+ * ⛔ ET IL FERME UNE SEULE PORTE SUR DEUX — kanopi l'a mesure et il a raison. Un `.gitignore` ne
+ * fait pas disparaitre un fichier DU DISQUE :
+ *
+ *     ferme      la fenetre de la TOUR, qui lit `git status`
+ *     NE ferme PAS  un releve qui marche les inodes sous une racine exposee
+ *
+ * Ma premiere redaction disait « un voisin qui mesure mon etat a cet instant se bloque », sans
+ * distinguer les deux — vrai pour la tour, faux pour son garde de bascule. UNE AFFIRMATION FAUSSE
+ * SUR MON CODE SE RETIRE DE MON CODE, et c'est la PORTEE qui se corrige, pas le perimetre.
+ *
+ * ⚠️ ET IL N'Y A PAS DE GESTE QUI FERME L'AUTRE PORTE, mesure avant de conclure : le temporaire
+ * doit naitre SUR LA MEME PARTITION que sa cible pour que le `mv` reste atomique. Le deplacer
+ * echangerait un bruit rare contre un `libs-data.js` TRONQUE qu'un voisin lirait en direct — pire,
+ * et pour lui d'abord. Ce que je controle est le MOMENT ou j'ecris : le gel qu'un voisin ouvre
+ * couvre deja ce cas, et rien ne s'ajoute par-dessus.
  */
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
@@ -48,8 +64,9 @@ const estIgnore = (chemin) => {
 const nus = [...cibles].filter((c) => !estIgnore(c));
 ok(nus.length === 0,
   `⛔ ${nus.length} artefact(s) transitoire(s) ne sont pas ignore(s) : ${nus.join(', ')}\n     `
-  + `Ils apparaissent dans l'arbre de travail le temps d'un \`mv\`, et un voisin qui mesure mon etat `
-  + `a cet instant se bloque sur un fichier qui n'existe deja plus. Ajouter le chemin a .gitignore.`);
+  + `Ils apparaissent dans \`git status\` le temps d'un \`mv\`, et la tour refuse d'ouvrir une fenetre `
+  + `de mesure a un voisin quand mon depot porte un etat non publie. Ajouter le chemin a .gitignore.\n     `
+  + `⚠️ Ça ferme la porte de la TOUR, pas un releve d'inodes : le fichier existe toujours sur le disque.`);
 
 // ── ⛔ LE TEMOIN — le detecteur voit-il un artefact NU quand il y en a un ? ───────────────────
 // Sans lui, un `check-ignore` qui repondrait toujours « oui » rendrait zero faute exactement comme
