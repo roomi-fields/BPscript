@@ -19,6 +19,7 @@
  */
 
 import { LIBS as BUNDLED_LIBS } from './libs-data.js';
+import { SYNTAXE } from './syntaxe-data.js';
 
 // Registry: pre-loaded libs (browser or Node pre-registration)
 const registry = {};
@@ -1280,8 +1281,13 @@ function describeVocabulary(directives = []) {
     for (const k of keys) if (def[k] !== undefined) o[k] = def[k];
     return o;
   };
-  // Schéma SYNTAXE (mots/opérateurs + enums de directive) — lib `language.json`, autorité machine.
-  const langLib = loadJsonFile('language') || {};
+  // ⛔ LE SCHÉMA DE SYNTAXE SE LIT PAR SA PROPRE PORTE — il a quitté `lib/` le 2026-08-21 (décision
+  // Romain du 2026-08-20). Ce n'est pas une librairie : aucune scène ne l'invoque, il ne déclare
+  // aucun mot d'invocation, et il porte ce que le LANGAGE EST. Passer par `loadJsonFile` le faisait
+  // dépendre du registre des librairies, donc de ce qu'une scène avait déclaré.
+  // ⚠️ ET LE `|| {}` EST PARTI AVEC : la porte REFUSE de se publier vide (`syntaxe-bundle.mjs`).
+  // Un repli sur l'objet vide publiait « zéro mot de syntaxe », qui a la graphie d'une mesure.
+  const langLib = SYNTAXE;
   // Voix (LANG-SONS-2, lib/voices.json §3) : noms de BASE pour `voice.<nom>` — les clés
   // `nom for:<device>` (spécialisations §5) se replient sur leur nom de base.
   // Même geste : l'AXE `voice`, pas le fichier `voices`.

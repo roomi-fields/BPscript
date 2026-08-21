@@ -10,6 +10,9 @@
 import { T } from './tokenizer.js';
 import { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, universeAddressKeys } from './libs.js';
 import { BP3_OPERATORS } from './constants.js';
+// ⛔ LE SCHÉMA DE SYNTAXE N'EST PAS UNE LIBRAIRIE — il se lit par SA PROPRE PORTE, jamais par le
+// registre des librairies. Décision Romain, 2026-08-20.
+import { SYNTAXE } from './syntaxe-data.js';
 
 class ParseError extends Error {
   constructor(msg, token) {
@@ -263,13 +266,16 @@ function refuserCanalDeSortieInconnu(name, subkey, tok) {
  */
 function refuserModeInvalide(name, runtime, value, tok) {
   if (name !== 'mode') return;
-  // ⛔ LA LISTE VIENT DE LA DONNÉE, PAR LA MÊME PORTE QUE LE CATALOGUE DES CANAUX. Le parseur ne
-  // connaît pas `LIBS` : il lit une librairie par `loadLib`, et c'est voulu — une librairie non
-  // invoquée n'a pas à peser sur la lecture.
-  const lang = loadLib('language') || {};
-  const declares = ((lang.directiveValues && lang.directiveValues.mode
-    && lang.directiveValues.mode.values) || []).map((v) => v.name);
-  if (!declares.length) return;                     // la donnée ne dit rien : on n'invente pas
+  // ⛔ LA LISTE VIENT DU SCHÉMA DE SYNTAXE, PLUS D'UNE LIBRAIRIE. Décision Romain, 2026-08-20 : le
+  // schéma sort de `lib/` — ce n'est pas une librairie, aucune scène ne l'invoque, et il n'a pas à
+  // dépendre de ce qu'une scène a déclaré. Il se lisait par `loadLib('language')`, donc par le
+  // REGISTRE DES LIBRAIRIES : le mode de dérivation devenait invérifiable dans une scène qui
+  // n'invoque rien, alors que c'est un mot du LANGAGE et non d'un catalogue.
+  const declares = ((SYNTAXE.directiveValues.mode || {}).values || []).map((v) => v.name);
+  // ⚠️ ET LE REPLI SUR LE SILENCE A DISPARU AVEC LA PORTE : `if (!declares.length) return` laissait
+  // passer n'importe quel mode le jour où la donnée se viderait. La porte REFUSE de se publier vide
+  // (`syntaxe-bundle.mjs`), donc l'absence ne peut plus arriver — l'effet est devenu impossible au
+  // lieu d'être toléré ici.
   const ecrit = runtime ?? (value == null ? null : String(value));
   if (ecrit == null) {
     throw new ParseError(

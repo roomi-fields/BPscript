@@ -41,4 +41,20 @@ if (typesFresh !== typesCommitted) {
   );
   process.exit(1);
 }
-console.log('[bundle:check] ✓ libs-data.js et libs-data.d.ts à jour vs les sources lib/.');
+// ⛔ ET LA PORTE DU SCHÉMA DE SYNTAXE SE VÉRIFIE COMME LE BUNDLE — posée le 2026-08-21 quand le
+// schéma a quitté `lib/`. C'est un SECOND artefact dérivé, et un artefact dérivé sans garde de
+// fraîcheur dérive en silence : le bundle l'a déjà fait, et son garde est né de cette dérive.
+// Atlas le lit par `git show <branche>:src/transpiler/syntaxe-data.js` — un fichier périmé lui
+// publierait un vocabulaire d'hier sous l'apparence de la source de vérité.
+const syntaxeGen = join(__dirname, 'syntaxe-bundle.mjs');
+const syntaxePath = join(__dirname, 'syntaxe-data.js');
+const syntaxeFresh = execFileSync(process.execPath, [syntaxeGen], { encoding: 'utf-8' });
+const syntaxeCommitted = readFileSync(syntaxePath, 'utf-8');
+if (syntaxeFresh !== syntaxeCommitted) {
+  console.error(
+    '[bundle:check] ✗ src/transpiler/syntaxe-data.js est PÉRIMÉ vs schema-syntaxe/language.json.\n' +
+    '               Régénère : `npm run bundle:syntaxe` (puis commit).',
+  );
+  process.exit(1);
+}
+console.log('[bundle:check] ✓ libs-data.js, libs-data.d.ts et syntaxe-data.js à jour vs leurs sources.');

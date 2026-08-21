@@ -19,6 +19,7 @@
  * égalité d'ensembles ne se prouve que par ses deux inclusions.
  */
 import { loadLib } from '../src/transpiler/libs.js';
+import { SYNTAXE } from '../src/transpiler/syntaxe-data.js';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 
 let passe = 0;
@@ -33,8 +34,12 @@ const erreursDe = (src) => (compileToBPxAST(src).errors || []).map((e) => e.mess
  * l'ensemble vide le jour où un chemin change, et un ensemble vide a la tête d'un garde vert.
  */
 const DOMICILES = [
-  ['language.directiveValues.mode.values',
-    () => (loadLib('language')?.directiveValues?.mode?.values || []).map((v) => v.name ?? v)],
+  // ⛔ LE SCHÉMA DE SYNTAXE A QUITTÉ `lib/` LE 2026-08-21 — il se lit par SA PORTE, plus par le
+  // registre des librairies (décision Romain du 2026-08-20). `loadLib('language')` rendait `null`
+  // après le déménagement, et ce volet a compté ZÉRO mode déclaré : un catalogue vide et un
+  // catalogue déplacé ont exactement la même empreinte à travers un lecteur qui n'a pas suivi.
+  ['schema-syntaxe · directiveValues.mode.values',
+    () => (SYNTAXE.directiveValues?.mode?.values || []).map((v) => v.name ?? v)],
   ['engine.engine.mode.values',
     () => loadLib('engine')?.engine?.mode?.values || []],
 ];

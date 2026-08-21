@@ -28,3 +28,4 @@ test/grammars/trySrand/snapshots/
 baseline-status.json.tmp
 src/transpiler/libs-data.js.tmp
 src/transpiler/libs-data.d.ts.tmp
+src/transpiler/syntaxe-data.js.tmp
