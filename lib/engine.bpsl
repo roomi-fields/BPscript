@@ -82,7 +82,7 @@ def engine (resolves:engine, resolvedBy:"BPx", name:engine, description:"Les cl�
     // ou un legato au-dela de 100% fait chevaucher les notes tenues -- l'intention meme). Le moteur
     // ne declare AUCUN plafond ; 1000 est un garde-fou de saisie, pas une limite du moteur.
     legato(bp3:_legato, args(value), range(0, 1000), description:"Legato — extend note durations (affects temporal structure)", scope(symbol, group, rule, flow)),
-    rndtime(bp3:_rndtime, args(amount), range(0, 32767), description:"Random timing jitter — displaces note attacks by ±N ms (temporal). Like staccato/legato, a current-parameter control, not a reorder.", scope(scene, symbol, group, rule, flow)),
+    rndtime(bp3:_rndtime, args(amount), range(0, 32767), unit:"ms", description:"Random timing jitter — displaces note attacks by ±N ms (temporal). Like staccato/legato, a current-parameter control, not a reorder.", scope(scene, symbol, group, rule, flow)),
     // destru · RANGE DANS LA SECTION `engine` LE 2026-08-10 (arbitrage Romain : « la portee regle,
     // c est un sac en fin de regle pour tous les controles, ca doit etre pareil pour destru, voila
     // comme pour stop »). ⚠️ DEUX CHOSES DIFFERENTES, TOUTES DEUX PORTEES PAR LA DONNEE, et les

@@ -90,7 +90,7 @@ def modcont (bp3:_modcont, description:"Enable continuous modulation interpolati
 
 def pitchbend (bp3:_pitchbend, args(value), range(-8192, 8191), description:"MIDI Pitch Bend", scope(symbol, group, rule, flow), transportGroup:midi)
 
-def pitchrange (bp3:_pitchrange, args(cents), description:"Pitch bend range in cents", scope(symbol, group, rule, flow), transportGroup:midi)
+def pitchrange (bp3:_pitchrange, args(cents), unit:"cents", description:"Pitch bend range in cents", scope(symbol, group, rule, flow), transportGroup:midi)
 
 def pitchcont (bp3:_pitchcont, description:"Enable continuous pitch bend interpolation", scope(symbol, group, rule, flow), transportGroup:midi)
 
