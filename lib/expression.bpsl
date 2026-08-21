@@ -113,5 +113,5 @@ def step (bp3:_step, bpscript:false, args(param), description:"Geste NATIF : le 
 // ⚠️ LA VALEUR 0 EST ACCEPTEE PAR LE NATIF ET SUPPRIME LE FLUX CONTINU : un mode continu ecrit avec
 //    une cadence de 0 compile et ne module rien. Le fait est mesure, la declaration appartient a
 //    Romain — je porte le natif, je ne retranche pas de mon propre chef.
-def panrate (bp3:_panrate, args(hz), range(0, 1000), default:50, description:"Cadence des valeurs intermediaires du continu de panoramique, en valeurs par seconde. Defaut 50, comme le moteur natif.", scope(symbol, group, rule, flow), transportGroup:expression)
+def panrate (bp3:_panrate, args(hz), range(0, 1000), unit:"Hz", default:50, description:"Cadence des valeurs intermediaires du continu de panoramique, en valeurs par seconde. Defaut 50, comme le moteur natif.", scope(symbol, group, rule, flow), transportGroup:expression)
 

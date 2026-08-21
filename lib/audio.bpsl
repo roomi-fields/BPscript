@@ -29,11 +29,11 @@ def audio (name:audio, resolvedBy:"runtime-audio", description:"Contrôles spéc
 // Audio (Web Audio) specific controls — groupe renommé webaudio→audio (canon 2026-07-16)
 def wave (args(type), values(sine, triangle, square, sawtooth), default:triangle, description:"Oscillator waveform (Web Audio)", scope(symbol, group, rule, flow), transportGroup:audio)
 
-def attack (args(ms), range(1, 5000), default:20, description:"Envelope attack in ms (Web Audio)", scope(symbol, group, rule, flow), transportGroup:audio)
+def attack (args(ms), range(1, 5000), unit:"ms", default:20, description:"Envelope attack in ms (Web Audio)", scope(symbol, group, rule, flow), transportGroup:audio)
 
-def release (args(ms), range(1, 5000), default:100, description:"Envelope release in ms (Web Audio)", scope(symbol, group, rule, flow), transportGroup:audio)
+def release (args(ms), range(1, 5000), unit:"ms", default:100, description:"Envelope release in ms (Web Audio)", scope(symbol, group, rule, flow), transportGroup:audio)
 
-def detune (args(cents), range(-1200, 1200), default:0, description:"Detune in cents (Web Audio)", scope(symbol, group, rule, flow), transportGroup:audio)
+def detune (args(cents), range(-1200, 1200), unit:"cents", default:0, description:"Detune in cents (Web Audio)", scope(symbol, group, rule, flow), transportGroup:audio)
 
 // filter · DEFAULT — DEFAUT CORRIGE le 2026-08-08. Il valait 0, HORS de sa propre plage [20,20000]
 // — meme defaut que celui d ins, trouve par le meme produit croise. 0 Hz ne veut rien dire pour
@@ -42,7 +42,7 @@ def detune (args(cents), range(-1200, 1200), default:0, description:"Detune in c
 // audible. ⚠️ Contrairement a ins, ce controle n a AUCUN antecedent dans le moteur d origine (Web
 // Audio) : la valeur n est donc pas mesuree mais RAISONNEE, et elle se corrige si quelqu un mesure
 // mieux.
-def filter (args(freq), range(20, 20000), default:20000, description:"Lowpass filter cutoff Hz (Web Audio)", scope(symbol, group, rule, flow), transportGroup:audio)
+def filter (args(freq), range(20, 20000), unit:"Hz", default:20000, description:"Lowpass filter cutoff Hz (Web Audio)", scope(symbol, group, rule, flow), transportGroup:audio)
 
 def filterQ (args(value), range(0, 30), default:1, description:"Filter resonance Q (Web Audio)", scope(symbol, group, rule, flow), transportGroup:audio)
 

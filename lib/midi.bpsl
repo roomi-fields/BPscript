@@ -153,7 +153,7 @@ def cc (component:number, args(value), range(0, 127), description:"Controleur MI
 // ⚠️ LA VALEUR 0 EST ACCEPTEE PAR LE NATIF ET SUPPRIME LE FLUX CONTINU : un mode continu ecrit avec
 //    une cadence de 0 compile et ne module rien. Le fait est mesure, la declaration appartient a
 //    Romain — je porte le natif, je ne retranche pas de mon propre chef.
-def volumerate (bp3:_volumerate, args(hz), range(0, 1000), description:"Cadence des valeurs intermediaires du continu de volume, en valeurs par seconde. Defaut 50, comme le moteur natif.", scope(symbol, group, rule, flow), transportGroup:midi)
+def volumerate (bp3:_volumerate, args(hz), range(0, 1000), unit:"Hz", description:"Cadence des valeurs intermediaires du continu de volume, en valeurs par seconde. Defaut 50, comme le moteur natif.", scope(symbol, group, rule, flow), transportGroup:midi)
 
 // MODRATE · LA CADENCE DU CONTINU DE MODULATION. Elle se declare parametre par parametre, et vaut
 // CINQUANTE valeurs par seconde sans ecriture -- comme le moteur natif. Decision de Romain du
@@ -168,7 +168,7 @@ def volumerate (bp3:_volumerate, args(hz), range(0, 1000), description:"Cadence 
 // ⚠️ LA VALEUR 0 EST ACCEPTEE PAR LE NATIF ET SUPPRIME LE FLUX CONTINU : un mode continu ecrit avec
 //    une cadence de 0 compile et ne module rien. Le fait est mesure, la declaration appartient a
 //    Romain — je porte le natif, je ne retranche pas de mon propre chef.
-def modrate (bp3:_modrate, args(hz), range(0, 1000), description:"Cadence des valeurs intermediaires du continu de modulation, en valeurs par seconde. Defaut 50, comme le moteur natif.", scope(symbol, group, rule, flow), transportGroup:midi)
+def modrate (bp3:_modrate, args(hz), range(0, 1000), unit:"Hz", description:"Cadence des valeurs intermediaires du continu de modulation, en valeurs par seconde. Defaut 50, comme le moteur natif.", scope(symbol, group, rule, flow), transportGroup:midi)
 
 // PITCHRATE · LA CADENCE DU CONTINU DE HAUTEUR. Elle se declare parametre par parametre, et vaut
 // CINQUANTE valeurs par seconde sans ecriture -- comme le moteur natif. Decision de Romain du
@@ -183,7 +183,7 @@ def modrate (bp3:_modrate, args(hz), range(0, 1000), description:"Cadence des va
 // ⚠️ LA VALEUR 0 EST ACCEPTEE PAR LE NATIF ET SUPPRIME LE FLUX CONTINU : un mode continu ecrit avec
 //    une cadence de 0 compile et ne module rien. Le fait est mesure, la declaration appartient a
 //    Romain — je porte le natif, je ne retranche pas de mon propre chef.
-def pitchrate (bp3:_pitchrate, args(hz), range(0, 1000), description:"Cadence des valeurs intermediaires du continu de hauteur, en valeurs par seconde. Defaut 50, comme le moteur natif.", scope(symbol, group, rule, flow), transportGroup:midi)
+def pitchrate (bp3:_pitchrate, args(hz), range(0, 1000), unit:"Hz", description:"Cadence des valeurs intermediaires du continu de hauteur, en valeurs par seconde. Defaut 50, comme le moteur natif.", scope(symbol, group, rule, flow), transportGroup:midi)
 
 // PRESSRATE · LA CADENCE DU CONTINU DE PRESSION. Elle se declare parametre par parametre, et vaut
 // CINQUANTE valeurs par seconde sans ecriture -- comme le moteur natif. Decision de Romain du
@@ -198,7 +198,7 @@ def pitchrate (bp3:_pitchrate, args(hz), range(0, 1000), description:"Cadence de
 // ⚠️ LA VALEUR 0 EST ACCEPTEE PAR LE NATIF ET SUPPRIME LE FLUX CONTINU : un mode continu ecrit avec
 //    une cadence de 0 compile et ne module rien. Le fait est mesure, la declaration appartient a
 //    Romain — je porte le natif, je ne retranche pas de mon propre chef.
-def pressrate (bp3:_pressrate, args(hz), range(0, 1000), description:"Cadence des valeurs intermediaires du continu de pression, en valeurs par seconde. Defaut 50, comme le moteur natif.", scope(symbol, group, rule, flow), transportGroup:midi)
+def pressrate (bp3:_pressrate, args(hz), range(0, 1000), unit:"Hz", description:"Cadence des valeurs intermediaires du continu de pression, en valeurs par seconde. Defaut 50, comme le moteur natif.", scope(symbol, group, rule, flow), transportGroup:midi)
 
 
 
@@ -229,7 +229,7 @@ def pressrate (bp3:_pressrate, args(hz), range(0, 1000), description:"Cadence de
 
 // RATE · LA CADENCE COMMUNE DES CINQ FLUX CONTINUS. Elle meut volumerate, modrate, pitchrate et
 // pressrate d un seul mot, la ou chacun se regle aussi separement.
-def rate (args(hz), range(0, 1000), description:"Cadence des valeurs intermédiaires de TOUS les flux continus, en émissions par seconde. Règle d'un mot ce que volumerate, modrate, pitchrate et pressrate règlent séparément. Image de SamplingRate au moteur natif.", scope(scene), transportGroup:midi)
+def rate (args(hz), range(0, 1000), unit:"Hz", description:"Cadence des valeurs intermédiaires de TOUS les flux continus, en émissions par seconde. Règle d'un mot ce que volumerate, modrate, pitchrate et pressrate règlent séparément. Image de SamplingRate au moteur natif.", scope(scene), transportGroup:midi)
 
 // VOLUMECONTROL · QUEL CONTROLEUR PORTE LE VOLUME. Le numero est une DONNEE de la scene, plus une
 // valeur ecrite en dur dans un runtime.
