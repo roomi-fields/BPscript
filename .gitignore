@@ -18,3 +18,13 @@ build-web.sh
 .claude/
 .codegraph/
 test/grammars/trySrand/snapshots/
+
+# ⛔ LES ARTEFACTS TRANSITOIRES DES GENERATEURS — ils vivent une fraction de seconde entre
+# l ecriture et le `mv`, et DEUX D ENTRE EUX NAISSENT DANS `src/transpiler/`, une racine que mes
+# voisins lisent en direct. Kanopi mesure mon arbre toutes les quinze secondes : le 2026-08-21 sa
+# fenetre s est bloquee sur `baseline-status.json.tmp`, apparu pile pendant son tir. Un fichier qui
+# n existe que le temps d un `mv` peut arreter un voisin au hasard, et rien ne le rattrape.
+# Les trois noms sont ceux que `package.json` ecrit — cf. le garde `un_artefact_transitoire_ne_se_montre_pas.mjs`.
+baseline-status.json.tmp
+src/transpiler/libs-data.js.tmp
+src/transpiler/libs-data.d.ts.tmp
