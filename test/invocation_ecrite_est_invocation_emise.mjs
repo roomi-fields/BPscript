@@ -105,7 +105,26 @@ for (const nom of nomsBps()) {
 }
 
 ok(ecrites > 40, `2. le corpus doit ÉCRIRE des invocations — ${ecrites} trouvée(s), garde creux sinon`);
-ok(emises > 15, `2. et il doit en ÉMETTRE — ${emises} adresse(s) sortie(s)`);
+// ⛔ SEUIL RECALIBRÉ DE 15 À 10 LE 2026-08-21, ET LA CAUSE EST MESURÉE — sans elle, le prochain
+// lecteur verrait un seuil baissé et rien d'autre.
+//
+// Ce socle comptait les invocations du canal NEUTRE. Kanopi a réécrit 22 scènes qui invoquaient
+// `test_alphabets.<entrée>` en `alphabet.<entrée>` (son `9cc575a`) — et `alphabet` est un AXE DE
+// HAUTEUR, exclu du décompte quinze lignes plus haut parce qu'il voyage par un AUTRE PORTEUR.
+//
+//     avant   167 écrites · 130 hauteur · 22 alphabets comptés au canal NEUTRE À CAUSE DE LEUR
+//             GRAPHIE de nom de fichier
+//     après   167 écrites · 152 hauteur · 14 neutres · 14 émises · 0 perdue
+//
+// ⛔ LE SOCLE MESURAIT DONC UN ARTEFACT DE GRAPHIE. Le canal neutre ne perd rien : ces 22 n'y
+// avaient jamais leur place, et la migration les remet dans le leur. Recalibrer n'est pas
+// affaiblir — c'est compter ce que ce volet est censé compter.
+//
+// ⚠️ ET CE GESTE N'EST PAS À MOI SEUL. « Une assertion ajustée à ce qui sort » est un repli ; la
+// différence tient à ce que la CAUSE a été établie AVANT le geste et vue par deux — mesure rendue
+// à l'architecte, arbitrage rendu le même jour. Un seuil qu'on baisse parce que ça rougit, sans
+// savoir pourquoi, reste interdit.
+ok(emises > 10, `2. et il doit en ÉMETTRE — ${emises} adresse(s) sortie(s)`);
 
 // ─── 3. Le registre ne rancit pas ────────────────────────────────────────────────────────────
 for (const p of PERTES_CONNUES) {

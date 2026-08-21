@@ -158,7 +158,23 @@ for (const [nom, src] of sources) {
       continue;
     }
     if ((a.properties || {}).eval) { voixCode++; continue; }                 // voix-code : légitime
-    if ((o.ast.libRefs || []).length) { opaques++; continue; }               // hauteur opaque : légitime
+    // ⛔ LA PROVENANCE VIT À DEUX ÉTAGES, ET CE LECTEUR N'EN CONNAISSAIT QU'UN.
+    //
+    // `retirerArdoiseAlphabet` retire `properties.alphabet` quand l'acteur porte une adresse :
+    // l'adresse REMPLACE l'ardoise pour l'aval. La raison de sortir sans alphabet est donc la
+    // PRÉSENCE D'UNE ADRESSE — et elle se pose à l'un ou l'autre étage selon la GRAPHIE de
+    // l'invocation, mesuré le 2026-08-21 :
+    //
+    //     test_alphabets.abc1   (nom de fichier)  → `ast.libRefs`          = ["test_alphabets.abc1"]
+    //     alphabet.abc1         (mot, 2e fichier) → `actors[].libRefs`     = ["test_alphabets.abc1"]
+    //     alphabet.western      (mot, 1er fichier) → ni l'un ni l'autre, et `properties.alphabet` reste
+    //
+    // ⚠️ ET CE VOLET A ROUGI SUR UNE MIGRATION LÉGITIME : kanopi a réécrit 22 scènes par le MOT
+    // (son `9cc575a`), la ref est passée d'étage, et ce lecteur a compté 14 acteurs « SANS RAISON »
+    // alors que chacun portait son adresse — au champ d'à côté. Le fait n'avait pas bougé, sa place
+    // si. Un lecteur qui n'interroge qu'un étage conclut à l'absence quand la donnée a déménagé.
+    const adresse = [...(o.ast.libRefs || []), ...(a.libRefs || [])];
+    if (adresse.length) { opaques++; continue; }                             // hauteur opaque : légitime
     sansRaison.push(`${nom} → acteur '${a.name}'`);
   }
 }
