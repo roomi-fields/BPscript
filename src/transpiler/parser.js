@@ -2838,7 +2838,30 @@ function parse(tokens, opts = {}) {
     }
 
     if (name === 'actor') {
-      const actorName = expect(T.IDENT).value;
+      // ⛔ DEUX MOITIÉS D'UN SEUL GESTE — décision de Romain, 2026-08-16 : « déclarer un type et
+      // instancier sont LE MÊME GESTE, et s'écrivent pareil ». Elle les écrit l'une sous l'autre :
+      //     actor basse(out.midi(ch:1))        un exemplaire
+      //     actor midi.actor(ch: required)     une sorte
+      // Les frapper séparément ferait vivre une moitié sans l'autre, ce que le prototypal interdit.
+      //
+      // ⚠️ LA FORME NUE RESTE — `actor basse out.midi(ch:1)` est la seule vivante dans le corpus
+      // (398 acteurs, mesurés au compilateur le 2026-08-22) ; la parenthèse s'ajoute à côté d'elle.
+      //
+      // ⛔ CE QUI N'EST PAS FRAPPÉ ICI, ET C'EST DÉLIBÉRÉ. La décision ne montre pas ce qu'un corps
+      // parenthésé accepte de PLUS qu'un corps nu ; on lui donne donc EXACTEMENT le même lecteur.
+      // Une forme non montrée qui refuse se répare en une ligne ; une forme inventée qui compile
+      // devient la spécification.
+      let actorName = expect(T.IDENT).value;
+      // Le POINT porte la dérivation — `extends` a été effacé pour ça (même décision, « ce qui
+      // s'efface »). Le nom qualifié voyage TEL QUEL dans `name`, comme le langage l'écrit : aucun
+      // champ neuf, donc aucun contrat déplacé chez qui lit l'arbre.
+      while (at(T.PERIOD) && !current().spaceBefore && peek(1).type === T.IDENT) {
+        advance();
+        actorName += `.${advance().value}`;
+      }
+      // La parenthèse porte ce qui appartient à ce qui la précède — ici le corps de l'acteur.
+      const corpsParenthese = at(T.LPAREN);
+      if (corpsParenthese) advance();
       const properties = {};
       const soundAssignments = [];
       // Adressage de sortie : UNE seule forme d'adresse partout (KAI-9, décision
@@ -2921,6 +2944,16 @@ function parse(tokens, opts = {}) {
         // Sauter les NEWLINEs / commentaires : autorisés en v0.8 multi-ligne
         while (at(T.NEWLINE) || at(T.COMMENT)) advance();
 
+        // ⛔ DANS UN CORPS PARENTHÉSÉ, C'EST LA PARENTHÈSE QUI FERME — jamais l'indentation. La
+        // garde d'indentation plus bas existe parce qu'une ligne non indentée termine un bloc nu ;
+        // ici le délimiteur est écrit, et le lui laisser gouverner ferait avaler la parenthèse
+        // fermante par la propriété suivante.
+        if (corpsParenthese && at(T.RPAREN)) break;
+        // « Dans la partie DÉCLARATIVE, seule la virgule sépare » (Romain, 2026-08-19) : elle est
+        // donc admise entre deux propriétés d'un corps parenthésé, sans jamais être exigée — le
+        // corps nu, lui, sépare par l'espace, et il ne change pas.
+        if (corpsParenthese && at(T.COMMA)) { advance(); continue; }
+
         // Affectation `*:sound.X` (défaut acteur)
         if (at(T.STAR) && peek(1).type === T.COLON) {
           advance(); // *
@@ -2958,7 +2991,7 @@ function parse(tokens, opts = {}) {
         // `!at(T.IDENT)` sortait de la boucle. Sans elle, `chromashift` est un IDENT comme une
         // cle d acteur : le bloc l avale, puis casse sur sa valeur negative — « Expected IDENT,
         // got REST ». Le bloc se borne donc comme celui de `def` : par l INDENTATION.
-        if (at(T.IDENT) && current().col === 1 && current().line > tok.line) break;
+        if (!corpsParenthese && at(T.IDENT) && current().col === 1 && current().line > tok.line) break;
         if (!at(T.IDENT)) break;
 
         const key = current().value;
@@ -3081,6 +3114,14 @@ function parse(tokens, opts = {}) {
         // Sortie : token inconnu (probable début de règle)
         break;
       }
+      // Un corps ouvert se referme. Le refus NOMME ce qui manque : sans lui, une parenthèse
+      // oubliée sortirait par « Expected IDENT » sur la ligne suivante, qui n'apprend rien.
+      if (corpsParenthese && !at(T.RPAREN)) {
+        throw new ParseError(
+          `acteur '${actorName}' : le corps ouvert par '(' n'est pas refermé — il manque ')'.`,
+          current());
+      }
+      if (corpsParenthese) advance();
 
       // ENFORCEMENT modèle producteur/canal (décision Romain 2026-07-14 ; chantier hub [419]).
       // Source : hub/decisions/2026-07-14-modele-producteur-canal-eval-transport.md §Le modèle ;

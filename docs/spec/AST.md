@@ -80,7 +80,7 @@ sonner, la scène déclare un acteur avec la sienne.
 ```
 ActorDirective {
   type: "ActorDirective"
-  name: string
+  name: string                    // qualifié quand la déclaration l'écrit — `midi.actor`
   properties: {
     alphabet: string              // la collection de terminaux que l'acteur joue
     tuning: string | null         // l'accordage qui donne une fréquence à chaque degré

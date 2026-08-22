@@ -33,7 +33,12 @@ Le cœur déclaratif tient en quatre mots. Tout le reste s'écrit en invoquant u
 catégorie de réglages.
 
 ```ebnf
-actor_directive = "actor" , IDENT , NEWLINE , actor_key+ ;
+actor_directive = "actor" , actor_name , actor_body ;
+
+actor_name = IDENT , { "." , IDENT } ;            (* basse · midi.actor *)
+
+actor_body = "(" , actor_key , { [ "," ] , actor_key } , ")"   (* corps délimité *)
+           | [ NEWLINE ] , actor_key+ ;                        (* corps ouvert *)
 
 actor_key = ACTOR_KEY , "." , IDENT , [ "(" , kv_pairs , ")" ] ;   (* out.midi(ch:3) *)
 
@@ -43,6 +48,14 @@ ACTOR_KEY = "alphabet" | "tuning" | "octaves" | "out" | "eval" ;
 `actor` déclare **qui joue**. Chacune des cinq clés se lit dans un catalogue ; ce que l'acteur
 n'écrit pas, il l'hérite de la scène. Le point appelle le composant, et les paramètres entre
 parenthèses en donnent l'adresse.
+
+**Le nom porte sa dérivation.** `basse` nomme un exemplaire, `midi.actor` une sorte : le point y
+sépare l'espace de noms du nom, comme partout ailleurs. Les deux s'écrivent pareil — c'est la
+complétude qui les sépare, jamais la forme.
+
+**Le corps se délimite ou s'ouvre.** Entre parenthèses, la virgule sépare deux clés et la
+parenthèse fermante clôt le corps ; sans parenthèses, le corps s'étend jusqu'à la première ligne
+non indentée. Le vocabulaire des clés est le même des deux côtés.
 
 ```ebnf
 declaration_typee = "flag"   , IDENT , "(" , flag_state , { "," , flag_state } , ")"
