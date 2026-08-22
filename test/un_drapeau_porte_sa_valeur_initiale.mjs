@@ -10,9 +10,15 @@
  * production, donc un drapeau jamais affecté vaut `0`. C'est pourquoi les 26 scènes du corpus natif
  * marchent sans déclarer quoi que ce soit. Écrire la valeur dit ce que le moteur faisait en silence.
  *
- * ⛔ C'EST UN AJOUT, ET RIEN NE SORT — c'est le volet B, et il vaut autant que le reste. Les deux
- * formes qui existaient compilent comme avant. Le sort de la forme nue n'est pas tranché : un ajout
- * qui retirerait au passage ferait mourir une forme vivante sans décision.
+ * ⛔ ET C'EST DEVENU LA SEULE FORME LE MÊME JOUR, à deux minutes d'intervalle. Ce banc a été écrit
+ * à 15h quand la valeur s'AJOUTAIT ; son volet B gardait alors « rien ne sort ». À 16h28 Romain a
+ * précisé — « on initie » veut dire que la déclaration PORTE sa valeur —, et à 16h30 les états
+ * nommés sont sortis. Le volet B garde donc l'inverse de ce qu'il gardait : les deux formes qui
+ * vivaient sont REFUSÉES, chacune en nommant celle qui convient.
+ *
+ * ⚠️ IL RESTE, ET IL NE S'INVERSE PAS EN SILENCE : un volet qui passe de « doit compiler » à « doit
+ * refuser » sur les mêmes formes est le seul endroit où l'on voit qu'une décision en a remplacé une
+ * autre. Le retirer effacerait la trace du renversement.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
 
@@ -42,24 +48,28 @@ for (const [decl, attendue] of [['flag steps:0', 0], ['flag steps:5', 5], ['flag
      `A. et sa valeur initiale voyage — ${attendue} attendu. Vue : ${JSON.stringify(r.vt)}`);
 }
 
-// ── B. ⛔ RIEN NE SORT — le témoin qui distingue AJOUTER de REMPLACER ───────────────────────
+// ── B. ⛔ LES DEUX AUTRES FORMES SONT REFUSÉES — et le refus NOMME celle qui convient ────────
 for (const [quoi, decl] of [
   ['la forme NUE',        'flag steps'],
   ['les états nommés',    'flag section(calm:1, full:2)'],
 ]) {
   const r = compiler(decl);
-  ok(r.ok, `B. ${quoi} doit rester vivante — la valeur initiale s'AJOUTE. Reçu : ${r.err}`);
+  ok(!r.ok, `B. ${quoi} doit être REFUSÉE — 'flag <nom>:<entier>' est la seule forme depuis le `
+    + `2026-08-22. Reçu : ${r.ok ? 'ACCEPTÉE' : ''}`);
+  ok(/porte sa valeur initiale/.test(r.err),
+     `B. et le refus de ${quoi} doit NOMMER la forme attendue — un refus muet laisse chercher la `
+     + `faute dans la ligne au lieu de la donner. Reçu : ${r.err.slice(0, 90)}`);
 }
 
 // ── C. ⛔ LE MÊME NŒUD, À LA VALEUR PRÈS ────────────────────────────────────────────────────
 // C'est ce qui interdit la voie parallèle au lieu de la surveiller : si la forme à valeur rendait
 // une autre structure, l'aval devrait lire les deux pour une seule notion.
 {
-  const nu = compiler('flag steps');
   const avec = compiler('flag steps:0');
-  ok(nu.ok && avec.ok, 'C. SOCLE : les deux formes doivent compiler');
-  ok(nu.vt?.kind === 'flag' && avec.vt?.kind === 'flag',
-     `C. les deux rendent kind:'flag'. Vus : ${nu.vt?.kind} et ${avec.vt?.kind}`);
+  const nu = { vt: { kind: 'flag', states: [] } };   // la forme nue N'EXISTE PLUS : on garde sa
+  // structure ATTENDUE en dur pour continuer de vérifier que la valeur n'en fabrique aucune autre.
+  ok(avec.ok, 'C. SOCLE : la forme à valeur doit compiler');
+  ok(avec.vt?.kind === 'flag', `C. elle rend kind:'flag'. Vu : ${avec.vt?.kind}`);
   ok(JSON.stringify(nu.vt?.states) === JSON.stringify(avec.vt?.states),
      `C. et leurs états sont IDENTIQUES — la valeur initiale n'en fabrique aucun. `
      + `Vus : ${JSON.stringify(nu.vt?.states)} vs ${JSON.stringify(avec.vt?.states)}`);
@@ -90,7 +100,7 @@ for (const [quoi, decl] of [
      "E. et un état NOMMÉ reste refusé — la valeur initiale n'en déclare aucun");
 }
 
-const ATTENDU = 1 + 6 + 2 + 4 + 2 + 2;
+const ATTENDU = 1 + 6 + 4 + 4 + 2 + 2;
 ok(passe + echecs.length === ATTENDU,
    `bilan : ${ATTENDU} vérifications attendues, ${passe + echecs.length} exécutées`);
 
@@ -100,5 +110,5 @@ if (echecs.length) {
   process.exit(1);
 }
 console.log(`✅ un drapeau porte sa valeur initiale — elle voyage dans l'arbre, les deux formes qui `
-          + `existaient restent vivantes, le nœud est le même à la valeur près, et une valeur non `
-          + `entière est refusée en nommant les deux écritures. ${passe} vérification(s) passée(s).`);
+          + `vivaient sont REFUSÉES en nommant celle qui convient, aucun état n'est fabriqué, et une `
+          + `valeur non entière est refusée. ${passe} vérification(s) passée(s).`);

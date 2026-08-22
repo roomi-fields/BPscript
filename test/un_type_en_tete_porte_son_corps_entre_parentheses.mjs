@@ -107,9 +107,12 @@ for (const [ligne, nom, clesAttendues] of [
 // Sans eux, un lecteur qui aurait happé le drapeau, la convention ou le module passerait tout
 // ce qui précède en triomphe.
 {
-  const f = lire('flag section(intro:1, drop:2)').vars[0];
-  ok(f?.varType?.kind === 'flag' && f.varType.states?.length === 2,
-    `3. TÉMOIN — le DRAPEAU garde son lecteur propre et ses états — reçu ${JSON.stringify(f?.varType)}`);
+  const f = lire('flag section:1').vars[0];
+  // ⛔ LE DRAPEAU N A PLUS D ETATS DEPUIS LE 2026-08-22 : il porte sa VALEUR INITIALE, et ce témoin
+  // garde ce qu il gardait — que son lecteur reste PROPRE, distinct du corps parenthésé générique.
+  ok(f?.varType?.kind === 'flag' && f.varType.initiale === 1 && f.varType.states?.length === 0,
+    `3. TÉMOIN — le DRAPEAU garde son lecteur propre et porte sa valeur initiale, sans fabriquer `
+    + `d'état — reçu ${JSON.stringify(f?.varType)}`);
   const c = lire('signal grain:0.5').vars[0];
   ok(c?.varType?.kind === 'convention' && c.initial?.[0]?.value === 0.5,
     `3. TÉMOIN — la CONVENTION garde sa valeur de départ collée — reçu ${JSON.stringify(c)}`);

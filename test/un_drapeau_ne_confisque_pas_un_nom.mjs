@@ -32,7 +32,9 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const TETE = 'core\nalphabet.western:midi\n-----\n\n';
+// ⛔ MIGRE LE 2026-08-22 : un drapeau porte sa valeur initiale et n a plus d etats nommes
+// (deux decisions de Romain le meme jour). Les socles de ce banc declarent donc leurs drapeaux.
+const TETE = 'core\nalphabet.western:midi\nflag stage:0\nflag count:1\nflag Ideas:20\nflag zz_drapeau_neuf:0\n-----\n\n';
 const erreursDe = (src) => (compileToBPxAST(src).errors ?? []);
 const refusDeDrapeau = (src) => erreursDe(src).filter((e) => /le drapeau '/.test(String(e.message)));
 
@@ -61,11 +63,15 @@ for (const n of VOLES) {
 
 // ─── 2. LE COMPLÉMENT — les formes légitimes ne bougent pas ──────────────────────────────────
 const LEGITIMES = [
-  ['un nom neuf, muté', `${TETE}S -> C4 [zz_drapeau_neuf=1]\n`],
-  ['un nom neuf, nu (forme vivante du corpus)', `${TETE}S -> C4 [zz_drapeau_neuf]\n`],
+  // ⛔ « UN NOM NEUF » A CHANGÉ DE SENS LE 2026-08-22 : un drapeau se DÉCLARE, donc un nom qui
+  // n'apparaît que dans le flux n'est plus une forme vivante — c'est le refus que la décision de
+  // Romain a demandé. Le volet garde ce qu'il gardait — un nom que rien d'autre ne confisque reste
+  // écrivable — mais sur un drapeau DÉCLARÉ, comme le langage l'exige désormais.
+  ['un nom neuf DÉCLARÉ, muté', `${TETE}S -> C4 [zz_drapeau_neuf=1]\n`],
+  ['un nom neuf DÉCLARÉ, nu', `${TETE}S -> C4 [zz_drapeau_neuf]\n`],
   ['plusieurs mutations dans un sac', `${TETE}S -> C4 [stage=1, count=4]\n`],
   ['une garde devant le membre gauche', `${TETE}[Ideas] S -> C4\n-----\nS -> D4\n`],
-  ['un drapeau déclaré par var, puis muté', 'core\nalphabet.western:midi\nflag section(calm:1, full:2)\n-----\nS -> C4 [section=1]\n'],
+  ['un drapeau déclaré par var, puis muté', 'core\nalphabet.western:midi\nflag section:1\n-----\nS -> C4 [section=1]\n'],
   ['le MÊME drapeau muté dans deux règles', `${TETE}S -> C4 [count-1]\n-----\nS -> D4 [count-1]\n`],
 ];
 for (const [quoi, src] of LEGITIMES) {

@@ -154,22 +154,34 @@ const err = (src) => {
 }
 
 // ── 4. TÉMOIN D'INSTRUMENT ───────────────────────────────────────────────────────────────────
-// ⚠️ CE TÉMOIN A DÉJÀ SERVI, ET C'EST POUR ÇA QU'IL EST ÉCRIT AINSI. Sa première version exigeait
-// que `[zorglub]` soit REFUSÉ — elle a échoué, et cet échec a révélé que le crochet accepte tout
-// mot comme drapeau, donc que ma preuve de la portée `rule` (section 2) était verte pour la
-// mauvaise raison. Un témoin qui rougit n'accuse pas toujours le sujet : ici il accusait la mesure.
-ok(err('-----\nS -> C4 [zorglub]').length === 0,
-   "4. TÉMOIN — le crochet accepte tout mot comme drapeau : c'est CE FAIT qui interdit de lire "
-   + "'[destru] passe' comme une preuve de portée. S'il se met à refuser, le crochet a été "
-   + 'restreint et la section 2 doit être relue.');
-// ⚠️ ET LE SECOND TÉMOIN A MORDU AUSSI, sur la seconde preuve. J'attendais que le modificateur de
-// sous-grammaire VALIDE ses noms — il ne les valide pas : `mode:ord(zorglub)` passe et entre dans
-// l'arbre en `{name:"zorglub"}`. Donc « `mode:ord(destru)` passe » ne prouvait pas davantage que
-// « `[destru]` passe » : les deux graphies acceptent n'importe quel mot.
-// CE QUI EST RÉELLEMENT PROUVÉ DANS CE FICHIER se réduit donc à deux choses, et elles suffisent au
-// geste du jour : `destru` en tête est REFUSÉ (section 2, la portée inventée est bien partie), et
-// le PORTAGE pose le mot sur la sous-grammaire (section 3, la divergence avec bp3-frontend est
-// fermée). Le reste est un constat, pas une preuve, et il est écrit comme tel.
+// ⛔ CE TÉMOIN A SERVI DEUX FOIS, ET LA SECONDE EST LE 2026-08-22 — IL A ANNONCÉ SON PROPRE
+// RENVERSEMENT. Sa première version exigeait que `[zorglub]` soit REFUSÉ ; elle a échoué, et cet
+// échec a révélé que le crochet acceptait ALORS tout mot comme drapeau — donc que la preuve de la
+// portée `rule` (section 2) était verte pour la mauvaise raison. Le témoin a donc été retourné pour
+// GRAVER ce fait, avec sa clause : « s'il se met à refuser, le crochet a été restreint et la
+// section 2 doit être relue ».
+//
+// ⛔ IL S'EST MIS À REFUSER. Un drapeau se déclare depuis le 2026-08-22 (Romain), et `[zorglub]` est
+// refusé en nommant le drapeau manquant. La section 2 est donc relue, et elle GAGNE une preuve
+// qu'elle n'avait pas : `[destru]` passe MAINTENANT pour une raison, celle qu'on voulait montrer —
+// `destru` est un réglage de règle du vocabulaire, pas un mot que le crochet avale.
+ok(err('-----\nS -> C4 [zorglub]').length >= 1,
+   "4. TÉMOIN — le crochet REFUSE désormais un mot qui n'est ni un réglage de règle ni un drapeau "
+   + "déclaré. C'est CE FAIT qui rend '[destru] passe' probant : il ne passe plus par tolérance.");
+ok(err('-----\nS -> C4 [zorglub]').some((m) => /n'est pas déclaré/.test(m)),
+   '4. et son refus NOMME le drapeau manquant — un refus muet laisserait croire que la graphie est '
+   + 'fautive alors que c\'est la déclaration qui manque');
+ok(err('flag zorglub:0\n-----\nS -> C4 [zorglub]').length === 0,
+   '4. COMPLÉMENT — déclaré, le même mot passe. Sans lui, « le crochet refuse » se confondrait avec '
+   + '« le crochet a cessé de lire les drapeaux ».');
+// ⚠️ ET LE SECOND TÉMOIN S'EST RETOURNÉ AVEC LUI. Il constatait que `mode:ord(zorglub)` PASSAIT,
+// donc que « `mode:ord(destru)` passe » ne prouvait rien. Mesuré le 2026-08-22 : il REFUSE
+// maintenant — « 'zorglub' n'est déclaré par aucune librairie ». Les deux graphies sont donc
+// devenues probantes le même jour, sans que ce fichier ait bougé.
+// CE QUI EST PROUVÉ DANS CE FICHIER n'est plus réduit : `destru` en tête est REFUSÉ (section 2), il
+// est ACCEPTÉ là où sa portée le met — et cette acceptation vaut désormais, puisque les deux
+// lecteurs refusent ce qu'ils ne connaissent pas —, et le PORTAGE le pose sur la sous-grammaire
+// (section 3). Ce qui était un constat est devenu une preuve, par un geste étranger à ce fichier.
 // ⚠️ CE TÉMOIN A ROUGI LE JOUR MÊME, ET C'ÉTAIT SON OFFICE. Il exigeait d'abord que
 // `mode:ord(zorglub)` PASSE — c'était l'état : les modificateurs de sous-grammaire n'étaient
 // confrontés à aucune librairie, et j'avais écrit « le jour où il se ferme, ce témoin rougit et la

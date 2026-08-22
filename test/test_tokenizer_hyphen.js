@@ -174,7 +174,12 @@ M <- V A'16-2`;
 // ============================================================
 section('Cas 7 : flag décréments [K1-1] et [A-1] — inchangé');
 {
-  const tokens = toks('[K1-1] Head -> Head a [Atrans, A-1]');
+  // ⛔ LES TROIS DRAPEAUX SE DECLARENT DEPUIS LE 2026-08-22 (Romain) : un drapeau porte sa valeur
+  // initiale, et un nom employe sans declaration est refuse. Ce banc lit le TOKENIZER, mais il
+  // appelle `parse` juste apres — donc sa source doit etre une scene valide, pas une ligne nue.
+  // Les assertions de jetons ne bougent pas : elles cherchent `K1` et `A` parmi les IDENT, et le
+  // tiret parmi les types ; les declarations en ajoutent, elles n en retirent aucun.
+  const tokens = toks('flag K1:0\nflag A:0\nflag Atrans:0\n-----\n[K1-1] Head -> Head a [Atrans, A-1]');
   // ⚠️ CES DEUX ASSERTIONS TESTAIENT LA FORME DU JETON, PAS L'EFFET, et le déplacement du
   // 2026-08-17 est instructif. Elles exigeaient `IDENT("K1-")` — le tokenizer collait alors le
   // tiret suivi d'un alphanumérique. Il ne le colle plus : au natif, un tiret est un SILENCE et
@@ -310,7 +315,11 @@ S -> A (weight:50-12)`;
 // ============================================================
 section('Cas 13 : mohanam réel [Notes-4] + (weight:50-12) — sac déplacé');
 {
+  // `Notes` se declare depuis le 2026-08-22 — `mohanam.bps`, dont ce cas est tire, ecrit
+  // `[Notes=32]` a sa premiere regle ; on prend SA valeur plutot qu un zero qui rendrait
+  // `[Notes-4]` inerte.
   const src = `core
+flag Notes:32
 -----
 [Notes-4] A -> P4 (weight:50-12)`;
   const ast = parse(toks(src));

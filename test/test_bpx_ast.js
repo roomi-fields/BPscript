@@ -50,11 +50,16 @@ function backtickNodes(ast) {
 // 4. flagStates LU depuis `var <nom> flag: ...` (ex-`flag`, tombée le 2026-08-05 — `flag` n'est
 // plus une directive de tête de scène, EBNF.md:29-33 : quatre mots déclaratifs seulement).
 {
-  const r = compileToBPxAST('flag section(calm:1, full:2)\ncore\n-----\nS -> C4');
+  const r = compileToBPxAST('flag section:1\ncore\n-----\nS -> C4');
   const vd = (r.ast.vars || []).find((v) => v.names?.[0] === 'section' && v.varType?.kind === 'flag');
   check(!!vd, "directive var section flag: présente dans l'arbre");
-  const m = Object.fromEntries((vd?.varType?.states || []).map((s) => [s.name, s.value]));
-  check(m.calm === 1 && m.full === 2, 'états lisibles depuis la directive : ' + JSON.stringify(m));
+  // ⛔ LES ETATS NOMMES SONT SORTIS LE 2026-08-22 (Romain). Ce qui se lit depuis la directive est
+  // desormais la VALEUR INITIALE, et la liste d etats reste VIDE — la verifier vide est le complement
+  // qui empeche qu une valeur initiale en fabrique un.
+  check(vd?.varType?.initiale === 1,
+    'valeur initiale lisible depuis la directive : ' + JSON.stringify(vd?.varType));
+  check(JSON.stringify(vd?.varType?.states) === '[]',
+    'et AUCUN etat n est fabrique : ' + JSON.stringify(vd?.varType?.states));
 }
 
 // 5. LA BANQUE D'ÉCHANTILLONS EST LUE SUR L'ACTEUR, PAS SUR UNE DIRECTIVE DE SCÈNE.
@@ -108,22 +113,22 @@ function backtickNodes(ast) {
 // 7. États de drapeau nommés RÉSOLUS dans l'AST (bug BPx G2) : la garde porte l'ENTIER, pas le nom
 // (`var <nom> flag: ...`, ex-`flag` tombée le 2026-08-05)
 {
-  const r = compileToBPxAST('flag section(calm:1, full:2)\n-----\n[section==calm] S -> A\n[section==full] S -> Two\n-----\nA -> C4\nTwo -> C4 C4');
+  const r = compileToBPxAST('flag section:1\n-----\n[section==1] S -> A\n[section==2] S -> Two\n-----\nA -> C4\nTwo -> C4 C4');
   const guards = [];
   for (const sg of r.ast.subgrammars) for (const rule of sg.rules) {
     const gg = Array.isArray(rule.guard) ? rule.guard : (rule.guard ? [rule.guard] : []);
     for (const g of gg) guards.push(g);
   }
-  check(guards.some((g) => g.flag === 'section' && g.value === 1), 'garde [section==calm] résolue à 1 dans l\'AST : ' + JSON.stringify(guards.map((g) => g.value)));
-  check(guards.some((g) => g.flag === 'section' && g.value === 2), 'garde [section==full] résolue à 2 dans l\'AST');
+  check(guards.some((g) => g.flag === 'section' && g.value === 1), 'garde [section==1] portée telle quelle dans l\'AST : ' + JSON.stringify(guards.map((g) => g.value)));
+  check(guards.some((g) => g.flag === 'section' && g.value === 2), 'garde [section==2] portée telle quelle dans l\'AST');
   check(!guards.some((g) => typeof g.value === 'string'), 'aucun nom d\'état non résolu (que des entiers)');
   // ⛔ UN AUTRE DRAPEAU RESTE UNE CHAÎNE — c'est la référence croisée, fidèle BP3. Mais il doit
   // être DÉCLARÉ : ce volet éprouvait 'other', qui n'est ni un état de 'section' ni un drapeau,
   // donc un nom qui ne désigne RIEN. Il certifiait le trou que la décision du 2026-08-20 ferme.
-  const r2 = compileToBPxAST('flag section(calm:1)\nflag autre(x:9)\n-----\n[section==autre] S -> A\n-----\nA -> C4');
+  const r2 = compileToBPxAST('flag section:1\nflag autre:9\n-----\n[section==autre] S -> A\n-----\nA -> C4');
   check(r2.ast.subgrammars[0].rules[0].guard[0].value === 'autre', 'le nom d un AUTRE DRAPEAU déclaré reste une chaîne (réf croisée)');
   // ET SON COMPLÉMENT : un nom qui ne désigne rien est REFUSÉ — l'incomplétude se refuse à l'usage.
-  const r3 = compileToBPxAST('flag section(calm:1)\n-----\n[section==other] S -> A\n-----\nA -> C4');
+  const r3 = compileToBPxAST('flag section:1\n-----\n[section==other] S -> A\n-----\nA -> C4');
   check((r3.errors || []).length > 0, 'un nom qui n est ni un état ni un drapeau est REFUSÉ');
 }
 

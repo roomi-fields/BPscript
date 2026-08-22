@@ -69,7 +69,9 @@ function valeurExemple(spec) {
   return '3';
 }
 
-const compile = (src) => compileToBPxAST(`core\nalphabet.western:audio\n-----\n\n${src}\n`);
+// ⛔ MIGRE LE 2026-08-22 : un drapeau porte sa valeur initiale et n a plus d etats nommes
+// (deux decisions de Romain le meme jour). Les socles de ce banc declarent donc leurs drapeaux.
+const compile = (src) => compileToBPxAST(`core\nalphabet.western:audio\nflag stage:1\nflag etape:0\nflag zz_drapeau_neuf:0\n-----\n\n${src}\n`);
 
 let cellules = 0;
 // ⚠️ FILTRÉ PAR LA PORTÉE le 2026-08-08. Ce garde mesure que les DEUX SIGNES mènent au même

@@ -94,12 +94,20 @@ for (const [quoi, scene] of [
      + 'départ seraient la voie parallèle qu\'on s\'interdit. `init` garde le code lancé une fois.');
 }
 
-// ─── 4. LE DRAPEAU N'EST PAS TOUCHÉ — témoin, pas évidence ───────────────────────────────────
+// ─── 4. ⛔ LE DRAPEAU A CHANGÉ DE CÔTÉ LE 2026-08-22, ET CE VOLET GARDE L'INVERSE ─────────────
+// Il gardait que le deux-points d'un drapeau n'initialise RIEN — il venait après le mot `flag` et
+// séparait un état de sa valeur. Les états sont sortis (Romain), et le deux-points y porte
+// désormais la VALEUR INITIALE. Le volet reste, retourné : c'est le seul endroit où l'on voit que
+// ce signe a changé de rôle sur ce mot-là, et non qu'on l'a simplement oublié.
+// ⚠️ ET IL NE SE CONFOND PAS AVEC LA VALEUR DE DÉPART DES AUTRES SORTES : celles-ci la portent dans
+// `initial`, le drapeau dans `varType.initiale`. Deux champs, deux mécanismes — le volet le dit.
 {
-  const v = varsDe('flag section(calm:1, full:2)');
-  ok(!v.erreur && v.varType?.kind === 'flag' && v.varType.states.length === 2 && !('initial' in v),
-     '4. `flag section(calm:1, full:2)` : le deux-points du drapeau vient APRÈS le mot `flag` '
-     + `et ne doit RIEN initialiser (reçu ${JSON.stringify(v.varType)}, initial=${JSON.stringify(v.initial)})`);
+  const v = varsDe('flag section:1');
+  ok(!v.erreur && v.varType?.kind === 'flag' && v.varType.initiale === 1
+     && v.varType.states.length === 0 && !('initial' in v),
+     '4. `flag section:1` : le deux-points du drapeau porte sa VALEUR INITIALE dans `varType`, '
+     + `jamais dans le champ 'initial' des autres sortes, et il ne fabrique aucun état `
+     + `(reçu ${JSON.stringify(v.varType)}, initial=${JSON.stringify(v.initial)})`);
 }
 
 // ─── 5. CHAQUE NOM D'UNE LISTE PORTE LA SIENNE ───────────────────────────────────────────────

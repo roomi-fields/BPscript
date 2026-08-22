@@ -346,7 +346,7 @@ const CE_QUI_VIT = [
   ['le canal d\'un alphabet',     `core\nalphabet.western:audio\n-----\nS -> C4\n`],
   ['une sortie de scène',         `${T}out.midi(ch:1)\n-----\nS -> C4\n`],
   ['un acteur et ses clés',       `core\nactor v\n  alphabet.sargam\n  out.audio\n-----\nS -> sa\n`],
-  ['le type en tête',             `${T}flag section(intro:1, drop:2)\n-----\nS -> C4\n`],
+  ['le type en tête',             `${T}flag section:1\n-----\nS -> C4\n`],
   ['un symbole déclaré',          `${T}symbol x\n-----\nS -> C4 x\n`],
   ['une instance de module',      `${T}lfo osc1\n-----\nS -> C4\n`],
   ['une table d\'homomorphisme',  `core\nhomomorphism.dhati\n-----\nS -> C4\n`],

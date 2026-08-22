@@ -39,20 +39,39 @@ const CONVENTIONS = schema.varConventions || [];
 ok(TYPES.length > 0, 'core.schema.declarationTypes doit être peuplé — sans lui le garde examine zéro');
 ok(CONVENTIONS.length > 0, 'core.schema.varConventions doit être peuplé — sans lui le garde examine zéro');
 
+// ⛔ `flag` EST SORTI DE CETTE MATRICE LE 2026-08-22, ET IL EST LE SEUL. Deux décisions de Romain le
+// même jour lui donnent UNE forme et une seule — `flag <nom>:<entier>` — donc ni la forme nue ni la
+// parenthèse ne valent pour lui. Le laisser dans la boucle ferait rougir un garde sur une décision
+// rendue ; l'en retirer SANS LE DIRE ferait croire qu'il suit la règle des autres.
+// ⚠️ IL EST DONC ÉPROUVÉ À PART, juste en dessous, avec ce qui lui est propre.
+const TYPES_A_PARENTHESE = TYPES.filter((t) => t !== 'flag');
+ok(TYPES_A_PARENTHESE.length === TYPES.length - 1,
+   `SOCLE : 'flag' doit être dans declarationTypes pour en être retiré ici — sinon cette exclusion `
+   + `porte sur rien et la matrice se croit complète. Vus : ${JSON.stringify(TYPES)}`);
+
 // ── A. UN TYPE PORTE SON TYPE EN FORME NUE — la faute d'origine, primitive par primitive ─────────
-for (const t of TYPES) {
+for (const t of TYPES_A_PARENTHESE) {
   const nu = lire(`${t} truc`);
   ok(nu.erreurs.length === 0, `A. '${t} truc' doit COMPILER — la parenthèse absente vaut parenthèse vide`);
-  const porte = t === 'flag' ? nu.v?.varType?.kind === 'flag' : nu.v?.varType?.type === t;
-  ok(porte, `A. '${t} truc' doit porter son type — reçu ${JSON.stringify(nu.v?.varType)}`);
+  ok(nu.v?.varType?.type === t, `A. '${t} truc' doit porter son type — reçu ${JSON.stringify(nu.v?.varType)}`);
 }
 
 // ── B. ET LA FORME AVEC PARENTHÈSE PORTE LE MÊME — sinon la forme nue serait un régime à part ────
-for (const t of TYPES) {
+for (const t of TYPES_A_PARENTHESE) {
   const avec = lire(`${t} truc (x:1)`);
   ok(avec.erreurs.length === 0, `B. '${t} truc (x:1)' doit COMPILER`);
-  const porte = t === 'flag' ? avec.v?.varType?.kind === 'flag' : avec.v?.varType?.type === t;
-  ok(porte, `B. '${t} truc (x:1)' doit porter le MÊME type que sa forme nue — reçu ${JSON.stringify(avec.v?.varType)}`);
+  ok(avec.v?.varType?.type === t,
+     `B. '${t} truc (x:1)' doit porter le MÊME type que sa forme nue — reçu ${JSON.stringify(avec.v?.varType)}`);
+}
+
+// ── B-bis. ⛔ `flag` A UNE SEULE FORME, ET LES DEUX AUTRES SONT REFUSÉES ──────────────────────────
+{
+  const avec = lire('flag truc:1');
+  ok(avec.erreurs.length === 0, `B-bis. 'flag truc:1' doit COMPILER — reçu ${JSON.stringify(avec.erreurs[0])}`);
+  ok(avec.v?.varType?.kind === 'flag' && avec.v?.varType?.initiale === 1,
+     `B-bis. et porter sa valeur initiale — reçu ${JSON.stringify(avec.v?.varType)}`);
+  ok(lire('flag truc').erreurs.length >= 1, "B-bis. 'flag truc' NU doit être refusé");
+  ok(lire('flag truc (x:1)').erreurs.length >= 1, "B-bis. 'flag truc (x:1)' doit être refusé");
 }
 
 // ── C. UNE CONVENTION EST UNE AUTRE FAMILLE — elle se déclare nue, et refuse la parenthèse ───────
@@ -69,7 +88,9 @@ ok(lire('zorglubinvente truc').erreurs.length > 0, "D. TÉMOIN — un mot qui ne
 ok(lire('zorglubinvente truc (x:1)').erreurs.length > 0, "D. TÉMOIN — et refusé avec un corps");
 
 // ⛔ Le compte se dérive de la donnée, il ne s'écrit pas : une primitive ajoutée l'augmente d'elle-même.
-const ATTENDU = 2 + TYPES.length * 4 + CONVENTIONS.length * 2 + 2;
+// ⛔ LE COMPTE SUIT LA SORTIE DE `flag` : ses deux lignes quittent les volets A et B (donc
+// -2 × 2 = -4) et son volet propre en apporte QUATRE, plus le socle qui prouve l'exclusion.
+const ATTENDU = 2 + TYPES.length * 4 + CONVENTIONS.length * 2 + 2 - 4 + 4 + 1;
 ok(p + e.length === ATTENDU, `le garde doit couvrir les ${TYPES.length} types et les ${CONVENTIONS.length} conventions — ${p + e.length} cas au lieu de ${ATTENDU}`);
 
 if (e.length) { console.error(`[primitives] ${e.length} ÉCHEC(S) :`); for (const x of e) console.error('  ✗ ' + x); process.exit(1); }

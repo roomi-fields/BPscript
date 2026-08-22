@@ -35,7 +35,9 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const P = 'core\nalphabet.western\n-----\n';
+// ⛔ LE SOCLE DECLARE SON DRAPEAU DEPUIS LE 2026-08-22 : un drapeau porte sa valeur initiale, et
+// un nom employe sans declaration est refuse. Un des cas de ce banc mute `stage`.
+const P = 'core\nalphabet.western\nflag stage:0\n-----\n';
 const compiler = (rhs) => {
   // Une règle SUIVANTE est indispensable : le premier défaut ne se voyait QUE lorsqu'un jeton
   // suivait la fin de ligne. Mesurer une règle seule en fin de fichier l'aurait manqué.
@@ -60,7 +62,7 @@ const CAS = [
   // [ce qu'on écrit, nombre de sacs DANS LE FLUX attendu, pourquoi]
   ['S -> C4 D4 (vel:80)',                      0, 'fin de règle nue → suffixe'],
   ['S -> C4 D4 (vel:80)  // un commentaire',   0, 'fin de règle + commentaire → suffixe'],
-  ['S -> C4 D4 (vel:80) [stage=1]',            0, 'fin de règle + mutation de drapeau → suffixe'],
+  ['S -> C4 D4 (vel:80) [stage=1]',            0, 'fin de règle + mutation de drapeau → suffixe'],  // socle : `flag stage:0`
   ['S -> C4 D4 (vel:80) (pan:20)',             0, 'DEUX sacs chaînés en fin → deux suffixes'],
   ['S -> C4 D4 (vel:80) (pan:20) (weight:50)', 0, 'TROIS sacs chaînés en fin → trois suffixes'],
   ['S -> C4 (vel:80) D4',                      1, 'au milieu → posé dans le flux'],

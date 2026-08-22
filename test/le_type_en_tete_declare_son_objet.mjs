@@ -43,10 +43,11 @@ const vd = (r) => (r.ast?.vars || [])[0] || null;
 
 // ─── 1. LES HUIT FORMES DE LA RÉFÉRENCE COMPILENT, ET LE NŒUD PRODUIT CORRESPOND À AST.md ────
 const FORMES = [
-  ['flag section(calm:1, full:2)', 'un drapeau et ses états nommés',
+  ['flag section:1', 'un drapeau et sa valeur initiale',
     (n) => n?.names?.[0] === 'section'
       && n?.varType?.kind === 'flag'
-      && JSON.stringify(n.varType.states) === JSON.stringify([{ name: 'calm', value: 1 }, { name: 'full', value: 2 }])],
+      && n?.varType?.initiale === 1
+      && JSON.stringify(n.varType.states) === '[]'],
   ['in.keyboard touches', 'une entrée (déjà portée — InDirective, hors `ast.vars`)',
     null, (r) => (r.ast?.inputs || []).some((i) => i.name === 'touches' && i.transport === 'keyboard')],
   ['signal grain', 'la convention signal',

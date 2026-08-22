@@ -35,12 +35,12 @@ const SORTES = [
   // Décision Romain 2026-07-30 (`hub/decisions/2026-07-30-trois-arbitrages-nature-fabrique-
   // drapeaux.md`) : un drapeau CRÉE un nom, comme les quatre sortes ci-dessus — c'était un TROU,
   // pas un espace séparé légitime.
-  ['un drapeau',             (n) => `flag ${n}(a:1, b:2)`],
+  ['un drapeau',             (n) => `flag ${n}:1`],
 ];
 const CE_QUI_EST_DEJA_PRIS = [
   ['un TERMINAL de l\'alphabet', 'G4', (poseur) => `core\nalphabet.western\n${poseur}\n-----\nS -> C4 D4`],
   ['une DÉFINITION déjà déclarée', 'pris', (poseur) => `core\ndef pris C4 D4\n${poseur}\n-----\nS -> C4`],
-  ['un DRAPEAU déjà déclaré',    'pris', (poseur) => `core\nflag pris(a:1, b:2)\n${poseur}\n-----\nS -> C4`],
+  ['un DRAPEAU déjà déclaré',    'pris', (poseur) => `core\nflag pris:1\n${poseur}\n-----\nS -> C4`],
 ];
 console.log(`[un seul espace de noms] ${SORTES.length} sortes × ${CE_QUI_EST_DEJA_PRIS.length} conflits`);
 for (const [sorte, ligne] of SORTES) {
@@ -61,7 +61,7 @@ const TETES_REFUSEES = [
   // réécrit un terminal : elle en a forcément un en tête, et « la note devient inatteignable » est
   // ce qu'elle fait EXPRÈS. Elles sont désormais au lot B, celui de ce qui DOIT passer.
   ['contre une définition', 'core\ndef motif C4 D4\n-----\nmotif -> C4'],
-  ['contre un drapeau',   'core\nflag motif(a:1, b:2)\n-----\nmotif -> C4'],
+  ['contre un drapeau',   'core\nflag motif:1\n-----\nmotif -> C4'],
   // L'AMALGAME acteur / tête de règle — l'erreur grave tranchée par Romain le 2026-07-28.
   ['contre un ACTEUR (l\'amalgame)', 'core\nactor viz  eval.hydra\n-----\nS -> viz\nviz -> `hydra: osc(4).out()`'],
   ['contre un acteur de notes',      'core\nalphabet.western\nactor v\n  alphabet.western\n  out.audio\n-----\nS -> v\nv -> C4 D4'],
@@ -133,9 +133,9 @@ const DOIVENT_PASSER = [
   // drapeau LUI-MÊME (`section`) ; ses ÉTATS (`calm`, `full`…) sont des étiquettes internes, pas
   // des noms globaux — les y faire entrer déborderait la règle.
   ['un ÉTAT de drapeau qui porte le nom d\'un terminal : ce n\'est pas un nom global',
-   'core\nalphabet.western\nflag section(C4:1, D4:2)\n-----\nS -> C4'],
+   'core\nalphabet.western\nflag section:1\n-----\nS -> C4'],
   ['un drapeau LU plusieurs fois en garde : une lecture ne crée rien',
-   'core\nalphabet.simple\nflag section(calm:1, full:2)\n[section==calm] S -> X\n'
+   'core\nalphabet.simple\nflag section:1\n[section==1] S -> X\n'
    + '[section==full] S -> X\n[section==calm] X -> a'],
 ];
 for (const [quoi, src] of DOIVENT_PASSER) {
