@@ -289,16 +289,16 @@ pitch hauteur:C4
 symbol a:1, b:2
 ```
 
-Chaque nom d'une liste porte la sienne. Le deux-points d'un drapeau suit le mot `flag` et enumere
-ses etats ; celui d'une valeur de depart suit le nom. Une valeur commence par un tiret bas quand elle
-nomme un geste du moteur natif.
+Chaque nom d'une liste porte la sienne. Le deux-points d'un drapeau suit son nom et porte sa valeur
+initiale, comme celui d'une valeur de depart. Une valeur commence par un tiret bas quand elle nomme
+un geste du moteur natif.
 
 Un type porte son corps entre parentheses. Le corps est un sac de reglages : des couples, des membres
 nus, et des parentheses qui descendent d'un niveau.
 
 | type          | ce que la variable porte                                                                        |
 | ------------- | ----------------------------------------------------------------------------------------------- |
-| `flag`        | un etat entier, avec ses valeurs nommees ; les regles s'y conditionnent                         |
+| `flag`        | un entier, avec sa valeur initiale ; les regles s'y conditionnent par un entier                |
 | `in`          | une valeur qui vient du dehors : un **role**, son canal, sa table de correspondance             |
 | `signal`      | un flux de nombres, sans convention de lecture — le cas ordinaire                               |
 | `pitch`       | un signal lu comme une **hauteur**                                                              |

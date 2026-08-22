@@ -133,7 +133,7 @@ VarDirective {
 }
 
 VarType =
-    { kind: "flag",       states: { name: string, value: number }[] }
+    { kind: "flag",       initiale: number, states: [] }
   | { kind: "in",         channel: "midi" | "osc" | "keyboard" }
   | { kind: "convention", convention: "signal" | "pitch" | "phase" | "logic" }
   | { kind: "module",     module: string }
@@ -147,14 +147,15 @@ aucune valeur, et il porte une entrée par nom qui en écrit une — `symbol a:1
 
 | type          | ce que la variable porte                                                            |
 | ------------- | ----------------------------------------------------------------------------------- |
-| `flag`        | un état entier, avec ses valeurs nommées ; les règles s'y conditionnent             |
+| `flag`        | un entier, avec sa valeur initiale ; les règles s'y conditionnent par un entier     |
 | `in`          | une valeur qui vient du dehors : un **rôle**, et le canal qui l'apporte             |
 | `convention`  | un flux de nombres, et la façon dont le récepteur le lit                            |
 | `module`      | une **instance** de ce module — elle ne porte aucun corps propre                    |
 | *(aucun)*     | un symbole du flux qui n'est ni une note ni un nom de règle                         |
 
-Un flag déclare ses états en même temps que lui-même, et l'encodeur résout ensuite les noms en
-entiers. Une entrée nomme un **rôle** ; l'appareil qui le remplit s'y associe hors de la scène.
+Un flag porte sa valeur initiale en même temps que lui-même, et une règle s'y conditionne par un
+entier. Le champ `states` reste dans le contrat, TOUJOURS VIDE : un consommateur qui le lisait avant
+le 2026-08-22 continue de le lire sans casser, et sa vacuité dit que rien ne le remplit plus. Une entrée nomme un **rôle** ; l'appareil qui le remplit s'y associe hors de la scène.
 
 **Une variable sans type porte la nature `var` dans le flux.** L'aval la porte opaquement, et la
 résolution la laisse telle quelle.
