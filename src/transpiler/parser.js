@@ -5573,6 +5573,26 @@ function parse(tokens, opts = {}) {
           parts.push(advance().value);
         }
         const brut = parts.join('');
+        // ⛔ `required` ET `many` SONT SORTIS DU LANGAGE — décision de Romain, 2026-08-20 :
+        // « ni l'un ni l'autre ne s'écrit : les deux se lisent de la forme ». L'obligation se lit de
+        // l'ABSENCE de défaut, la multiplicité de l'EXEMPLAIRE.
+        //
+        // ⚠️ SANS CE REFUS, ILS PASSAIENT COMME UNE VALEUR ORDINAIRE : `scope:required` produisait un
+        // membre dont la valeur est la chaîne « required », et l'auteur écrivait une forme qu'il
+        // croyait vivante sans que rien ne le détrompe. Un mot retiré qui reste lisible comme une
+        // chaîne quelconque est le pire des retraits : il n'a pas de pierre tombale.
+        //
+        // ⛔ ET LE REFUS EST BORNÉ À LA VALEUR D'UN MEMBRE DÉCLARATIF, jamais au mot partout — il
+        // interdirait sinon un mot anglais dans une prose, et la donnée en porte déjà un cas
+        // (« many » dans la note sur les makams turcs). Le flux n'est pas touché.
+        if (enDeclaratif && (brut === 'required' || brut === 'many')) {
+          throw new ParseError(
+            `'${key}:${brut}' : '${brut}' est SORTI du langage (décision Romain, 2026-08-20) — `
+            + `l'obligation se lit de l'ABSENCE de défaut, la multiplicité de l'EXEMPLAIRE. `
+            + `Écrire '${key}' seul pour un membre obligatoire, ou '${key}()' pour une collection `
+            + `obligatoire ; une valeur donnée après ':' en fait un membre optionnel dont elle est `
+            + `le défaut.`, current());
+        }
         if (elementAvale) {
           throw new ParseError(
             `'(${key}:${brut} ${elementAvale.value}…)' : '${key}' n'attend qu'UNE valeur, donc `
