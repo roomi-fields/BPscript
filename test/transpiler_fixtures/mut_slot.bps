@@ -1,5 +1,6 @@
 // Mutation en fin de règle : occupe-t-elle un slot temporel ?
 core
+flag count
 -----
 mode:ord
 S -> Sa Re [count=2]

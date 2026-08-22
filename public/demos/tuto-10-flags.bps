@@ -11,6 +11,7 @@
 core
 alphabet.western:audio
 
+flag count
 -----
 S -> Loop [count=4]
 

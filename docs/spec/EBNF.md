@@ -58,7 +58,7 @@ parenthèse fermante clôt le corps ; sans parenthèses, le corps s'étend jusqu
 non indentée. Le vocabulaire des clés est le même des deux côtés.
 
 ```ebnf
-declaration_typee = "flag"   , IDENT , "(" , flag_state , { "," , flag_state } , ")"
+declaration_typee = "flag"   , IDENT , [ "(" , flag_state , { "," , flag_state } , ")" ]
                   | "in" , "." , IN_CHANNEL , IDENT , [ "mapping" , "." , IDENT ]
                   | "symbol" , nom_pose , { "," , nom_pose }
                   | CONVENTION , nom_pose
