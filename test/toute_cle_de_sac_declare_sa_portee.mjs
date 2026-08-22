@@ -211,11 +211,15 @@ for (const [racine, attendu] of Object.entries(PAR_DESTINATAIRE)) {
 //   engine 22 → 23 le 2026-08-21 : `resetweights` entre, sur décision de Romain
 //     (`trois-reglages-natifs-trouvent-leur-domicile`). Il vit ici parce que c'est la génération de
 //     la structure qui le consomme — auprès de `weight`, dont il remet la valeur.
-ok(CLES.filter((c) => c.source.startsWith('engine.')).length === 23,
+//   engine 23 → 24 le 2026-08-22 : `keepweights` entre, sur GO de Romain (« ok pour le contraire »).
+//     Son objection — un reset est une ACTION, pas un état — est tombée sur la mesure du natif :
+//     `ScriptUtils.c:1628-1637` porte les DEUX cas, OFF et ON. La règle des paires n'a plus
+//     d'exception, et ce compte est ce qui le tient.
+ok(CLES.filter((c) => c.source.startsWith('engine.')).length === 24,
    `C. ${CLES.filter((c) => c.source.startsWith('engine.')).length} contrôles balayés sous `
-   + `'engine.', 23 attendus (les procédures moteur rapatriées de lib/controls.json, plus `
+   + `'engine.', 24 attendus (les procédures moteur rapatriées de lib/controls.json, plus `
    + `'articulcont' — le mode continu suit son paramètre, et 'legato'/'staccato' vivent ici — `
-   + `plus 'resetweights').`);
+   + `plus la paire 'resetweights'/'keepweights').`);
 ok(CLES.filter((c) => c.source.startsWith('modulation.')).length === 0,
    `C. ${CLES.filter((c) => c.source.startsWith('modulation.')).length} entrée(s) de modulation `
    + `balayée(s) — ZÉRO attendu depuis l'archivage du 2026-08-22. Un compte NON NUL ici veut dire `
