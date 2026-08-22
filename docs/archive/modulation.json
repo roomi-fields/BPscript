@@ -1,6 +1,5 @@
 {
-  "resolves": "modulation",
-  "_resolves_doc": "LE MOT QUI INVOQUE CETTE LIBRAIRIE, ÉCRIT AU LIEU D'ÊTRE DÉDUIT. Sans ce champ le chargeur retombe sur le NOM DU FICHIER, et le préfixe ne résout pas : mesuré avant l'écriture, '(modulation.cutoff:4000)' était REFUSÉ alors que '(cutoff:4000)' compilait. Le mot nu marchait, le mot préfixé non — c'est ce que ce champ répare.",
+  "_archive": "ARCHIVEE le 2026-08-22 (decision de Romain) : remplacee par FaustX. Elle ne fait autorite sur rien et n'est chargee par personne — elle a quitte lib/, que le bundle balaie. Sa cle `resolves` est retiree avec elle : une archive ne declare plus le mot qui l'invoque. Ses cinq entrees etaient les cibles ou un CV se branchait au point de parametre ; le sujet `cv` est sorti du langage le 2026-08-19. La validation des branchements est inscrite au backlog central sous LAN-48, a refaire quand FaustX ouvrira.",
   "resolvedBy": "runtime-audio",
   "audio": {
     "cutoff": {

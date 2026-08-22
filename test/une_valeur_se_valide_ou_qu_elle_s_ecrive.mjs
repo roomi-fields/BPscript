@@ -17,18 +17,20 @@
  * ne mordaient nulle part. Des plages déclarées qui ne validaient rien sont pires qu'une absence :
  * elles font croire que la valeur est gardée.
  *
- * ═══ B. DEUX CONCEPTS, UN NOM, DEUX TABLES
+ * ═══ B. UN NOM, UNE SEULE TABLE — ET SA PORTÉE NE SE DESSERRE PAS
  *
- * `pan` est écrit deux fois dans le vocabulaire : une VALEUR qu'on écrit (`!(pan:64)`, contrôle
- * 0..127) et une CIBLE où un CV se branche (`(pan: env1)`, entrée de modulation −1..1). La table
+ * `pan` a été écrit deux fois dans le vocabulaire : une VALEUR qu'on écrit (`!(pan:64)`, contrôle
+ * 0..127) et une CIBLE où un CV se branchait (`(pan: env1)`, entrée de modulation −1..1). La table
  * des portées les confondait, et la boucle des modulations passant en dernier, l'entrée ÉCRASAIT
- * le contrôle. Résultat mesuré : `pan` avait reçu `scene` dans sa déclaration, sur arbitrage de
- * Romain, et `pan:64` restait refusé en récitant les places de l'AUTRE `pan`.
+ * le contrôle : `pan` avait reçu `scene` dans sa déclaration, sur arbitrage de Romain, et `pan:64`
+ * restait refusé en récitant les places de l'AUTRE `pan`.
  *
- * ⛔ CE QUE CE GARDE TIENT, ET SON COMPLÉMENT. Il ne suffit pas que `pan:64` passe : il faut aussi
- * qu'un nom qui n'appartient QU'aux modulations garde SA portée. Sinon la séparation serait un
- * desserrage — tout deviendrait écrivable partout, et le garde serait vert en décrivant un langage
- * plus large que le vrai.
+ * ⛔ L'HOMONYME A DISPARU LE 2026-08-22 avec l'archivage de la librairie des modulations — CE QUE
+ * CE GARDE TIENT N'A PAS CHANGÉ POUR AUTANT. Il ne suffit pas que `pan:64` passe : il faut qu'un
+ * nom dont la portée EXCLUT la tête de scène continue d'y être refusé. Sinon la table unique
+ * serait un desserrage — tout deviendrait écrivable partout, et le garde serait vert en décrivant
+ * un langage plus large que le vrai. Le complément est donc porté par `panrate`, qui déclare les
+ * quatre places sans la scène.
  *
  * INJECTION dans le JUGE, et dans l'ACCUSÉ pour chacune des deux corrections.
  */
@@ -98,31 +100,41 @@ for (const mot of ['pan', 'vel', 'volume']) {
 // ── B2. LE COMPLÉMENT — un nom PROPRE aux modulations garde SA portée ───────────────────────
 // Sans ce volet, séparer les tables aurait pu rendre tout écrivable partout, et B1 serait vert
 // pour la mauvaise raison.
-ok(horsPortee('core\ncutoff:400\n-----\nS -> C4\n').length > 0,
-   "B2. 'cutoff' n'appartient QU'aux entrées de modulation : sa portée doit continuer de refuser "
-   + 'la tête de scène. La séparation donne le dernier mot au contrôle, elle ne supprime pas la '
-   + 'portée des modulations.');
-ok(erreursDe('core\n-----\nS -> C4(cutoff:400)\n').length === 0,
-   "B2. et 'cutoff' doit rester écrivable là où sa portée l'autorise");
+ok(horsPortee('core\npanrate:64\n-----\nS -> C4\n').length > 0,
+   "B2. 'panrate' déclare quatre places SANS la scène : sa portée doit continuer d'y refuser son "
+   + "écriture. Une table unique donne le dernier mot au contrôle, elle ne desserre aucune portée. "
+   + "(Ce volet portait sur 'cutoff' jusqu'au 2026-08-22 ; son mot est parti avec sa librairie, "
+   + 'la question qu\'il posait est restée.)');
+ok(erreursDe('core\n-----\nS -> C4(panrate:64)\n').length === 0,
+   "B2. et 'panrate' doit rester écrivable là où sa portée l'autorise");
 
 // ── B3. LES DEUX FAMILLES SONT TENUES SÉPARÉMENT DANS LA DONNÉE ─────────────────────────────
 {
   const { LIBS } = await import('../src/transpiler/libs-data.js');
   const controle = LIBS.expression?.controls?.pan;
-  let entree = null;
-  for (const [type, e] of Object.entries(LIBS.modulation || {})) {
-    if (type.startsWith('_') || !e || typeof e !== 'object') continue;
-    if (e.pan) entree = e.pan;
-  }
-  ok(controle && entree,
-     "B3. SOCLE : les deux `pan` doivent exister — le contrôle et l'entrée de modulation. Si l'un "
-     + 'disparaît, ce garde ne mesure plus la collision qu\'il existe pour tenir.');
+  // QUI D'AUTRE PORTE LE NOM `pan` AVEC UNE PORTÉE ? On balaie TOUTE la donnée, sans nommer un
+  // fichier : c'est ce balayage qui ferait crier le retour d'un homonyme, pas une liste écrite ici.
+  const autresPorteurs = [];
+  const descendre = (nomLib, o, prof) => {
+    if (!o || typeof o !== 'object' || prof > 4) return;
+    for (const [k, v] of Object.entries(o)) {
+      if (k === 'pan' && v && typeof v === 'object' && Array.isArray(v.scope) && v !== controle) {
+        autresPorteurs.push(`${nomLib} → ${JSON.stringify(v.scope)}`);
+      }
+      if (v && typeof v === 'object') descendre(nomLib, v, prof + 1);
+    }
+  };
+  for (const [nomLib, lib] of Object.entries(LIBS)) descendre(nomLib, lib, 0);
+  ok(controle,
+     "B3. SOCLE : le CONTRÔLE `pan` doit exister. S'il disparaît, ce garde ne mesure plus rien — "
+     + 'et son silence ressemblerait à un succès.');
   ok(controle && Array.isArray(controle.scope) && controle.scope.includes('scene'),
      `B3. le CONTRÔLE 'pan' doit déclarer la tête de scène — arbitrage de Romain. Vu : `
      + `${JSON.stringify(controle && controle.scope)}`);
-  ok(entree && Array.isArray(entree.scope) && !entree.scope.includes('scene'),
-     `B3. l'ENTRÉE DE MODULATION 'pan' ne la déclare PAS — et c'est bien elle qui écrasait l'autre. `
-     + `Vue : ${JSON.stringify(entree && entree.scope)}`);
+  ok(autresPorteurs.length === 0,
+     `B3. AUCUNE autre source ne doit porter 'pan' AVEC UNE PORTÉE : l'homonyme est parti le `
+     + `2026-08-22 avec la librairie des modulations, et c'était LUI qui écrasait le contrôle. Son `
+     + `retour doit crier ici avant de casser une tête de scène. Vu : ${JSON.stringify(autresPorteurs)}`);
 }
 
 // ── C. INJECTION DANS LE JUGE — les deux décisions rejouées isolées ──────────────────────────
@@ -133,15 +145,13 @@ ok(jugerPlage(0, [1, 128]), 'C. (mord) une valeur en dessous du minimum');
 ok(!jugerPlage(64, [0, 127]), 'C. (se tait) une valeur dans la plage');
 ok(!jugerPlage(true, [0, 127]), "C. (se tait) un mot nu n'a pas de valeur à juger");
 
-const jugerPortee = (cle, controles, modulation) =>
-  (controles.has(cle) ? controles.get(cle) : modulation.get(cle));
+const jugerPortee = (cle, controles) => controles.get(cle);
 {
-  const c = new Map([['pan', ['symbol', 'scene']]]);
-  const mo = new Map([['pan', ['symbol']], ['cutoff', ['symbol']]]);
-  ok(jugerPortee('pan', c, mo).includes('scene'),
-     "C. (contrôle d'abord) le `pan` contrôle gouverne sa propre portée");
-  ok(!jugerPortee('cutoff', c, mo).includes('scene'),
-     "C. (modulation en repli) un nom qu'aucun contrôle ne porte garde la sienne");
+  const c = new Map([['pan', ['symbol', 'scene']], ['panrate', ['symbol']]]);
+  ok(jugerPortee('pan', c).includes('scene'),
+     "C. (mord) une portée qui déclare la scène l'autorise");
+  ok(!jugerPortee('panrate', c).includes('scene'),
+     "C. (mord) une portée qui ne la déclare pas la refuse — le juge lit la donnée, il ne devine pas");
 }
 
 const TOTAL_ATTENDU = MOTS.length * 3 + 2 + 3 + 3 + 2 + 3 + 4 + 2;

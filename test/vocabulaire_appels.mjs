@@ -279,8 +279,11 @@ for (const [forme, quoi] of [
   ['-----\nS -> C4 (wave:sine detune:5)', 'deux éléments, sac runtime'],
   // ⚠️ `mode`/`weight` s'écrivent en PARENTHÈSES depuis la décision 2026-08-02 (LANGUAGE.md:773-800).
   ['-----\nS -> C4 (scan:left weight:50)', 'deux éléments, RÉGLAGES RÉSERVÉS — elles passaient par un autre lecteur, sans aucune garde'],
-  ['-----\nS -> C2 (C2:cutoff: env1)', "espace après le SECOND deux-points (écriture à sujet) — un crible qui ne regarde que le premier le manque"],
-  ['-----\nS -> C2 (*:cutoff: env1)', 'idem avec le sujet universel'],
+  // ⚠️ CES DEUX FORMES PORTAIENT SUR `cutoff` jusqu'au 2026-08-22 ; son mot est parti avec
+  // l'archivage de la librairie des modulations. Le sujet du volet est l'ÉCRITURE À SUJET, pas le
+  // nom employé : il se rejoue à l'identique sur un contrôle vivant.
+  ['-----\nS -> C2 (C2:vel: 50)', "espace après le SECOND deux-points (écriture à sujet) — un crible qui ne regarde que le premier le manque"],
+  ['-----\nS -> C2 (*:vel: 50)', 'idem avec le sujet universel'],
 ]) {
   ok(erreursDe(`core\nalphabet.western:midi\nmode:ord\n-----\n${forme}\n`).length > 0,
      `§2septies ${quoi} : '${forme.replace('-----\nS -> ', '')}' doit être refusé`);
@@ -288,8 +291,8 @@ for (const [forme, quoi] of [
 // LES LÉGALES, indiscernables des précédentes au caractère près :
 for (const forme of [
   '-----\nS -> {C4 D4}(vel:50, pan:7)', '-----\nS -> C4 (keyxpand:B3 -1)', '-----\nS -> C4 (keymap:C3 C3 C5 C5)',
-  '-----\nS -> C4 (vel:50, velcont)', '-----\nS -> C4 (scan:left, weight:50)', '-----\nS -> C2 (C2:cutoff:env1)',
-  '-----\nS -> C2 (*:cutoff:env1)',
+  '-----\nS -> C4 (vel:50, velcont)', '-----\nS -> C4 (scan:left, weight:50)', '-----\nS -> C2 (C2:vel:50)',
+  '-----\nS -> C2 (*:vel:50)',
 ]) {
   const e = erreursDe(`core\nalphabet.western:midi\nmode:ord\n-----\n${forme}\n`);
   ok(e.length === 0, `§2septies '${forme}' est LÉGAL et doit passer — reçu : ${e.join(' | ')}`);

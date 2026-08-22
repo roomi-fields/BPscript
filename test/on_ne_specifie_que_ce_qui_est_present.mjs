@@ -106,8 +106,12 @@ for (const f of fichiers) {
 }
 
 // ── SOCLE — contre le vert obtenu en ne lisant plus rien ─────────────────────────────────────
-ok(champs >= 15,
-   `SOCLE : ${champs} librairie(s) lue(s), 15 au moins attendues. Sous ce seuil ce garde est vert `
+// SOCLE ABAISSÉ DE 15 À 14 le 2026-08-22 : `lib/modulation.json` est ARCHIVÉE (décision de
+// Romain, remplacée par FaustX) et a quitté le dossier. Le seuil suit le dossier, il ne le
+// commande pas — le laisser à 15 aurait fait rougir ce garde pour un retrait voulu, et l'abaisser
+// sans cette ligne aurait rendu le prochain retrait indolore.
+ok(champs >= 14,
+   `SOCLE : ${champs} librairie(s) lue(s), 14 au moins attendues. Sous ce seuil ce garde est vert `
  + `parce qu'il ne balaie plus la donnée, pas parce qu'elle est propre.`);
 
 if (echecs.length) {

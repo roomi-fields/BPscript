@@ -1601,38 +1601,22 @@ const NOM_DE_PLACE = {
 
 /**
  * Les portées permises par clé, ramassées dans TOUTES les librairies qui en portent.
- * ⚠️ Trois sources, et il faut les trois : le sac ne porte pas que des contrôles. Mesuré sur les
- * 274 scènes — `cutoff` y est écrit vingt fois et vient de la librairie des modulations, `ch` une
- * fois et vient du socle. Bâtir sur la seule librairie des contrôles les refuserait à tort.
- */
-/**
- * ⛔ DEUX TABLES, PAS UNE — décision de Romain, 2026-08-15, portée comme une CORRECTION.
  *
- * `pan` est écrit deux fois dans le vocabulaire, et ce ne sont PAS deux réalisations d'un même
- * concept : ce sont DEUX CONCEPTS qui portent le même nom. L'un est une VALEUR qu'on écrit —
- * `!(pan:64)`, un contrôle d'expression 0..127 ; l'autre est une CIBLE où un CV se branche —
- * `(pan: env1)`, une entrée de modulation −1..1. Ils ne s'écrivent même pas pareil.
+ * ⚠️ IL FAUT PLUSIEURS SOURCES : le sac ne porte pas que des contrôles. `ch` vient du socle, les
+ * procédures moteur de leur propre librairie, les clés d'adresse du canal qui les porte — bâtir la
+ * table sur la seule librairie des contrôles les refuserait toutes à tort.
  *
- * CE QUE LA TABLE UNIQUE FAISAIT : la boucle des modulations passait APRÈS celle des contrôles,
- * donc la portée de l'entrée de modulation ÉCRASAIT celle du contrôle, dernière écriture gagnante.
- * Mesuré le 2026-08-15 : `pan` avait bien reçu `scene` dans sa déclaration — sur arbitrage de
- * Romain — et `pan:64` en tête de scène restait refusé, en récitant les quatre places de l'AUTRE
- * `pan`. Ni l'auteur ni le mainteneur n'avaient de quoi comprendre le refus.
- *
- * Une entrée de modulation n'a aucune raison de gouverner où un CONTRÔLE s'écrit. Les deux tables
- * sont donc tenues séparément, et la lecture dit son ordre : le contrôle d'abord, la modulation en
- * repli pour les noms qu'aucun contrôle ne porte (`cutoff`, `amplitude`…).
- *
- * PÉRIMÈTRE MESURÉ : `pan` est le SEUL homonyme strict entre les deux familles — confirmé par
- * runtime-audio le même jour, rien sur cutoff, amplitude, resonance, pitch. La séparation n'est
- * donc pas un filet posé au hasard : elle règle un cas connu et empêche le suivant.
+ * ⛔ ELLE A TENU DEUX TABLES, une pour les contrôles et une pour les entrées de modulation, sur
+ * décision de Romain du 2026-08-15 : `pan` était le SEUL nom porté par les deux familles, et la
+ * table unique laissait la portée de l'entrée écraser celle du contrôle — `pan:64` en tête de
+ * scène était refusé en récitant les places de l'AUTRE `pan`. La seconde table disparaît avec
+ * l'archivage de la librairie des modulations le 2026-08-22 : plus aucune clé ne l'alimente.
+ * `pan` reste gouverné par sa déclaration de contrôle, qui porte `scene`.
  */
 let _porteesPermises = null;
 function chargerPorteesPermises() {
   if (_porteesPermises) return _porteesPermises;
-  const controles = new Map();
-  const modulation = new Map();
-  const m = controles;
+  const m = new Map();
   const w = (o) => {
     for (const [k, v] of Object.entries(o || {})) {
       if (!v || typeof v !== 'object') continue;
@@ -1651,10 +1635,6 @@ function chargerPorteesPermises() {
   // lib/engine.bpsl le 2026-08-10 (une clé ne vit que dans UNE librairie) — leur `scope` doit
   // continuer à alimenter cette table, sinon `(scan:…)`/`(weight:…)` redeviennent « inconnu ».
   w(LIBS.engine);
-  for (const [type, entrees] of Object.entries(LIBS.modulation || {})) {
-    if (type.startsWith('_') || !entrees || typeof entrees !== 'object') continue;
-    for (const [k, v] of Object.entries(entrees)) if (v && Array.isArray(v.scope)) modulation.set(k, v.scope);
-  }
   // ── UNE CLÉ D'ADRESSE PORTE SA PROPRE PORTÉE, comme tout le reste du vocabulaire ────────────
   // Elles ont quitté le socle le 2026-08-15 (décision Romain : « dans midi ») pour la librairie du
   // canal qui les porte. Leur portée les suit : elle vivait dans une liste unique du schéma
@@ -1668,14 +1648,7 @@ function chargerPorteesPermises() {
       m.set(k, def.scope);
     }
   }
-  // LA LECTURE DIT SON ORDRE, et elle ne le devine pas : le CONTRÔLE gouverne où son nom s'écrit ;
-  // la modulation ne répond que pour les noms qu'aucun contrôle ne porte.
-  _porteesPermises = {
-    get: (cle) => (controles.has(cle) ? controles.get(cle) : modulation.get(cle)),
-    has: (cle) => controles.has(cle) || modulation.has(cle),
-    controles,
-    modulation,
-  };
+  _porteesPermises = { get: (cle) => m.get(cle), has: (cle) => m.has(cle) };
   return _porteesPermises;
 }
 
@@ -1788,7 +1761,6 @@ function validateReferences(ast, libCtx = {}) {
   const vocab = describeVocabulary([...(ast.directives || []), ...(ast.actors || [])]);
   const controlNames = new Set(vocab.controls.map((c) => c.name));
   const registry = new Set(vocab.values.map((v) => v.name));
-  const modInputs = new Set(vocab.modulationInputs);
   const reserved = new Set(vocab.keywords);
   const digitalFns = new Set(vocab.functions);
   const addressKeys = new Set(vocab.addressKeys);
@@ -1800,8 +1772,8 @@ function validateReferences(ast, libCtx = {}) {
   const catalogAxes = Object.keys(vocab.components);
   const componentExists = (axis, name) => (vocab.components[axis] || []).includes(name);
 
-  // 1. Occurrence / paramètres `(k:v)` — clé connue = contrôle ∪ valeur ∪ entrée modulation ∪
-  //    adresse ∪ fonction digitale ∪ réglage réservé. Les paires d'occurrence vivent dans
+  // 1. Occurrence / paramètres `(k:v)` — clé connue = contrôle ∪ valeur ∪ adresse ∪ fonction
+  //    digitale ∪ réglage réservé. Les paires d'occurrence vivent dans
   //    `payload.params` (note ou groupe/règle, foldées par le parser) ET dans les
   //    `SettingBag.pairs`.
   // Les INSTANCES de module que la scène déclare (`var lpf1 lpf`) : un réglage peut nommer le
@@ -1833,7 +1805,7 @@ function validateReferences(ast, libCtx = {}) {
   const estModeDeParametre = (k) => MODES.some((mode) =>
     k.endsWith(mode) && signauxDeclares.has(k.slice(0, -mode.length)));
 
-  const knownParamKey = (k) => controlNames.has(k) || registry.has(k) || modInputs.has(k) || addressKeys.has(k) || digitalFns.has(k) || qualifierKeys.has(k) || instancesDeclarees.has(k) || estModeDeParametre(k);
+  const knownParamKey = (k) => controlNames.has(k) || registry.has(k) || addressKeys.has(k) || digitalFns.has(k) || qualifierKeys.has(k) || instancesDeclarees.has(k) || estModeDeParametre(k);
   // DÉDUPLICATION PAR CLÉ ET PAR LIGNE — et surtout : une paire vue DEUX FOIS ne compte qu'une.
   //
   // La même paire est collectée à deux endroits : dans `payload.params` (replié par le parser,
@@ -1953,7 +1925,7 @@ function validateReferences(ast, libCtx = {}) {
       if (deja.line === undefined && line !== undefined) { deja.line = line; deja.col = col; }
       return;
     }
-    const err = { message: `attribut '(${key}:…)' inconnu — ni contrôle, ni valeur de librairie, ni entrée de modulation, ni adresse`, line, col };
+    const err = { message: `attribut '(${key}:…)' inconnu — ni contrôle, ni valeur de librairie, ni adresse`, line, col };
     vus.set(key, err);
     errors.push(err);
   };
@@ -2100,7 +2072,7 @@ function validateReferences(ast, libCtx = {}) {
       });
     };
     // ⚠️ UNE DIRECTIVE DE TÊTE N'EST PAS TOUJOURS UN RÉGLAGE — et l'homonymie est réelle.
-    // `mod` INVOQUE la librairie des modulations ; elle ne pose pas le contrôle MIDI `mod`.
+    // `mod` INVOQUE la librairie `lib/mod.json` ; elle ne pose pas le contrôle MIDI `mod`.
     // Mesuré : sans ce tri, cinq scènes du corpus étaient refusées à tort, toutes pour ce seul
     // mot. Une invocation se reconnaît à ce qu'un fichier de librairie porte son nom — c'est le
     // même critère que le chargeur emploie, pas une liste de noms à écarter.

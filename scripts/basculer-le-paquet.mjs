@@ -45,6 +45,17 @@ const RETRAITS_ASSUMES = [
     pourquoi: "un gabarit de réglages natifs n'est pas une librairie (décision Romain 2026-08-21) — "
             + 'il a sa porte, `src/transpiler/gabarits-data.js`, et sa CLÉ ne change pas. '
             + 'bp3-frontend a simulé la bascule chez lui avant la frappe : 30/30 → 29/29, vert.' },
+  { cle: 'modulation', date: '2026-08-22',
+    pourquoi: "la librairie des cinq cibles de branchement est ARCHIVÉE (décision Romain "
+            + '2026-08-22, « on l\'archive, elle va être remplacée par FaustX ») — elle vit '
+            + 'désormais sous `docs/archive/modulation.json`, hors du dossier que le bundle '
+            + 'balaie. MESURÉ AVANT LA FRAPPE sur les 390 scènes des deux dépôts : DEUX cessent '
+            + 'de compiler, toutes deux chez kanopi (cv/cv-backtick.bps, '
+            + "code-voices/cv-curve-js.bps), sur « attribut '(cutoff:…)' inconnu ». `cutoff`, "
+            + '`amplitude`, `resonance` et `pitch` tombent sans recours ; `pan` SURVIT, tenu par '
+            + 'sa déclaration de contrôle dans `lib/expression.bpsl`. kanopi préavisé avec la '
+            + 'liste exacte, a répondu « frappe » et inscrit ses deux scènes en forme-à-venir '
+            + 'dans le même mouvement.' },
 ];
 
 /** Les clés du paquet publié, telles que le commit les porte. */

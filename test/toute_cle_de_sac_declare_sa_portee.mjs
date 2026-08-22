@@ -16,10 +16,12 @@
  * jours, avec le défaut du moteur appliqué à la place, en silence.
  *
  * ⚠️ POURQUOI LA PORTÉE VIT DANS LA LIBRAIRIE DE LA CLÉ, ET NON DANS UN FICHIER CENTRAL. **Le sac
- * ne porte pas que des contrôles.** Mesuré sur les 274 scènes : `cutoff` y est écrit vingt fois et
- * vient de la librairie des modulations ; `ch` une fois, et vient du socle. Une validation bâtie
- * sur la seule librairie des contrôles les refuserait à tort. Ce garde balaie donc les TROIS
- * sources, et il échoue si une quatrième apparaît sans déclarer — c'est le volet C.
+ * ne porte pas que des contrôles.** Mesuré sur les 274 scènes : `ch` vient du socle, les procédures
+ * moteur de leur propre librairie, les clés d'adresse du canal qui les porte.
+ * Une validation bâtie sur la seule librairie des contrôles les refuserait à tort. Ce
+ * garde balaie donc TOUTES les sources, et il échoue si une nouvelle apparaît sans déclarer —
+ * c'est le volet C. Les entrées de modulation en étaient une jusqu'au 2026-08-22 ; leur compte est
+ * désormais tenu à ZÉRO, ce qui fait crier leur retour autant que leur absence.
  *
  * ⚠️ UN SEUL AXE, et c'est une leçon plutôt qu'une simplification. Un second axe était prévu :
  * « où on a le droit d'écrire » contre « jusqu'où l'effet porte ». Il reposait ENTIÈREMENT sur
@@ -59,7 +61,12 @@ function toutesLesCles() {
   // Les procédures MOTEUR (mode/scan/weight/goto/rndtime, destru/randomize…) ont rejoint
   // lib/engine.json le 2026-08-10 (une clé ne vit que dans UNE librairie) — même balayage.
   w(LIBS.engine, 'engine', '');
-  // (b) les entrées de modulation
+  // (b) LES ENTRÉES DE MODULATION — la librairie qui les portait est ARCHIVÉE le 2026-08-22
+  // (décision de Romain, remplacée par FaustX). ⛔ LE BALAYAGE RESTE, ET C'EST LE POINT : retirer
+  // la boucle aurait mis le compte du volet C à zéro PAR CONSTRUCTION, et un garde qui ne peut
+  // pas compter autre chose que zéro ne dit plus rien — il aurait été vert le jour du retour comme
+  // le jour de l'absence. Mesuré en essayant de le faire mordre : il ne mordait plus.
+  // La boucle lit donc toujours la donnée, et le volet C exige ZÉRO. Le jour du dégel, il crie.
   for (const [type, entrees] of Object.entries(LIBS.modulation || {})) {
     if (type.startsWith('_') || !entrees || typeof entrees !== 'object') continue;
     for (const [k, v] of Object.entries(entrees)) {
@@ -209,9 +216,11 @@ ok(CLES.filter((c) => c.source.startsWith('engine.')).length === 23,
    + `'engine.', 23 attendus (les procédures moteur rapatriées de lib/controls.json, plus `
    + `'articulcont' — le mode continu suit son paramètre, et 'legato'/'staccato' vivent ici — `
    + `plus 'resetweights').`);
-ok(CLES.filter((c) => c.source.startsWith('modulation.')).length >= 5,
-   `C. ${CLES.filter((c) => c.source.startsWith('modulation.')).length} entrées de modulation `
-   + `balayées, 5 au moins attendues.`);
+ok(CLES.filter((c) => c.source.startsWith('modulation.')).length === 0,
+   `C. ${CLES.filter((c) => c.source.startsWith('modulation.')).length} entrée(s) de modulation `
+   + `balayée(s) — ZÉRO attendu depuis l'archivage du 2026-08-22. Un compte NON NUL ici veut dire `
+   + `que la librairie est revenue : elle doit alors réintégrer 'toutesLesCles()', sinon ses clés `
+   + `échappent aux trois volets sans que rien ne le dise.`);
 // ── LES CLÉS D'ADRESSE, UNE PAR UNE ─────────────────────────────────────────────────────────
 // Elles ont quitté le socle le 2026-08-15 pour la librairie du canal qui les porte, et leur portée
 // a cessé d'être une LISTE UNIQUE (`channelParamsScope`) pour devenir un champ SUR CHAQUE CLÉ.
@@ -282,7 +291,7 @@ if (echecs.length) {
   if (echecs.length > 12) console.error(`   … et ${echecs.length - 12} autre(s)`);
   process.exit(1);
 }
-console.log(`✅ toute clé de sac déclare sa portée — ${CLES.length} clés balayées sur trois sources `
-          + `(contrôles, modulations, paramètres d'adresse), vocabulaire fermé de `
+console.log(`✅ toute clé de sac déclare sa portée — ${CLES.length} clés balayées sur deux sources `
+          + `(contrôles, paramètres d'adresse), vocabulaire fermé de `
           + `${VOCABULAIRE.length} mots, format liste partout, et le champ DISTINGUE réellement les `
           + `familles. ${passe} vérification(s) passée(s).`);

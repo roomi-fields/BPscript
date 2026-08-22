@@ -113,7 +113,7 @@ for (const mot of ['wire', 'map', 'mod', 'macro', 'cv']) {
 // donc la sérialisation d'une scène riche, pas seulement le membre droit d'une règle.
 {
   const { ast, erreurs } = mesure(`${T}def ouvre (vel:120)\ninit\n  \`sc: x\`\n-----\n`
-    + `M -> $ C4 D4\nS -> C4 !(cutoff:400) D4 {E4, F4} &M\n`);
+    + `M -> $ C4 D4\nS -> C4 !(filter:400) D4 {E4, F4} &M\n`);
   ok(erreurs.length === 0, `4. TÉMOIN NON NUL — la scène de contrôle doit compiler `
     + `(reçu : ${erreurs[0]?.slice(0, 140)})`);
   const serialise = JSON.stringify(ast ?? {});
@@ -129,9 +129,13 @@ for (const mot of ['wire', 'map', 'mod', 'macro', 'cv']) {
 // celui-ci remplace, étaient FAUX : ils écrivaient une valeur de membre derrière un nom défini et
 // un crochet posé dans le flux — deux graphies que le langage a perdues depuis. Un témoin faux
 // rougit pour la mauvaise raison et fait chercher un défaut là où il n'y en a pas.
+// ⛔ ET C'EST ARRIVÉ UNE SECONDE FOIS, LE 2026-08-22 : trois témoins posaient `cutoff`, dont le mot
+// est parti avec l'archivage de la librairie des modulations. Ils rougissaient en accusant le sac
+// de flux, qui n'avait rien perdu. Ce que le témoin doit porter est un contrôle VIVANT — ici
+// `filter` — parce que ce qu'il mesure est la place, jamais le nom qui l'occupe.
 const CE_QUI_RESTE = [
-  ['le sac de flux pose une valeur',        `${T}-----\nS -> C4 !(cutoff:400) D4\n`],
-  ['un sac de flux à deux entrées',         `${T}-----\nS -> C4 !(cutoff:400, vel:80) D4\n`],
+  ['le sac de flux pose une valeur',        `${T}-----\nS -> C4 !(filter:400) D4\n`],
+  ['un sac de flux à deux entrées',         `${T}-----\nS -> C4 !(filter:400, vel:80) D4\n`],
   ['la définition nommée',                  `${T}def ouvre (vel:120)\n-----\nS -> C4\n`],
   ['l\'état de départ — le code lancé',     `${T}init\n  \`sc: x\`\n-----\nS -> C4\n`],
   ['l\'état de départ — les valeurs',       `${T}init\n  (vel:100)\n-----\nS -> C4\n`],

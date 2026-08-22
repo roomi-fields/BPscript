@@ -1,8 +1,8 @@
 // Garde-fou : préfixe de SUJET sur une paire de contrôle (décision Romain 2026-06-21).
 // Forme `[sujet:]contrôle:valeur` dans () :
-//   (cutoff:Env)    → sujet omis = la portée elle-même (la règle/le groupe comme unité)
-//   (*:cutoff:Env)  → sujet '*' = chaque terminal (par note)
-//   (C2:cutoff:Env) → sujet 'C2' = les terminaux C2 de la règle
+//   (filter:Env)    → sujet omis = la portée elle-même (la règle/le groupe comme unité)
+//   (*:filter:Env)  → sujet '*' = chaque terminal (par note)
+//   (C2:filter:Env) → sujet 'C2' = les terminaux C2 de la règle
 // Cohérent avec l'existant `*:sound.X`. Le sujet décide l'horloge (unité vs par-terminal) ;
 // la nature de la valeur ne décide plus rien.
 import { compileToBPxAST } from '../src/transpiler/bpxAst.js';
@@ -20,42 +20,42 @@ const get = (pairs, key) => pairs.find((p) => p.key === key) || {};
 
 // 1. Défaut : pas de sujet (= la règle)
 {
-  const { pairs, err } = bassPairs('Bass -> C2 E2 (cutoff:env1, wave:square)');
+  const { pairs, err } = bassPairs('Bass -> C2 E2 (filter:400, wave:square)');
   check(!err, '1: pas d\'erreur, ' + JSON.stringify(err));
-  check(get(pairs, 'cutoff').subject === undefined, '1: cutoff sans sujet (défaut=règle), obtenu ' + JSON.stringify(get(pairs, 'cutoff')));
+  check(get(pairs, 'filter').subject === undefined, '1: filter sans sujet (défaut=règle), obtenu ' + JSON.stringify(get(pairs, 'filter')));
 }
 
 // 2. Sujet '*' = chaque terminal
 {
-  const { pairs } = bassPairs('Bass -> C2 E2 (*:cutoff:env1)');
-  check(get(pairs, 'cutoff').subject === '*', '2: cutoff sujet=*, obtenu ' + JSON.stringify(get(pairs, 'cutoff')));
+  const { pairs } = bassPairs('Bass -> C2 E2 (*:filter:400)');
+  check(get(pairs, 'filter').subject === '*', '2: filter sujet=*, obtenu ' + JSON.stringify(get(pairs, 'filter')));
 }
 
 // 3. Sujet nommé 'C2'
 {
-  const { pairs } = bassPairs('Bass -> C2 E2 (C2:cutoff:env1)');
-  check(get(pairs, 'cutoff').subject === 'C2', '3: cutoff sujet=C2, obtenu ' + JSON.stringify(get(pairs, 'cutoff')));
+  const { pairs } = bassPairs('Bass -> C2 E2 (C2:filter:400)');
+  check(get(pairs, 'filter').subject === 'C2', '3: filter sujet=C2, obtenu ' + JSON.stringify(get(pairs, 'filter')));
 }
 
-// 4. Mélange : cutoff par terminal, wave/vel pour la règle (sujets indépendants par paire)
+// 4. Mélange : filter par terminal, wave/vel pour la règle (sujets indépendants par paire)
 {
-  const { pairs } = bassPairs('Bass -> C2 E2 (*:cutoff:env1, wave:square, vel:100)');
-  check(get(pairs, 'cutoff').subject === '*', '4: cutoff sujet=*');
+  const { pairs } = bassPairs('Bass -> C2 E2 (*:filter:400, wave:square, vel:100)');
+  check(get(pairs, 'filter').subject === '*', '4: filter sujet=*');
   check(get(pairs, 'wave').subject === undefined, '4: wave sans sujet (règle)');
   check(get(pairs, 'vel').subject === undefined && get(pairs, 'vel').value === 100, '4: vel sans sujet, valeur 100');
 }
 
 // 5. La valeur reste correctement captée avec un sujet (pas de glissement)
 {
-  const { pairs } = bassPairs('Bass -> C2 E2 (*:cutoff:env1, vel:120)');
-  check(get(pairs, 'cutoff').value === 'env1', '5: valeur cutoff=env1 préservée, obtenu ' + JSON.stringify(get(pairs, 'cutoff')));
+  const { pairs } = bassPairs('Bass -> C2 E2 (*:filter:400, vel:120)');
+  check(get(pairs, 'filter').value === 400, '5: valeur filter=400 préservée, obtenu ' + JSON.stringify(get(pairs, 'filter')));
   check(get(pairs, 'vel').value === 120, '5: vel=120 préservé');
 }
 
 // 6. ligne/col toujours présents avec sujet
 {
-  const { pairs } = bassPairs('Bass -> C2 E2 (*:cutoff:env1)');
-  check(typeof get(pairs, 'cutoff').line === 'number', '6: cutoff porte une ligne');
+  const { pairs } = bassPairs('Bass -> C2 E2 (*:filter:400)');
+  check(typeof get(pairs, 'filter').line === 'number', '6: filter porte une ligne');
 }
 
 console.log(`${pass} PASS / ${fail} FAIL`);

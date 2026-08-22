@@ -88,10 +88,16 @@ ok(porteurs.length >= 10, `SOCLE : la donnée doit porter des unités — ${port
     ['mod.objects.adsr.parameters.attack', 'audio.controls.attack'],
     ['mod.objects.adsr.parameters.release', 'audio.controls.release'],
     ['mod.objects.lfo.parameters.rate', 'midi.controls.rate'],
-    ['mod.objects.lfo.parameters.amplitude', 'modulation.audio.amplitude'],
-    // Les deux que la décision nomme par leur plage identique, 2026-08-20 §2.
-    ['modulation.audio.pitch', 'audio.controls.detune'],
-    ['modulation.audio.cutoff', 'audio.controls.filter'],
+    // ⛔ TROIS PARENTÉS SONT SORTIES LE 2026-08-22, avec l'archivage de `lib/modulation.json`
+    // (décision de Romain, remplacée par FaustX) : `modulation.audio.amplitude` en face de
+    // `mod.objects.lfo.parameters.amplitude`, et les deux que la décision du 2026-08-20 §2 nommait
+    // par leur plage identique — `modulation.audio.pitch` contre `audio.controls.detune`,
+    // `modulation.audio.cutoff` contre `audio.controls.filter`.
+    // ⚠️ CE QU'ELLES TENAIENT N'EST PAS PERDU POUR AUTANT : chacune appariait un champ ARCHIVÉ à un
+    // champ VIVANT, et les trois champs vivants gardent leur unité, tenue par le volet A. Ce sont
+    // les COUPLES qui disparaissent, pas les unités. Le jour du dégel, les trois lignes reviennent
+    // ici en même temps que la librairie — et le compte de couples ci-dessous le dira, puisqu'il
+    // refuse d'avoir confronté moins que ce que le registre déclare.
   ];
   const parChemin = new Map(porteurs.map((x) => [x.ou, x]));
   let couples = 0;
@@ -108,7 +114,15 @@ ok(porteurs.length >= 10, `SOCLE : la donnée doit porter des unités — ${port
     + absents.join('\n     ')
     + `\n     Un registre qui garde des lignes mortes finit par ne plus rien dire — RETIRER l'entrée, `
     + `ou réparer le champ qui a perdu son unité.`);
-  ok(couples >= 4, `B. le garde doit avoir confronté des couples réels — ${couples} sur ${PARENTES.length}`);
+  // LE SEUIL SUIT LE REGISTRE, IL NE LE COMMANDE PAS : ce qu'il refuse est d'avoir confronté MOINS
+  // de couples que le registre n'en déclare — c'est-à-dire d'être vert en ayant sauté une ligne.
+  // Écrit en dur (4 avant le 2026-08-22), il aurait fallu le corriger à chaque entrée qui bouge, et
+  // un oubli aurait laissé le garde vert sur un registre amputé.
+  ok(couples === PARENTES.length,
+    `B. le garde doit avoir confronté TOUS les couples du registre — ${couples} sur ${PARENTES.length}`);
+  ok(PARENTES.length >= 3,
+    `B. SOCLE : ${PARENTES.length} parenté(s) au registre, 3 au moins attendues. Sous ce seuil ce `
+    + `volet est vert parce qu'il ne confronte plus rien, pas parce que la donnée est d'accord.`);
   ok(desaccords.length === 0,
     `B. ⛔ ${desaccords.length} parenté(s) portent DEUX unités pour une seule grandeur :\n     `
     + desaccords.join('\n     '));
@@ -198,7 +212,10 @@ ok(porteurs.length >= 10, `SOCLE : la donnée doit porter des unités — ${port
     + 'pas la parenté, et c\'est pourquoi le registre est nommé au lieu d\'être dérivé');
 }
 
-const ATTENDU = 1 + 2 + 3 + 3 + 4;
+// Le volet B passe de 3 à 4 le 2026-08-22 : son seuil de couples s'est doublé d'un SOCLE sur la
+// taille du registre. Le premier refuse de sauter une ligne, le second refuse un registre vidé —
+// deux questions, et le seul seuil d'origine ne posait que la première.
+const ATTENDU = 1 + 2 + 3 + 4 + 4;
 ok(p + e.length === ATTENDU, `le garde doit éprouver ${ATTENDU} cas — ${p + e.length} seulement`);
 
 if (e.length) { console.error(`[unité] ${e.length} ÉCHEC(S) :`); for (const x of e) console.error('  ✗ ' + x); process.exit(1); }

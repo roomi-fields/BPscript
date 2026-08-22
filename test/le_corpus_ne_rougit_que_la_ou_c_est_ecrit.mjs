@@ -81,6 +81,20 @@ const REGISTRE = [
   ['synthesis/group-cutoff.bps',          'Expected IDENT', 'ecrit un modulateur nomme, forme sortie le 2026-08-18', 'kanopi', 'son proprietaire'],
   ['synthesis/superp-cutoff.bps',         'Expected IDENT', 'ecrit un modulateur nomme, forme sortie le 2026-08-18', 'kanopi', 'son proprietaire'],
   ['synthesis/patchbay.bps',              'Expected IDENT', 'ecrit un branchement, forme sortie le 2026-08-18', 'kanopi', 'son proprietaire'],
+  // ⛔ DEUX SCENES DE PLUS LE 2026-08-22, ET LEUR REFUS EST NEUF : `lib/modulation.json` est
+  // ARCHIVEE (decision de Romain, « on l archive, elle va etre remplacee par FaustX »). Les cinq
+  // cibles de branchement — `cutoff`, `amplitude`, `resonance`, `pitch` — perdent leur mot ; `pan`
+  // survit, tenu par sa declaration de controle dans `lib/expression.bpsl`.
+  // ⚠️ LA CAUSE INSCRITE N EST PAS CELLE DES CINQ AU-DESSUS. Celles-la refusent au PARSEUR, sur la
+  // graphie d un modulateur nomme ; ces deux-ci compilaient encore ce matin et refusent au
+  // VOCABULAIRE, sur un mot qui n existe plus. Meme chantier, deux etages — les confondre ferait
+  // passer une casse de vocabulaire pour une casse de graphie le jour ou l une bougerait.
+  // MESURE AVANT LA FRAPPE : 390 scenes des deux depots, DEUX changent de verdict, ces deux-ci.
+  // kanopi previenu avec la liste exacte, a repondu « frappe » et les inscrit en forme-a-venir
+  // chez lui dans le meme mouvement. Sa prediction — exactement deux rouges neufs, tous deux sur
+  // ce message — est VERIFIEE.
+  ['cv/cv-backtick.bps',                  "attribut '(cutoff:…)' inconnu", 'ecrit une cible de branchement dont la librairie est archivee le 2026-08-22', 'kanopi', 'son proprietaire — inscrite en forme-a-venir chez lui'],
+  ['code-voices/cv-curve-js.bps',         "attribut '(cutoff:…)' inconnu", 'ecrit une cible de branchement dont la librairie est archivee le 2026-08-22', 'kanopi', 'son proprietaire — inscrite en forme-a-venir chez lui'],
   // ⚠️ LES SIX SCÈNES DE PROVENANCE PERSONNELLE N'ONT JAMAIS TENU UNE LIGNE ICI. Je les ai
   //    inscrites le 2026-08-19 en retirant `mine` du langage (Romain : « SI, mine SORT ! »), et
   //    Kanopi les avait SUPPRIMÉES avant que mon garde ne tourne — sa consigne était du même
