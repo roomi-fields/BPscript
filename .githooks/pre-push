@@ -6,6 +6,12 @@
 # la même dérive que la doc qui ment, appliquée au garde-fou lui-même.
 set -e
 cd "$(git rev-parse --show-toplevel)"
+# ⛔ EN TETE, AVANT LE PORTILLON : le gel de la tour ferme sa porte, pas celle de git. Un voisin qui
+# mesure cet arbre n'avait rien pour arreter une poussee d'ici — seule une relecture de courrier
+# aurait mordu, et c'est precisement ce qui se saute. Garde partage, pose par BPx, unique
+# implementation dans le hub : il ne lit que le CHAMP des depots (jamais le motif, texte libre) et
+# laisse passer si la tour est injoignable. Il passe en premier parce qu'il est le moins cher.
+BP_AGENT=bpscript bash "$HOME/dev/bp/hub/tools/garde-fenetre.sh" || exit 1
 export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" >/dev/null 2>&1
 maj=$(node -v 2>/dev/null | sed "s/v\([0-9]*\).*/\1/")
 if [ "${maj:-0}" -lt 20 ]; then nvm use 20 >/dev/null 2>&1 || nvm use 22 >/dev/null 2>&1; fi
