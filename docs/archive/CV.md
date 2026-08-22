@@ -302,3 +302,78 @@ S -> Phrase1
 
 Phrase1 -> C3 E3 G3 C4 (amplitude: custom)
 ```
+
+---
+
+## Ce que `LANGUAGE.md` en disait — retire le 2026-08-22
+
+Les formes du mot nu `cutoff` sont sorties de la bible le 2026-08-22 (autorisation de Romain,
+« elles partent »), avec l'archivage de `lib/modulation.json`. Elles sont conservees ici parce que
+le sujet revient avec FaustX : ce qui part est la forme, jamais la facon dont le sujet etait pense.
+
+
+### `LANGUAGE.md` :703 — la mention de `cutoff` dans la liste des noms venus des catalogues
+
+```text
+**Tout le reste vient des librairies.** `mode`, `tempo`, `vel`, `cutoff`, les alphabets, les
+```
+
+
+### `LANGUAGE.md` :1193-1214 — la section ENTIERE de l'enveloppe posee sur une portee (4 lignes nommees, plus le bloc et la conclusion qui n'ont plus d'objet sans elles)
+
+```text
+**Une enveloppe posee sur une portee repart a chaque silence.** Ecrire `(cutoff:env)` confie la
+coupure a une enveloppe nommee `env` : elle monte, elle tient, elle redescend. Quand elle couvre une
+**regle** ou un **groupe**, chaque silence `-` de cette portee la relance depuis le debut ; une
+accolade qui enjambe le silence lui fait au contraire **traverser** -- une seule montee sur toute
+l'etendue. L'accolade choisit :
+
+```bpscript
+// Regle nue -> le silence ARTICULE : l'enveloppe repart apres chaque -
+Detache -> C2 - C2 (cutoff:env)
+
+// Accolade -> UN arc continu : le - interne est franchi (liaison)
+Lie -> { C2 - C2 }(cutoff:env)
+
+// La boucle est transparente : un tour re-arme quand un silence tombe a la couture,
+// ou quand le tour sort de l'accolade. Un long arc sur N tours = une accolade
+// qui couvre la reprise :
+S -> { Lie Lie Lie Lie }(cutoff:env)
+```
+
+**Une seule regle a retenir : c'est l'accolade qui dit jusqu'ou une enveloppe tient.** Plus elle
+est large, plus la montee est longue -- sur une note, sur une phrase, sur plusieurs tours de boucle.
+Ce qui la realise est decrit dans `atlas/architecture/MODULATIONS.md`.
+```
+
+
+### `LANGUAGE.md` :1264-1266 — les trois ecritures `(cutoff:…)` du tableau des sujets ; `{…}(sombre)` reste et le tableau tient
+
+```text
+| `(cutoff:env)` · `{…}(sombre)`       | omis  | **la portee elle-meme** (l'unite) |
+| `(*:cutoff:env)` · `{…}(*:sombre)`   | `*`   | **chaque terminal** de la portee  |
+| `(C2:cutoff:env)` · `{…}(C2:sombre)` | `C2`  | les terminaux **C2** de la portee |
+```
+
+
+### `LANGUAGE.md` :1272 — l'EXEMPLE de la puce « le sujet vaut par paire »
+
+⚠️ LA PUCE ELLE-MEME EST RESTEE DANS LA BIBLE. « Le sujet vaut par paire » n'est pas une notion de
+modulation : c'est une regle du langage sur la portee d'un sujet dans un sac, et elle survit au mot
+qui l'illustrait. Seul son EXEMPLE a change — `(*:cutoff:env, …)` est devenu
+`(*:filter:4000, wave:sawtooth, vel:100)`, mesure au compilateur : `filter` porte le sujet `*`,
+`wave` et `vel` n'en portent aucun. C'est la forme d'origine, avec des mots vivants.
+
+Ce qui est conserve ci-dessous est donc l'exemple retire, pas la regle.
+
+```text
+- Le sujet vaut **par paire** : `(*:cutoff:env, wave:sawtooth, vel:100)` pose `cutoff` sur chaque
+  terminal, `wave` et `vel` sur la regle.
+```
+
+
+### `LANGUAGE.md` :2299 — l'exemple du nom NU, REMPLACE : `cutoff` -> `filter`, un seul catalogue le porte (mesure)
+
+```text
+(cutoff:4000)          // un seul catalogue porte `cutoff` -- il passe nu
+```

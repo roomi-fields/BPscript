@@ -58,7 +58,7 @@ parenthèse fermante clôt le corps ; sans parenthèses, le corps s'étend jusqu
 non indentée. Le vocabulaire des clés est le même des deux côtés.
 
 ```ebnf
-declaration_typee = "flag"   , IDENT , [ ":" , INT | "(" , flag_state , { "," , flag_state } , ")" ]
+declaration_typee = "flag"   , IDENT , ":" , INT
                   | "in" , "." , IN_CHANNEL , IDENT , [ "mapping" , "." , IDENT ]
                   | "symbol" , nom_pose , { "," , nom_pose }
                   | CONVENTION , nom_pose
@@ -78,11 +78,10 @@ nom_pose   = IDENT , [ ":" , ( INT | FLOAT | NOM ) ] ;   (* signal grain:0.5 *)
 NOM        = [ "_" ] , IDENT ;   (* une valeur porte le tiret bas des gestes natifs *)
 CONVENTION = "signal" | "pitch" | "phase" | "logic" ;
 IN_CHANNEL = "midi" | "osc" | "keyboard" ;
-flag_state = IDENT , ":" , INT ;
 ```
 
-**Le type vient en tete, le nom ensuite.** Un drapeau declare ses etats entre parentheses, et une
-regle s y conditionne ensuite par leur nom. Une entree nomme un **role** ; l appareil qui le remplit
+**Le type vient en tete, le nom ensuite.** Un drapeau porte sa valeur initiale, et une regle s y
+conditionne ensuite par un entier. Une entree nomme un **role** ; l appareil qui le remplit
 s y associe hors de la scene, et sa table se nomme par le point. `symbol` declare un symbole du flux
 qui n est ni une note ni un nom de regle. Un mot du catalogue de modules declare une **instance** de
 ce module.

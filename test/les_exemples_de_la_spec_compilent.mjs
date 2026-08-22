@@ -271,21 +271,18 @@ const RETARD_REGLES = new Map([
   // ⚠️ CAUSE RÉVISÉE le 2026-08-21 avec sa jumelle ci-dessus — le refus a gagné « ni une librairie
   // invoquée », le retard est inchangé.
   ['S -> {A B}(lpf1.cutoff:4000)', /n'est ni une librairie invoquée, ni un contrôle à composants, ni une instance déclarée/],
-  // (b-bis) ⛔ LE MOT NU `cutoff`, INSCRIT LE 2026-08-22 — ET SA CAUSE N'EST PAS CELLE DU DESSUS.
-  //     Les deux lignes `lpf1.cutoff` butent sur une INSTANCE que le bloc ne déclare pas ; ces
-  //     deux-ci butent sur le MOT LUI-MÊME, qui n'existe plus dans aucune librairie. `lib/
-  //     modulation.json` est ARCHIVÉE (décision de Romain du 2026-08-22, « on l'archive, elle va
-  //     être remplacée par FaustX »), et avec elle les cinq cibles de branchement. `pan` survit,
-  //     tenu par sa déclaration de contrôle ; `cutoff`, `amplitude`, `resonance` et `pitch` non.
-  //     ⛔ CE N'EST PAS UN DÉFAUT DU PARSER, ET LE PARSER NE LE RATTRAPERA PAS. La bible écrit ces
-  //     lignes comme des formes VIVANTES ; l'archivage les prive de leur mot. L'écart appartient à
-  //     Romain, il lui est signalé, et JE N'ÉCRIS PAS DANS LA BIBLE. Ces entrées sortent d'ici le
-  //     jour où il tranche — soit la bible change de mot, soit le mot revient avec FaustX.
-  //     ⚠️ DIX LIGNES DE LA BIBLE sont dans ce cas, mesurées avant la frappe ; deux seulement sont
-  //     des RÈGLES isolées et atterrissent ici. Les autres sont de la prose et un tableau, que ce
-  //     garde ne compile pas — leur inventaire est parti à l'architecte, pas dans ce fichier.
-  ['Detache -> C2 - C2 (cutoff:env)', /attribut '\(cutoff:…\)' inconnu/],
-  ['Lie -> \{ C2 - C2 \}(cutoff:env)', /attribut '\(cutoff:…\)' inconnu/],
+  // (b-bis) LE MOT NU `cutoff` — INSCRIT LE 2026-08-22 À 12h, SORTI LE MÊME JOUR À 16h.
+  //     Ces deux lignes ont été au retard une demi-journée : `lib/modulation.json` archivée les
+  //     privait de leur mot, et je n'avais pas le droit d'écrire dans la bible. Romain a tranché
+  //     dans l'après-midi — « elles partent » — et les dix lignes du mot nu ont quitté la
+  //     référence pour `docs/archive/CV.md`. Elles ne refusent plus : elles n'existent plus.
+  //     ⛔ ET C'EST LE CLIQUET QUI L'A EXIGÉ, pas ma mémoire : il a rougi en disant « inscrite au
+  //     retard mais NE REFUSE PLUS avec sa cause ». Un retard qui survit à ce qui l'a fait naître
+  //     n'est qu'un compteur — trois entrées sorties d'ici, datées.
+  //     ⚠️ CE QUI RESTE HORS DE CE GESTE : les quatre lignes du PORT D'INSTANCE `lpf1.cutoff`,
+  //     déjà fausses avant l'archivage et non tranchées. Leur refus ne nomme même pas `cutoff`.
+  //     (Les deux entrées qui vivaient ici étaient
+  //      'Detache -> C2 - C2 (cutoff:env)' et 'Lie -> { C2 - C2 }(cutoff:env)'.)
   // (c) la VITESSE : RATTRAPÉE le 2026-08-06 — `! (/N)` compile, les trois lignes sont sorties
   //     de ce retard le jour même. C'est le cliquet qui l'a EXIGÉ, pas moi qui y ai pensé.
   // (d') L'EXEMPLE DES PARAMÈTRES D'INVOCATION — et il est plus abîmé qu'il n'en a l'air.
@@ -472,17 +469,12 @@ const RETARD_BLOCS = new Map([
   //    la production mesurée en regard. Elles compilent, donc rien à inscrire ici — c'est la
   //    vérification en sens inverse de ce garde qui a exigé que cette ligne parte.
 
-  // ⛔ L'ENCADRÉ DE L'ENVELOPPE SUR UNE PORTÉE, INSCRIT LE 2026-08-22. Il écrit `(cutoff:env)` sur
-  //    une règle nue, sur un groupe, puis sur une boucle — trois illustrations d'une même loi
-  //    d'articulation. Le mot `cutoff` n'existe plus dans aucune librairie depuis l'archivage de
-  //    `lib/modulation.json` (décision de Romain du 2026-08-22, remplacée par FaustX).
-  //    ⚠️ CE QUE LE BLOC ENSEIGNE N'EST PAS TOUCHÉ : la loi porte sur le SILENCE et l'accolade —
-  //    une enveloppe repart après chaque `-` d'une règle nue, une accolade la fait traverser. Seul
-  //    son PORTEUR a disparu. Le jour où la bible change de mot, ou où FaustX rend celui-ci, cet
-  //    encadré compile sans qu'une ligne de sa prose ait bougé.
-  //    ⛔ JE N'ÉCRIS PAS DANS LA BIBLE, et le parser ne rattrapera pas ceci : c'est un mot retiré,
-  //    pas une forme mal lue. L'écart appartient à Romain et lui est signalé avec ses dix lignes.
-  ['// Regle nue -> le silence ARTICULE : l\'enveloppe repart apres chaque - #0', /attribut '\(cutoff:…\)' inconnu/],
+  // L'ENCADRÉ DE L'ENVELOPPE SUR UNE PORTÉE — inscrit le 2026-08-22 à 12h, SORTI le même jour.
+  //    Il illustrait une loi d'articulation vraie — une enveloppe repart après chaque silence d'une
+  //    règle nue, une accolade la fait traverser — que seul `(cutoff:env)` portait. Le mot parti,
+  //    la section entière a rejoint `docs/archive/CV.md` : ce qui sort est la FORME, jamais la
+  //    façon dont le sujet était pensé. Le jour où FaustX ouvre, la loi se réécrit sur son porteur.
+  //    ⛔ SORTI SUR L'EXIGENCE DU CLIQUET, qui a rougi dans la minute où la bible a changé.
   ['// 1. Sac de reglages -- sur un symbole, une regle ou un groupe #0', /'lpf1\.cutoff:…' affecte une valeur au compos/],
   ["// Portee symbole -- colle a l'element #1", /'lpf1\.cutoff:…' affecte une valeur au compos/],
   // ⚠️ CAUSE RESSERRÉE le 2026-08-08 — le palier STRUCTURE de `@def` a changé le refus de ces

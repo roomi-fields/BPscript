@@ -58,6 +58,7 @@ Le vocabulaire est petit et la combinatoire est riche. Comme les echecs : 6 type
 core
 alphabet.sargam
 homomorphism.dhati
+flag stage:1
 
 // Une sequence de notes
 -----
@@ -152,6 +153,7 @@ refusee.
 core
 alphabet.sargam
 in.midi depart
+flag stage:0
 
 actor sitar1
   tuning.sargam_22shruti
@@ -262,7 +264,7 @@ Une variable porte un **type** qui dit ce qu'elle est. **Le type vient en tete, 
 l'ordre de toute declaration, `def` et `actor` comme celle-ci. Le point qualifie le type.
 
 ```text
-flag section(calm:1, full:2)
+flag section:1
 in.keyboard touches
 signal grain
 pitch hauteur
@@ -311,8 +313,9 @@ nus, et des parentheses qui descendent d'un niveau.
 | `object`      | la **racine** d'une famille -- le premier objet, celui qui ne derive de rien                    |
 | *(aucun)*     | un symbole du flux qui n'est ni une note ni un nom de regle                                     |
 
-**Le flag declare ses etats en meme temps que lui-meme.** `calm:1, full:2` nomme deux valeurs
-entieres ; une regle s'y conditionne ensuite par son nom : `[section==calm]`.
+**Le flag porte sa valeur initiale en meme temps que lui-meme.** `flag section:1` cree le drapeau
+et dit d'ou il part ; une regle s'y conditionne ensuite par un entier : `[section==1]`. Un drapeau
+compte et se compare a des entiers -- c'est sa seule forme.
 
 **Une entree nomme un ROLE.** La scene declare `touches` ; l'utilisateur y associe le clavier reel
 **au moment de jouer**, et la scene garde le role. Un nom de port change de machine en machine ; un
@@ -636,6 +639,7 @@ instant -- ecrits directement dans la regle, ou nommes par une definition (cf.
 ```bpscript
 core
 alphabet.western:audio
+flag stage:0
 
 // En tete de scene : chaque moteur de code prepare ses objets au chargement
 `sc: SynthDef(\grain, { |freq, dens| GrainSin.ar(dens, freq) }).add`
@@ -700,7 +704,7 @@ qui l'apporte.
 
 Plus les **symboles structurels** ci-dessous.
 
-**Tout le reste vient des librairies.** `mode`, `tempo`, `vel`, `cutoff`, les alphabets, les
+**Tout le reste vient des librairies.** `mode`, `tempo`, `vel`, les alphabets, les
 accordages, les modules : chacun de ces noms vient d'un catalogue. Un nom qui ne vient d'aucune
 librairie invoquee arrete la compilation, et le message le nomme.
 
@@ -810,6 +814,7 @@ marche que ce chemin suit, et le rang d'une forme dans le catalogue. Tout reglag
 ```bpscript
 core
 alphabet.western
+flag stage:0
 
 -----
 S -> C4 D4 [stage=2][goto:3 0]
@@ -824,6 +829,8 @@ tete de sous-grammaire.
 ```bpscript
 core
 alphabet.western:audio
+flag count:1
+flag stage:0
 
 -----
 [count-1] S -> C4 D4 [stage=2]
@@ -1190,29 +1197,6 @@ groupe.
 ne se traversent pas : le plus local gagne, l'autre est ignore. La difference tient a ce que la
 chose est -- un filtre se traverse, une intensite se choisit.
 
-**Une enveloppe posee sur une portee repart a chaque silence.** Ecrire `(cutoff:env)` confie la
-coupure a une enveloppe nommee `env` : elle monte, elle tient, elle redescend. Quand elle couvre une
-**regle** ou un **groupe**, chaque silence `-` de cette portee la relance depuis le debut ; une
-accolade qui enjambe le silence lui fait au contraire **traverser** -- une seule montee sur toute
-l'etendue. L'accolade choisit :
-
-```bpscript
-// Regle nue -> le silence ARTICULE : l'enveloppe repart apres chaque -
-Detache -> C2 - C2 (cutoff:env)
-
-// Accolade -> UN arc continu : le - interne est franchi (liaison)
-Lie -> { C2 - C2 }(cutoff:env)
-
-// La boucle est transparente : un tour re-arme quand un silence tombe a la couture,
-// ou quand le tour sort de l'accolade. Un long arc sur N tours = une accolade
-// qui couvre la reprise :
-S -> { Lie Lie Lie Lie }(cutoff:env)
-```
-
-**Une seule regle a retenir : c'est l'accolade qui dit jusqu'ou une enveloppe tient.** Plus elle
-est large, plus la montee est longue -- sur une note, sur une phrase, sur plusieurs tours de boucle.
-Ce qui la realise est decrit dans `atlas/architecture/MODULATIONS.md`.
-
 ### Valeur brute (modele CSS)
 
 Dans `()`, tout ce qui suit le `:` jusqu'au prochain `,` ou au delimiteur fermant
@@ -1261,15 +1245,15 @@ Le `()` d'une regle vaut par defaut pour **la regle comme unite**. Une paire peu
 
 | Ecriture                             | Sujet | Cible                             |
 | ------------------------------------ | ----- | --------------------------------- |
-| `(cutoff:env)` · `{…}(sombre)`       | omis  | **la portee elle-meme** (l'unite) |
-| `(*:cutoff:env)` · `{…}(*:sombre)`   | `*`   | **chaque terminal** de la portee  |
-| `(C2:cutoff:env)` · `{…}(C2:sombre)` | `C2`  | les terminaux **C2** de la portee |
+| `{…}(sombre)`       | omis  | **la portee elle-meme** (l'unite) |
+| `{…}(*:sombre)`     | `*`   | **chaque terminal** de la portee  |
+| `{…}(C2:sombre)`    | `C2`  | les terminaux **C2** de la portee |
 
 Le sujet s'ecrit pareil devant une **valeur** a affecter et devant un **nom** a appliquer : le
 deux-points introduit le sujet dans les deux cas.
 
 - `*` designe tous les terminaux de la portee.
-- Le sujet vaut **par paire** : `(*:cutoff:env, wave:sawtooth, vel:100)` pose `cutoff` sur chaque
+- Le sujet vaut **par paire** : `(*:filter:4000, wave:sawtooth, vel:100)` pose `filter` sur chaque
   terminal, `wave` et `vel` sur la regle.
 - Pour un **signal** (qui varie dans le temps), le sujet decide l'**horloge** : sans sujet, il court
   sur la voix ; avec `*:`, une enveloppe relancee par note. C'est le sujet qui tranche, pas la
@@ -1464,6 +1448,7 @@ actor perc
   out.osc
 ramp ramp1
 def monte ramp1(from:0, to:255)
+flag stage:0
 
 -----
 S -> perc.dha!perc.tin             // deux symboles a la meme attaque
@@ -2133,6 +2118,8 @@ modifie pendant la dérivation. Les neuf opérateurs qui le lisent et l'écriven
 
 ```bpscript
 alphabet.sargam
+flag stage:1
+flag count:4
 -----
 [stage==1] S -> sa re ga pa       // active quand stage vaut 1
 [count>3]  S -> ga pa             // active quand count dépasse 3
@@ -2142,6 +2129,8 @@ alphabet.sargam
 
 ```bpscript
 alphabet.sargam
+flag Ideas:20
+flag NumR:1
 -----
 [Ideas-1] S -> Motif S            // décrémente Ideas, active tant qu'il reste positif
 [NumR+1] S -> S                   // incrémente NumR, active tant qu'il reste positif
@@ -2162,6 +2151,8 @@ Les neuf à l'œuvre dans une scène :
 ```bpscript
 core
 alphabet.western:audio
+flag stage:0
+flag count:0
 
 -----
 S -> Loop [stage=1, count=4]
@@ -2186,6 +2177,8 @@ séquence jouée reste inchangée.
 
 ```bpscript
 alphabet.sargam
+flag count:1
+flag stage:0
 -----
 S -> Motif Cadence [count-1]                 // une mutation
 S -> Motif Motif [stage=1] [count=2]         // plusieurs mutations
@@ -2204,6 +2197,7 @@ un déclenchement dans le temps ; `[stage=2]` est entre crochets, donc une mutat
 ```text
 alphabet.sargam
 time.tempo:60
+flag stage:1
 
 [stage==1] S -> alap S
 [stage==2] S -> jor S
@@ -2296,7 +2290,7 @@ La categorie dit alors a quoi le reglage touche.
 la compilation s'arrete et **nomme les deux candidats** : on ne prefixe que ce cas.
 
 ```text
-(cutoff:4000)          // un seul catalogue porte `cutoff` -- il passe nu
+(filter:4000)          // un seul catalogue porte `filter` -- il passe nu
 (time.tempo:120)       // on prefixerait si deux librairies portaient `tempo`
 ```
 

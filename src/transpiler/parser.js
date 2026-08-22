@@ -1214,17 +1214,34 @@ function parse(tokens, opts = {}) {
     // cette liste ne désigne rien.
     const criFlags = [];
     const resolveFlag = (flag, value, ou) => {
+      // ⛔ LE DRAPEAU LUI-MÊME SE DÉCLARE — Romain, 2026-08-22 : « DONC EN BPSCRIPT ON INITIE ».
+      //
+      // ⚠️ CE TEST VIENT AVANT CELUI DE LA VALEUR, ET C'EST LE POINT. L'ancien jugeait la VALEUR et
+      // sortait tôt sur un entier : `[qq==3]` et `[qq=2]` sur un drapeau JAMAIS déclaré passaient
+      // en silence, et la règle ne se déclenchait jamais. Un défaut qui ne s'entend qu'à l'oreille.
+      // Mesuré le 2026-08-22 : quatre cas sur cinq échappaient au cri, tous ceux où la valeur est
+      // un entier — c'est-à-dire la forme que le corpus écrit partout.
+      if (!Object.prototype.hasOwnProperty.call(flagStates, flag)) {
+        criFlags.push(
+          `${ou} '[${flag}…]' : le drapeau '${flag}' n'est pas déclaré. Un drapeau porte sa valeur `
+          + `initiale — 'flag ${flag}:0' — avant le délimiteur. Sans elle, une règle qui s'y `
+          + `conditionne ne se déclenche jamais, et rien ne le dit.`);
+        return value;
+      }
       if (typeof value !== 'string') return value;
       const etats = flagStates[flag];
       if (etats && Object.prototype.hasOwnProperty.call(etats, value)) return etats[value];
       if (Object.prototype.hasOwnProperty.call(flagStates, value)) return value;   // un autre drapeau
-      if (!etats) return value;                       // régime BP3 : le drapeau n'est pas déclaré
+      // ⛔ LE MESSAGE A PERDU SA PREMIÈRE MOITIÉ AVEC LES ÉTATS NOMMÉS (Romain, 2026-08-22). Il
+      // disait « ni un état déclaré par 'X', ni le nom d'un autre drapeau » : la première branche
+      // n'existe plus, et la citer enverrait l'auteur écrire une forme que le langage refuse.
+      // ⚠️ LA COMPARAISON ENTRE DEUX DRAPEAUX RESTE LÉGALE, et ce n'est pas une tolérance : deux
+      // scènes vivantes l'écrivent — `[Num_a>Num_b]` dans `flags.bps` et `tryFlags.bps` —, le natif
+      // la porte, et la décision du 2026-08-22 ne la nomme pas. Mesuré avant d'écrire ce refus.
       criFlags.push(
-        `${ou} '[${flag}${ou === 'mutation' ? '=' : '=='}${value}]' : '${value}' n'est ni un état `
-        + `déclaré par '${flag}', ni le nom d'un autre drapeau. Les états d'un drapeau se déclarent `
-        + `avec lui — '${flag}(${value}:<entier>)' — et un nom qui ne désigne rien ne se compare à `
-        + `rien.${etats ? ` '${flag}' déclare ${JSON.stringify(Object.keys(etats))}.` : ` '${flag}' `
-        + `ne déclare aucun état : il ne peut servir que de modèle, jamais s'employer.`}`);
+        `${ou} '[${flag}${ou === 'mutation' ? '=' : '=='}${value}]' : '${value}' n'est pas le nom `
+        + `d'un drapeau déclaré. Un drapeau se compare à un ENTIER — '[${flag}==<entier>]' — ou au `
+        + `nom d'un autre drapeau, qui doit alors être déclaré lui aussi : 'flag ${value}:<entier>'.`);
       return value;
     };
 
@@ -2060,41 +2077,34 @@ function parse(tokens, opts = {}) {
       // comme avant — le sort de la forme nue n'est pas tranché, il attend Romain. Un ajout qui
       // retirerait au passage ferait exactement la voie parallèle qu'on évite : deux formes vivantes
       // dont une meurt sans décision.
-      if (at(T.COLON)) {
-        advance();
-        if (!at(T.INT)) {
-          throw new ParseError(`flag ${premier} : la valeur initiale est un ENTIER — `
-            + `'flag ${premier}:<entier>'. Un drapeau compte ou compare des entiers ; `
-            + `un nom d'état se déclare entre parenthèses, 'flag ${premier}(<nom>:<entier>)'.`,
-            current());
-        }
-        const initiale = Number(advance().value);
-        return { type: 'VarDirective', names: [premier],
-                 varType: { kind: 'flag', states: [], initiale }, line: tok.line };
-      }
-      if (!at(T.LPAREN)) {
-        return { type: 'VarDirective', names: [premier],
-                 varType: { kind: 'flag', states: [] }, line: tok.line };
+      // ⛔ UN DRAPEAU PORTE UN NOM ET UNE VALEUR ENTIÈRE — C'EST LA SEULE FORME.
+      //
+      // Romain, 2026-08-22 : « oui on fait `flag steps:0`, DONC EN BPSCRIPT ON INITIE. » — « on
+      // initie » veut dire que la déclaration PORTE sa valeur, pas qu'elle peut la porter.
+      //
+      // ⛔ ET LES ÉTATS NOMMÉS SORTENT, même jour : « je ne vois pas l'intérêt de cette graphie.
+      // C'est quoi un flag à deux variables ? Ou un flag qui a des valeurs nommées ? Dans tous les
+      // cas je n'en vois l'usage d'aucun des deux, ce n'est pas en BP3, donc je ne veux pas ce
+      // truc. » Le corpus lui donne raison : 58 drapeaux, tous des COMPTEURS, zéro état nommé.
+      //
+      // ⚠️ ET LA FORME À ÉTATS N'AVAIT AUCUNE VALEUR DE DÉPART — mesuré avant de la retirer : elle
+      // rendait `states` rempli et `initiale` ABSENTE. Elle était donc incompatible avec « on
+      // initie » : un drapeau à états ne pouvait pas dire d'où il part.
+      if (!at(T.COLON)) {
+        throw new ParseError(
+          `flag ${premier} : un drapeau porte sa valeur initiale — 'flag ${premier}:<entier>'. `
+          + `C'est la seule forme : ni le nom seul, ni des états nommés entre parenthèses. `
+          + `Un drapeau compte et se compare à des entiers.`, current());
       }
       advance();
-      const states = [];
-      while (!at(T.RPAREN) && !atEnd()) {
-        const stName = expect(T.IDENT).value;
-        if (!at(T.COLON)) {
-          throw new ParseError(`flag ${premier} : l'état '${stName}' doit porter sa valeur `
-            + `entière après ':' — '${stName}:<entier>'.`, current());
-        }
-        advance();
-        states.push({ name: stName, value: Number(expect(T.INT).value) });
-        if (at(T.COMMA)) advance();
+      if (!at(T.INT)) {
+        throw new ParseError(`flag ${premier} : la valeur initiale est un ENTIER — `
+          + `'flag ${premier}:<entier>'. Un drapeau compte et se compare à des entiers.`,
+          current());
       }
-      expect(T.RPAREN);
-      if (!states.length) {
-        throw new ParseError(`flag ${premier} : au moins un état est requis — `
-          + `'flag ${premier}(<nom>:<entier>, …)'.`, tok);
-      }
-      return { type: 'VarDirective', names: [premier], varType: { kind: 'flag', states },
-               line: tok.line };
+      const initiale = Number(advance().value);
+      return { type: 'VarDirective', names: [premier],
+               varType: { kind: 'flag', states: [], initiale }, line: tok.line };
     }
 
     // ── LE CORPS ENTRE PARENTHÈSES — LA MÊME PARENTHÈSE QU'AILLEURS ────────────────────────
