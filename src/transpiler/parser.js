@@ -2960,6 +2960,10 @@ function parse(tokens, opts = {}) {
       if (corpsParenthese) advance();
       const properties = {};
       const soundAssignments = [];
+      // ⛔ CE QUE CETTE TABLE TIENT : la LIGNE de chaque clé déjà écrite sur cet acteur, pour que le
+      // refus d'un doublon nomme LES DEUX déclarations. `properties` ne suffit pas — `out` s'y range
+      // sous `transport`, et aucune ligne n'y survit.
+      const clesEcrites = new Map();
       // Adressage de sortie : UNE seule forme d'adresse partout (KAI-9, décision
       // 2026-06-26 / GAP#1). Le type de runtime est `out.<midi|osc|...>` et les
       // DÉTAILS d'adresse (canal/device/port) sont ses PARAMS, iso-MIDI :
@@ -3008,7 +3012,32 @@ function parse(tokens, opts = {}) {
       // Helper : enregistre une référence d'entité dans `properties`
       // (alphabet, tuning, out, sound, eval). `out` (ex-`transport`) alimente TOUJOURS le champ
       // interne `properties.transport`/`TransportRef` — seul le mot ÉCRIT par l'auteur a changé.
-      const setEntityRef = (key, value, params /* | null */) => {
+      const setEntityRef = (key, value, params /* | null */, tokenDeLaCle) => {
+        // ⛔ UN DOUBLON DE CLÉ D'ACTEUR PASSAIT EN SILENCE, ET C'EST LA FAMILLE DU POIDS MUET.
+        // La dernière écriture gagnait, la première était mangée : ni refus, ni dernière-gagne
+        // annoncée, ni trace. L'auteur croit déclarer deux choses, il en déclare une, et rien ne le
+        // détrompe. Mesuré sur les CINQ clés que la donnée déclare, pas sur celle qui a été
+        // signalée : `tuning`, `out` et `eval` acceptaient à valeurs différentes ; `alphabet` et
+        // `octaves` acceptaient aussi, leur refus tombant plus loin sur un terminal — donc MUETS dès
+        // qu'aucun terminal ne les exerce. À valeur identique, les cinq passaient.
+        //
+        // ⚠️ ET LE REFUS PORTE AUSSI SUR LA VALEUR IDENTIQUE : écrire deux fois la même chose est le
+        // signe qu'on croit en écrire deux. Un refus qui laisserait passer ce cas-là garderait
+        // vivante la seule forme où l'erreur est certaine.
+        //
+        // Le refus existait déjà UNE PLACE PLUS HAUT — « une scène ne déclare qu'UN alphabet » mord
+        // sur les invocations globales. Le même fait vivait à deux places, une seule était gardée.
+        const dejaLa = clesEcrites.get(key);
+        if (dejaLa) {
+          throw new ParseError(
+            `l'acteur '${actorName}' déclare '${key}' DEUX FOIS — '${key}.${dejaLa.value}' ligne `
+            + `${dejaLa.line}, puis '${key}.${value}' ligne ${(tokenDeLaCle || current()).line}. `
+            + `Un acteur ne porte qu'un '${key}' : garder la déclaration voulue, retirer l'autre. `
+            + `Jusqu'ici la DERNIÈRE écrite gagnait sans un mot, et la première était perdue.`,
+            tokenDeLaCle || current(),
+          );
+        }
+        clesEcrites.set(key, { value, line: (tokenDeLaCle || current()).line });
         if (key === 'out') {
           properties.transport = { type: 'TransportRef', key: value, params: params || {} };
         // ⛔ LA BRANCHE `sound` A ETE ELAGUEE LE 2026-08-22 — elle etait morte depuis le 2026-08-06.
@@ -3138,12 +3167,15 @@ function parse(tokens, opts = {}) {
               + `Les clés d'un acteur sont : ${[...actorKeysData().valides].join(', ')}`,
               current());
           }
+          // Le jeton de la CLÉ, pris AVANT de la consommer : c'est lui qui porte la ligne que le
+          // refus d'un doublon doit nommer. Après `advance()`, elle n'est plus atteignable.
+          const jetonDeLaCle = current();
           advance();           // consume key IDENT
           advance();           // consume PERIOD
           const value = expect(T.IDENT).value;
           let params = null;
           if (at(T.LPAREN) && !current().spaceBefore) params = parseRefParams();
-          setEntityRef(key, value, params);
+          setEntityRef(key, value, params, jetonDeLaCle);
           continue;
         }
 
@@ -3200,7 +3232,7 @@ function parse(tokens, opts = {}) {
             if (at(T.LPAREN) && !current().spaceBefore) params = parseRefParams();
             // Renommage : v0.7 `sounds:` → propriété canonique `sound`
             const canonicalKey = key === 'sounds' ? 'sound' : key;
-            setEntityRef(canonicalKey, value, params);
+            setEntityRef(canonicalKey, value, params, tok);
             continue;
           }
           if (at(T.INT)) { properties[key] = Number(advance().value); continue; }
