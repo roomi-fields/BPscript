@@ -432,15 +432,26 @@ function resolveActorAlphabet(nom, directives) {
  * endroit : dupliquer la recherche ici serait rouvrir l'écart entre validation et résolution.
  */
 function resolveActorAlphabetSource(nom, directives) {
-  // ⛔ QUEL FICHIER A SERVI — l'adresse d'acteur en depend, et un mot en designe plusieurs.
-  // `alphabet` est declare par `alphabets.json` ET `test_alphabets.json` : dire seulement « le
-  // catalogue standard » perdrait le fichier, et l'aval ne saurait plus quel nom il a resolu.
-  // Le premier fichier du mot est le catalogue de reference ; les suivants portent leur nom.
+  // ⛔ QUEL AXE A SERVI — l'adresse d'acteur en depend. Le premier fichier du mot est le catalogue
+  // de reference et n'emet aucune adresse : son entree se retrouve par son nom. Les suivants en
+  // portent une, et elle dit le MOT DECLARE.
+  //
+  // ⛔ ELLE DISAIT LE NOM DU FICHIER JUSQU AU 2026-08-22, ET C ETAIT LA MOITIE MANQUANTE DE
+  // L ARBITRAGE DE ROMAIN DU 2026-08-17. L entree etait fermee — une scene n ecrit plus
+  // `test_alphabets.abc` — et la SORTIE portait encore le nom physique : le fichier redevenait une
+  // adresse au seul endroit qui compte pour l aval. Mesure : sur les 17 adresses que le corpus
+  // emet, `test_alphabets` etait le SEUL nom de fichier ; les seize autres disaient deja leur mot.
+  //
+  // ⚠️ CE QUE L ADRESSE CESSE DE DIRE : quel fichier a servi. C est voulu. Les entrees des fichiers
+  // d un meme mot sont disjointes, et une entree portee par deux d entre eux est REFUSEE — des deux
+  // cotes de la frontiere.
   const fichiers = motsDInvocation().get('alphabet') || [];
   for (let i = 0; i < fichiers.length; i++) {
     const e = loadJsonFile(fichiers[i]);
     const entry = e && (e.alphabets?.[nom] || e[nom]);
-    if (entry && nomsDeTerminaux(entry)) return { entry, lib: i === 0 ? null : fichiers[i] };
+    if (entry && nomsDeTerminaux(entry)) {
+      return { entry, lib: i === 0 ? null : (registry[fichiers[i]] || {}).resolves || fichiers[i] };
+    }
   }
   const standard = loadLib('alphabet', nom);
   if (standard && nomsDeTerminaux(standard)) return { entry: standard, lib: null };

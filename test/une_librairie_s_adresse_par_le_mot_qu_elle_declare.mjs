@@ -114,6 +114,51 @@ for (const a of APPELS) {
   passe += APPELS.filter((x) => !x.avecEntree).length;
 }
 
+// ── D. L'AUTRE DIRECTION — aucune ADRESSE ÉMISE ne porte un nom de fichier ───────────────────
+// ⛔ LA RÈGLE A DEUX SENS, ET J'AVAIS FERMÉ UN SEUL. Les volets ci-dessus tiennent l'ENTRÉE : ce que
+// mon code demande au chargeur. Ce volet tient la SORTIE : ce que mon émission dit à l'aval. Le
+// 2026-08-22, l'entrée était close — une scène n'écrit plus `test_alphabets.abc` — et l'adresse
+// émise portait encore le nom physique : le fichier redevenait une adresse au seul endroit qui
+// compte pour un voisin. Kairos l'a mesuré chez lui et me l'a renvoyé ; aucun garde d'ici ne le
+// voyait.
+//
+// ⚠️ ET LA MESURE DISAIT DÉJÀ TOUT : sur les 17 adresses que le corpus émet, `test_alphabets` était
+// le SEUL nom de fichier — les seize autres disaient leur mot. Un seul chemin réécrivait.
+{
+  const { toutesLesScenes } = await import('./corpus.mjs');
+  const { compileToBPxAST } = await import('../src/transpiler/index.js');
+  const nomsDeFichier = new Set(Object.keys(LIBS).filter((f) => motDuFichier(f) && motDuFichier(f) !== f));
+  ok(nomsDeFichier.size >= 1,
+     `D-témoin. aucun fichier ne porte un nom différent de son mot — ce volet ne garde plus rien. `
+   + `(Il y en avait 8 le 2026-08-22 : alphabets, scales, sounds, temperaments, tunings, voices, `
+   + `digital, test_alphabets.)`);
+
+  let scenes = 0, adresses = 0;
+  const fautives = [];
+  for (const [nom, src] of toutesLesScenes()) {
+    scenes++;
+    let r;
+    try { r = compileToBPxAST(src, {}); } catch { continue; }
+    if (!r.ast || (r.errors || []).length) continue;
+    const emises = [];
+    for (const a of r.ast.actors || []) for (const x of a.libRefs || []) emises.push([`acteur '${a.name}'`, x]);
+    for (const x of r.ast.libRefs || []) emises.push(['scène', x]);
+    for (const [ou, adresse] of emises) {
+      adresses++;
+      const axe = String(adresse).split('.')[0];
+      if (nomsDeFichier.has(axe)) fautives.push(`${nom} (${ou}) émet '${adresse}' — '${axe}' est le `
+        + `NOM DU FICHIER, la librairie déclare '${motDuFichier(axe)}'. L'aval reçoit une adresse que `
+        + `le langage refuse en entrée.`);
+    }
+  }
+  ok(scenes >= 300, `D-socle : ${scenes} scène(s) compilées, 300 au moins attendues.`);
+  ok(adresses >= 10,
+     `D-socle : ${adresses} adresse(s) émise(s) examinée(s), 10 au moins attendues. Sous ce seuil, `
+   + `ce volet est vert parce qu'il ne voit plus d'adresse, pas parce qu'elles sont justes.`);
+  for (const f of fautives) echecs.push(`D. ${f}`);
+  passe += adresses - fautives.length;
+}
+
 if (echecs.length) {
   console.error(`❌ une librairie s'adresse par le mot qu'elle déclare : ${echecs.length} échec(s)`);
   for (const e of echecs) console.error(`   - ${e}`);
@@ -122,4 +167,5 @@ if (echecs.length) {
 console.log(`✅ une librairie s'adresse par le mot qu'elle déclare — ${APPELS.length} appel(s) au `
   + `chargeur examinés dans ${readdirSync(SRC).filter((n) => n.endsWith('.js')).length} fichiers, `
   + `aucun ne nomme un fichier à la place de son mot, et aucun ne charge sans entrée un mot que `
-  + `plusieurs fichiers servent. ${passe} vérification(s) passée(s).`);
+  + `plusieurs fichiers servent — et dans l'autre sens, aucune adresse ÉMISE vers l'aval ne porte `
+  + `un nom de fichier. ${passe} vérification(s) passée(s).`);

@@ -136,10 +136,17 @@ const REGISTRE = [
   // Une librairie s'invoque par le mot qu'elle DÉCLARE, jamais par le nom de son fichier. Sept des
   // huit noms physiques passaient encore ; le corpus n'en portait qu'UNE scène réelle, celle-ci.
   // La réécriture est mécanique et le refus la porte : `test_alphabets.abc` devient `alphabet.abc`.
-  // QUI ATTEND : kanopi, prévenu AVANT la frappe avec la liste des lecteurs dérivée de mes fichiers
-  // suivis. ⚠️ ET SON RÉSOLVEUR DE PROVENANCE ADRESSE PAR FICHIER LÀ OÙ MON CHARGEUR PARCOURT :
-  // ce n'est pas seulement une scène à migrer chez lui, c'est du CODE qui résout autrement.
-  ['BPScript-tests/kairos-hauteur-collision-slot.bps', 'est le NOM DU FICHIER', 'invocation d une librairie par le nom de son fichier au lieu du mot qu elle declare', 'kanopi', 'kanopi — réécriture mécanique fournie : test_alphabets.abc → alphabet.abc'],
+  // QUI ATTENDAIT : kanopi, prévenu AVANT la frappe avec la liste des lecteurs dérivée de mes
+  // fichiers suivis.
+  //
+  // ⛔ L'ENTRÉE EST SORTIE LE JOUR MÊME, ET C'EST LE CLIQUET QUI L'A DIT. La seule scène concernée
+  // — `kairos-hauteur-collision-slot.bps`, à kanopi — a QUITTÉ le corpus : 389 scènes au lieu de
+  // 390, et plus aucune n'écrit un nom de fichier. Une entrée de ce registre qui ne refuse plus
+  // certifie un état disparu ; elle sort à la main, dans le mouvement où on l'apprend.
+  //
+  // ⚠️ CE QUE LE RETRAIT DE LA SCÈNE NE TRANCHE PAS : ce qu'elle mesurait. Elle servait la garde de
+  // collision de slot de Kairos, et sa migration supprimait le cas qu'elle exerce. La question est
+  // remontée, elle appartient à Romain, et aucun de ces trois gestes ne l'a refermée.
 ];
 
 // ── LA MESURE ─────────────────────────────────────────────────────────────────────────────────
