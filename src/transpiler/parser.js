@@ -2047,6 +2047,31 @@ function parse(tokens, opts = {}) {
       // de `[s==a]` passait en silence. Le cri qui manquait est posé À L'USAGE, dans
       // `annotateScene`, et il l'a été AVANT ce retrait : sans cet ordre, la famille entière
       // serait restée sans aucune garde entre les deux gestes.
+      // ⛔ UN DRAPEAU PORTE SA VALEUR INITIALE — décision de Romain, 2026-08-22 : « oui on fait
+      // `flag steps:0`, et le frontal BP3 s'arrange pour initialiser explicitement ce qui est
+      // implicite en BP3 ».
+      //
+      // ⚠️ ELLE NE CHANGE AUCUN COMPORTEMENT, ELLE LE REND LISIBLE. Le natif ne plante ni n'invente :
+      // `ResetFlags` — « Reset rule flags », valeur 1 par défaut — remet les drapeaux à zéro à chaque
+      // production, donc un drapeau jamais affecté vaut `0`. C'est pourquoi les 26 scènes du corpus
+      // natif marchent sans rien déclarer. Écrire la valeur dit ce que le moteur faisait en silence.
+      //
+      // ⛔ C'EST UN AJOUT, ET RIEN NE SORT. `flag steps` nu et `flag steps(calm:1, full:2)` compilent
+      // comme avant — le sort de la forme nue n'est pas tranché, il attend Romain. Un ajout qui
+      // retirerait au passage ferait exactement la voie parallèle qu'on évite : deux formes vivantes
+      // dont une meurt sans décision.
+      if (at(T.COLON)) {
+        advance();
+        if (!at(T.INT)) {
+          throw new ParseError(`flag ${premier} : la valeur initiale est un ENTIER — `
+            + `'flag ${premier}:<entier>'. Un drapeau compte ou compare des entiers ; `
+            + `un nom d'état se déclare entre parenthèses, 'flag ${premier}(<nom>:<entier>)'.`,
+            current());
+        }
+        const initiale = Number(advance().value);
+        return { type: 'VarDirective', names: [premier],
+                 varType: { kind: 'flag', states: [], initiale }, line: tok.line };
+      }
       if (!at(T.LPAREN)) {
         return { type: 'VarDirective', names: [premier],
                  varType: { kind: 'flag', states: [] }, line: tok.line };
