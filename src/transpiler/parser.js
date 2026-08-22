@@ -2560,13 +2560,27 @@ function parse(tokens, opts = {}) {
     // Les autres corps (branchement, structure, code typé, préréglage, transformation) suivront ;
     // ils sont REFUSÉS NOMMÉMENT plus bas plutôt que lus de travers — un corps qu'on ne sait pas
     // lire doit crier, jamais tomber dans une branche voisine.
-    if (name === 'def') {
+    // ⛔ `terminal` EST `def` AVEC SON TYPE ECRIT — jamais un second lecteur. Le nœud existe déjà :
+    // `def ka voice.sec` rend `DefDirective{kind:'terminal'}`, le `kind` DEDUIT du corps. Le mot le
+    // nomme au lieu de le laisser deviner, et c'est tout ce qu'il ajoute — la bible décrit le
+    // prototype à `LANGUAGE.md:348-374` (« Déclarer un terminal ») et `:863-900` (« Ce que porte un
+    // terminal », avec ses deux axes et son prototype complet).
+    // ⚠️ CE QUI LE SEPARE D'`actor`, ET C'EST ECRIT — `LANGUAGE.md:853` : un terminal est « une chose
+    // entière », seul porteur d'une sortie ; un acteur porte un alphabet et une sortie pour un
+    // ENSEMBLE de terminaux. Deux nœuds distincts, `DefDirective` et `ActorDirective`, et ils
+    // l'étaient déjà.
+    if (name === 'def' || name === 'terminal') {
+      const motDeclarant = name;
       if (!at(T.IDENT)) {
         throw new ParseError(
-          "'def' doit nommer ce qu'il définit : 'def <nom> <corps>'. Le nom vient d'abord, ce "
-          + "qu'il vaut ensuite — comme 'actor'.", tok);
+          `'${motDeclarant}' doit nommer ce qu'il définit : '${motDeclarant} <nom> <corps>'. Le nom `
+          + "vient d'abord, ce qu'il vaut ensuite — comme 'actor'.", tok);
       }
       const defName = expect(T.IDENT).value;
+      // La parenthèse porte ce qui appartient à ce qui la précède — ici les clés du terminal. Elle
+      // s'ajoute aux deux corps que `def` lit déjà (même ligne, bloc indenté) ; aucun ne change.
+      const clesParenthesees = motDeclarant === 'terminal' && at(T.LPAREN);
+      if (clesParenthesees) advance();
       refuserLeSigneEgal('def', defName);
       const cles = {};
       let lu = 0;
@@ -2614,9 +2628,15 @@ function parse(tokens, opts = {}) {
           // d'une autre n'en porte pas, et le mot nu qui la suit reste refusé.
           const ouvreUneCle = () => at(T.IDENT) && current().spaceBefore
             && (!dansUnBloc || peek(1).type === T.COLON || peek(1).type === T.PERIOD);
+          // ⛔ DANS UN CORPS PARENTHESE, LA LIGNE N'EST PLUS LA FRONTIERE — la parenthese l'est.
+          // Sans ces deux bornes, `terminal sirene(hz:440)` avalait la fermante DANS la valeur, et
+          // le refus disait « le corps n'est pas referme » sur une ligne qui l'etait : une cause
+          // fausse sous une conclusion juste, qui envoie chercher ailleurs. La virgule borne de meme,
+          // puisqu'elle separe deux cles du corps.
+          const borneDuCorps = () => clesParenthesees && (at(T.RPAREN) || at(T.COMMA));
           const parties = [];
           let courante = '';
-          while (!atEnd() && !at(T.NEWLINE) && !at(T.COMMENT) && !ouvreUneCle()) {
+          while (!atEnd() && !at(T.NEWLINE) && !at(T.COMMENT) && !ouvreUneCle() && !borneDuCorps()) {
             if (courante !== '' && current().spaceBefore) { parties.push(courante); courante = ''; }
             courante += String(advance().value);
           }
@@ -2723,6 +2743,17 @@ function parse(tokens, opts = {}) {
         return !!apres && (apres.type === T.PERIOD || apres.type === T.COLON) && !apres.spaceBefore;
       };
 
+      // ⛔ UN TERMINAL N'EST PAS UNE STRUCTURE. `def` lit deux corps — les clés d'un terminal ET
+      // « un nom vaut une suite de termes » ; le second n'a aucun sens sous `terminal`, qui NOMME
+      // déjà ce qu'il déclare. Le laisser passer rendrait un `kind:'terminal'` sur une structure,
+      // c'est-à-dire un nœud plausible et faux.
+      if (motDeclarant === 'terminal' && at(T.IDENT) && !cleEnTete()) {
+        throw new ParseError(
+          `'terminal ${defName}' : un terminal se déclare par ses CLÉS — 'voice.<nom>', 'hz:<n>', `
+          + `'degree:<n>', 'register:<n>', 'sounding:<vrai|faux>', 'duration:<n>', `
+          + `'tuning.<nom>', 'octaves.<nom>'. Une suite de termes est une STRUCTURE, et elle `
+          + `s'écrit 'def ${defName} <termes>'.`, current());
+      }
       if (at(T.IDENT) && !cleEnTete()) {
         // ── UNE STRUCTURE — un nom vaut une suite de termes, qu'on réinvoque d'un mot ────────
         // `LANGUAGE.md:304` : « `def` associe un nom a un corps, pour le reinvoquer d'un mot »,
@@ -2758,8 +2789,22 @@ function parse(tokens, opts = {}) {
         return { type: 'DefDirective', name: defName, kind: 'structure', body: corps, line: tok.line };
       }
 
-      // Les clés qui tiennent sur la MÊME ligne que le nom.
-      while (at(T.IDENT)) lireUneCle();
+      // Les clés qui tiennent sur la MÊME ligne que le nom. Dans un corps parenthésé, la virgule
+      // les sépare — « dans la partie DÉCLARATIVE, seule la virgule sépare » (Romain, 2026-08-19).
+      while (at(T.IDENT)) {
+        lireUneCle();
+        if (clesParenthesees && at(T.COMMA)) advance();
+      }
+      if (clesParenthesees) {
+        // Un corps ouvert se referme. Le refus NOMME ce qui manque : sans lui, une parenthèse
+        // oubliée sortirait par « Expected IDENT » sur la ligne suivante, qui n'apprend rien.
+        if (!at(T.RPAREN)) {
+          throw new ParseError(
+            `'terminal ${defName}' : le corps ouvert par '(' n'est pas refermé — il manque ')'.`,
+            current());
+        }
+        advance();
+      }
 
       // Puis le BLOC : les lignes suivantes, une clé par ligne, tant qu'elles sont INDENTÉES.
       // ⚠️ L'indentation est ce qui BORNE le bloc — sans elle, la ligne suivante serait avalée,
@@ -2780,7 +2825,7 @@ function parse(tokens, opts = {}) {
 
       if (lu === 0) {
         throw new ParseError(
-          `'def ${defName}' ne déclare rien. Ce palier lit DEUX corps : la DÉCLARATION DE `
+          `'${motDeclarant} ${defName}' ne déclare rien. Ce palier lit DEUX corps : la DÉCLARATION DE `
           + `TERMINAL — un nom puis ses clés, sur la même ligne ('def ${defName}  voice.sec') ou `
           + `dans un bloc indenté, une clé par ligne — et la STRUCTURE, un nom qui vaut une suite `
           + `de termes ('def ${defName} sa re ga pa'). Les autres corps que la spécification `

@@ -92,7 +92,7 @@ object_directive = "object" , IDENT , setting_bag ;
 
 (* `object` nomme une RACINE : le premier objet d une famille, celui qui ne derive de rien. *)
 
-def_directive = "def" , IDENT , [ param_list ] , [ CONVENTION ] , def_body ;
+def_directive = ( "def" | "terminal" ) , IDENT , [ param_list ] , [ CONVENTION ] , def_body ;
 
 param_list = "(" , IDENT , { "," , IDENT } , ")" ;      (* collé au nom *)
 
@@ -101,7 +101,8 @@ def_body = terminal_block            (* def cloche  degree:0  voice.sombre *)
          | backtick_inline           (* def fondu phase `js: (t, dur) => 1 - t / dur` *)
          | rhs ;                     (* def cadence sa re ga pa   def accent(x) x(vel:120) *)
 
-terminal_block = terminal_key+ ;     (* une clé par ligne, ou sur la même ligne *)
+terminal_block = "(" , terminal_key , { [ "," ] , terminal_key } , ")"   (* terminal cloche(voice.sec) *)
+               | terminal_key+ ;    (* une clé par ligne, ou sur la même ligne *)
 
 terminal_key = TERMINAL_REF , "." , ( IDENT | backtick_inline )   (* le point appelle un composant *)
              | TERMINAL_VALUE , ":" , value ;                (* le deux-points affecte une valeur *)
