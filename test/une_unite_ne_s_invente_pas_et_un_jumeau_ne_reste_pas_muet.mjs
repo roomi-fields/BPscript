@@ -33,7 +33,11 @@ const ok = (cond, quoi) => { if (cond) p++; else e.push(quoi); };
 const GABARITS = new Set(['bp3-settings-template', 'settings/notreich', 'settings/pattern_grammar', 'settings/test1']);
 /** Le vocabulaire fermé des unités, décision du 2026-08-20. `symbols` n'y est pas : il ne sert
  *  à convertir rien, il compte — et il ne vit que dans les gabarits. */
-const UNITES = new Set(['Hz', 'ms', 'ratio', 'cents']);
+// ⛔ `bpm` ET `s` ENTRENT LE 2026-08-22, sur GO de Romain — et la règle qui décide leur GRAPHIE est
+// la sienne : **on écrit l'unité comme le monde l'écrit**. `Hz` et `ms` portent leur majuscule parce
+// qu'elles viennent du système international ; `bpm` n'en vient pas, `s` en vient et s'y écrit en
+// minuscule. Ce n'est donc pas une inconsistance de casse, c'est la casse d'usage de chacune.
+const UNITES = new Set(['Hz', 'ms', 'ratio', 'cents', 'bpm', 's']);
 
 /** Tout champ porteur d'une unité, dans les librairies de VOCABULAIRE. */
 const porteurs = [];

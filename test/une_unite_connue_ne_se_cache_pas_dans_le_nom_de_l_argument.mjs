@@ -30,12 +30,18 @@ const e = [];
 const ok = (cond, quoi) => { if (cond) p++; else e.push(quoi); };
 
 /**
- * LES UNITÉS DE COMPTAGE — question ouverte, portée à Romain le 2026-08-21.
+ * LES COMPTAGES — ⛔ QUESTION TRANCHÉE PAR ROMAIN LE 2026-08-22, ET ELLE NE SE ROUVRE PAS.
  *
- * `degrees` compte des DEGRÉS D'ALPHABET, `keys` des TOUCHES : ce sont des rangs dans une échelle,
- * pas des grandeurs physiques. Leur donner un champ `unit` supposerait que « degré » et « touche »
- * SONT des unités — c'est une décision de vocabulaire, et le vocabulaire du langage appartient à
- * Romain. Ils sont donc nommés ici, un par un, au lieu d'être ni traités ni vus.
+ * « Le degré et la touche N'ENTRENT PAS au vocabulaire. Un degré d'alphabet est un RANG, pas une
+ * grandeur — `args(degrees)` dit déjà ce qu'il compte. »
+ *
+ * `degrees` compte des DEGRÉS D'ALPHABET, `keys` des TOUCHES : des rangs dans une échelle, jamais
+ * des grandeurs physiques. Leur champ d'unité reste VIDE, et c'est un état, pas un oubli — c'est le
+ * NOM DE L'ARGUMENT qui porte l'information, et il la porte entièrement.
+ *
+ * ⚠️ CE VOLET NE LES SURVEILLE PLUS COMME UNE DETTE, IL LES TIENT COMME UNE RÈGLE : le jour où l'un
+ * d'eux se met à porter une unité, c'est LUI qui rougit. La liste n'est donc pas une exemption qui
+ * s'oublie, c'est le lieu où la décision s'applique.
  */
 const COMPTAGE = new Set(['rotate', 'scaleshift', 'chromashift']);
 
@@ -52,7 +58,14 @@ const COMPTAGE = new Set(['rotate', 'scaleshift', 'chromashift']);
  * Ils sont donc nommés ici, avec leur unité manquante, au lieu d'être ni traités ni vus. Le volet 4
  * tient la contrepartie : le jour où l'unité entre au vocabulaire, l'exemption doit tomber.
  */
-const UNITE_ABSENTE_DU_VOCABULAIRE = new Map([['tempo', 'BPM'], ['fadeout', 's']]);
+// ⛔ LA MAP EST VIDE DEPUIS LE 2026-08-22, ET C EST LE VOLET QUI L A VIDEE, PAS MA MAIN. `bpm` et
+// `s` sont entrés au vocabulaire sur GO de Romain ; `tempo` et `fadeout` portent désormais leur
+// unité, donc plus aucune attente ne les couvre. Le volet 4 exige que chaque entrée de cette map
+// rougisse encore : celle qui a cessé de rougir sort, datée. Les deux sont sorties ensemble.
+// ⚠️ ELLE RESTE, VIDE, ET CE N EST PAS UN OUBLI : le jour où une unité connue se cache de nouveau
+// dans un nom d argument sans pouvoir entrer au vocabulaire, c est ici qu elle s inscrit avec sa
+// cause. Une map supprimée ferait disparaître le mécanisme avec ses deux cas.
+const UNITE_ABSENTE_DU_VOCABULAIRE = new Map([]);
 const VOCABULAIRE = new Set(['Hz', 'ms', 'ratio', 'cents']);
 
 /** Les unités que je sais reconnaître, avec la graphie attendue dans le champ. */
@@ -116,7 +129,10 @@ for (const { lib, nom, def } of grandeurs) {
 
 // ── 3. LE COMPLÉMENT NE RANCIT PAS ───────────────────────────────────────────────────────────
 // Une entrée inscrite parmi les comptages doit exister, et doit encore porter le mot qui l'y a
-// mise. Sans ça l'exemption survit à son motif et couvre autre chose.
+// mise. Sans ça la règle survit à son motif et couvre autre chose.
+// ⛔ ET DEPUIS LE 2026-08-22 CE N'EST PLUS UNE EXEMPTION : la décision est rendue, donc ce volet
+// APPLIQUE une règle au lieu de garder une dette. Un comptage qui se mettrait à porter une unité
+// contredirait Romain, et c'est ce que le troisième test dit maintenant.
 for (const nom of COMPTAGE) {
   const x = grandeurs.find((g) => g.nom === nom);
   ok(!!x, `3. '${nom}' est inscrit parmi les unités de comptage mais n'est plus une grandeur déclarée — RETIRER la ligne`);
@@ -124,8 +140,10 @@ for (const nom of COMPTAGE) {
     ok(/degrees|keys/i.test((x.def.args || []).join(' ')),
        `3. '${nom}' est inscrit comme comptage, et son argument ne compte plus rien — reçu args(${(x.def.args || []).join(', ')})`);
     ok(!(typeof x.def.unit === 'string' && x.def.unit),
-       `3. '${nom}' porte maintenant une unité (${JSON.stringify(x.def.unit)}) — la question de Romain est `
-       + `donc tranchée : le RETIRER de la liste des comptages, sinon l'exemption cache une décision rendue`);
+       `3. ⛔ '${nom}' porte une unité (${JSON.stringify(x.def.unit)}), et la décision de Romain du `
+       + `2026-08-22 dit l'inverse : « le degré et la touche N'ENTRENT PAS — un degré d'alphabet est `
+       + `un RANG, pas une grandeur ». Son champ d'unité doit rester VIDE, et c'est \`args(`
+       + `${(x.def.args || []).join(', ')})\` qui porte l'information.`);
   }
 }
 
@@ -148,4 +166,4 @@ for (const [nom, manquante] of UNITE_ABSENTE_DU_VOCABULAIRE) {
 
 if (e.length) { console.error(`[unités] ${e.length} ÉCHEC(S) :`); for (const x of e) console.error('  ✗ ' + x); process.exit(1); }
 console.log(`[unités] ${p} PASS / 0 FAIL — ${p} assertion(s) · ${grandeurs.length} grandeurs, `
-          + `${avecUnite.length} nomment leur unité, ${COMPTAGE.size} comptages en question`);
+          + `${avecUnite.length} nomment leur unité, ${COMPTAGE.size} comptages sans unité — décision rendue`);

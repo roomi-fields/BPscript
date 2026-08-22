@@ -239,7 +239,7 @@ def volumecontrol (bp3:_volumecontrol, args(controller), range(0, 127), descript
 def pancontrol (bp3:_pancontrol, args(controller), range(0, 127), description:"Numéro du contrôleur MIDI qui porte le panoramique. Image de PanoramicController au moteur natif. Le canal se dit dans le même sac : !(chan:3, pancontrol:11).", scope(symbol, group, rule, flow, scene), transportGroup:midi)
 
 // FADEOUT · L EXTINCTION DE FIN.
-def fadeout (bp3:EndFadeOut, args(duration), description:"Extinction du son à la fin de la performance, en SECONDES. Une valeur inférieure ou égale à zéro supprime le fondu. Image de EndFadeOut au moteur natif.", scope(scene), transportGroup:midi)
+def fadeout (bp3:EndFadeOut, args(duration), unit:"s", description:"Extinction du son à la fin de la performance, en SECONDES. Une valeur inférieure ou égale à zéro supprime le fondu. Image de EndFadeOut au moteur natif.", scope(scene), transportGroup:midi)
 
 // ═══ LES QUATRE GESTES DE FIN ET DE RELANCE ═══
 // QUATRE PAIRES, HUIT MOTS, DEUX NOMS POSITIFS PAR PAIRE — jamais un nom et sa negation. Les deux

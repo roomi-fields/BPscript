@@ -9,6 +9,7 @@
       "args": [
         "bpm"
       ],
+      "unit": "bpm",
       "description": "Metronome absolu de la scene ou de la sous-grammaire, en BPM.",
       "scope": [
         "subgrammar",
