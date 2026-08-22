@@ -341,7 +341,9 @@ let _voicesIndex = null;
 function voicesIndex() {
   if (_voicesIndex) return _voicesIndex;
   _voicesIndex = new Map();
-  const lib = loadLib('voices');
+  // ⛔ PAR LE MOT DECLARE, jamais par le nom du fichier (Romain, 2026-08-17) : `voices.json`
+  // declare `voice`, et c est ce mot qui adresse la librairie partout ailleurs.
+  const lib = loadLib('voice');
   for (const [key, def] of Object.entries((lib && lib.objects) || {})) {
     const m = key.match(/^(\S+)\s+for:(\S+)$/);
     const name = m ? m[1] : key;

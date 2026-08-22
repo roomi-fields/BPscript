@@ -167,7 +167,11 @@ function octavesHerite(ast, alphabetKey) {
  * @returns {string|undefined} l'accordage effectif, ou undefined = l'alphabet n'en déclare pas
  */
 function tuningHerite(ast, alphabetKey) {
-  const connu = (nom) => !!(nom && loadLib('tunings')?.[nom]);
+  // ⛔ L AXE EST LE MOT DECLARE, JAMAIS LE NOM DU FICHIER (Romain, 2026-08-17). Cet appel disait
+  // `tunings` — le fichier — et court-circuitait l axe que toute scene ecrit. Les deux portes
+  // rendent le meme objet sur les 19 entrees reelles, et null / undefined sur l inexistant :
+  // la bascule est mecanique, et ce qui change est l ADRESSE, pas le resultat.
+  const connu = (nom) => !!(nom && loadLib('tuning', nom));
   const sceneTun = (ast.directives || []).find((d) => d.name === 'tuning' && d.subkey);
   if (sceneTun) return connu(sceneTun.subkey) ? sceneTun.subkey : undefined;  // niveau 3 : la scène
   if (!alphabetKey) return undefined;
