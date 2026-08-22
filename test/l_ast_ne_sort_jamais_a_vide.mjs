@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+// ⛔ MIGRE LE 2026-08-22 : une librairie s invoque par le mot qu elle DECLARE, jamais par le nom
+// de son fichier (decision de Romain du 2026-08-17, frappee ce jour). `temperaments` →
+// `temperament`, `test_alphabets` → `alphabet`, `voices` → `voice`, `tunings` → `tuning`,
+// `scales` → `scale`, `sounds` → `sound`, `alphabets` → `alphabet`.
 /**
  * GARDE — L'AST SORT COMPLET. Une scène qui se tait HÉRITE ; elle ne sort jamais à vide.
  *
@@ -68,9 +72,9 @@ const SITUATIONS = [
    'core\nactor voix\n  alphabet.sargam\n  out.audio\n-----\nS -> voix.sa', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
   // Les deux SEULES absences légitimes.
   ['hauteur OPAQUE : l\'alphabet reste ABSENT, Kairos le remplit (loi 35)',
-   'core\ntemperaments.12TET\n-----\nS -> C4', { alphabet: null, octaves: null, tuning: null }],
+   'core\ntemperament.12TET\n-----\nS -> C4', { alphabet: null, octaves: null, tuning: null }],
   ['invocation par le canal NEUTRE : ABSENT aussi — le socle ne recouvre jamais un composant invoqué',
-   'core\ntest_alphabets.abc\n-----\nS -> a b', { alphabet: null, octaves: null, tuning: null }],
+   'core\nalphabet.abc\n-----\nS -> a b', { alphabet: null, octaves: null, tuning: null }],
   ['une VOIX-CODE n\'a pas de vocabulaire de notes : ABSENT',
    'core\nactor viz  eval.hydra\n-----\nS -> voix\nvoix -> viz.`osc(4).out()`', { alphabet: null, octaves: null, tuning: null }],
   // ⚠️ L'ACCORDAGE vient de l'ALPHABET, jamais du socle core (Romain 2026-07-29). J'avais laissé
@@ -115,7 +119,7 @@ ok(refusUnicite('core\ndef G4 C4 D4\n-----\nS -> C4').length >= 1,
   + "l'alphabet du socle est bien descendu (sans lui, il n'y a rien à heurter)");
 ok(refusUnicite('core\ndef grondement saw >> audio\n-----\nS -> C4').length === 0,
   '2. SE TAIT — la même scène nue accepte une déclaration au nom quelconque');
-ok(refusUnicite('core\ntemperaments.12TET\n-----\nG4 -> C4').length === 0,
+ok(refusUnicite('core\ntemperament.12TET\n-----\nG4 -> C4').length === 0,
   '2. SE TAIT — hauteur opaque : aucun vocabulaire connu ici, donc rien à heurter');
 
 // ── 3. LE BALAYAGE — l'ESPACE, pas mes exemples ─────────────────────────────────────────────
@@ -165,8 +169,8 @@ for (const [nom, src] of sources) {
     // PRÉSENCE D'UNE ADRESSE — et elle se pose à l'un ou l'autre étage selon la GRAPHIE de
     // l'invocation, mesuré le 2026-08-21 :
     //
-    //     test_alphabets.abc1   (nom de fichier)  → `ast.libRefs`          = ["test_alphabets.abc1"]
-    //     alphabet.abc1         (mot, 2e fichier) → `actors[].libRefs`     = ["test_alphabets.abc1"]
+    //     alphabet.abc1   (nom de fichier)  → `ast.libRefs`          = ["alphabet.abc1"]
+    //     alphabet.abc1         (mot, 2e fichier) → `actors[].libRefs`     = ["alphabet.abc1"]
     //     alphabet.western      (mot, 1er fichier) → ni l'un ni l'autre, et `properties.alphabet` reste
     //
     // ⚠️ ET CE VOLET A ROUGI SUR UNE MIGRATION LÉGITIME : kanopi a réécrit 22 scènes par le MOT

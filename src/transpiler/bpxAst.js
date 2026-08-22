@@ -2148,7 +2148,21 @@ function validateReferences(ast, libCtx = {}) {
   // FRONTIÈRE MESURÉE AVANT DE LIVRER, sur 447 fichiers de scène (bibliothèque Kanopi entière,
   // démos, scènes de BPx) : QUATRE invocations ne résolvent pas, et les quatre sont déjà refusées
   // aujourd'hui (`alphabet.raga`, axe à catalogue). Ce fail-loud n'ajoute donc AUCUNE casse.
-  const libExiste = (nom) => !!loadLib(nom);
+  // ⛔ UNE LIBRAIRIE S INVOQUE PAR LE MOT QU ELLE DECLARE, JAMAIS PAR LE NOM DE SON FICHIER —
+  // décision de Romain, 2026-08-17. Le nom LOGIQUE se sépare du nom PHYSIQUE : « un fichier se
+  // renomme, se scinde ou s'ajoute sans qu'aucune scène change ».
+  //
+  // ⚠️ `loadLib(nom)` NE SUFFIT PAS À JUGER, et c'est ce qui laissait les deux voies vivre : il
+  // traduit un AXE en fichier, puis retombe sur le nom TEL QUEL quand ce n'est pas un axe. Sept
+  // fichiers étaient donc adressables par leur nom physique — `voices.bayan_open`,
+  // `tunings.western_12TET`, `sounds.tabla_perc`… — cinq jours après l'arbitrage, pendant que
+  // kanopi migrait 22 scènes sur la règle inverse.
+  //
+  // ⛔ CE JUGE LIT DONC LES MOTS DÉCLARÉS, jamais le registre des fichiers. Un mot qu'aucune
+  // librairie ne DÉCLARE n'est pas un axe, même si un fichier porte ce nom.
+  const motsDeclares = () => new Set(
+    Object.values(LIBS).map((l) => l && typeof l === 'object' ? l.resolves : null).filter(Boolean));
+  const libExiste = (nom) => motsDeclares().has(nom);
   const motsDuLangage = new Set(loadLib('core')?.schema?.reservedDirectives || []);
   for (const d of ast.directives || []) {
     if (!d || !d.name || !d.subkey) continue;
@@ -2177,10 +2191,20 @@ function validateReferences(ast, libCtx = {}) {
     // remonte a l'architecte, pas bricole ici.
     if (!libExiste(d.name)) {
       if (motsDuLangage.has(d.name)) continue;
+      // ⛔ ET LE REFUS NOMME LE MOT A ECRIRE quand l axe est un NOM DE FICHIER. Sans ça, l auteur
+      // de `voices.bayan_open` lit « aucune librairie ne sert cet axe » devant un fichier qui
+      // existe, et il cherche une donnee manquante au lieu de changer un mot.
+      const fichier = LIBS[d.name];
+      const motAEcrire = fichier && typeof fichier === 'object' ? fichier.resolves : null;
       errors.push({
-        message: `'${d.name}.${d.subkey}' : aucune librairie ne sert l'axe '${d.name}'. Une `
-               + `invocation dont l'axe n'est porte par aucune donnee ne charge RIEN, et rien ne `
-               + `distingue ce silence d'une scene qui n'a pas declare.`,
+        message: motAEcrire
+          ? `'${d.name}.${d.subkey}' : '${d.name}' est le NOM DU FICHIER, pas le mot qui l'invoque. `
+            + `Ecrire '${motAEcrire}.${d.subkey}'. Une librairie s'invoque par le mot qu'elle `
+            + `DECLARE (decision Romain, 2026-08-17) : le nom logique se separe du nom physique, et `
+            + `un fichier se renomme sans qu'aucune scene change.`
+          : `'${d.name}.${d.subkey}' : aucune librairie ne sert l'axe '${d.name}'. Une `
+            + `invocation dont l'axe n'est porte par aucune donnee ne charge RIEN, et rien ne `
+            + `distingue ce silence d'une scene qui n'a pas declare.`,
         line: d.line,
       });
       continue;

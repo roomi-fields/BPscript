@@ -49,10 +49,22 @@ const CATALOGUES = new Set(LIBS.core?.schema?.catalogAxes || []);
 // ⚠️ CRITÈRE MIGRÉ le 2026-08-10 : `lib.domain` (retiré, remplacé par `resolvedBy` — mise en
 // conformité des librairies) faisait le tri entre « vraie librairie à contenu » et schéma/config.
 // `resolvedBy` joue le même rôle ici : un champ de fichier déclaré à la main, opt-in.
+// ⛔ LA CLE DE CE TABLEAU EST LE MOT DECLARE, PLUS LE NOM DU FICHIER — decision de Romain,
+// 2026-08-17, frappee le 2026-08-22 : « une librairie s invoque par le mot qu elle DECLARE, jamais
+// par le nom de son fichier ». Ce garde ecrivait `${nom}.${entree}` avec le nom PHYSIQUE, donc il
+// EXIGEAIT que sept adresses mortes passent — il gravait la voie qu on vient de fermer.
+// ⚠️ ET C EST LE MEME PIEGE QUE PARTOUT AUJOURD HUI : un banc qui grave une forme la defend contre
+// la decision qui la retire, et son rouge accuse la frappe au lieu de lui-meme.
 const SANS_CATALOGUE = Object.entries(LIBS)
   .filter(([nom, lib]) => !CATALOGUES.has(nom) && lib && typeof lib === 'object' && lib.resolvedBy)
-  .map(([nom, lib]) => [nom, Object.keys(lib).filter((k) => !k.startsWith('_') && !['name', 'description', 'version', 'resolvedBy'].includes(k))])
-  .filter(([, entrees]) => entrees.length > 0);
+  .map(([nom, lib]) => [lib.resolves || nom,
+    Object.keys(lib).filter((k) => !k.startsWith('_')
+      && !['name', 'description', 'version', 'resolvedBy', 'resolves'].includes(k))])
+  // ⚠️ ET LE FILTRE DES CATALOGUES SE REJOUE APRES LA TRADUCTION : `test_alphabets` n'etait pas
+  // reconnu comme un axe a catalogue tant qu'on le nommait par son fichier. Traduit en `alphabet`,
+  // il l'est — et il doit sortir d'ici, parce que le volet 4 garde deja les axes a catalogue et que
+  // leur invocation change l'alphabet de la scene, donc ses terminaux.
+  .filter(([mot, entrees]) => entrees.length > 0 && !CATALOGUES.has(mot));
 
 ok(CATALOGUES.size >= 5, `1. les axes à catalogue doivent être chargés — reçu ${CATALOGUES.size}`);
 ok(SANS_CATALOGUE.length >= 2,

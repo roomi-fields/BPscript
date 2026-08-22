@@ -1,3 +1,7 @@
+// ⛔ MIGRE LE 2026-08-22 : une librairie s invoque par le mot qu elle DECLARE, jamais par le nom
+// de son fichier (decision de Romain du 2026-08-17, frappee ce jour). `temperaments` →
+// `temperament`, `test_alphabets` → `alphabet`, `voices` → `voice`, `tunings` → `tuning`,
+// `scales` → `scale`, `sounds` → `sound`, `alphabets` → `alphabet`.
 // RESOLVER-CASCADE-ALPHABET (modèle Romain 2026-07-13) — la cascade de défauts s'applique AUSSI
 // à l'alphabet : « PAS D'ALPHABET » N'EXISTE PAS. Un acteur sans alphabet HÉRITE (acteur → scène
 // alphabet.X → sinon socle core western). Le résolveur ne REJETTE JAMAIS pour 'no alphabet' —
@@ -42,7 +46,7 @@ console.log('\n=== DÉFAUT @core : aucun alphabet de scène → socle western ==
 
 console.log('\n=== @MINE : hauteur opaque de scène → alphabet ABSENT (Kairos résout), PAS de rejet ===');
 {
-  const r = scene('core\ntemperaments.12TET\nactor mavoix out.audio\n-----\nvoice -> sa re\n');
+  const r = scene('core\ntemperament.12TET\nactor mavoix out.audio\n-----\nvoice -> sa re\n');
   assert('0 erreur (compile, plus de rejet §71)', r.errors.length === 0, r.errors.join(' | '));
   assert('alphabet ABSENT (opaque, loi 35 → aval)', r.alphabet === undefined, String(r.alphabet));
   assert('transport présent (canon audio)', r.transport === 'audio', String(r.transport));

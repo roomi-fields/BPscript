@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+// ⛔ MIGRE LE 2026-08-22 : une librairie s invoque par le mot qu elle DECLARE, jamais par le nom
+// de son fichier (decision de Romain du 2026-08-17, frappee ce jour). `temperaments` →
+// `temperament`, `test_alphabets` → `alphabet`, `voices` → `voice`, `tunings` → `tuning`,
+// `scales` → `scale`, `sounds` → `sound`, `alphabets` → `alphabet`.
 /**
  * UN AXE QUE PERSONNE NE SERT EST REFUSÉ.
  *
@@ -111,7 +115,7 @@ const compiler = (tete) => compileToBPxAST(`core\nalphabet.western\n${tete}\n---
 // ── D. LA VALIDATION D'ENTRÉE N'A PAS BOUGÉ — le refus voisin garde son message ─────────────
 // Un axe SERVI dont l'entrée manque crie autrement : c'est l'entrée qu'il nomme, pas l'axe.
 {
-  const msg = messages(compiler('temperaments.nexistepasdutout'));
+  const msg = messages(compiler('temperament.nexistepasdutout'));
   ok(/l'entrée 'nexistepasdutout' n'existe pas/.test(msg),
      `D. un axe servi dont l'entrée manque doit nommer L'ENTRÉE, pas l'axe — les deux refus se `
      + `distinguent. Reçu : ${msg.slice(0, 100)}`);

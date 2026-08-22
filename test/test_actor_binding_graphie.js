@@ -1,3 +1,7 @@
+// ⛔ MIGRE LE 2026-08-22 : une librairie s invoque par le mot qu elle DECLARE, jamais par le nom
+// de son fichier (decision de Romain du 2026-08-17, frappee ce jour). `temperaments` →
+// `temperament`, `test_alphabets` → `alphabet`, `voices` → `voice`, `tunings` → `tuning`,
+// `scales` → `scale`, `sounds` → `sound`, `alphabets` → `alphabet`.
 // Graphie canonique des bindings d'ACTEUR — CUTOVER 2026-07-14 (Romain GO, tour [411]).
 // Règle gravée (décision hub 2026-06-26) : « `.` APPELLE un composant / `:` AFFECTE une valeur ».
 //
@@ -57,9 +61,9 @@ console.log('\n=== §71 : une provenance NON posée sur la ligne d\'acteur → l
   // ⚠️ PAR LA PORTE COMPLÈTE, PAS PAR LE PARSEUR SEUL. L'ancienne forme préfixée produisait son
   // nœud AU PARSEUR, sans résolution — c'est exactement le contournement qui l'a fait sortir.
   // L'invocation directe EXIGE que la librairie existe : elle se mesure donc là où elle se résout.
-  const ast = compileToBPxAST('core\nactor voice out.audio\ntemperaments.12TET\n-----\nS -> sa\n').ast;
+  const ast = compileToBPxAST('core\nactor voice out.audio\ntemperament.12TET\n-----\nS -> sa\n').ast;
   assert('acteur sortie-seule : properties.alphabet ABSENT', ast.actors[0].properties.alphabet === undefined, JSON.stringify(ast.actors[0].properties.alphabet));
-  assert('temperaments.12TET → libRef de scène, adresse NUE', JSON.stringify(ast.libRefs) === '["temperaments.12TET"]', JSON.stringify(ast.libRefs));
+  assert('temperament.12TET → libRef de scène, adresse NUE', JSON.stringify(ast.libRefs) === '["temperament.12TET"]', JSON.stringify(ast.libRefs));
 }
 
 console.log('\n=== CUTOVER : l\'ancienne forme d\'entité en `:` CRIE désormais ===');

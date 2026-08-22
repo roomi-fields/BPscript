@@ -131,6 +131,15 @@ const REGISTRE = [
   // était lu comme une INVOCATION de librairie qui n'émettait rien, alors que le point y qualifie
   // un TYPE et que l'entrée voyage par `ast.inputs`. Une forme neuve traverse les gardes écrits
   // pour l'ancienne, et c'est en la voyant compiler qu'on l'apprend — jamais avant.
+
+  // ── E. LE NOM DU FICHIER CESSE D'ÊTRE UNE ADRESSE (Romain, 2026-08-17 — frappé le 2026-08-22) ──
+  // Une librairie s'invoque par le mot qu'elle DÉCLARE, jamais par le nom de son fichier. Sept des
+  // huit noms physiques passaient encore ; le corpus n'en portait qu'UNE scène réelle, celle-ci.
+  // La réécriture est mécanique et le refus la porte : `test_alphabets.abc` devient `alphabet.abc`.
+  // QUI ATTEND : kanopi, prévenu AVANT la frappe avec la liste des lecteurs dérivée de mes fichiers
+  // suivis. ⚠️ ET SON RÉSOLVEUR DE PROVENANCE ADRESSE PAR FICHIER LÀ OÙ MON CHARGEUR PARCOURT :
+  // ce n'est pas seulement une scène à migrer chez lui, c'est du CODE qui résout autrement.
+  ['BPScript-tests/kairos-hauteur-collision-slot.bps', 'est le NOM DU FICHIER', 'invocation d une librairie par le nom de son fichier au lieu du mot qu elle declare', 'kanopi', 'kanopi — réécriture mécanique fournie : test_alphabets.abc → alphabet.abc'],
 ];
 
 // ── LA MESURE ─────────────────────────────────────────────────────────────────────────────────

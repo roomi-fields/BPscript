@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// ⛔ MIGRE LE 2026-08-22 : une librairie s invoque par le mot qu elle DECLARE, jamais par le nom
+// de son fichier (decision de Romain du 2026-08-17, frappee ce jour).
 /**
  * GARDE — UNE FORME SUPPRIMÉE PAR DÉCISION NE REVIENT PAS PAR LA PORTE D'UNE LIBRAIRIE.
  *
@@ -115,13 +117,13 @@ for (const f of SUPPRIMEES.filter((x) => x.composee)) {
 // consigne ne couvrait pas encore, et se retirer quand elle l'a couvert.
 //
 // ⛔ ET CE QUI L'A FAIT SORTIR N'EST PAS SA FORME, C'EST SA RAISON : le préfixe CONTOURNAIT la
-// résolution. Mesuré avant le retrait — `temperaments.nexistepas` est REFUSÉ, et
-// `factory.temperaments.nexistepas` était ACCEPTÉ et voyageait jusqu'à l'aval. Une seconde porte
+// résolution. Mesuré avant le retrait — `temperament.nexistepas` est REFUSÉ, et
+// `factory.temperament.nexistepas` était ACCEPTÉ et voyageait jusqu'à l'aval. Une seconde porte
 // qui ne vérifie rien n'est pas un sucre.
 //
 // La forme vivante qui reste est l'invocation DIRECTE : même canal, et elle EXIGE que la
 // librairie existe.
-ok(err('temperaments.12TET\n-----\nS -> C4').length === 0,
+ok(err('temperament.12TET\n-----\nS -> C4').length === 0,
   "TÉMOIN — l'invocation DIRECTE d'une entrée de catalogue compile ; c'est la forme qui reste.");
 
 // ── LA MOITIÉ « DOIT PASSER » — sans elle, une règle qui refuserait tout aurait l'air juste ───

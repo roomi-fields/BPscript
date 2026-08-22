@@ -91,7 +91,10 @@ const DECLARATIONS_DE_TETE = new Set([
   'actor', 'all_items', 'allitems', 'alphabet', 'chromashift', 'core', 'def', 'diapason', 'eval',
   'homomorphism', 'improvize', 'init', 'ins', 'items', 'maxitems', 'meter', 'modulation',
   'octaves', 'on_fail', 'out', 'qclock', 'quantization', 'randomize', 'rndtime', 'scale', 'scan',
-  'seed', 'settings', 'sound', 'sounds', 'test_alphabets', 'timepatterns', 'transpose', 'tuning',
+  // ⛔ `sounds` ET `test_alphabets` SORTIS LE 2026-08-22 : c'étaient des noms de FICHIER, et une
+  // librairie s'invoque par le mot qu'elle DÉCLARE. Les mots qu'ils servaient — `sound` et
+  // `alphabet` — sont déjà dans cette famille, chacun une seule fois.
+  'seed', 'settings', 'sound', 'timepatterns', 'transpose', 'tuning',
 ]);
 
 const nomsReserves0 = (rd) => (Array.isArray(rd) ? rd : Object.keys(rd || {}));
@@ -227,10 +230,14 @@ ok(RESERVEES >= 40, `4. le vocabulaire de directives doit être chargé — ${RE
 // ⛔ LE PLANCHER PORTE DÉSORMAIS SUR L'UNION, PAS SUR LA MATRICE. La matrice se dérive de l'union :
 // un plancher posé sur elle mesurerait sa propre soustraction. C'est l'UNION qui dit la taille du
 // vocabulaire, et c'est elle qui doit refuser de rétrécir sans qu'on le sache.
-// Mesure du 2026-08-19 : 49 mots à l'union, 34 déclarations, 14 contrôles de portée, 1 légitime
+// Mesure du 2026-08-22 : 47 mots à l'union, 32 déclarations, 14 contrôles de portée, 1 légitime
 // après. Le plancher descend d'un cran quand un mot SORT du langage, jamais parce qu'un extracteur
 // a cessé de voir.
-ok(UNION.length >= 49,
+// ⛔ ET IL EST DESCENDU DE 49 À 47 CE JOUR-LÀ, POUR LA SEULE RAISON ADMISE : `sounds` et
+// `test_alphabets` étaient des noms de FICHIER, et une librairie s'invoque par le mot qu'elle
+// DÉCLARE. Le diff de la donnée porte exactement deux retraits et aucun autre — c'est cette
+// soustraction-là qui est comptée, pas un extracteur devenu aveugle.
+ok(UNION.length >= 47,
   `4. le vocabulaire réservé ne s'est pas vidé — ${UNION.length} mot(s) à l'union des librairies`);
 ok(DECLARATIONS_DE_TETE.size + CONTROLES_DE_PORTEE.size + LEGITIME_APRES.size === UNION.length,
   `4. les trois familles doivent PARTITIONNER l'union — ${DECLARATIONS.length} + `

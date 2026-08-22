@@ -1,8 +1,10 @@
 #!/usr/bin/env node
+// ⛔ MIGRE LE 2026-08-22 : une librairie s invoque par le mot qu elle DECLARE, jamais par le nom
+// de son fichier (decision de Romain du 2026-08-17, frappee ce jour).
 /**
  * UNE INVOCATION MET SON VOCABULAIRE EN PORTÉE — une seule ligne suffit.
  *
- * `@test_alphabets.abc` charge l'alphabet ET l'active : ses mots sont écrivables, tout autre mot est
+ * `@alphabet.abc` charge l'alphabet ET l'active : ses mots sont écrivables, tout autre mot est
  * refusé. Le nom du fichier et celui de l'entrée disent déjà tout.
  *
  * ⛔ ELLE DÉSACTIVAIT LA VALIDATION AU LIEU DE L'ACTIVER. La scène sortait avec ZÉRO terminal en
@@ -43,13 +45,13 @@ const messages = (r) => (r.errors || []).map((e) => e.message ?? e).join(' | ');
        + `parce qu'un mot absorbé par le vocabulaire reste accepté quoi qu'il arrive.`);
     if (!sonde) continue;
 
-    const bon = compileToBPxAST(`core\ntest_alphabets.${nom}\n-----\nS -> ${[...T][0]}\n`);
+    const bon = compileToBPxAST(`core\nalphabet.${nom}\n-----\nS -> ${[...T][0]}\n`);
     ok(messages(bon) === '',
-       `A. 'test_alphabets.${nom}' SEULE doit accepter ses propres mots — reçu : ${messages(bon).slice(0, 80)}`);
+       `A. 'alphabet.${nom}' SEULE doit accepter ses propres mots — reçu : ${messages(bon).slice(0, 80)}`);
 
-    const mauvais = compileToBPxAST(`core\ntest_alphabets.${nom}\n-----\nS -> ${sonde}\n`);
+    const mauvais = compileToBPxAST(`core\nalphabet.${nom}\n-----\nS -> ${sonde}\n`);
     ok(messages(mauvais) !== '',
-       `A. 'test_alphabets.${nom}' SEULE doit REFUSER '${sonde}', insegmentable sur ses `
+       `A. 'alphabet.${nom}' SEULE doit REFUSER '${sonde}', insegmentable sur ses `
        + `${T.size} termes. Il passe — donc la validation ne tourne pas, et cette scène n'est `
        + `contrôlée par rien.`);
   }
@@ -78,15 +80,16 @@ const messages = (r) => (r.errors || []).map((e) => e.message ?? e).join(' | ');
   }
 }
 
-// ── C. LA DIRECTIVE D'AXE CONTINUE DE MARCHER — l'une n'exclut pas l'autre ───────────────────
+// ── C. LA DIRECTIVE D'AXE POSE SON ALPHABET ─────────────────────────────────────────────────
+// ⛔ CE VOLET PORTAIT UNE SECONDE ASSERTION, ET ELLE EST MORTE LE 2026-08-22 AVEC SON SUJET. Elle
+// gardait la coexistence de DEUX voies — le nom du FICHIER et le mot DÉCLARÉ — en compilant les deux
+// lignes côte à côte. Le nom de fichier ayant cessé d'être une adresse, les deux lignes disent
+// désormais LE MÊME mot, et la scène en refuse le second : un seul alphabet par acteur implicite.
+// La garder revenait à affirmer contre le langage une règle que le geste du jour a supprimée.
 {
   const r = compileToBPxAST('core\nalphabet.tabla\n-----\nS -> dha\n');
   ok(messages(r) === '',
      `C. 'alphabet.tabla' pose toujours son alphabet — reçu : ${messages(r).slice(0, 80)}`);
-  const deux = compileToBPxAST('core\ntest_alphabets.abc\nalphabet.abc\n-----\nS -> a\n');
-  ok(messages(deux) === '',
-     `C. les DEUX lignes ensemble restent acceptées — la seconde devient inutile, pas interdite. `
-     + `Reçu : ${messages(deux).slice(0, 80)}`);
 }
 
 // ── SOCLE ────────────────────────────────────────────────────────────────────────────────────

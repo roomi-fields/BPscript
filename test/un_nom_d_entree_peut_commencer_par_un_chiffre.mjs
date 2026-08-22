@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+// ⛔ MIGRE LE 2026-08-22 : une librairie s invoque par le mot qu elle DECLARE, jamais par le nom
+// de son fichier (decision de Romain du 2026-08-17, frappee ce jour). `temperaments` →
+// `temperament`, `test_alphabets` → `alphabet`, `voices` → `voice`, `tunings` → `tuning`,
+// `scales` → `scale`, `sounds` → `sound`, `alphabets` → `alphabet`.
 /**
  * LE NOM D'UNE ENTRÉE DE LIBRAIRIE PEUT COMMENCER PAR UN CHIFFRE.
  *
@@ -40,10 +44,15 @@ const compiler = (tete) => {
   ok(aChiffre.length > 0,
      `A. aucune entrée à chiffre dans le bundle — le garde serait creux. S'il n'y en a plus, c'est `
      + `la donnée qui a changé, et ce garde doit le dire au lieu de verdir sur zéro.`);
+  // ⛔ L ADRESSE EST LE MOT DECLARE, PLUS LE NOM DU FICHIER (2026-08-22). La boucle lisait
+  // `Object.entries(LIBS)`, donc elle ecrivait `temperaments.12TET` — l adresse PHYSIQUE, qui vient
+  // d etre fermee. Le nom du fichier ne se lit plus dans une scene ; ce qui s y ecrit est ce que la
+  // librairie DECLARE.
   for (const [lib, entree] of aChiffre) {
-    const r = compiler(`${lib}.${entree}`);
+    const mot = (LIBS[lib] && LIBS[lib].resolves) || lib;
+    const r = compiler(`${mot}.${entree}`);
     ok(messages(r) === '',
-       `A. '${lib}.${entree}' doit être ACCEPTÉ — reçu : ${messages(r).slice(0, 90)}`);
+       `A. '${mot}.${entree}' doit être ACCEPTÉ — reçu : ${messages(r).slice(0, 90)}`);
   }
 }
 
@@ -52,9 +61,9 @@ const compiler = (tete) => {
 // A en triomphe. Le refus doit NOMMER l'entrée manquante — s'il parlait de forme, il enverrait
 // l'auteur corriger une graphie qui est juste.
 {
-  const msg = messages(compiler('temperaments.12zzz'));
+  const msg = messages(compiler('temperament.12zzz'));
   ok(/12zzz/.test(msg),
-     `B. 'temperaments.12zzz' doit REFUSER en nommant l'entrée absente. Reçu : ${msg.slice(0, 100) || 'aucune erreur'}`);
+     `B. 'temperament.12zzz' doit REFUSER en nommant l'entrée absente. Reçu : ${msg.slice(0, 100) || 'aucune erreur'}`);
   ok(!/Expected/.test(msg),
      `B. le refus ne doit PAS être une faute de forme — reçu : ${msg.slice(0, 100)}. La graphie est `
      + `valide ; c'est l'entrée qui n'existe pas.`);
@@ -86,10 +95,14 @@ const compiler = (tete) => {
 // ── D-bis. LE NOM DE LA LIBRAIRIE PORTE AUSSI UN TIRET ──────────────────────────────────────
 // ⚠️ TROUVE PAR KANOPI EN RETIRANT LE PREFIXE DE PROVENANCE, qui le masquait. Le tokenizer detache
 // le tiret partout depuis qu'il est un SILENCE dans le flux ; dans un nom de librairie il est une
-// lettre. `ragas-tunings.X` cassait a l'ANALYSE — « Expected arrow, got PERIOD » — au lieu d'etre
+// lettre. `ragas-tuning.X` cassait a l'ANALYSE — « Expected arrow, got PERIOD » — au lieu d'etre
 // LU puis refuse pour son axe. La difference compte : un refus syntaxique envoie corriger une
 // graphie juste.
 {
+  // ⚠️ CE NOM EST INVENTE ET IL PORTE UN `s` FINAL — mon remplacement global de `tunings.` en
+  // `tuning.` le lui avait mange, pendant que la chaine ATTENDUE juste en dessous gardait le sien :
+  // le volet accusait alors un ecart qu il venait de creer. Un renommage global se fait du plus
+  // LONG au plus COURT, et celui-la contenait le motif.
   const msg = messages(compiler('ragas-tunings.sargam_12TET'));
   ok(!/Expected/.test(msg),
      `D-bis. 'ragas-tunings.X' doit etre LU, pas casser a l'analyse. Reçu : ${msg.slice(0, 100)}. `
@@ -103,8 +116,8 @@ const compiler = (tete) => {
 // ⚠️ CE VOLET GARDE LA CAUSE, PAS LE SYMPTÔME. La lecture vivait dans le canal de provenance et
 // manquait à la voie directe : deux endroits pour un même nom, un seul qui savait le lire.
 {
-  const direct = compiler('temperaments.12TET');
-  const provenance = compiler('temperaments.12TET');
+  const direct = compiler('temperament.12TET');
+  const provenance = compiler('temperament.12TET');
   ok(messages(direct) === '' && messages(provenance) === '',
      `D. les deux voies doivent lire le même nom — direct : ${messages(direct).slice(0, 50) || 'ok'} · `
      + `provenance : ${messages(provenance).slice(0, 50) || 'ok'}. Si l'une passe et pas l'autre, `
