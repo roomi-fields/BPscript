@@ -53,17 +53,49 @@ const empreinte = (msgs, mot) => {
 };
 
 /**
- * LES MOTS RETIRÉS, ET LEUR DÉCISION. Nommés un par un : une liste dérivée d'un motif attraperait
- * l'anglais courant et les procédures natives homonymes.
+ * LES MOTS RETIRÉS, LEUR DÉCISION, ET CE QUI RESTE VIVANT SOUS LE MÊME NOM.
+ *
+ * ⛔ UNE DÉCISION RETIRE UN EMPLOI, JAMAIS UN NOM — et cette liste énonçait le retrait comme TOTAL.
+ * Une entrée portait `['duration', '2026-08-04']` : le mot et la date, rien sur la place. Un lecteur
+ * qui l'ouvre sans lire le volet 5 conclut « ce mot est mort », et c'est arrivé le 2026-08-22 —
+ * `duration` a été signalé comme un mot vivant compté pour mort, alors que le garde n'accuse QUE sa
+ * forme de MOT DE TÊTE, qui est bien celle que la décision supprime.
+ *
+ * ⚠️ CE QUE CE GARDE JUGE, ET LUI SEUL : le mot écrit EN TÊTE D'UNE LIGNE DÉCLARATIVE. Il ne dit
+ * rien d'un homonyme employé ailleurs — champ de prototype, valeur d'un ensemble, clé d'une
+ * librairie. La troisième colonne le nomme quand il existe, MESURÉ, pour qu'aucun lecteur n'ait à
+ * le déduire de l'absence.
+ *
+ * ⛔ LA TROISIÈME COLONNE NE SE DÉDUIT PAS D'UN NOM DE FICHIER. Mon premier relevé cherchait la
+ * décision de chaque mot par son nom dans `hub/decisions/` : il a rendu une décision de juin sur les
+ * contrôles pour `transport`, et une décision de syntaxe pour `cv` — des fichiers qui portent le mot
+ * sans le retirer. Ce qui est écrit ici est MESURÉ au compilateur, forme par forme.
  */
 const MOTS_RETIRES = [
-  ['routing', '2026-07-16'], ['transcription', '2026-08-07'], ['var', '2026-08-16'],
-  ['label', '2026-07-28'], ['macro', '2026-08-16'], ['scene', '2026-07-29'],
-  ['transport', '2026-08-04'], ['library', '2026-08-06'], ['alias', '2026-08-15'],
-  ['mm', '2026-06-26'], ['speed', '2026-06-26'], ['map', '2026-07-27'],
-  ['mine', '2026-08-17'], ['factory', '2026-08-20'], ['wire', '2026-08-15'], ['cv', '2026-08-08'],
-  ['gate', '2026-08-15'], ['trigger', '2026-08-15'], ['sub', '2026-08-04'],
-  ['tempx', '2026-08-06'], ['duration', '2026-08-04'], ['timepatterns', null],
+  // [mot, décision, ce qui reste VIVANT sous le même nom — mesuré, ou null]
+  ['routing', '2026-07-16', null],
+  ['transcription', '2026-08-07', null],
+  ['var', '2026-08-16', null],
+  ['label', '2026-07-28', null],
+  ['macro', '2026-08-16', null],
+  ['scene', '2026-07-29', 'portée d\'écriture dans la donnée — `scope[] = scene` ; refusé en scène'],
+  // (les témoins compilables de la colonne 3 sont plus bas, dans TEMOINS_VIVANTS)
+  ['transport', '2026-08-04', 'composant par défaut — `core.defaults.components.transport` ; refusé en scène'],
+  ['library', '2026-08-06', null],
+  ['alias', '2026-08-15', null],
+  ['mm', '2026-06-26', null],
+  ['speed', '2026-06-26', null],
+  ['map', '2026-07-27', null],
+  ['mine', '2026-08-17', null],
+  ['factory', '2026-08-20', null],
+  ['wire', '2026-08-15', null],
+  ['cv', '2026-08-08', 'type de module — `mod.type = cv` ; refusé en scène'],
+  ['gate', '2026-08-15', null],
+  ['trigger', '2026-08-15', null],
+  ['sub', '2026-08-04', 'VALEUR de mode — `mode:sub` COMPILE'],
+  ['tempx', '2026-08-06', null],
+  ['duration', '2026-08-04', 'CHAMP du prototype de terminal — `terminal zz(duration:2)` COMPILE'],
+  ['timepatterns', null, 'directive réservée — `timepatterns` NU COMPILE ; son sort n\'est pas tranché'],
 ];
 
 /**
@@ -71,6 +103,12 @@ const MOTS_RETIRES = [
  * lecteur — c'est exactement ce qui a laissé un silence vivre sous une réparation.
  */
 const GRAPHIES = [
+  // ⛔ LA GRAPHIE NUE MANQUAIT, ET C'EST `timepatterns` QUI L'A DIT. Mesure du 2026-08-22 : les
+  // vingt-deux mots écrits SEULS en tête de scène — vingt-et-un refusent, UN passe, et ce garde ne
+  // le voyait pas. Ses cinq graphies portaient toutes un argument, une valeur ou un composant ;
+  // aucune ne posait le mot tout court. Un garde qui énumère des formes en oublie toujours une —
+  // celle qu'on n'écrit pas parce qu'elle ne ressemble à rien.
+  ['nu, seul',           (m) => `${m}`],
   ['nu, deux arguments', (m) => `${m} alpha beta`],
   ['nu, un argument',    (m) => `${m} alpha`],
   ['deux-points, mot',   (m) => `${m}:studio`],
@@ -95,21 +133,62 @@ const GRAPHIES = [
  *                         graphie à deux-points rend « Expected EQUALS ». Aucune décision datée ne
  *                         le retire — c'est une mesure d'Atlas relayée le 2026-08-19, et son sort
  *                         se tranche avec l'architecte.
+ *   timepatterns|nu, seul ⛔ INSCRIT LE 2026-08-22, ET IL EST LE SEUL DES VINGT-DEUX : écrit tout
+ *                         court, il COMPILE. La sixième graphie l'a trouvé le jour où elle est
+ *                         entrée — les cinq précédentes portaient toutes un argument, une valeur ou
+ *                         un composant.
+ *                         ⚠️ SA QUESTION EST OUVERTE ET ELLE A DEUX RÉPARATIONS OPPOSÉES : son
+ *                         entrée porte une décision `null`, donc AUCUNE décision ne le retire. Ou
+ *                         bien il doit refuser, et c'est le lecteur qu'on répare ; ou bien il est
+ *                         VIVANT comme directive réservée, et c'est son entrée dans cette liste qui
+ *                         est la faute. Choisir l'une reviendrait à trancher un mot du langage.
+ *                         Remonté à l'architecte le 2026-08-22 ; inscrit, pas jugé.
  */
 const RETARD = new Set([
   'cv|nu, un argument',
   'gate|nu, un argument',
   'trigger|nu, un argument',
+  'timepatterns|nu, seul',
   'timepatterns|nu, un argument',
   'timepatterns|deux-points, mot',
   'timepatterns|deux-points, nombre',
 ]);
 let retardsVus = 0;
 
+/**
+ * ⛔ LA TROISIÈME COLONNE SE PROUVE, SINON C'EST DE LA PROSE QUE RIEN NE TIENT.
+ *
+ * Mesuré le 2026-08-22 en l'injectant : retirer l'emploi vivant d'une entrée ne fait rougir AUCUN
+ * volet. La colonne informait le lecteur et ne s'appuyait sur rien — exactement la forme qu'on
+ * reproche à une donnée rangée où personne ne va la chercher. Ces témoins la rendent vraie : chacun
+ * compile la forme citée et exige le verdict annoncé.
+ *
+ * ⚠️ Et le jour où un de ces emplois meurt, c'est ICI que ça crie — pas dans six semaines chez un
+ * lecteur qui aura cru la colonne sur parole.
+ */
+const TEMOINS_VIVANTS = [
+  ['duration', 'terminal zz(duration:2)', true,  'CHAMP du prototype de terminal'],
+  ['sub',      'mode:sub',                true,  'VALEUR de mode'],
+  ['scene',    'scene',                   false, 'portée dans la donnée, REFUSÉE en scène'],
+  ['transport', 'transport.midi',         false, 'composant par défaut, REFUSÉ en scène'],
+  ['cv',       'cv zz',                   false, 'type de module, REFUSÉ en scène'],
+];
+for (const [mot, forme, doitCompiler, quoi] of TEMOINS_VIVANTS) {
+  const e = erreurs(`${T}${forme}\n-----\nS -> C4\n`);
+  ok(doitCompiler ? e.length === 0 : e.length > 0,
+    `COLONNE 3 — '${mot}' est annoncé « ${quoi} », donc '${forme}' doit `
+    + `${doitCompiler ? 'COMPILER' : 'être REFUSÉ'}. Reçu : ${e[0]?.slice(0, 90) ?? 'compile'}`);
+}
+ok(TEMOINS_VIVANTS.length === MOTS_RETIRES.filter(([, , v]) => v).length - 1,
+  `COLONNE 3 — ${TEMOINS_VIVANTS.length} témoin(s) pour `
+  + `${MOTS_RETIRES.filter(([, , v]) => v).length} entrée(s) portant un emploi vivant. L'écart `
+  + `attendu est de UN : 'timepatterns', dont le sort n'est pas tranché et qui est déjà au retard. `
+  + `Toute autre entrée sans témoin serait une affirmation que rien ne tient.`);
+
 console.log(`[mot retiré] ${MOTS_RETIRES.length} mots × ${GRAPHIES.length} graphies, `
   + `chacun contre le témoin inventé · ${RETARD.size} au retard inventorié`);
 
-for (const [mot, decision] of MOTS_RETIRES) {
+for (const [mot, decision, vivant] of MOTS_RETIRES) {
   for (const [nomGraphie, ecrire] of GRAPHIES) {
     const eRetire = erreurs(`${T}${ecrire(mot)}\n-----\nS -> C4\n`);
     const eInvente = erreurs(`${T}${ecrire(INVENTE)}\n-----\nS -> C4\n`);
@@ -121,10 +200,27 @@ for (const [mot, decision] of MOTS_RETIRES) {
       + `ce témoin est alors vide des deux côtés, et ce garde certifierait un silence.`);
     if (eInvente.length === 0) continue;
 
-    ok(eRetire.length >= 1,
-      `'${mot}' écrit « ${nomGraphie} » COMPILE, alors qu'il est sorti du langage`
-      + `${decision ? ` le ${decision}` : ''} — une ligne avalée sans effet est le pire des refus.`);
-    if (eRetire.length === 0) continue;
+    // ⛔ UN RETARD INVENTORIÉ VAUT ICI AUSSI, et il ne le faisait pas. Ce volet exigeait un refus
+    // AVANT de consulter le registre : une entrée inscrite avec sa cause rougissait quand même, donc
+    // le registre ne servait qu'à la moitié basse de la matrice. Mesuré le 2026-08-22 en y inscrivant
+    // `timepatterns|nu, seul` — le garde a crié sur une entrée qu'il venait d'accepter.
+    const cleAmont = `${mot}|${nomGraphie}`;
+    if (!RETARD.has(cleAmont)) {
+      ok(eRetire.length >= 1,
+        `'${mot}' écrit « ${nomGraphie} » COMPILE, alors qu'il est sorti du langage`
+        + `${decision ? ` le ${decision}` : ''} — une ligne avalée sans effet est le pire des refus.`
+        + `${vivant ? ` (ce mot reste vivant AILLEURS : ${vivant} — ce volet ne juge que sa forme de `
+        + `MOT DE TÊTE.)` : ''}`);
+    }
+    // ⛔ UNE ENTRÉE DE RETARD SE COMPTE AVANT CE RACCOURCI. Le `continue` ci-dessous saute la fin de
+    // la boucle quand le mot COMPILE — or c'est exactement l'état d'une entrée inscrite au retard.
+    // Elle n'était donc jamais atteinte, et le volet de vérification du registre criait « 6 sur 7 »
+    // pour une entrée parfaitement en règle. Un raccourci placé avant un compteur le rend aveugle
+    // au seul cas qu'il existe pour compter.
+    if (eRetire.length === 0) {
+      if (RETARD.has(cleAmont)) retardsVus++;
+      continue;
+    }
 
     // ⛔ LE MOT RETIRE EST PASSE AUX DEUX APPELS, ET C EST LA MOITIE QUI MANQUAIT. En passant
     // `INVENTE` au second, la prose du TEMOIN gardait le mot retire en clair alors que celle du
