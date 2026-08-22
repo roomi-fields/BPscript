@@ -3009,18 +3009,19 @@ function parse(tokens, opts = {}) {
       const setEntityRef = (key, value, params /* | null */) => {
         if (key === 'out') {
           properties.transport = { type: 'TransportRef', key: value, params: params || {} };
-        } else if (key === 'sound') {
-          // sound.X dans @actor X = sucre pour *:sound.X (cf. EBNF v0.8 ligne 104).
-          // On enregistre la référence sur properties.sound (pour l'actorResolver)
-          // ET on émet une SoundAssignment scope=actor subject=*.
-          properties.sound = value;
-          soundAssignments.push({
-            type: 'SoundAssignment',
-            scope: 'actor', actor: actorName,
-            subject: '*',
-            target: { kind: 'named-ref', name: value },
-            line: tok.line,
-          });
+        // ⛔ LA BRANCHE `sound` A ETE ELAGUEE LE 2026-08-22 — elle etait morte depuis le 2026-08-06.
+        // `sound.X` comme cle d ACTEUR a ete retiree ce jour-la ; son refus a ete ecrit, la donnee
+        // l a inscrite dans `deprecatedActorKeys`, ET LES DEUX SITES QUI LA SERVAIENT SONT RESTES.
+        // Le mot est parti sans son code, alors que la regle dit l inverse : le code mort s elague
+        // dans le mouvement qui le rend mort.
+        //
+        // ⚠️ MESURE AVANT LE RETRAIT, DEUX FOIS. D abord le PRODUCTEUR : `properties.sound` n avait
+        // que cet ecrivain, et ses deux chemins d acces sont refuses en amont (`sound.X` par la cle
+        // d acteur retiree, `sound:X` parce que le deux-points n affecte pas un composant). Ensuite
+        // le CHAMP QU ELLE ALIMENTAIT : `soundAssignments` garde DEUX producteurs vivants —
+        // `*:sound.X` sur un ACTEUR et sur un ALPHABET, verifies tous deux. Le champ reste donc
+        // rempli, et l aval ne voit aucun changement : c est ce qui distingue cet elagage d un
+        // retrait de surface.
         } else {
           // alphabet, tuning, eval — référence simple
           properties[key] = value;
@@ -3310,7 +3311,6 @@ function parse(tokens, opts = {}) {
       addRef('alphabet', properties.alphabet);
       addRef('tuning', properties.tuning);
       addRef('octaves', properties.octaves);
-      addRef('sound', properties.sound);
       addRef('voice', properties.voice);
       if (properties.transport) addRef('transport', properties.transport.key, properties.transport.params);
       addRef('eval', properties.eval);
