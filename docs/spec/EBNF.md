@@ -59,7 +59,7 @@ non indentée. Le vocabulaire des clés est le même des deux côtés.
 
 ```ebnf
 declaration_typee = "flag"   , IDENT , ":" , INT
-                  | "in" , "." , IN_CHANNEL , IDENT , [ "mapping" , "." , IDENT ]
+                  | "in" , [ "." , IN_CHANNEL ] , IDENT , [ "mapping" , "." , IDENT ]
                   | "symbol" , nom_pose , { "," , nom_pose }
                   | CONVENTION , nom_pose
                   | IDENT , nom_pose            (* un module du catalogue : ramp r1 *)

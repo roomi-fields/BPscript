@@ -1958,6 +1958,20 @@ function parse(tokens, opts = {}) {
     // ── L'ENTRÉE — `in.<canal> <rôle> [mapping.<table>]` ────────────────────────────────────
     // Les trois contraintes de la décision du 2026-07-27 ne bougent pas : aucun nom de port,
     // aucun alphabet, aucune table par défaut. Elles changent seulement de côté de la ligne.
+    // ⛔ `in zz` EST UN MODÈLE INCOMPLET, PAS UNE FAUTE — alignement du 2026-08-22, sur les canons du
+    // prototypal pur que Romain a demandé d'appliquer. `in.midi pedale` EST le type en tête avec sa
+    // dérivation pointée : `in` le type, `midi` la sorte, `pedale` le nom — la même forme que
+    // `actor midi.actor(ch)`. La table de `LANGUAGE.md:300` ne se trompait donc pas ; c'est le refus
+    // de la forme NUE qui était en retard.
+    //
+    // ⚠️ UN NOM NU VAUT UN OBJET VIDE, et l'incomplétude se refuse à l'USAGE : `flag zz` compile,
+    // `actor basse` compile — `in zz` compile aussi, et c'est au moment où le flux attend son
+    // trigger que le canal manquant se voit. Refuser à la déclaration interdirait le modèle.
+    if (mot === 'in' && peek(1).type === T.IDENT && !directiveDeclareeParLaLibrairie('core', 'in')) {
+      advance();
+      const roleName = advance().value;
+      return { type: 'InDirective', name: roleName, transport: null, mapping: null, line: tok.line };
+    }
     if (mot === 'in' && peek(1).type === T.PERIOD && !peek(1).spaceBefore
         && peek(2).type === T.IDENT) {
       advance(); advance();                        // in .
