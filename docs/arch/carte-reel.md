@@ -55,7 +55,6 @@ flowchart TD
     libs["libs.js"]
     libs_data["libs-data.js — généré"]
     controlValidation["controlValidation.js"]
-    modulationValidation["modulationValidation.js"]
   end
   subgraph SORTIE_BP3["SORTIE_BP3 (hérité)"]
     encoder["encoder.js"]
@@ -72,7 +71,6 @@ flowchart TD
   bpxAst --> parser
   bpxAst --> tokenizer
   bpxAst --> controlValidation
-  bpxAst --> modulationValidation
   bpxAst --> libs
   index --> parser
   index --> tokenizer
@@ -103,7 +101,6 @@ flowchart TD
 | `libs.js` | 327 | RESOLUTION | Chargeur de librairies (JSON → contrôles/symboles/CV) |
 | `libs-data.js` | 44 | RESOLUTION | **Généré** par `libs-bundle.js` (bundle JSON **+ corps `.ts` des fonctions digitales captés**) — ne pas éditer |
 | `controlValidation.js` | 78 | RESOLUTION | Validation des VALEURS de contrôle runtime |
-| `modulationValidation.js` | 133 | RESOLUTION | Validation des NOMS d'entrées de modulation |
 | `encoder.js` | 1657 | SORTIE_BP3 | AST → texte grammaire BP3 (**hérité, ne pas toucher**) |
 | `prototypes.js` | 165 | SORTIE_BP3 | Génère les fichiers prototypes BP3 `-so.` (durées) |
 | `orderTokens.js` | 92 | SORTIE_BP3 | Tokenisation « ordre » de la production canonique BP3 |

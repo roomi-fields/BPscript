@@ -37,10 +37,14 @@ dit.
 
 ## Code qui dort, et qui ne dort pas silencieusement
 
-⚠️ **`src/transpiler/modulationValidation.js` est BRANCHÉ et APPELÉ** à chaque compilation
-(`bpxAst.js:2220`), mais construit ses sources depuis une section supprimée : il rend toujours vide.
-**Mesuré : une modulation vers une source inexistante est acceptée.**
+Rien à cette date.
 
-Ce n'est pas un garde endormi — c'est du code vivant devenu inerte. Il relève du gel, donc il n'est
-pas corrigé ; il est **nommé ici** pour que le dégel le retrouve, et pour que personne ne prenne son
-silence pour une validation.
+Le validateur des branchements de modulation figurait ici : il était branché, appelé à chaque
+compilation, et rendait toujours vide. Le champ d'arbre dont il tirait ses sources a disparu quand
+le sujet `cv` est sorti du langage — il est **élagué** le 2026-08-22, et la validation qu'il portait
+est inscrite au backlog central sous **LAN-48**, à refaire quand FaustX ouvrira.
+
+**Ce qu'il a appris, et qui vaut pour tout témoin** : la première injection écrite pour l'éprouver
+visait une VALEUR inexistante, quand ce validateur ne jugeait qu'une CLÉ. Elle ne l'atteignait pas,
+et son calme se lisait comme une preuve. Un témoin qui n'entre pas par la porte qu'il teste rend un
+faux calme.

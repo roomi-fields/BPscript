@@ -23,7 +23,7 @@ au reste de `public/` qui est ignoré par git (artefacts de build/runtime).
 - Nouvelle **entrée de modulation** exposée par une sortie → section `modulation_inputs`
   (source des noms = le runtime qui implémente la sortie, ex. audio = Kanopi ; cf. `lib/modulation.json`).
 - La **validation** des noms (erreur ligne/col) est faite par le transpileur
-  (`src/transpiler/modulationValidation.js` + `controlValidation.js`), pas par ce fichier.
+  (`src/transpiler/controlValidation.js`), pas par ce fichier.
 
 > Le parseur Lezer (`public/editor/bpscript-parser.js`) qui tokenise la grammaire pour CodeMirror est
 > un artefact frontend généré, hors de ce dossier (non versionné).

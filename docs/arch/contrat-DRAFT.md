@@ -31,7 +31,7 @@
 | Annotation des voix de code | étiquette + `payload.interp/nature` sur les nœuds backtick ; `auto`→`eval` de l'acteur | `bpxAst.js` |
 | Défauts d'environnement | inscrit EN DUR dans l'AST les réglages absents (aujourd'hui : `tempo`) | `bpxAst.js` |
 | Acteur implicite | matérialise l'acteur `scene` dans l'AST si aucun `actor` (LAN-5/KAI-9 ; renommé `default`→`scene` le 2026-07-30, `hub/decisions/2026-07-30-l-acteur-implicite-s-appelle-scene.md`) | `bpxAst.js` |
-| Validation sémantique | valeurs de contrôle + noms de modulation contre les libs (erreurs non fatales) | `controlValidation.js`, `modulationValidation.js`, `libs.js` |
+| Validation sémantique | valeurs de contrôle contre les libs (erreurs non fatales) | `controlValidation.js`, `libs.js` |
 
 **Résolution (RESOLUTION)** — sert l'AST, jamais l'ancien format dans la voie propre :
 - `actorResolver.js` : résolution d'acteur (les 6 clés : alphabet, tuning, octaves, sound, transport, eval ; obligatoires alphabet+transport).
@@ -112,7 +112,7 @@ Le transpileur a **quatre frontières** :
 |---|---|---|---|---|
 | `compileToBPxAST(source, env?)` | bpxAst.js → BPx | BPScript ▶ BPx | `{ ast: SceneAST\|null, errors: [], warnings: [] }` | point d'émission UNIQUE de la voie propre ; n'appelle JAMAIS encoder.js (loi BPx-only) |
 | `ast` (= `SceneAST`) | parser+bpxAst | sortant | `{type:'Scene', directives[], subgrammars[], …}` conforme `AST_SPEC v1.2` | un SEUL objet traverse ; agnostique moteur ; source unique (zéro table parallèle) |
-| `errors` | controlValidation + modulationValidation + ParseError | sortant | `Array<{message, line?, col?}>` | NON fatal : l'AST reste produit même avec erreurs (affichées en rouge à l'éval) |
+| `errors` | controlValidation + ParseError | sortant | `Array<{message, line?, col?}>` | NON fatal : l'AST reste produit même avec erreurs (affichées en rouge à l'éval) |
 | `warnings` | parser (`onWarning`) | sortant | `Array<{type:'warning', message, line?}>` | formes dépréciées (ex. `seed:N` historique) ; canal séparé d'`errors` |
 | `scene.type` | parser | sortant | littéral `'Scene'` | discriminant fixe |
 | `scene.directives` | parser | sortant | `DirectiveAST[]` (requis) | `tempo`/`seed`/`alphabet`… |
@@ -194,7 +194,7 @@ compileToBPxAST(
 ```js
 compileToBPxAST(source, environnement?) → {
   ast:      SceneAST | null,                 // null si ParseError fatale
-  errors:   Array<{message:string, line?:number, col?:number}>,   // validateControls + validateModulation + ParseError
+  errors:   Array<{message:string, line?:number, col?:number}>,   // validateControls + ParseError
   warnings: Array<{type:'warning', message:string, line?:number}> // onWarning du parser
 }
 // Pipeline : parse(tokenize(src)) → annotateBackticks → applyEnvironmentDefaults → applyDefaultActor.
@@ -531,7 +531,7 @@ NON GÉRÉ (retour `"NON GÉRÉ: …"`, par grammaire) — déclencheurs exacts 
 
 ```
 FRONTAL_AST ───────────────► RESOLUTION
- tokenizer→parser→bpxAst       actorResolver, libs(+libs-data), controlValidation, modulationValidation
+ tokenizer→parser→bpxAst       actorResolver, libs(+libs-data), controlValidation
  index (façade), constants
 
    (héritage, isolé — voie compileBPS uniquement)
@@ -542,7 +542,7 @@ OUTILLAGE : scripts CLI/tests/bundle (points d'entrée)
 
 Règles de forme voulues :
 - **Une source unique = l'arbre.** Zéro table latérale dans la voie propre (les vues redondantes backticks/flagStates/libraries de l'encodeur BP3 sont supprimées de cette voie ; tout vit dans les nœuds/directives).
-- **`bpxAst.js` n'importe que FRONTAL + RESOLUTION** (`tokenizer`, `parser`, `libs`, `controlValidation`, `modulationValidation`) — jamais SORTIE_BP3.
+- **`bpxAst.js` n'importe que FRONTAL + RESOLUTION** (`tokenizer`, `parser`, `libs`, `controlValidation`) — jamais SORTIE_BP3.
 - **OUTILLAGE n'est jamais importé par le cœur** (frontal + résolution + encoder). Garde `core-no-tooling`.
 - **Zéro cycle.** Garde `no-circular`.
 

@@ -31,7 +31,6 @@ const restesDeSegmentation = new WeakMap();
 import { resolveActors, expandAlphabetTerminals, alphabetHerite, octavesHerite, tuningHerite,
          sortieHeritee, evalHerite, defaultActorTransport } from './actorResolver.js';
 import { validateControls } from './controlValidation.js';
-import { validateModulation } from './modulationValidation.js';
 
 /**
  * POSE LE DESTINATAIRE DE CHAQUE RÉGLAGE SUR LE SAC QUI LE PORTE.
@@ -345,11 +344,12 @@ function hasTempoDirective(ast) {
 //       chargement qui dérivent). → au flip, calculer la séquence/`side`
 //       depuis l'ordre SOURCE (un remote de tête peut être un contexte DROIT
 //       quand le motif est vide — d'où `side` OMIS dans l'enrichissement).
-//   P3. Lecteurs de tête côté BPScript : annotateBackticks (lhsHead, ci-
-//       dessous) et modulationValidation.js:35 identifient la règle par
-//       lhs[0].name → un atome nié préfixé masque l'acteur (interp
-//       'strudel'→'auto') et les erreurs de modulation. → leur apprendre à
-//       sauter les atomes niés de tête AVANT le flip.
+//   P3. Lecteur de tête côté BPScript : annotateBackticks (lhsHead, ci-
+//       dessous) identifie la règle par lhs[0].name → un atome nié préfixé
+//       masque l'acteur (interp 'strudel'→'auto'). → lui apprendre à sauter
+//       les atomes niés de tête AVANT le flip.
+//       (Ce point nommait AUSSI le validateur de modulation, élagué le
+//       2026-08-22 avec le sujet `cv` — un seul lecteur reste concerné.)
 //   P4. Kanopi bpx-adapter.ts:550 (table de backticks par lhs[0].name) : même
 //       correction que P3, côté hôte.
 // ============================================================================
@@ -2984,16 +2984,16 @@ export function resoudreSource(source, environnement) {
     result.errors.push(...validateTerminals(ast)); // fail-loud : terminal de règle absent des alphabets en portée → erreur
     poserLaVoixDesTerminaux(ast);
     result.errors.push(...validateControls(ast, libCtx.controls, libCtx.controlsQualified || {}));
-    result.errors.push(...validateModulation(ast, libCtx));
     result.errors.push(...refuserAttenteNonDeclaree(ast));  // un point d'attente nomme ce qu'il attend
 
     // LE DIAGNOSTIC PRÉCIS SUBSUME LE GÉNÉRIQUE (arbitrage architecte [778]).
     //
-    // Une quasi-faute comme `(cutof:env1)` déclenchait DEUX messages : le générique
-    // « attribut '(cutof:…)' inconnu — ni contrôle, ni valeur… » et le ciblé « 'cutof' n'est
-    // pas une entrée de modulation (connues : cutoff, amplitude, resonance, pitch, pan) ».
-    // Le second dit tout ce que dit le premier, PLUS la liste des formes attendues : le
-    // générique n'ajoute rien et noie le seul message utile.
+    // Une même faute déclenchait DEUX messages : le générique « attribut '(X:…)' inconnu — ni
+    // contrôle, ni valeur… » et un diagnostic NOMMÉ sur la même clé, qui dit tout ce que dit le
+    // premier PLUS la forme attendue. Le générique n'ajoute rien et noie le seul message utile.
+    // Producteur vivant mesuré sur le corpus (2026-08-22) : « 'script(…)' n'est lisible ni comme
+    // un SAC DE RÉGLAGES… », sur trois scènes. L'exemple d'origine citait le validateur de
+    // modulation, élagué le même jour — le mécanisme, lui, sert tous les diagnostics nommés.
     // On le retire donc pour les clés qui ont déjà un diagnostic nommé. Une clé sans
     // diagnostic ciblé garde évidemment le générique — c'est le seul qu'elle ait.
     {
