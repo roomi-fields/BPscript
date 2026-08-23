@@ -699,7 +699,12 @@ ok(croisements === TOUS.length * MORTES.length && croisements >= 100,
   // FauxtX, et celui qui l'ouvrira voudra lire comment il était pensé.
   // Ce plafond monte parce que la population a grandi ; il ne se règle JAMAIS sur ce que le
   // balayage rend, sinon il cesse de mesurer.
-  ok(ecartes <= 5,
+  // ⚠️ PLAFOND 5 → 6 le 2026-08-23 : `docs/archive/modules.md` s'ajoute à la population écartée.
+  // C'est la section « Les modules » de la bible, archivée avec le catalogue `mod` (décision de
+  // Romain) — même geste et même raison que `CV.md` : celui qui rouvrira le sujet voudra lire
+  // comment il était pensé. Le plafond monte parce qu'un document est ARCHIVÉ, jamais parce qu'un
+  // document vivant refuse de compiler.
+  ok(ecartes <= 6,
      `4. trop de documents écartés du balayage — ${ecartes} sur ${totalMd}. La seule raison admise `
      + `est « c'est un compte rendu archivé, le réécrire falsifierait l'histoire ». Si l'écart `
      + `grandit, c'est qu'on écarte pour ne pas corriger.`);

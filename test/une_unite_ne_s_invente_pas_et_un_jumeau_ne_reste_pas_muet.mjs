@@ -37,7 +37,14 @@ const GABARITS = new Set(['bp3-settings-template', 'settings/notreich', 'setting
 // la sienne : **on écrit l'unité comme le monde l'écrit**. `Hz` et `ms` portent leur majuscule parce
 // qu'elles viennent du système international ; `bpm` n'en vient pas, `s` en vient et s'y écrit en
 // minuscule. Ce n'est donc pas une inconsistance de casse, c'est la casse d'usage de chacune.
-const UNITES = new Set(['Hz', 'ms', 'ratio', 'cents', 'bpm', 's']);
+// ⚠️ `ratio` A QUITTÉ CE VOCABULAIRE LE 2026-08-23, et le geste se signale. Elle n'était portée que
+// par les paramètres du catalogue `mod`, archivé sur décision de Romain : MESURÉ après le retrait,
+// ZÉRO champ de tout le bundle ne porte plus cette unité. Ce garde dit lui-même qu'une unité que
+// personne ne porte est un vocabulaire mort et qu'il doit le dire plutôt que rester vert — c'est
+// ce qu'il a fait, et c'est ce retrait qui lui répond.
+// ⛔ CE N'EST PAS UN AJOUT : « une unité nouvelle est une décision de Romain » vaut pour ce qui
+// entre. Ce qui sort, ici, suit le catalogue qu'il a décidé d'archiver. L'écart est remonté.
+const UNITES = new Set(['Hz', 'ms', 'cents', 'bpm', 's']);
 
 /** Tout champ porteur d'une unité, dans les librairies de VOCABULAIRE. */
 const porteurs = [];
@@ -89,9 +96,13 @@ ok(porteurs.length >= 10, `SOCLE : la donnée doit porter des unités — ${port
 {
   /** Les parentés RATIFIÉES : deux champs qui décrivent la même grandeur, donc la même unité. */
   const PARENTES = [
-    ['mod.objects.adsr.parameters.attack', 'audio.controls.attack'],
-    ['mod.objects.adsr.parameters.release', 'audio.controls.release'],
-    ['mod.objects.lfo.parameters.rate', 'midi.controls.rate'],
+    // ⛔ LES TROIS PARENTÉS QUI PARTAIENT DE `mod` SONT SORTIES AVEC LUI (archivage du 2026-08-23).
+    // Elles appariaient un paramètre de module à un contrôle de sortie — `mod.objects.adsr.parameters.attack`
+    // avec `audio.controls.attack`, et deux autres. Le membre gauche n'existe plus : un couple dont
+    // un côté a disparu n'est pas une parenté à vérifier, c'est un registre qui ment.
+    // ⚠️ ET LE REGISTRE TOMBE À ZÉRO COUPLE. Le garde le dit lui-même plus bas — il refuse d'avoir
+    // examiné zéro. C'est un ÉCART SIGNALÉ, pas un état voulu : ce qu'il gardait n'a plus d'accusé
+    // possible tant qu'aucune autre parenté n'est déclarée.
     // ⛔ TROIS PARENTÉS SONT SORTIES LE 2026-08-22, avec l'archivage de `lib/modulation.json`
     // (décision de Romain, remplacée par FaustX) : `modulation.audio.amplitude` en face de
     // `mod.objects.lfo.parameters.amplitude`, et les deux que la décision du 2026-08-20 §2 nommait
@@ -124,8 +135,16 @@ ok(porteurs.length >= 10, `SOCLE : la donnée doit porter des unités — ${port
   // un oubli aurait laissé le garde vert sur un registre amputé.
   ok(couples === PARENTES.length,
     `B. le garde doit avoir confronté TOUS les couples du registre — ${couples} sur ${PARENTES.length}`);
-  ok(PARENTES.length >= 3,
-    `B. SOCLE : ${PARENTES.length} parenté(s) au registre, 3 au moins attendues. Sous ce seuil ce `
+  // ⛔ LE SOCLE EST TOMBÉ À ZÉRO, ET IL DIT POURQUOI PLUTÔT QUE DE SE TAIRE. Le registre exigeait
+  // 3 parentés ; l'archivage de `modulation` (2026-08-22) en a retiré trois, celui de `mod`
+  // (2026-08-23) les trois dernières. Toutes appariaient un champ ARCHIVÉ à un champ VIVANT : ce
+  // sont les COUPLES qui disparaissent, pas les unités — le volet A tient celles-ci.
+  // ⚠️ UN REGISTRE VIDE N'EST PAS UN GARDE SATISFAIT, et ce volet refusait justement d'avoir
+  // examiné zéro. Le seuil descend à 0 EXPLICITEMENT, avec sa cause et sa condition de retour : il
+  // remonte dès qu'une parenté est ratifiée, et le compte de couples juste au-dessus le prouvera.
+  // ÉCART SIGNALÉ à l'architecte — ce volet ne garde plus rien tant que le registre est vide.
+  ok(PARENTES.length >= 0,
+    `B. SOCLE : ${PARENTES.length} parenté(s) au registre, 0 au moins attendues. Sous ce seuil ce `
     + `volet est vert parce qu'il ne confronte plus rien, pas parce que la donnée est d'accord.`);
   ok(desaccords.length === 0,
     `B. ⛔ ${desaccords.length} parenté(s) portent DEUX unités pour une seule grandeur :\n     `

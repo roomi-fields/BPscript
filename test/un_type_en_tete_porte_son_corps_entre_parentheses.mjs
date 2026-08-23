@@ -116,9 +116,12 @@ for (const [ligne, nom, clesAttendues] of [
   const c = lire('signal grain:0.5').vars[0];
   ok(c?.varType?.kind === 'convention' && c.initial?.[0]?.value === 0.5,
     `3. TÉMOIN — la CONVENTION garde sa valeur de départ collée — reçu ${JSON.stringify(c)}`);
-  const m = lire('adsr env1').vars[0];
-  ok(m?.varType?.kind === 'module',
-    `3. TÉMOIN — le MODULE du catalogue reste lu comme tel — reçu ${JSON.stringify(m?.varType)}`);
+  // ⛔ LE TROISIÈME TÉMOIN EST PARTI AVEC LE TYPE QU'IL GARDAIT. Il éprouvait que `adsr env1` reste
+  // lu comme un MODULE — l'un des trois qui empêchaient qu'un lecteur trop gourmand happe le
+  // drapeau, la convention ou le module d'un seul coup. Le catalogue `mod` est archivé le
+  // 2026-08-23, aucun chemin ne produit plus un `varType.kind === 'module'`, et le lecteur qui le
+  // fabriquait est sorti de `parser.js`. Les deux témoins restants tiennent ce que celui-ci
+  // partageait : le drapeau et la convention gardent chacun leur forme.
 }
 
 // ── 4. LES REFUS QUI BORNENT LA FORME ───────────────────────────────────────────────────────

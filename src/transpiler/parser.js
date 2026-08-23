@@ -126,10 +126,11 @@ function typesDeclaratifs() {
   return _typesDeclaratifs;
 }
 
-/** Les modules du catalogue — une instance se déclare en écrivant son module en tête. */
-function modulesDuCatalogue() {
-  return new Set(Object.keys(loadLib('mod')?.objects || {}));
-}
+// ⛔ LE CATALOGUE DE MODULES EST SORTI — arbitrage de Romain, 2026-08-23 : « on sort `mod` et la
+// section correspondante est sortie/archivée. Idem pour `module.X` ». `lib/mod.json` est archivé,
+// ses trois entrées — `adsr`, `lfo`, `ramp` — quittent le langage avec lui, et le lecteur qui
+// faisait qu'une instance se déclare en écrivant son module en tête sort dans le même mouvement.
+// `adsr env1` compilait ; il ne compile plus. C'est un retrait de FORME, pas un nettoyage.
 
 /**
  * Axes à CATALOGUE au niveau SCÈNE (directive `axe.<nom>`) : leur opérande est un NOM D'ENTRÉE
@@ -999,26 +1000,17 @@ function parse(tokens, opts = {}) {
    *
    */
   function deplierLesCommodites(scene) {
-    // ⛔ UNE INVOCATION DE MODULE N'EST PAS UNE STRUCTURE, et sans ce tri elle se dépliait.
-    // `var ramp1 ramp` puis `def monte ramp1(from:0, to:255)` (LANGUAGE.md, « `!` accepte tout ce
-    // qui se pose dans le flux ») : le parser type `monte` en STRUCTURE parce que le corps commence
-    // par un terme nu. Or `ramp1` est une INSTANCE DE MODULE déclarée, `from` et `to` sont ses
-    // ports, et l'invocation est une CHOSE — elle ne se déplie pas. Le défaut était muet tant que
-    // rien ne se dépliait ; il devient une erreur de compilation dès que le corps devient du vrai
-    // contenu d'arbre.
-    const modules = new Set();
-    for (const v of scene.vars || []) {
-      if (v?.varType?.kind === 'module') for (const n of v.names || []) modules.add(n);
-    }
-    const inviteUnModule = (corps) => (corps || []).some(
-      (el) => el && (el.type === 'Symbol' || el.type === 'SymbolCall') && modules.has(el.name));
-
+    // ⛔ LE TRI DES INVOCATIONS DE MODULE S'ÉLAGUE AVEC LE CATALOGUE QUI LES PRODUISAIT. Il
+    // distinguait `def monte ramp1(from:0, to:255)` — une invocation d'instance, une CHOSE qui ne
+    // se déplie pas — d'une vraie structure. Depuis que `mod` est archivé, aucun chemin ne produit
+    // un `varType.kind === 'module'` : cet ensemble ne pouvait plus contenir un seul nom, et un
+    // filtre qui ne peut plus rien filtrer a la même forme qu'un filtre qui n'a rien à filtrer.
     const formes = new Map();
     for (const d of scene.defs || []) {
       if (!d || d.type !== 'DefDirective') continue;
       if (d.kind === 'prereglage') { formes.set(d.name, d); continue; }
       if (d.kind === 'structure' || d.kind === 'transformation') {
-        if (!inviteUnModule(d.body)) formes.set(d.name, d);
+        formes.set(d.name, d);
       }
     }
     if (!formes.size) return;
@@ -2029,11 +2021,10 @@ function parse(tokens, opts = {}) {
     // Un mot retiré sortait de ce chemin par son nom, pour tomber dans un refus à lui. L'écriteau
     // parti, l'exception restait — et elle envoyait ce mot dans un refus MOINS BON que le refus
     // ordinaire, qui énumère les types acceptés. Un détour nommé se retire avec sa destination.
-    const modules = modulesDuCatalogue();
     // ⛔ ET UN PROTOTYPE DÉCLARÉ PAR LA SCÈNE OUVRE UNE DÉCLARATION. La sortie vivait ICI, en
     // amont : élargir le seul site de décision plus bas ne suffisait pas — on n'y arrivait jamais.
     // Deux endroits décident du même fait, et j'en avais corrigé un seul.
-    if (!typesDeclaratifs().has(mot) && !varConventions().has(mot) && !modules.has(mot)
+    if (!typesDeclaratifs().has(mot) && !varConventions().has(mot)
         && !prototypesDeclares.has(mot)) {
       // ⚠️ UN TYPE INCONNU SUIVI D'UN NOM SE REFUSE EN NOMMANT LES TYPES, sans quoi
       // `lpf lpf1` tombe dans « n'est déclaré par aucune librairie chargée » et envoie l'auteur
@@ -2051,9 +2042,11 @@ function parse(tokens, opts = {}) {
         || peek(2).type === T.COMMENT;
       if (peek(1).type === T.IDENT && finDeLigne && !directiveDeclareeParLaLibrairie('core', mot)
           && porteesDeclarees(mot) === null) {
+        // ⚠️ CE REFUS ÉNUMÉRAIT LE CATALOGUE DE MODULES, et il l'a perdu avec lui : un refus qui
+        // nomme une forme la ressuscite pour son lecteur. C'est le troisième domicile d'un mot
+        // retiré, après le parseur et les librairies — et aucun garde ne compile un message.
         throw new ParseError(`'${mot} ${peek(1).value}' : '${mot}' n'est pas un type. Un type en `
-          + `tête vient des conventions (${[...varConventions()].join(', ')}), du catalogue de `
-          + `modules (${[...modules].join(', ')}), ou des types de base `
+          + `tête vient des conventions (${[...varConventions()].join(', ')}) ou des types de base `
           + `(${[...typesDeclaratifs()].join(', ')}, in.<canal>).`, tok);
       }
       return null;
@@ -2176,11 +2169,11 @@ function parse(tokens, opts = {}) {
     const d0 = lireDepart(premier);
     if (d0 !== null) departs.push({ name: premier, value: d0 });
 
-    // ── LA CONVENTION et LE MODULE — un seul nom ───────────────────────────────────────────
-    if (varConventions().has(mot) || modules.has(mot)) {
-      const varType = varConventions().has(mot)
-        ? { kind: 'convention', convention: mot }
-        : { kind: 'module', module: mot };
+    // ── LA CONVENTION — un seul nom ────────────────────────────────────────────────────────
+    // ⚠️ LE MODULE PARTAGEAIT CETTE BRANCHE et il en sort avec le catalogue : plus aucun chemin ne
+    // produit un `varType.kind === 'module'`, donc plus rien n'en lit un.
+    if (varConventions().has(mot)) {
+      const varType = { kind: 'convention', convention: mot };
       const d = { type: 'VarDirective', names: [premier], varType, line: tok.line };
       return departs.length ? { ...d, initial: departs } : d;
     }

@@ -9,7 +9,10 @@ import { compileToBPxAST } from '../src/transpiler/bpxAst.js';
 
 let pass = 0, fail = 0;
 function check(cond, msg) { if (cond) pass++; else { fail++; console.log('FAIL:', msg); } }
-const HEAD = 'mod\ncore\nalphabet.western:audio\nadsr env1\n-----\n';
+// ⛔ LE SOCLE INVOQUAIT `mod` ET DÉCLARAIT UNE INSTANCE — le catalogue est archivé le 2026-08-23 et
+// `adsr env1` ne compile plus. `env1` n'était employé nulle part ailleurs dans ce fichier : le socle
+// le déclarait sans que rien ne s'en serve.
+const HEAD = 'core\nalphabet.western:audio\n-----\n';
 function bassPairs(rhsLine) {
   const r = compileToBPxAST(HEAD + 'S -> Bass\n' + rhsLine + '\n');
   if (r.errors && r.errors.length) return { err: r.errors };

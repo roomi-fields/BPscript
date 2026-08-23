@@ -110,8 +110,11 @@ for (const f of fichiers) {
 // Romain, remplacée par FaustX) et a quitté le dossier. Le seuil suit le dossier, il ne le
 // commande pas — le laisser à 15 aurait fait rougir ce garde pour un retrait voulu, et l'abaisser
 // sans cette ligne aurait rendu le prochain retrait indolore.
-ok(champs >= 14,
-   `SOCLE : ${champs} librairie(s) lue(s), 14 au moins attendues. Sous ce seuil ce garde est vert `
+// PUIS DE 14 À 13 le 2026-08-23 : `lib/mod.json` est ARCHIVÉ à son tour (décision de Romain,
+// « on sort `mod` et la section correspondante est sortie/archivée »). Chaque abaissement porte sa
+// cause et sa date — un socle qui descend sans dire pourquoi ne se distingue pas d'un socle desserré.
+ok(champs >= 13,
+   `SOCLE : ${champs} librairie(s) lue(s), 13 au moins attendues. Sous ce seuil ce garde est vert `
  + `parce qu'il ne balaie plus la donnée, pas parce qu'elle est propre.`);
 
 if (echecs.length) {

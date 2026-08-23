@@ -45,6 +45,20 @@ const RETRAITS_ASSUMES = [
     pourquoi: "un gabarit de réglages natifs n'est pas une librairie (décision Romain 2026-08-21) — "
             + 'il a sa porte, `src/transpiler/gabarits-data.js`, et sa CLÉ ne change pas. '
             + 'bp3-frontend a simulé la bascule chez lui avant la frappe : 30/30 → 29/29, vert.' },
+  { cle: 'mod', date: '2026-08-23',
+    pourquoi: "le catalogue des modules est ARCHIVÉ (décision Romain 2026-08-23, « on sort `mod` "
+            + "et la section correspondante est sortie/archivée. Idem pour `module.X` ») — il vit "
+            + 'désormais sous `docs/archive/mod.json`, hors du dossier que le bundle balaie. '
+            + "⛔ C'EST UN RETRAIT DE FORME, PAS UN NETTOYAGE : ses trois entrées `adsr`, `lfo` et "
+            + '`ramp` étaient le catalogue que `parser.js` lisait pour reconnaître la déclaration '
+            + "d'une instance — `adsr env1` compilait, il ne compile plus. MESURÉ AVANT LA FRAPPE "
+            + 'sur mes 389 scènes : 5 lignes écrivent `mod.`, dans 4 scènes, et les QUATRE ne '
+            + "compilaient DÉJÀ plus (« Expected IDENT, got INT » à la ligne d'invocation) ; ZÉRO "
+            + 'ligne écrit `module.` ; ZÉRO déclaration `adsr|lfo|ramp <nom>`. Les cinq '
+            + 'consommateurs préavisés avant la frappe, avec la liste et une prédiction en trois '
+            + "points. ⚠️ Deux scènes NOMMÉES `cv-adsr` et `cv-lfo` compilent et ne sont PAS "
+            + 'touchées : elles ont été réécrites, leur nom est un vestige — vérifié en les lisant, '
+            + 'un balayage par nom de fichier aurait rendu deux faux positifs.' },
   { cle: 'modulation', date: '2026-08-22',
     pourquoi: "la librairie des cinq cibles de branchement est ARCHIVÉE (décision Romain "
             + '2026-08-22, « on l\'archive, elle va être remplacée par FaustX ») — elle vit '

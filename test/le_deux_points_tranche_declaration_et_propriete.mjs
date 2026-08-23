@@ -49,8 +49,11 @@ const S = 'core\nalphabet.western\n';
 // ── 2. LES DEUX FORMES AROBASÉES — chacune à sa place ───────────────────────────────────────
 ok(err(`${S}C4:midi\n-----\nS -> C4\n`).length === 0,
   '2. PROPRIÉTÉ — `C4:midi` pose une propriété sur un nom qui existe');
-ok(err(`${S}adsr env1\n-----\nS -> C4\n`).length === 0,
-  '2. DÉCLARATION — `adsr env1` crée un nom, sans deux-points');
+// ⛔ LE VOLET 2 ÉPROUVAIT `adsr env1` — une déclaration de module, sortie du langage le 2026-08-23
+// avec l'archivage de `mod`. Ce que ce garde tient est le DEUX-POINTS, pas le module : la
+// déclaration sans deux-points reste éprouvée par les autres types en tête, qui eux vivent.
+ok(err(`${S}signal grain\n-----\nS -> C4\n`).length === 0,
+  '2. DÉCLARATION — `signal grain` crée un nom, sans deux-points');
 // ⛔ LE CAS DU BLOC DE CODE A PERDU SON PORTEUR le 2026-08-09 : il s ecrivait avec `cv`, supprime
 // du langage. La forme qui le remplacera — le corps  code typé  de `def` — n est PAS ENCORE LUE.
 // Ce que le volet garde encore, et qui suffit : les deux formes arobasées vivantes, la PROPRIÉTÉ
@@ -86,7 +89,7 @@ ok(err(`${S}adsr env1\n-----\nS -> C4\n`).length === 0,
 // gardera la meme chose sur la forme vivante.
 const VOLET_2BIS_ACTIF = false;
 if (VOLET_2BIS_ACTIF) {
-for (const [quoi, corps] of [['un modulateur de lib', 'mod.adsr(attack:5)'], ['un bloc de code', '`js: 1`']]) {
+for (const [quoi, corps] of [['un bloc de code', '`js: 1`']]) {
   const e = err(`core\nmod\nalphabet.western\ncv x : ${corps}\n-----\nS -> C4\n`);
   ok(e.length >= 1, `2bis. 'cv x : ${quoi}' doit être refusé — le deux-points n'a pas de sens là`);
   ok(e.some((m) => /deux-points n'a pas de sens ici/.test(m)),
@@ -102,13 +105,13 @@ for (const [quoi, corps] of [['un modulateur de lib', 'mod.adsr(attack:5)'], ['u
 // compile » n'est pas « ça arrive » — c'est la même famille que la directive jetée après les
 // règles, à un aiguillage près.
 {
-  const r = compileToBPxAST(`${S}adsr env1\n-----\nS -> C4 env1\n`);
+  const r = compileToBPxAST(`${S}signal grain\n-----\nS -> C4 grain\n`);
   ok((r.errors || []).length === 0, '3. la scène doit compiler');
   // ⚠️ LA SONDE A CHANGE DE SECTION le 2026-08-09 : le modulateur se declare desormais avec `var`,
   // et il arrive donc dans `vars`, pas dans la section supprimee avec `cv`. Le SUJET du volet est
   // inchange et c est lui qui compte —  ça compile  n est pas  ça arrive .
-  ok((r.ast?.vars || []).some((v) => (v.names || []).includes('env1')),
-    `3. le module déclaré doit ARRIVER dans l'arbre (reçu : ${JSON.stringify((r.ast?.vars || []).flatMap((v) => v.names || []))})`);
+  ok((r.ast?.vars || []).some((v) => (v.names || []).includes('grain')),
+    `3. le nom déclaré doit ARRIVER dans l'arbre (reçu : ${JSON.stringify((r.ast?.vars || []).flatMap((v) => v.names || []))})`);
   ok(!(r.ast?.directives || []).some((d) => d && d.name === 'var'),
     '3. et il ne doit PAS traîner parmi les directives de scène');
 }

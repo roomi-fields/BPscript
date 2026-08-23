@@ -45,7 +45,8 @@ const DECLARATIONS = [
   // qu'un point d'attente attend (décision du 2026-08-04). Le nom arrive donc dans `inputs`, pas
   // dans `declarations` : c'est le MÊME fait mesuré au bon endroit de l'arbre.
   ['in.<canal> …', 'core\nin.midi sync1\n-----\nS -> C4 <!sync1', (a) => (a.inputs || []).some((d) => d.name === 'sync1')],
-  ['<module> <nom>', 'mod\nadsr env1\n-----\nS -> C4 env1', (a) => (a.vars || []).some((v) => (v.names || []).includes('env1'))],
+  // ⛔ `<module> <nom>` A QUITTÉ CETTE MATRICE avec le catalogue qui le portait (archivage de `mod`,
+  // 2026-08-23). La ligne éprouvait une forme du langage ; la forme n'existe plus, la ligne non plus.
   ['symbol',       'symbol travail\n-----\nS -> C4 travail',                   (a) => nomsVars(a).includes('travail')],
 ];
 console.log(`[portée unique] ${DECLARATIONS.length} déclarations de terminal`);
@@ -99,7 +100,10 @@ for (const [quoi, src] of A_TRAVERS_LES_BLOCS) {
 }
 
 // ── 4. SOCLE ET TÉMOINS D'INSTRUMENT ────────────────────────────────────────────────────────
-ok(DECLARATIONS.length === 4, `4. les QUATRE déclarations doivent être éprouvées — ${DECLARATIONS.length}`);
+// ⚠️ TROIS DEPUIS LE 2026-08-23, ET LE CHIFFRE PORTE SA CAUSE. Elles étaient QUATRE : la quatrième
+// était `<module> <nom>`, sortie du langage avec l'archivage de `mod`. Un socle qui baisse doit dire
+// POURQUOI, sinon il ne se distingue pas d'un socle qu'on desserre pour faire passer un test.
+ok(DECLARATIONS.length === 3, `4. les TROIS déclarations doivent être éprouvées — ${DECLARATIONS.length}`);
 // PLANCHER ABAISSÉ DE 4 À 3 le 2026-08-15, SCIEMMENT : `alias` sort du langage, donc son témoin
 // sort de la matrice. Un plancher qui suit ce que l'extracteur rend ne mesure plus rien ; celui-ci
 // se déplace par une décision, et la décision est écrite ici.

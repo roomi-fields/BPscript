@@ -127,19 +127,13 @@ for (const [quoi, avecForme, enDirect] of [
      `5bis. ${quoi} — l'arbre déplié doit être INDISCERNABLE de l'écriture directe`);
 }
 
-// ─── 5ter. UNE INVOCATION DE MODULE N'EST PAS UNE STRUCTURE ──────────────────────────────────
-// `var ramp1 ramp` puis `def monte ramp1(from:0, to:255)` : le corps commence par un terme nu,
-// donc le parser type `monte` en STRUCTURE. Mais `ramp1` est une INSTANCE DE MODULE déclarée,
-// `from` et `to` sont ses ports, et une invocation est une CHOSE — elle ne se déplie pas. Le
-// défaut était muet tant que rien ne se dépliait ; il devient une erreur de compilation dès que le
-// corps devient du vrai contenu d'arbre.
-{
-  const t = arbreDe('core\nalphabet.western\nramp ramp1\ndef monte ramp1(from:0, to:255)\n\n-----\nS -> C4!monte\n');
-  ok(t.erreurs.length === 0,
-     `5ter. une invocation de module nommée par def ne doit PAS se déplier (${t.erreurs[0]?.message})`);
-  ok(symbolesDe(t.ast?.subgrammars).includes('monte'),
-     "5ter. le nom de l'invocation de module reste dans l'arbre — ce n'est pas du sucre");
-}
+// ─── 5ter. LE VOLET DE L'INVOCATION DE MODULE EST PARTI AVEC SA FORME ────────────────────────
+// ⛔ Il éprouvait que `def monte ramp1(from:0, to:255)` ne se déplie PAS — `ramp1` était une
+// instance de module déclarée, `from` et `to` ses ports, et une invocation est une CHOSE. Le
+// catalogue `mod` est archivé le 2026-08-23 et ses trois entrées quittent le langage : `ramp ramp1`
+// ne compile plus, donc l'accusé de ce volet ne peut plus naître. Le tri qu'il gardait a été élagué
+// de `parser.js` dans le même mouvement — un filtre qui ne peut plus rien filtrer a exactement la
+// même forme qu'un filtre qui n'a rien à filtrer.
 
 // ─── 6. LE DÉPLIAGE NE SORT PAS DU MEMBRE DROIT ──────────────────────────────────────────────
 // ⚠️ CE VOLET EXISTE PARCE QUE J'AI CRÉÉ LE DÉFAUT et qu'il était silencieux : en balayant l'arbre

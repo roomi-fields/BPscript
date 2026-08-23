@@ -58,8 +58,12 @@ const FORMES = [
     (n) => n?.names?.[0] === 'rotation' && n?.varType?.kind === 'convention' && n.varType.convention === 'phase'],
   ['logic porte', 'la convention logic',
     (n) => n?.names?.[0] === 'porte' && n?.varType?.kind === 'convention' && n.varType.convention === 'logic'],
-  ['ramp ramp1', 'un module DU CATALOGUE (`ramp` vit dans lib/mod.json)',
-    (n) => n?.names?.[0] === 'ramp1' && n?.varType?.kind === 'module' && n.varType.module === 'ramp'],
+  // ⛔ `ramp ramp1` A QUITTÉ CETTE MATRICE avec le catalogue qui le portait. `lib/mod.json` est
+  // archivé le 2026-08-23 (décision de Romain) et ses trois entrées sortent du langage : le type
+  // n'existe plus, et aucun chemin ne produit plus un `varType.kind === 'module'`.
+  // ⚠️ LE CAS `lpf lpf1` PLUS BAS RESTE, ET IL CHANGE DE SENS : il éprouvait « un module RÉEL mais
+  // absent des données » — un trou de catalogue. Il n'y a plus de catalogue, donc plus de trou : le
+  // mot est désormais refusé pour la même raison qu'un mot inventé, et c'est ce que le volet dit.
   // ⛔ LE TYPE VOYAGE MÊME SANS PARENTHÈSE — prototypal pur, 2026-08-20. Ce volet exigeait
   // `varType === null` : il CERTIFIAIT la perte. Six types sortaient sans nature dès qu'aucune
   // parenthèse ne suivait, et un consommateur y lisait une variable anonyme là où l'auteur en
@@ -95,7 +99,7 @@ for (const [ligne, quoi, verifNoeud, verifAlt] of FORMES) {
 const REFUS = [
   ['zorglub x', "un mot en tête qui ne désigne RIEN de connu",
     /'zorglub' n'est pas un type/],
-  ['lpf lpf1', "un module RÉEL mais absent des données (trou de catalogue connu)",
+  ['lpf lpf1', "un mot qui n'ouvre aucune déclaration — le catalogue de modules est archivé",
     /'lpf' n'est pas un type/],
 ];
 for (const [ligne, quoi, attendu] of REFUS) {
@@ -104,7 +108,7 @@ for (const [ligne, quoi, attendu] of REFUS) {
   ok(msgs(r).some((m) => attendu.test(m)),
     `2. ${quoi} : le message doit correspondre à ${attendu} — reçu : ${msgs(r).join(' | ').slice(0, 160)}`);
 }
-// ⛔ LE REFUS NE PRÉTEND PAS DISTINGUER CE QU'IL NE DISTINGUE PAS. Un module absent du catalogue
+// ⛔ LE REFUS NE PRÉTEND PAS DISTINGUER CE QU'IL NE DISTINGUE PAS. Un mot hors catalogue
 // et un mot inventé sont mécaniquement le MÊME cas — aucun n'est un type déclaré —, et le message
 // est donc le même pour les deux. Ce qu'il DOIT faire, c'est ÉNUMÉRER les types connus : sans cette
 // liste, l'auteur apprend seulement que son mot est faux, jamais lequel écrire.
@@ -118,10 +122,13 @@ for (const [ligne, quoi, attendu] of REFUS) {
   const TYPES_DECLARES = LIBS.core?.schema?.declarationTypes || [];
   ok(TYPES_DECLARES.length >= 8,
     `2. les types déclaratifs doivent se lire dans la donnée — reçu ${JSON.stringify(TYPES_DECLARES)}`);
-  for (const [r, quoi] of [[rLpf, 'un module absent du catalogue'], [rZorglub, 'un mot inventé']]) {
+  for (const [r, quoi] of [[rLpf, 'un mot hors catalogue'], [rZorglub, 'un mot inventé']]) {
     const m = msgs(r).join(' | ');
-    ok(/signal, pitch, phase, logic/.test(m) && /adsr, lfo, ramp/.test(m) && /in\.<canal>/.test(m),
-      `2. le refus ${quoi} doit ÉNUMÉRER les conventions, les modules et le canal d'entrée — reçu : ${m.slice(0, 160)}`);
+    // ⚠️ LE REFUS N'ÉNUMÈRE PLUS LES MODULES, et c'est voulu : un refus qui nomme une forme la
+    // ressuscite pour son lecteur. Le catalogue est archivé le 2026-08-23, la liste part avec lui.
+    ok(/signal, pitch, phase, logic/.test(m) && /in\.<canal>/.test(m) && !/adsr|lfo|ramp/.test(m),
+      `2. le refus ${quoi} doit ÉNUMÉRER les conventions et le canal d'entrée, et NE PLUS nommer `
+      + `les modules archivés — reçu : ${m.slice(0, 160)}`);
     const manquants = TYPES_DECLARES.filter((t) => !m.includes(t));
     ok(manquants.length === 0,
       `2. le refus ${quoi} doit nommer CHAQUE type déclaré dans la donnée — manque(nt) `
@@ -142,12 +149,12 @@ for (const [ligne, quoi, attendu] of REFUS) {
   ok((doitMordre.errors || []).length > 0,
     "3. TÉMOIN — un mot en tête qui ne désigne rien doit être refusé (sinon ce fichier ne prouve rien)");
 }
-{
-  const doitSeTaire = compile('adsr env1'); // module réellement au catalogue
-  ok((doitSeTaire.errors || []).length === 0,
-    "3. TÉMOIN — un module RÉELLEMENT au catalogue doit compiler (sinon le refus mord à l'aveugle)");
-}
-ok(FORMES.length === 8, `3. les HUIT formes de la référence doivent être éprouvées — ${FORMES.length + 1} (avec la liste de noms)`);
+// ⛔ LE TÉMOIN DU MODULE VIVANT EST PARTI AVEC LE CATALOGUE. Il éprouvait que `adsr env1` compile,
+// pour que « le refus mord » ne se confonde pas avec « le refus mord à l'aveugle ». Les sept autres
+// formes de la matrice tiennent ce rôle : chacune doit compiler, et si le lecteur devenait gourmand
+// elles rougiraient ensemble.
+// ⚠️ SEPT DEPUIS LE 2026-08-23 : l'instance de module a quitté la référence avec son catalogue.
+ok(FORMES.length === 7, `3. les SEPT formes de la référence doivent être éprouvées — ${FORMES.length + 1} (avec la liste de noms)`);
 ok(REFUS.length === 2, `3. les DEUX refus doivent être éprouvés — ${REFUS.length}`);
 
 if (echecs.length) {

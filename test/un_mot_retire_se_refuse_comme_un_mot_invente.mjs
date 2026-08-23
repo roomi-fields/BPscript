@@ -348,7 +348,12 @@ const CE_QUI_VIT = [
   ['un acteur et ses clés',       `core\nactor v\n  alphabet.sargam\n  out.audio\n-----\nS -> sa\n`],
   ['le type en tête',             `${T}flag section:1\n-----\nS -> C4\n`],
   ['un symbole déclaré',          `${T}symbol x\n-----\nS -> C4 x\n`],
-  ['une instance de module',      `${T}lfo osc1\n-----\nS -> C4\n`],
+  // ⛔ `lfo osc1` A CHANGÉ DE CAMP LE 2026-08-23. Ce complément listait des formes qui doivent
+  // COMPILER, pour que « le mot est refusé » ne se confonde pas avec « tout est refusé ». Une
+  // instance de module n'en est plus une : le catalogue `mod` est archivé et ses trois entrées
+  // quittent le langage. La ligne sort du complément — elle ne migre pas vers les formes refusées,
+  // parce que ce garde-là porte sur les mots RETIRÉS NOMMÉMENT, et `adsr` n'est pas un mot du
+  // langage retiré : c'était une ENTRÉE DE CATALOGUE, une autre nature.
   ['une table d\'homomorphisme',  `core\nhomomorphism.dhati\n-----\nS -> C4\n`],
   ['une définition nommée',       `${T}def k (vel:120)\n-----\nS -> C4\n`],
   ['l\'état de départ',           `${T}init\n  \`sc: x\`\n-----\nS -> C4\n`],
@@ -362,7 +367,11 @@ for (const [quoi, src] of CE_QUI_VIT) {
 // ── TÉMOINS ANTI-RÉTRÉCISSEMENT ─────────────────────────────────────────────────────────────
 ok(MOTS_RETIRES.length >= 21, 'la liste des mots retirés ne s\'est pas vidée');
 ok(GRAPHIES.length >= 5, 'la matrice des graphies ne s\'est pas vidée');
-ok(CE_QUI_VIT.length >= 16, 'le complément ne s\'est pas vidé');
+// ⚠️ PLANCHER 16 → 15 le 2026-08-23, ET IL PORTE SA CAUSE. La forme partie est `lfo osc1`, une
+// instance de module : le catalogue `mod` est archivé et ses trois entrées quittent le langage.
+// Un plancher qui baisse sans dire quelle forme l'a quitté ne se distingue pas d'un plancher qu'on
+// desserre — et c'est précisément ce que ce garde existe pour refuser ailleurs.
+ok(CE_QUI_VIT.length >= 15, 'le complément ne s\'est pas vidé');
 ok(passe > 200, `le garde doit avoir EXAMINÉ, pas seulement tourné (${passe} assertions)`);
 // ⛔ ET LE REGISTRE DE RETARD DOIT ÊTRE ATTEINT EN ENTIER. Une entrée dont la GRAPHIE a disparu de
 // la matrice ne rougirait jamais et ne serait jamais retirée : elle deviendrait une exemption

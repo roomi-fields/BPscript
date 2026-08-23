@@ -113,9 +113,10 @@ ok(scenes > 100, `1. le balayage doit LIRE des scènes — ${scenes}`);
     "2. le nom d'une macro ne franchit pas la frontière de l'arbre — sonnant, il serait joué comme "
     + 'une note qu\'aucun alphabet ne porte');
 }
-// Et un MODULATEUR invoqué dure aussi — l'enveloppe a sa propre durée (même arbitrage).
-ok(compileToBPxAST('core\nalphabet.western\nmod\nadsr env1\n-----\nS -> C4 env1\n').errors.length === 0,
-  '2. SE TAIT — un modulateur invoqué reste légitime dans le flux');
+// ⛔ LE VOLET DU MODULATEUR EST PARTI AVEC LA FORME QU'IL GARDAIT. Il éprouvait qu'un modulateur
+// invoqué reste légitime dans le flux — `adsr env1` puis `S -> C4 env1`. Le catalogue `mod` est
+// archivé le 2026-08-23 (décision de Romain) et ses trois entrées quittent le langage : l'accusé de
+// ce volet ne peut plus naître. Un garde dont le cas est devenu impossible est vert pour rien.
 
 // ── 3. SOCLE ─────────────────────────────────────────────────────────────────────────────────
 // Le registre a disparu avec la réparation : il n'y a plus de dérogation à dater ni à motiver.

@@ -36,8 +36,12 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-// L'enveloppe déclare l'instance `env1` : le port d'une instance ne se mesure pas sans elle.
-const P = 'core\nalphabet.western:midi\nadsr env1\n-----\n';
+// ⛔ LE SOCLE DÉCLARAIT UNE INSTANCE DE MODULE, et il ne le peut plus : `mod` est archivé le
+// 2026-08-23 et `adsr env1` ne compile plus. Les trois formes de PORT D'INSTANCE de la matrice
+// (`(env1.attack:400)` et ses cinq combinaisons) sont parties avec lui — elles éprouvaient une
+// graphie du langage, pas une position du sac. Ce que ce garde tient reste entier : le sac se lit
+// PAREIL dans toutes ses positions, et c'est sur les clés valuées qu'il se mesure.
+const P = 'core\nalphabet.western:midi\n-----\n';
 
 // ── LES FORMES — la grammaire d'un élément de sac, énumérée ────────────────────────────────────
 // élément ::= sujet? clé ('.' composant)? (':' valeur)?  — cf. `sacBienForme()` dans parser.js.
@@ -49,14 +53,8 @@ const FORMES = [
   ['clé valuée',            '(vel:80)'],
   ['clé nue',               '(velcont)'],
   ['contrôleur numéroté',   '(cc.98:45)'],
-  ['port d\'instance',      '(env1.attack:400)'],
-  ['port puis clé',         '(env1.attack:400, vel:80)'],
-  ['clé puis port',         '(vel:80, env1.attack:400)'],
-  ['clé nue puis port',     '(velcont, env1.attack:400)'],
   ['sujet étoile + clé',    '(*:vel:80)'],
   ['sujet terminal + clé',  '(C4:vel:80)'],
-  ['sujet étoile + port',   '(*:env1.attack:400)'],
-  ['sujet terminal + port', '(C4:env1.attack:400)'],
 ];
 
 // ── LES POSITIONS — les quatre endroits du langage où un sac peut vivre ────────────────────────
@@ -132,7 +130,6 @@ const DOIVENT_DIFFERER = [
   ['la valeur',      '(vel:80)',              '(vel:90)'],
   ['le sujet',       '(*:vel:80)',            '(C4:vel:80)'],
   ['le sujet absent', '(vel:80)',             '(*:vel:80)'],
-  ['le composant',   '(env1.attack:400)',     '(env1.release:400)'],
   ['la clé',         '(vel:80)',              '(velcont)'],
 ];
 for (const [quoi, a, b] of DOIVENT_DIFFERER) {
@@ -157,7 +154,6 @@ const MAL_FORMES = [
   ['parenthèse non fermée', '(vel:80'],
   ['sujet vide',            '(*:)'],
   ['deux-points doublé',    '(vel::80)'],
-  ['point sans composant',  '(env1.:400)'],
   ['point sans clé',        '(.attack:400)'],
   ['nombre en place de clé', '(80:vel)'],
 ];
@@ -173,7 +169,11 @@ for (const [pourquoi, sac] of MAL_FORMES) {
 }
 
 // ── D. SOCLE — la matrice ne se vide pas en silence ───────────────────────────────────────────
-ok(cellules === FORMES.length * POSITIONS.length && cellules >= 40,
+// ⚠️ LE PLANCHER SUIT LE RETRAIT, ET IL DIT POURQUOI. Il valait 40 — dix formes × quatre positions.
+// Cinq formes portaient un PORT D'INSTANCE (`env1.attack`) et sont sorties avec le catalogue `mod`,
+// archivé le 2026-08-23. Un plancher qu'on baisse sans sa cause ne se distingue pas d'un plancher
+// qu'on desserre pour faire passer un test : celui-ci nomme la forme partie et la décision.
+ok(cellules === FORMES.length * POSITIONS.length && cellules >= 20,
    `D. SOCLE : la matrice doit être PLEINE — ${cellules} cellule(s) pour ${FORMES.length} forme(s) `
    + `× ${POSITIONS.length} position(s).`);
 ok(cellulesTemoin === MAL_FORMES.length * POSITIONS.length && cellulesTemoin >= 24,
