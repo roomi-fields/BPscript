@@ -2682,9 +2682,47 @@ function parse(tokens, opts = {}) {
           // fausse sous une conclusion juste, qui envoie chercher ailleurs. La virgule borne de meme,
           // puisqu'elle separe deux cles du corps.
           const borneDuCorps = () => clesParenthesees && (at(T.RPAREN) || at(T.COMMA));
+          // ⛔ UNE PARTIE DE VALEUR EST UN MOT — ET SANS CE JEU, QUINZE SIGNES ÉTAIENT AVALÉS.
+          //
+          // Cette boucle prenait TOUT jusqu'au bout de la ligne. `def x a:1 (b:2)` rendait donc
+          // `a = ["1", "(b:2)"]` : le corps entier devenu une PARTIE DE TEXTE, zéro erreur. Mesuré
+          // le 2026-08-24 sur `voices` — `def fatbass for:sub37 (device(preset:bass-init))` sortait
+          // `name:"fatbass"` (tronqué, il écrase l'entrée voisine), `kind:"terminal"` au lieu de
+          // `prereglage`, et le corps en texte. Une donnée fausse, acceptée sans un mot.
+          //
+          // ⚠️ ET LE DÉFAUT NE VIVAIT PAS SUR LA PARENTHÈSE : ( ) [ ] { } | < > ! ? # @ $ & ~
+          // passaient tous. Réparer la parenthèse seule aurait laissé les quatorze autres — le
+          // défaut se répare sur l'ESPACE où il peut vivre, pas là où il s'est montré.
+          //
+          // Le jeu est écrit en POSITIF — ce qui compose un mot — parce qu'une liste de ce qui est
+          // refusé se périme à chaque signe ajouté au langage.
+          const PARTIE = new Set([T.IDENT, T.INT, T.FLOAT, T.STRING, T.SLASH, T.PERIOD, T.REST,
+                                  T.PROLONG, T.HASH, T.PLUS, T.BACKTICK,
+                                  T.GATE, T.TRIGGER, T.CV, T.LAMBDA]);
           const parties = [];
           let courante = '';
           while (!atEnd() && !at(T.NEWLINE) && !at(T.COMMENT) && !ouvreUneCle() && !borneDuCorps()) {
+            // ⛔ LE CODE TYPÉ EST UNE VALEUR COMPLÈTE, JAMAIS UNE PARTIE PARMI D'AUTRES. Le mettre
+            // dans le jeu positif laissait le défaut entier sur lui : `def x a:1 \`js: 1\`` rendait
+            // `["1", "js: 1"]` — le profil exact qu'on répare, la seconde partie devenue du texte,
+            // zéro signal. Mesuré et rendu par bp3-frontend, qui a éprouvé le quinzième signe que
+            // ma propre liste annonçait comme couvert. Il porte une voix de code : il ouvre une
+            // valeur, il ne la prolonge pas.
+            if (current().type === T.BACKTICK && (parties.length || courante !== '')) {
+              throw new ParseError(
+                `'def ${defName}' : du code typé ne peut pas suivre une autre partie dans la valeur `
+                + `de '${cle}'. Le code typé EST la valeur — écris-le seul après le deux-points.`,
+                current());
+            }
+            if (!PARTIE.has(current().type)) {
+              throw new ParseError(
+                `'def ${defName}' : '${current().value ?? current().type}' n'est pas lisible dans la `
+                + `valeur de '${cle}'. Une valeur est faite de MOTS — un nom, un nombre, un texte `
+                + `entre guillemets, un rapport — et l'espace en sépare les parties. Ce signe ouvre `
+                + `une structure, et une structure ne se pose pas dans une valeur : écris-la dans le `
+                + `corps entre parenthèses de la déclaration.`,
+                current());
+            }
             if (courante !== '' && current().spaceBefore) { parties.push(courante); courante = ''; }
             courante += String(advance().value);
           }
