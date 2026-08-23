@@ -192,11 +192,31 @@ function tokenize(source, opts = {}) {
     }
 
     // Quoted string — "file.bps" (for scene paths)
+    //
+    // ⛔ LE GUILLEMET SE DOUBLE DANS UNE CHAÎNE — arbitrage de Romain, 2026-08-23. La règle n'était
+    // écrite NULLE PART : ni dans les 244 décisions de l'index, ni dans `LANGUAGE.md`, ni dans
+    // `FORME-OBJET.md`. Elle est consignée ICI, en étant câblée, parce qu'un mot de langage qui ne
+    // vit dans aucun code n'est pas une règle, c'est un souvenir.
+    //
+    // ⚠️ CE QUI SE PASSAIT AVANT N'ÉTAIT PAS UN REFUS, ET C'EST PIRE. Le lecteur fermait au premier
+    // guillemet puis rouvrait : `"scale ""Ma05"" fin"` rendait TROIS jetons — `scale `, `Ma05`,
+    // ` fin` — que la suite concaténait en `scale Ma05 fin`. Les guillemets DISPARAISSAIENT, le
+    // texte sortait faux, et rien ne le disait. C'est le patron du poids muet : une graphie
+    // acceptée qui rend autre chose que ce qu'elle écrit.
+    //
+    // ⚠️ ET LA CHAÎNE VIDE N'EST PAS UN DOUBLEMENT : `separator:""` ferme sur un guillemet suivi
+    // d'une virgule, pas d'un guillemet. `lib/octaves.bpsl` s'en sert huit fois — c'est le seul
+    // fichier du dépôt qui écrit deux guillemets accolés, et il ne doit pas bouger d'un octet.
     if (ch === '"') {
       advance(); // opening "
       let str = '';
-      while (i < source.length && peek() !== '"') str += advance();
-      if (i < source.length) advance(); // closing "
+      for (;;) {
+        while (i < source.length && peek() !== '"') str += advance();
+        if (i >= source.length) break;
+        advance();                              // le guillemet qui ferme… ou le premier des deux
+        if (peek() === '"') { str += advance(); continue; }   // doublé → un guillemet littéral
+        break;
+      }
       emit(T.STRING, str);
       continue;
     }

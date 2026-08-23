@@ -291,7 +291,8 @@ symbol a:1, b:2
 
 Chaque nom d'une liste porte la sienne. Le deux-points d'un drapeau suit son nom et porte sa valeur
 initiale, comme celui d'une valeur de depart. Une valeur commence par un tiret bas quand elle nomme
-un geste du moteur natif.
+un geste du moteur natif. Un texte s'ecrit entre guillemets ; un guillemet a l'interieur d'un texte
+se double.
 
 Un type porte son corps entre parentheses. Le corps est un sac de reglages : des couples, des membres
 nus, et des parentheses qui descendent d'un niveau.
