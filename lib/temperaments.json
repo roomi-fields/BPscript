@@ -3703,7 +3703,7 @@
       1.975
     ]
   },
-  "bp3_schlick_bad_": {
+  "bp3_schlick_bad": {
     "description": "Schlick temperament (Asselin 2000 p.88) Created 2021-01-16 10:56:35 [INCORRECT] Created meantone downward notes “la,re,sol,do,fa” fraction 3/2 adjusted -1/4 comma (2021-01-16 10:58:50) Created meantone upward notes “la,mi,si” fraction 3/2 adjusted -1/4 comma (2021-01-16 10:59:48) Created meantone upward notes “la,do#” fraction 5/4 (2021-01-16 11:04:11) Equalized intervals over series “si,fa#,do#” approx fraction 3/2 adjusted -5.4 cents to ratio = 1.495 (2021-01-16 11:05:59) Created meantone downward notes “sol,mib” fraction 5/4 (2021-01-16 11:07:31) Equalized intervals over series “mib,sib,fa” approx fraction 3/2 adjusted -5.3 cents to ratio = 1.495 (2021-01-16 11:08:47) Created meantone downward notes “do,lab” fraction 5/4 (2021-01-16 11:13:58) Created meantone upward notes “mi,sol#” fraction 5/4 adjusted 2/3 comma (2021-01-16 11:23:39) [estimation] Base note reset to ‘do’ (2021-01-16 11:25:48)",
     "source": "Bernard Bel / Bol Processor",
     "period_ratio": 2,
