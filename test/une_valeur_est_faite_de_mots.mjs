@@ -58,6 +58,14 @@ const lire = (ligne) => {
     const t = lire(ligne);
     ok(t.ok, `A2-borne. LANGUAGE.md:${l} — « ${ligne} » doit rester vivant : ${t.err.slice(0, 80)}`);
   }
+  // ⛔ ET LE DISCRIMINANT EST CE QUI PRÉCÈDE, PAS L'ACCENT GRAVE. Kanopi a mesuré la distinction
+  // avant moi : une PAIRE en première partie fait du code typé une seconde partie — refusé ; un
+  // NOM NU fait basculer le lecteur en `kind:"code"` avant tout découpage — vivant. Sans ce
+  // témoin, « le code typé est refusé » ne se distingue pas de « le lecteur de code est mort ».
+  const code = lire('def wobble phase `js: (t, dur) => 0.5`');
+  ok(code.ok && code.def?.kind === 'code',
+     `A2-témoin. une voix de code doit rendre kind:"code" — reçu ${JSON.stringify(code.def?.kind)}. `
+   + `C'est le nom NU en tête qui fait basculer le lecteur, pas l'accent grave.`);
 }
 
 // ── B. ⛔ LE CAS QUI A MOTIVÉ — et c'est l'ARBRE qu'on mesure, pas le verdict ─────────────────
@@ -90,6 +98,14 @@ const lire = (ligne) => {
     ['deux parties, corps NU',  'def x range:0 127'],
     ['une structure de noms',  'def cadence sa re ga pa'],       // LANGUAGE.md:336
     ['un corps parenthésé',    'def x (a:1, b(c:2))'],
+    // ⛔ CES QUATRE-LÀ VIENNENT DE VOISINS QUI ONT ÉPROUVÉ MON PRÉAVIS, pas de ma liste. Atlas
+    // enseigne la transformation paramétrée dans son aide publiée et a demandé qu'elle ne tombe
+    // pas « par le bord » ; Kanopi porte les deux voix de code en vitrine. Aucune n'était dans mes
+    // bornes, et toutes touchent l'espace que ce refus resserre.
+    ['une transformation',     'def accent(x) x(vel:120)'],      // atlas, aide publiée
+    ['un préréglage',          'def fort (vel:100)'],            // atlas
+    ['une voix de code',       'def wobble phase `js: (t, dur) => 0.5`'],   // kanopi, cv-backtick
+    ['du code sans convention', 'def wobble `js: 1`'],           // kanopi
   ];
   for (const [quoi, ligne] of VIVANTES) {
     const r = lire(ligne);
@@ -112,5 +128,6 @@ if (echecs.length) {
   process.exit(1);
 }
 console.log(`✅ une valeur est faite de mots — dix-sept signes de structure sont refusés dans une `
-  + `valeur de corps nu, le nom illisible qui écrasait une entrée voisine est arrêté, et les dix `
-  + `formes vivantes de la bible et de la donnée passent. ${passe} vérification(s) passée(s).`);
+  + `valeur de corps nu, le nom illisible qui écrasait une entrée voisine est arrêté, et les `
+  + `quatorze formes vivantes de la bible, de la donnée et des scènes des voisins passent. `
+  + `${passe} vérification(s) passée(s).`);
