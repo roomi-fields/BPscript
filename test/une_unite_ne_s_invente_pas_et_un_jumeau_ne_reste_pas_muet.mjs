@@ -60,7 +60,10 @@ for (const [fichier, lib] of Object.entries(LIBS)) {
   marcher(lib, '');
 }
 
-ok(porteurs.length >= 10, `SOCLE : la donnée doit porter des unités — ${porteurs.length} champ(s)`);
+// ⛔ SEUIL À 10, MÊME DÉFAUT QUE SON VOISIN — la donnée en porte 19, donc NEUF champs pouvaient
+// partir sans un mot sous un message qui promet « la donnée doit porter des unités ». Le propos est
+// « pas vide » ; il devient une inclusion, qui ne se périme sur aucun retrait légitime.
+ok(porteurs.length > 0, `SOCLE : la donnée ne porte AUCUNE unité — le champ a disparu`);
 
 // ── A. AUCUNE UNITÉ NE S'INVENTE ─────────────────────────────────────────────────────────────
 {

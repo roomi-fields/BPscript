@@ -90,11 +90,22 @@ ok(entrees.length >= 90, `SOCLE : ${entrees.length} entrée(s) lues dans le paqu
 const grandeurs = entrees.filter((x) => Array.isArray(x.def.args) && x.def.args.length && !Array.isArray(x.def.values));
 ok(grandeurs.length >= 50, `SOCLE : ${grandeurs.length} grandeur(s) — une entrée à argument, hors liste fermée`);
 const avecUnite = grandeurs.filter((x) => typeof x.def.unit === 'string' && x.def.unit);
-// ⚠️ CE SEUIL A ÉTÉ POSÉ AVANT LA MESURE, ET IL ÉTAIT FAUX. Je l'avais écrit à 14 en comptant deux
-// unités que je venais d'écrire — « BPM » et « s » — et qu'un garde voisin m'a fait retirer : elles
-// ne sont pas au vocabulaire, et en déclarer une est un arbitrage de Romain. Le compte réel est 13.
-// Le seuil est donc à 12 : il attrape une chute d'une seule unité sans casser au premier ajout.
-ok(avecUnite.length >= 12, `SOCLE : ${avecUnite.length} grandeur(s) nomment leur unité — sous 12, le champ s'est vidé`);
+// ⛔ CE SEUIL ÉTAIT À 12 ET IL ÉTAIT FAUX DANS LES DEUX SENS — mesuré le 2026-08-24 après que
+// bp3-frontend et Kairos aient cherché la même forme chez eux.
+//
+// Son commentaire promettait d'« attraper une chute d'une seule unité » à partir d'un compte de 13.
+// La donnée en porte 15 aujourd'hui : retirer DEUX unités passait donc sans un mot, et son message
+// disait « le champ s'est vidé » pendant qu'il gardait un inventaire.
+//
+// ⚠️ DEUX PROPOS VIVAIENT DANS UNE SEULE ASSERTION : « pas vide » — impérissable — et « pas de
+// chute » — qui se périme à chaque retrait légitime. Kairos l'a formulé le mieux : un tel seuil ne
+// tient ni le propos qu'il annonce ni l'inventaire qu'il verrouille, et il ne mord qu'au SECOND
+// retrait avec un message qui parle du premier.
+//
+// ⇒ LE PROPOS TENABLE EST « PAS VIDE ». Une unité qui sort de la donnée est un geste, pas un défaut
+// — vingt-neuf clés de prose sont sorties cette nuit. Le seuil devient une INCLUSION, la réparation
+// que Kairos a payée deux fois sur le même banc.
+ok(avecUnite.length > 0, `SOCLE : aucune grandeur ne nomme son unité — le champ a disparu de la donnée`);
 
 // ── 1. L'UNITÉ NOMMÉE DANS L'ARGUMENT OU DANS LA PROSE VIT AUSSI DANS LE CHAMP ───────────────
 for (const { lib, nom, def } of grandeurs) {
