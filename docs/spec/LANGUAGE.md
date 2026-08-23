@@ -296,6 +296,9 @@ se double.
 Un type porte son corps entre parentheses. Le corps est un sac de reglages : des couples, des membres
 nus, et des parentheses qui descendent d'un niveau.
 
+Ces types sont le SOCLE du langage. Les librairies l'etendent : toute entree d'un catalogue invoque
+se declare comme un type.
+
 | type          | ce que la variable porte                                                                        |
 | ------------- | ----------------------------------------------------------------------------------------------- |
 | `flag`        | un entier, avec sa valeur initiale ; les regles s'y conditionnent par un entier                |
