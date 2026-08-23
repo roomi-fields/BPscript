@@ -551,7 +551,7 @@
         "ge": "ke"
       }
     },
-    "trial.mohanam": {
+    "trial_mohanam": {
       "description": "Porté depuis bp3-engine/test-data/-ho.trial.mohanam le 2026-08-13, section par section et maillon par maillon. Vérifié : le dépliage en paires consécutives redonne exactement le natif.",
       "sections": {
         "trn": {
