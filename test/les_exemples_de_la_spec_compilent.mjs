@@ -241,7 +241,13 @@ const RETARD_REGLES = new Map([
   //     préfixe, la librairie, ou la place. `lpf1` reste dans la branche générique, qui a gagné
   //     « ni une librairie invoquée » — donc l'ancien motif ne matchait plus. Le retard ne bouge
   //     pas d'un cran : c'est le TEXTE du refus qui a changé, pas ce qu'il refuse.
-  ['S -> {A B C}(lpf1.cutoff:4000)', /n'est ni une librairie invoquée, ni un contrôle à composants, ni une instance déclarée/],
+  // SORTIES DU CLIQUET LE 2026-08-23 — les deux lignes ont quitté la bible avec l'archivage de
+  // `mod` (décision de Romain). Elles illustraient une INSTANCE DE MODULE et un de ses ports ;
+  // le mécanisme n'existe plus, et l'architecte a validé leur remplacement par une forme vivante :
+  //     S -> {A B C}(lpf1.cutoff:4000)   →   S -> {A B C}(attack:20)
+  //     S -> {A B}(lpf1.cutoff:4000)     →   S -> {A B}(attack:20)
+  // ⛔ ET C'EST LE CLIQUET QUI L'A EXIGÉ, pas ma mémoire : il a rougi en disant « inscrite au retard
+  // mais NE REFUSE PLUS avec sa cause ». Elles ne refusent plus parce qu'elles ne sont plus là.
   // ⚠️ CAUSES RÉVISÉES LE 2026-08-08 — le chantier « un appel exige une définition déclarée ».
   // Aucune de ces lignes n'est rattrapée ni cassée : elles refusent toujours, pour la MÊME raison
   // de fond, mais le compilateur la NOMME désormais au lieu de buter dessus. Un sac n'est plus
@@ -270,7 +276,6 @@ const RETARD_REGLES = new Map([
   // compter un retard qui n'existe plus.
   // ⚠️ CAUSE RÉVISÉE le 2026-08-21 avec sa jumelle ci-dessus — le refus a gagné « ni une librairie
   // invoquée », le retard est inchangé.
-  ['S -> {A B}(lpf1.cutoff:4000)', /n'est ni une librairie invoquée, ni un contrôle à composants, ni une instance déclarée/],
   // (b-bis) LE MOT NU `cutoff` — INSCRIT LE 2026-08-22 À 12h, SORTI LE MÊME JOUR À 16h.
   //     Ces deux lignes ont été au retard une demi-journée : `lib/modulation.json` archivée les
   //     privait de leur mot, et je n'avais pas le droit d'écrire dans la bible. Romain a tranché
@@ -475,8 +480,11 @@ const RETARD_BLOCS = new Map([
   //    la section entière a rejoint `docs/archive/CV.md` : ce qui sort est la FORME, jamais la
   //    façon dont le sujet était pensé. Le jour où FaustX ouvre, la loi se réécrit sur son porteur.
   //    ⛔ SORTI SUR L'EXIGENCE DU CLIQUET, qui a rougi dans la minute où la bible a changé.
-  ['// 1. Sac de reglages -- sur un symbole, une regle ou un groupe #0', /'lpf1\.cutoff:…' affecte une valeur au compos/],
-  ["// Portee symbole -- colle a l'element #1", /'lpf1\.cutoff:…' affecte une valeur au compos/],
+  // SORTIS DU CLIQUET LE 2026-08-23 — les deux BLOCS portaient `lpf1.cutoff`, l'instance de module
+  // et un de ses ports. `mod` est archivé (décision de Romain) et l'architecte a validé leur
+  // remplacement par `attack`, un contrôle vivant qu'`audio` déclare et que `core` apporte.
+  // ⛔ LE CLIQUET L'A EXIGÉ : ils ne refusent plus avec leur cause parce que la cause a quitté la
+  // bible. Un retard gardé « au cas où » compterait un retard qui n'existe plus.
   // ⚠️ CAUSE RESSERRÉE le 2026-08-08 — le palier STRUCTURE de `@def` a changé le refus de ces
   //    deux blocs, et le cliquet l'a vu le jour même. C'est ce pour quoi il existe : une cause
   //    inscrite qui n'est plus la vraie fait passer un retard pour un autre, et le compteur

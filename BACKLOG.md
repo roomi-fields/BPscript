@@ -3,6 +3,26 @@
 > En-tête (date/build/mesure S4 vs S5) retirée le 2026-07-31 : plus de référent depuis la
 > suppression du pipeline S4/S5 le 2026-07-19 (détail : item BPS-2 ci-dessous).
 
+## Frontières — l'ORDRE des librairies dans le paquet décide d'une résolution
+
+- **BPS-76** `ouvert` — **Une prédiction de conversion doit porter sur l'ordre des LIBRAIRIES, pas
+  seulement sur celui des clés** (mesuré et rendu par BPx le 2026-08-23, confirmé chez moi).
+  La conversion `bff1ed7` a changé le rang de **21 librairies sur 26** dans le paquet publié — les
+  converties quittent le premier bloc pour la fin. Ma prédiction ne portait que sur l'ordre des clés
+  de tête de trois catalogues ; cette dimension-là n'était pas annoncée.
+  ⛔ **Pourquoi ça compte** : un lecteur qui résout une clé en doublon par « la première librairie
+  qui la porte » dépend de cet ordre. Une seule clé est dans ce cas — `volume`, porté par `audio`,
+  `expression` et `midi` — et le mot NU **compile** : mesuré, aucun refus d'ambiguïté ne mord dessus.
+  ⚠️ **L'innocuité d'aujourd'hui tient à DEUX accidents indépendants**, pas un :
+    1. l'ordre RELATIF `audio < expression < midi` est préservé (17/19/20 → 13/16/17) ;
+    2. les TROIS déclarations sont identiques — `range [0,127]` partout.
+  Le jour où l'une des deux jambes cède — une conversion qui déplace `audio` sans `expression`, ou
+  une borne qui diffère d'une seule unité — la valeur part au mauvais destinataire **en silence** :
+  la scène compile, rien ne rougit. C'est le cas que `bpxAst.js` documente déjà sur `pan` (« jugé
+  sur la plage d'audio, aucune erreur ne nommait l'ambiguïté, l'ordre de chargement décidait »).
+  ⇒ **À faire** : au prochain lot de conversion, mesurer l'ordre des librairies ET vérifier si les
+  déclarations en doublon sont identiques. La seconde jambe peut céder sans que la première bouge.
+
 ## Frontières — un voisin lit une de mes sources par son CHEMIN
 
 - **BPS-75** `ouvert` — **Prévenir bp3-frontend NOMMÉMENT avant de convertir `lib/test_alphabets.json`

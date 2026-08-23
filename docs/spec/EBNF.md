@@ -62,7 +62,8 @@ declaration_typee = "flag"   , IDENT , ":" , INT
                   | "in" , [ "." , IN_CHANNEL ] , IDENT , [ "mapping" , "." , IDENT ]
                   | "symbol" , nom_pose , { "," , nom_pose }
                   | CONVENTION , nom_pose
-                  | IDENT , nom_pose            (* un module du catalogue : ramp r1 *)
+                  | IDENT , nom_pose            (* un prototype declare par une librairie
+                                                  invoquee : interval q1, apres `types` *)
                   | TYPE_DECLARE , IDENT , setting_bag ;
 
 (* TYPE_DECLARE — un type que la DONNEE declare : `core`, schema.declarationTypes. AUCUN NOM

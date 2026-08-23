@@ -416,7 +416,7 @@ actor sitar              // cet acteur affine ce dont il herite
 
 #### Le prototype d'un controle
 
-**Un controle se declare sur un prototype**, comme un terminal ou un module. Il porte ce que le
+**Un controle se declare sur un prototype**, comme un terminal. Il porte ce que le
 langage consulte pour decider ou et comment il s'ecrit :
 
 ```json
@@ -592,7 +592,7 @@ librairie invoquee arrete la compilation, et le message le nomme.
 *              sujet universel d'une affectation -- tous les terminaux de la portee
                (*:vel:80, *:sombre) ; dans une vitesse, ralentit (! (*2), ! (*3/2))
 =              affectation de drapeau, entre crochets en fin de regle (S -> C4 [stage=2])
-.              reference a une entite (alphabet.western, lpf1.cutoff, out.midi, in.keyboard),
+.              reference a une entite (alphabet.western, out.midi, in.keyboard),
                sous-partie (acteur.terminal), separateur de fragments (A B . C D)
 [ ]            derivation : un drapeau qui la conditionne, un rang de forme structurelle
 ` `            code externe, execute par l'interpreter que son tag nomme
@@ -1058,13 +1058,13 @@ S -> C2(wave:sawtooth, filterQ:8)       // parametres de synthese
 Basse -> C2 C2 - C2 (vel:100)           // vel pour toute la phrase
 
 // Portee groupe -- apres le groupe
-S -> {A B C}(lpf1.cutoff:4000)          // une instance nommee, un de ses ports
+S -> {A B C}(attack:20)                 // le reglage couvre le groupe entier
 ```
 
 **Superposition des modulations continues.** Quand plusieurs portees posent le **meme parametre**
 sur une meme note (note, groupe, groupe parent...), les reglages **s'empilent en serie**, de
 l'**interieur vers l'exterieur**, dans l'ordre de l'imbrication : dans
-`{ C4(lpf1.cutoff:500) D4 }(lpf2.cutoff:300)`, le son de C4 traverse son filtre de note puis celui du
+`{ C4(attack:500) D4 }(attack:300)`, le son de C4 traverse son filtre de note puis celui du
 groupe.
 **Une valeur simple, elle, ne s'empile pas.** Deux `vel` sur la meme note ne s'additionnent pas et
 ne se traversent pas : le plus local gagne, l'autre est ignore. La difference tient a ce que la
@@ -1212,7 +1212,7 @@ Les parentheses ont quatre fonctions, decidees par la position :
 // 1. Sac de reglages -- sur un symbole, une regle ou un groupe
 S -> C4(vel:120)                      // symbole : vel envoye a la sortie quand C4 joue
 Basse -> C2 C2 - C2 (vel:100)         // regle : vel pour toute la phrase
-S -> {A B}(lpf1.cutoff:4000)          // groupe : le filtre couvre tout le groupe
+S -> {A B}(attack:20)                 // groupe : le reglage couvre tout le groupe
 
 // 2. Contexte -- condition d'application d'une regle
 (A B) X -> D E                        // X se reecrit en D E seulement s'il suit A B
@@ -1846,7 +1846,7 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 | ---------- | ----------------------------------------- | ------------------------------------------------- |
 | espace     | sépare deux termes                        | `def souffle (vel:60)`                           |
 | collage    | réunit deux termes en un seul             | `def accent(x) x(vel:120)`                       |
-| `.`        | désigne un élément dans un espace de noms | `lpf1.cutoff`, `alphabet.tabla`, `out.midi` |
+| `.`        | désigne un élément dans un espace de noms | `alphabet.tabla`, `out.midi`                 |
 | `:`        | lie un sujet à une valeur                 | `dha:midi`, `time.tempo:120`, `(vel:100)`        |
 | `*`        | sujet = tous les terminaux                | `*:vel:80`                                        |
 | `()`       | réglages ; le domaine de la clé adresse   | `sa(vel:80)`, `(weight:50)`, `(tuning:just)`      |
@@ -1951,6 +1951,7 @@ produit. La presence du deux-points dit laquelle des deux formes declaratives on
 | `<nom>:<cible>`           | pose une **propriété** sur un nom qui existe déjà |
 
 ```bpscript
+signal grain              // déclaration : grain est un nom neuf
 alphabet.western:midi     // propriété : les terminaux de western sortent en MIDI
 
 -----
