@@ -29,6 +29,18 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const CLES_LISTES = new Set(['args', 'values', 'scope', 'range']);
+
+/**
+ * UN TEXTE DU LANGAGE — le guillemet s'y DOUBLE, il ne s'échappe pas.
+ *
+ * ⛔ `JSON.stringify` ÉCHAPPE À LA MODE JSON, et c'est ce qui a produit l'antislash que ce fichier
+ * refusait autrefois. Doubler le guillemet PUIS passer par `JSON.stringify` le réchappe : la source
+ * sortait `\"\"` et le compilateur disait « caractère inattendu '\' ». La délimitation du langage
+ * s'écrit donc ici, une fois, et jamais par un outil qui sert un autre format.
+ */
+function enTexte(s) {
+  return '"' + String(s).replace(/"/g, '""') + '"';
+}
 const CHAMPS_DE_FICHIER = new Set(['resolvedBy', 'resolves', 'name', 'description', 'version', 'type']);
 
 /**
@@ -52,7 +64,7 @@ function rendValeur(cle, v, ou) {
       // ⚠️ CE QUI PASSE NU EST UN MOT, ET RIEN D'AUTRE. Un signe hors de ce jeu a un SENS dans le
       // langage : `^` marque un registre dans `octaves`, et rendu nu il sort « caractère inattendu ».
       // Le jeu est donc écrit en positif — ce qui passe — jamais en liste de ce qui ne passe pas.
-      return /^[A-Za-z0-9_/#.+-]+$/.test(s) && !/^-?[0-9.]+$/.test(s) ? s : JSON.stringify(s);
+      return /^[A-Za-z0-9_/#.+-]+$/.test(s) && !/^-?[0-9.]+$/.test(s) ? s : enTexte(s);
     }).join(' ');
   }
   if (typeof v === 'object' && v !== null) throw new Error(`${ou}.${cle} : objet imbriqué, non rendu`);
@@ -63,8 +75,11 @@ function rendValeur(cle, v, ou) {
   //     … 2 grades of scale \"Ma05\" (23 grades) …   ⛔ Caractère inattendu '\'
   // Tant que la graphie d'un guillemet dans un texte n'est pas tranchée, on REFUSE au lieu de rendre
   // un fichier invalide : un refus nommé se répare, un fichier qui ne compile pas se cherche.
-  if (s.includes('"')) throw new Error(`${ou}.${cle} : la valeur contient un GUILLEMET — il sortirait `
-    + `en \\" et l'antislash n'a aucun emploi dans le langage`);
+  // ⛔ CE REFUS EST PÉRIMÉ ET C'ÉTAIT LE TROISIÈME DE CE FICHIER FONDÉ SUR UNE AFFIRMATION. Il tenait
+  // sur « l'antislash n'a aucun emploi dans le langage » — vrai — pour conclure qu'un guillemet dans
+  // un texte n'a pas de graphie — faux depuis que le guillemet SE DOUBLE. Mesuré au compilateur :
+  //     def w (d:"il dit ""oui"" ici")     ✓
+  // 106 valeurs de `temperaments` attendaient cette ligne.
   // ⚠️ LE TEXTE TYPÉ EST OBLIGATOIRE DÈS QU'IL Y A UNE ESPACE — sans lui, la valeur se découperait
   // en PARTIES et une description deviendrait une liste de mots.
   //
@@ -84,7 +99,7 @@ function rendValeur(cle, v, ou) {
   // butent encore sur l'objet imbriqué, donc aucune preuve n'est possible aujourd'hui. On rend
   // donc la forme PROUVÉE, et le nu attend son témoin plutôt qu'un raisonnement.
   if (s === '' || CLES_LISTES.has(cle) || !/^[A-Za-z0-9_/#.+-]+$/.test(s) || /^-?[0-9.]+$/.test(s)) {
-    return JSON.stringify(s);
+    return enTexte(s);
   }
   return s;
 }
@@ -116,22 +131,35 @@ const CLE_DE_MEMBRE = /^[A-Za-z][A-Za-z0-9_-]*$/;
  * Il n'y avait pas de question ouverte, il y avait une distinction que personne n'avait mesurée.
  */
 function rendPaire(k, v, ou) {
-  if (!CLE_DE_MEMBRE.test(k)) {
-    throw new Error(`${ou}.${k} : la clé « ${k} » n'est pas un nom — un membre commence par une `
-      + `lettre. La graphie d'une clé qui n'en est pas une n'est pas tranchée.`);
-  }
+  // ⛔ CINQUIÈME REFUS PÉRIMÉ DE CE FICHIER. Une clé de membre s'écrit NUE quand c'est un
+  // identifiant, ENTRE GUILLEMETS sinon — décision Romain, 2026-08-23 — et les deux graphies
+  // disent le même fait. Mesuré : `def w ("":0)` ✓, `def w ("12TET":1)` ✓, `def w ("a'":1)` ✓.
+  const nue = CLE_DE_MEMBRE.test(k);
+  const ecrite = nue ? k : enTexte(k);
+  // ⚠️ ET LA CLÉ TEXTE NE VAUT QUE DEVANT `:`. Le compilateur refuse `"x"(…)` — mesuré le
+  // 2026-08-24 — donc une clé non-identifiant à valeur COMPOSÉE n'a aucune graphie aujourd'hui.
+  const composee = () => {
+    if (nue) return;
+    throw new Error(`${ou}.${k} : clé texte à valeur COMPOSÉE — « "${k}"(…) » est refusé par le `
+      + `compilateur ; seule « "${k}":v » passe. Question ouverte, remontée le 2026-08-24.`);
+  };
   if (Array.isArray(v)) {
+    composee();
     // En une ligne, une liste se PARENTHÈSE : `scope:a b` sort « dans la partie DÉCLARATIVE… ».
-    return `${k}(${v.map((p) => rendValeur(k, p === null ? '' : p, ou)).join(', ')})`;
+    return `${ecrite}(${v.map((p) => rendValeur(k, p === null ? '' : p, ou)).join(', ')})`;
   }
   if (v && typeof v === 'object') {
+    composee();
     const dedans = Object.entries(v)
       .filter(([kk]) => !kk.startsWith('_'))
       .map(([kk, vv]) => rendPaire(kk, vv, `${ou}.${k}`));
-    if (!dedans.length) throw new Error(`${ou}.${k} : objet SANS membre rendable`);
-    return `${k}(${dedans.join(', ')})`;
+    // ⛔ ET L'OBJET VIDE SE REND, QUATRIÈME REFUS PÉRIMÉ DE CE FICHIER. `terminals.C` vaut {} dans
+    // sept alphabets, et cet outil disait « objet SANS membre rendable » — une règle à lui.
+    // Mesuré au compilateur : `def w (terminals(C(), D()))` ✓. Un nom nu vaut un objet vide, et la
+    // parenthèse vide le dit sans ambiguïté.
+    return `${ecrite}(${dedans.join(', ')})`;
   }
-  return `${k}:${rendValeur(k, v, ou)}`;
+  return `${ecrite}:${rendValeur(k, v, ou)}`;
 }
 
 /** Une note devient un COMMENTAIRE : elle ne voyage plus jusqu'aux consommateurs. */
@@ -234,12 +262,36 @@ export function convertir(nom, j) {
   out.push(...ecrireEntree(nom, enTete));
   out.push('');
 
+  // ── LE COMPTE : CE QUE LA SOURCE PORTE, AVANT DE REGARDER CE QU'ON EN ÉCRIT ──
+  // ⛔ CET OUTIL A LAISSÉ TROIS CHAMPS DERRIÈRE LUI ET A DIT « ✅ ». `settings` porte
+  // `note_conventions` À LA RACINE, la boucle du dessous n'itère que les SECTIONS, et rien ne
+  // comparait les deux. Le refus est bruyant, la perte est muette : seul un compte les distingue.
+  const attendues = new Set();
+  const recenser = (obj, chemin) => {
+    for (const [k, v] of Object.entries(obj)) {
+      if (k.startsWith('_') || CHAMPS_DE_FICHIER.has(k)) continue;
+      if (!v || typeof v !== 'object' || Array.isArray(v)) continue;
+      const ici = [...chemin, k].join('.');
+      if (trouvees.includes(ici)) { recenser(v, [...chemin, k]); continue; }
+      attendues.add(ici);
+    }
+  };
+  recenser(j, []);
+  const vues = new Set();
+
   // ── UN BLOC PAR ENTRÉE, DANS CHACUNE DE SES SECTIONS ──
   // ⛔ UNE LIBRAIRIE PEUT PORTER SON VOCABULAIRE EN PLUSIEURS SECTIONS. `engine` en a QUATRE, et
   // les fusionner changerait la donnée : plusieurs lecteurs de `src/` les distinguent.
-  for (const sec of (trouvees.length ? trouvees : [''])) {
+  // ⛔ LA RACINE SE PARCOURT TOUJOURS, PAS SEULEMENT QUAND ELLE EST SEULE. Un fichier qui porte des
+  // sections peut porter AUSSI des entrées à sa racine — `settings.note_conventions`, `core.schema` —
+  // et cette boucle ne les voyait pas. Une entrée mixte, qui mêle listes et objets, n'est jamais
+  // reconnue comme section : elle vit donc à la racine par construction, et s'y perdait.
+  for (const sec of [...new Set([...trouvees, ''])]) {
     for (const [nomE, def] of Object.entries(lire(sec))) {
       if (nomE.startsWith('_') || CHAMPS_DE_FICHIER.has(nomE)) continue;
+      // À la racine, ce qui EST une section se lit dans sa propre passe, jamais deux fois.
+      if (sec === '' && trouvees.includes(nomE)) continue;
+      vues.add(sec ? `${sec}.${nomE}` : nomE);
       if (typeof def !== 'object' || def === null || Array.isArray(def)) {
         out.push(...enCommentaire(`${nomE} : ${def}`), ''); continue;
       }
@@ -247,7 +299,11 @@ export function convertir(nom, j) {
         if (k.startsWith('_') && typeof v === 'string') out.push(...enCommentaire(`${nomE} · ${v}`));
       }
       const cles = [];
-      if (sec !== majoritaire) cles.push(`section:${sec || 'racine'}`);
+      // ⛔ LA RACINE SE DIT PAR UN TEXTE VIDE, PAS PAR LE MOT « racine ». Le mot créait une PLACE
+      // nommée `racine` dans le bundle — `settings.racine.note_conventions` au lieu de
+      // `settings.note_conventions` : trois champs déplacés, la perte muette devenue un déplacement
+      // muet. Le lecteur range à la racine quand le chemin est vide, et il le faisait déjà.
+      if (sec !== majoritaire) cles.push(sec ? `section:${sec}` : 'section:""');
       for (const [k, v] of Object.entries(def)) {
         if (k.startsWith('_')) continue;
         // Une liste VIDE s'écrit en n'écrivant pas la clé — le bundle la rétablit (libs-bundle.js).
@@ -258,7 +314,12 @@ export function convertir(nom, j) {
       out.push('');
     }
   }
-  return { texte: out.join('\n'), refus };
+  // ⚠️ UN COMPTE QUI N'A RIEN EXAMINÉ NE PROUVE RIEN — il le dit lui-même.
+  if (!attendues.size) refus.push(`${nom} : ZÉRO entrée recensée — le compte n'a rien examiné.`);
+  for (const a of attendues) {
+    if (!vues.has(a)) refus.push(`${nom}.${a} : entrée de la source JAMAIS ÉCRITE — perte muette.`);
+  }
+  return { texte: out.join('\n'), refus, examinees: attendues.size };
 }
 
 // ⛔ CET OUTIL ÉCRIVAIT DANS `lib/` SANS QU'ON LE LUI DEMANDE, ET IL M'A EU. Une mesure des 14

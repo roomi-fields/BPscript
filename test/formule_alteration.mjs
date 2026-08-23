@@ -12,15 +12,14 @@
  * il n'EST PAS le résolveur (rôle Kairos, PORTER≠RÉSOUDRE) : c'est un oracle de référence + un garde
  * anti-régression sur la grille. La résolution hz réelle (et sa preuve e2e) vit chez Kairos.
  */
-import { readFileSync } from 'fs';
 import { loadLib } from '../src/transpiler/libs.js';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const lib = (f) => JSON.parse(readFileSync(join(__dirname, '../lib', f), 'utf-8'));
-const alphabets = lib('alphabets.json');
-// ⛔ CE BANC LISAIT `lib/tunings.json` PAR SON CHEMIN, et il est tombé le jour où la source a
+// ⛔ CE BANC LISAIT SES TROIS LIBRAIRIES PAR LEUR CHEMIN, et il est tombé DEUX FOIS — une par
+// source convertie. La première réparation n'a porté que sur `tunings`, celle qui venait de casser,
+// en laissant `alphabets` et `temperaments` à côté ; ce commentaire écrivait déjà la règle générale
+// et le code n'en tenait qu'un tiers. Un défaut se répare sur l'ESPACE où il peut vivre, jamais à
+// l'endroit où il s'est montré : il ne reste plus une seule lecture par chemin dans ce fichier.
+// L'histoire de la première casse :
 // changé de format — `ENOENT`, pas une assertion. C'est exactement le motif que bp3-frontend
 // m'a rendu le 2026-08-23 sur SON banc qui lit `lib/test_alphabets.json` en dur : j'en avais un
 // chez moi sans le savoir, et sa mesure me l'a fait trouver dans l'heure.
@@ -30,8 +29,9 @@ const alphabets = lib('alphabets.json');
 // ⚠️ ET LA PORTE EST `loadLib(<mot>)`, PAS `LIBS[<fichier>]` : le bundle est clé par NOM DE FICHIER
 // (`tunings`), le langage adresse par le MOT DÉCLARÉ (`tuning`). Passer par la clé brute
 // réintroduirait le nom physique comme adresse — ce que la décision du 2026-08-17 a fermé.
+const alphabets = loadLib('alphabet');
 const tunings = loadLib('tuning');
-const temperaments = lib('temperaments.json');
+const temperaments = loadLib('temperament');
 
 // Ratio "num/den" | nombre | "Nc" (cents) → nombre décimal.
 function toNum(r) {
