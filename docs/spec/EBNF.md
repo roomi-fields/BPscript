@@ -629,6 +629,11 @@ ensemble est une suite dont personne ne lit le rang.
 Un **membre** est un nom, un nombre, ou un texte entre guillemets. Le vide s'écrit `""`. Rien entre
 deux virgules est refusé.
 
+Une **clé** s'écrit nue quand c'est un identifiant, entre guillemets sinon, et les deux graphies
+désignent le même fait : `x:1` vaut `"x":1`. La graphie de la clé est indépendante de sa valeur —
+`"x":1` et `"x"(b:1)` s'écrivent l'une comme l'autre. Ce qui distingue une clé d'un membre nu est
+ce qui la **suit** : un deux-points ou une parenthèse en font une clé, leur absence un membre nu.
+
 **Dans la partie déclarative, seule la virgule sépare** : une valeur n'a qu'une partie. Plusieurs
 parties sont plusieurs valeurs, et elles s'écrivent par une parenthèse et des noms. Après le
 délimiteur, l'espace sépare les termes.
@@ -734,7 +739,7 @@ FLOAT       = [ "-" ] , digit+ , "." , digit+ ;
 STRING      = '"' , { (* tout caractère sauf " *) } , '"' ;
 value       = [ "-" ] , INT | FLOAT | IDENT
             | INT , { "+" , INT } , "/" , INT ;   (* 7/8, 4+4/4 — la signature rythmique *)
-KEY         = IDENT ;
+KEY         = IDENT | TEXTE ;   (* nue quand c'est un identifiant, entre guillemets sinon *)
 TAG         = IDENT ;
 CODE        = (* tout caractère sauf ` non échappé *) ;
 TEXT        = (* tout caractère jusqu'à fin de ligne *) ;

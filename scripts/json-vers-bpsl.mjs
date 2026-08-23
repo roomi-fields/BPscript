@@ -136,20 +136,11 @@ function rendPaire(k, v, ou) {
   // disent le même fait. Mesuré : `def w ("":0)` ✓, `def w ("12TET":1)` ✓, `def w ("a'":1)` ✓.
   const nue = CLE_DE_MEMBRE.test(k);
   const ecrite = nue ? k : enTexte(k);
-  // ⚠️ ET LA CLÉ TEXTE NE VAUT QUE DEVANT `:`. Le compilateur refuse `"x"(…)` — mesuré le
-  // 2026-08-24 — donc une clé non-identifiant à valeur COMPOSÉE n'a aucune graphie aujourd'hui.
-  const composee = () => {
-    if (nue) return;
-    throw new Error(`${ou}.${k} : clé texte à valeur COMPOSÉE — « "${k}"(…) » est refusé par le `
-      + `compilateur ; seule « "${k}":v » passe. Question ouverte, remontée le 2026-08-24.`);
-  };
   if (Array.isArray(v)) {
-    composee();
     // En une ligne, une liste se PARENTHÈSE : `scope:a b` sort « dans la partie DÉCLARATIVE… ».
     return `${ecrite}(${v.map((p) => rendValeur(k, p === null ? '' : p, ou)).join(', ')})`;
   }
   if (v && typeof v === 'object') {
-    composee();
     const dedans = Object.entries(v)
       .filter(([kk]) => !kk.startsWith('_'))
       .map(([kk, vv]) => rendPaire(kk, vv, `${ou}.${k}`));

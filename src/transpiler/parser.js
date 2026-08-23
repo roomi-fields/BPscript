@@ -5263,7 +5263,12 @@ function parse(tokens, opts = {}) {
       // la mesure du doublon de cle qui l a tranchee : trois `alteration(…)` portant la meme cle
       // s ecrasaient dans le paquet — trois ecrites, UNE rendue, sans un mot. La sur-modelisation
       // fabriquait la perte qu elle voulait eviter.
-      if (at(T.STRING) && peek(1).type === T.COLON) { /* une CLE : la lecture ordinaire la prend */ }
+      // ⛔ ET LA CLE TEXTE VAUT DEVANT LA PARENTHESE AUTANT QUE DEVANT LE DEUX-POINTS. Ma premiere
+      // frappe n a ouvert que `"x":1`, parce que c est la forme que la decision CITE ; la regle qu elle
+      // POSE parle de la CLE, et `x:1` comme `x(…)` sont deux formes de la VALEUR pour une meme cle.
+      // Refuser `"x"(…)` aurait fait deux regimes de cle selon le type de sa valeur. Tranche par
+      // l architecte le 2026-08-24. Quatrieme fois que je mesure la forme citee au lieu de la portee.
+      if (at(T.STRING) && (peek(1).type === T.COLON || peek(1).type === T.LPAREN)) { /* une CLE */ }
       else if (!at(T.IDENT) && (at(T.INT) || at(T.FLOAT) || at(T.STRING)
                            || (at(T.REST) && (peek(1).type === T.INT || peek(1).type === T.FLOAT)
                                && !peek(1).spaceBefore))) {
@@ -5288,7 +5293,8 @@ function parse(tokens, opts = {}) {
       // membre est un nom » a « Expected IDENT, got STRING ». Deux sites decident de ce qu est une
       // cle, et n en corriger qu un DEPLACE le refus au lieu de le lever — c est la meme moitie
       // manquante que ce matin sur les deux portees du doublon, au meme endroit de ma journee.
-      let key = (at(T.STRING) && peek(1).type === T.COLON) ? advance().value : expect(T.IDENT).value;
+      let key = (at(T.STRING) && (peek(1).type === T.COLON || peek(1).type === T.LPAREN))
+        ? advance().value : expect(T.IDENT).value;
       // ── `<librairie>.<contrôle>` — LE PRÉFIXE SE CONSOMME ICI, AVANT TOUTE LECTURE ───────────
       // RÈGLE DE ROMAIN (2026-08-13), déjà écrite dans `EBNF.md:153` : « Le préfixe est optionnel :
       // un nom nu passe s'il vit dans une seule librairie invoquée. Porté par deux, la compilation

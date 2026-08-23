@@ -73,6 +73,39 @@ const sacEnObjet = (sac) => {
   }
 }
 
+// ── B2. ⛔ LA MATRICE — une CLÉ est une clé quelle que soit sa VALEUR ────────────────────────
+// ⛔ MA PREMIÈRE FRAPPE N'A OUVERT QUE `"x":1`, parce que c'est la forme que la décision CITE. La
+// règle qu'elle POSE parle de la CLÉ, et `x:1` comme `x(…)` sont deux formes de la VALEUR pour une
+// même clé : refuser `"x"(…)` aurait fait deux régimes de clé selon le type de sa valeur.
+// Tranché par l'architecte le 2026-08-24 comme une APPLICATION, pas une décision neuve.
+//
+// ⚠️ ET CE VOLET EST UNE MATRICE, PAS UNE LISTE — c'est ce qui manquait au premier. Il croise les
+// deux graphies de clé avec les quatre formes de valeur que le parseur produit ; une liste aurait
+// re-vérifié la case qui venait d'être réparée et laissé les trois autres.
+{
+  const CLES = [['NUE', 'x'], ['TEXTE', '"a\'"'], ['TEXTE signe', '"*"'], ['TEXTE vide', '""']];
+  const VALEURS = [
+    ['SIMPLE',    (k) => `${k}:1`],
+    ['COMPOSÉE',  (k) => `${k}(b:1)`],
+    ['LISTE',     (k) => `${k}(a, b)`],
+    ['IMBRIQUÉE', (k) => `w(${k}(b:1))`],
+  ];
+  for (const [nomK, k] of CLES) {
+    for (const [nomV, forme] of VALEURS) {
+      const r = lire(`def a (${forme(k)})`);
+      ok(r.ok, `B2. clé ${nomK} × valeur ${nomV} — « ${forme(k)} » doit compiler : ${r.err.slice(0, 70)}`);
+    }
+  }
+  // ⛔ ET CE QUE LA CLÉ COMPOSÉE REND, pas seulement qu'elle compile : la valeur doit être un SAC,
+  // jamais un membre nu. C'est la distinction que le piège des altérations a rendue non négociable.
+  const r = lire('def w ("*"(dha:ta, ge:ke))');
+  const etoile = r.pairs.find((p) => p.key === '*');
+  ok(JSON.stringify(sacEnObjet(etoile?.value || { pairs: [] })) === '{"dha":"ta","ge":"ke"}',
+     `B2. ⛔ ce que le BUNDLE rendrait pour une clé texte COMPOSÉE — reçu `
+   + `${JSON.stringify(sacEnObjet(etoile?.value || { pairs: [] }))}. La clé « * » est le sujet `
+   + `universel du langage ; entre guillemets elle est un TEXTE, et son sac doit arriver entier.`);
+}
+
 // ── C. LES BORNES — ce que cette ouverture ne doit PAS avoir changé ──────────────────────────
 {
   const BORNES = [
