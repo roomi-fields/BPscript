@@ -3,6 +3,21 @@
 > En-tête (date/build/mesure S4 vs S5) retirée le 2026-07-31 : plus de référent depuis la
 > suppression du pipeline S4/S5 le 2026-07-19 (détail : item BPS-2 ci-dessous).
 
+## Frontières — un voisin lit une de mes sources par son CHEMIN
+
+- **BPS-75** `ouvert` — **Prévenir bp3-frontend NOMMÉMENT avant de convertir `lib/test_alphabets.json`
+  en `.bpsl`** (mesuré et rendu par lui le 2026-08-23). Son banc
+  `test/test_alphabets_conformance.test.ts:20` lit ce fichier **par son chemin en dur** — le seul de
+  tout son dépôt — parce qu'il en garde les MEMBRES un par un, et que le paquet publié ne les lui rend
+  pas sous cette forme. Sortie réelle du jour où le fichier bougera :
+  `Command failed: git … show <commit>:lib/test_alphabets.json`.
+  ⛔ **Ce catalogue est aujourd'hui dans les huit que le convertisseur refuse** (clés qui ne sont pas
+  des noms, guillemets internes) : la frappe du 2026-08-23 ne l'a pas touché. Le jour où ces deux
+  limites tombent, il convertit — et son banc tombe avec, sans que rien ne le prévienne.
+  « Une minute de travail chez moi, et zéro si je l'apprends par un banc rouge après coup. »
+  ⚠️ **Un préavis qui nomme la clé publiée ne suffit pas ici** : ce qui mord chez lui est le CHEMIN de
+  la source, pas la valeur — le même motif que l'accord dossier↔paquet qu'il garde par ailleurs.
+
 ## Données — cohérence chaîne pitch (alphabet → fréquence)
 
 - **BPS-1** `ouvert` — Tri des `bp3_*` dans temperaments.json (différé, 2026-06-17). `lib/temperaments.json` traîne ~150 entrées legacy `bp3_*` qui MÉLANGENT de vrais tempéraments (`bp3_werckmeister_3`, `bp3_meantone_*`, `bp3_kirnberger_*`…) avec des GAMMES déguisées en tempéraments (`bp3_Cmaj`, `bp3_todi1`, `bp3_asavari1`, `bp3_*_murcchana`…). À TRIER : les vrais tempéraments restent ; les « gammes » partent dans `scales.json`. Même nature de ménage que la consolidation maqams. Reporté (décision Romain) — à faire après la migration jins/maqams.

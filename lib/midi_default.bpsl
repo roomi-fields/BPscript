@@ -1,0 +1,24 @@
+// LA LIBRAIRIE « midi_default » — écrite dans le langage qu'elle sert.
+// Convertie depuis le JSON : le bundle en rend la MÊME donnée, champ par champ. Les
+// consommateurs ne voient aucun changement — c'est l'AUTHORING qui change, pas la donnée.
+//
+// ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
+//    voyage pas jusqu'aux consommateurs, une clé si.
+
+// GESTES
+// LES QUATRE GESTES SONT DES PAIRES, ET LES HUIT MOTS SONT DÉCLARÉS ICI, chacun avec sa valeur.
+// Écrire les deux côtés plutôt que le seul mot actif rend le fichier lisible sans le déplier
+// mentalement, et un garde exige qu'exactement UN mot par paire soit vrai. ⛔ `resetcontrols`
+// VAUT FAUX, ET LA CAUSE COMPTE AUTANT QUE LA VALEUR. `Inits.c:212` le met à VRAI au démarrage,
+// puis `SaveLoads1.c:584` le remet à FAUX au début de CHAQUE chargement de réglages — et une
+// scène charge toujours ses réglages. Le cas VRAI n'existe donc que dans une exécution qui n'en
+// charge aucun, ce qui n'arrive pas en usage. Sans cette phrase, quelqu'un relira `Inits.c:212`
+// dans six mois et « corrigera » cette ligne en croyant réparer. `resetnotes` vaut FAUX aussi :
+// aucun site du moteur ne l'arme (`Inits.c:207`, périmètre les 54 fichiers de source/BP3).
+// C'est la mesure qui a fait tomber la première règle de découpage des paires — celle qui
+// réservait une paire aux seuls gestes vrais au natif.
+
+def midi_default (resolvedBy:runtime-MIDI, resolves:midi_default, name:midi_default, description:"L'ENVIRONNEMENT MIDI PAR DÉFAUT — la valeur que porte chaque mot de `midi` tant qu'une scène n'en écrit pas d'autre.", version:"0.2.0")
+
+def controlDefaults (chan:1, mod:0, pitchbend:0, pitchrange:200, pressure:0, press:0, volume:90, volumerate:50, modrate:50, pitchrate:50, pressrate:50, rate:50, volumecontrol:7, pancontrol:10, fadeout:2, resetnotes:false, letring:true, strikeagain:true, sustain:false, pedalrelease:true, pedalhold:false, resetcontrols:false, keepcontrols:true)
+

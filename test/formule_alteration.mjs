@@ -13,13 +13,24 @@
  * anti-régression sur la grille. La résolution hz réelle (et sa preuve e2e) vit chez Kairos.
  */
 import { readFileSync } from 'fs';
+import { loadLib } from '../src/transpiler/libs.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const lib = (f) => JSON.parse(readFileSync(join(__dirname, '../lib', f), 'utf-8'));
 const alphabets = lib('alphabets.json');
-const tunings = lib('tunings.json');
+// ⛔ CE BANC LISAIT `lib/tunings.json` PAR SON CHEMIN, et il est tombé le jour où la source a
+// changé de format — `ENOENT`, pas une assertion. C'est exactement le motif que bp3-frontend
+// m'a rendu le 2026-08-23 sur SON banc qui lit `lib/test_alphabets.json` en dur : j'en avais un
+// chez moi sans le savoir, et sa mesure me l'a fait trouver dans l'heure.
+// ⚠️ LE FORMAT D'UN FICHIER N'EST PAS UNE INFORMATION UTILE À QUI VEUT LA DONNÉE. La porte est le
+// BUNDLE : il rend la même donnée quel que soit le format de la source, et une bascule JSON→bpsl
+// ne le regarde plus.
+// ⚠️ ET LA PORTE EST `loadLib(<mot>)`, PAS `LIBS[<fichier>]` : le bundle est clé par NOM DE FICHIER
+// (`tunings`), le langage adresse par le MOT DÉCLARÉ (`tuning`). Passer par la clé brute
+// réintroduirait le nom physique comme adresse — ce que la décision du 2026-08-17 a fermé.
+const tunings = loadLib('tuning');
 const temperaments = lib('temperaments.json');
 
 // Ratio "num/den" | nombre | "Nc" (cents) → nombre décimal.

@@ -35,6 +35,7 @@
  * seule est ma part.
  */
 import { readFileSync, readdirSync } from 'node:fs';
+import { LIBS } from '../src/transpiler/libs-data.js';
 import path from 'node:path';
 
 const LIB = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', 'lib');
@@ -58,12 +59,15 @@ function cheminsNuls(valeur, prefixe = '') {
 // ── A. AUCUNE LIBRAIRIE N'ÉCRIT UN NUL ──────────────────────────────────────────────────────
 // ⚠️ La portée est L'ESPACE — tous les fichiers de données — et non les alphabets, où le défaut
 // s'est montré. Une garde écrite pour l'endroit du ticket laisse vivre la même faute à côté.
-const fichiers = readdirSync(LIB).filter((f) => f.endsWith('.json')).sort();
+// ⛔ CE GARDE ÉNUMÉRAIT `lib/` PAR EXTENSION, ET IL EST DEVENU AVEUGLE À UNE BASCULE. Le
+// 2026-08-23, quatre catalogues sont passés de JSON à `.bpsl` : il n'en lisait plus que 9 sur 13,
+// et seul son socle l'a dit. « Le format d'un fichier n'est pas une information utile à qui veut la
+// donnée » — un lecteur qui range par extension continue sur moins de données, et son portillon
+// reste vert tant qu'un socle ne le rattrape pas. Cinq lecteurs s'y sont pris le même jour.
+// ⇒ LA PORTE EST LE BUNDLE : il rend la même donnée quel que soit le format de la source, et une
+//   bascule ne le regarde plus.
 let champs = 0;
-for (const f of fichiers) {
-  let donnee;
-  try { donnee = JSON.parse(readFileSync(path.join(LIB, f), 'utf8')); }
-  catch (e) { echecs.push(`${f} : illisible — ${e.message}`); continue; }
+for (const [f, donnee] of Object.entries(LIBS)) {
   champs++;
   const nuls = cheminsNuls(donnee);
   ok(nuls.length === 0,
@@ -113,8 +117,11 @@ for (const f of fichiers) {
 // PUIS DE 14 À 13 le 2026-08-23 : `lib/mod.json` est ARCHIVÉ à son tour (décision de Romain,
 // « on sort `mod` et la section correspondante est sortie/archivée »). Chaque abaissement porte sa
 // cause et sa date — un socle qui descend sans dire pourquoi ne se distingue pas d'un socle desserré.
-ok(champs >= 13,
-   `SOCLE : ${champs} librairie(s) lue(s), 13 au moins attendues. Sous ce seuil ce garde est vert `
+// ⚠️ LE SOCLE COMPTE MAINTENANT DES CLÉS DU PAQUET, plus des fichiers d'un dossier : 26 clés
+// publiées le 2026-08-23. C'est le MÊME espace — toutes les librairies — mesuré par la porte qui ne
+// dépend pas du format des sources.
+ok(champs >= 26,
+   `SOCLE : ${champs} librairie(s) lue(s), 26 au moins attendues. Sous ce seuil ce garde est vert `
  + `parce qu'il ne balaie plus la donnée, pas parce qu'elle est propre.`);
 
 if (echecs.length) {
