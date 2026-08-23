@@ -296,6 +296,25 @@ se double.
 Un type porte son corps entre parentheses. Le corps est un sac de reglages : des couples, des membres
 nus, et des parentheses qui descendent d'un niveau.
 
+Une **cle de membre** s'ecrit nue quand c'est un identifiant, entre guillemets sinon. Les deux
+graphies designent le meme fait : `x:1` vaut `"x":1`. La graphie de la cle est independante de sa
+valeur -- `"x":1` et `"x"(b:1)` s'ecrivent l'une comme l'autre. Ce qui distingue une cle d'un membre
+nu est ce qui la suit : un deux-points ou une parenthese en font une cle.
+
+```text
+object w (alterations("bb":-2, "b":-1, "":0, "#":1, "##":2))
+object w (sections("*"(dha:ta, ge:ke)))
+```
+
+Un **nom** peut commencer par un chiffre s'il porte au moins une lettre. `12TET` et `22shruti` sont
+des noms ; `12` est un nombre. La position qualifie : en tete de declaration le mot est un nom, en
+valeur c'est une grandeur avec son unite.
+
+```text
+object 12TET (divisions:12)
+object w (a:100c, b:20ms)
+```
+
 Ces types sont le SOCLE du langage. Les librairies l'etendent : toute entree d'un catalogue invoque
 se declare comme un type.
 

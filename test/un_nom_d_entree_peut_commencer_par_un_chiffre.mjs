@@ -6,13 +6,18 @@
 /**
  * LE NOM D'UNE ENTRÉE DE LIBRAIRIE PEUT COMMENCER PAR UN CHIFFRE.
  *
- * `EBNF.md` §« Invoquer une librairie » : `library_invocation = "@" , LIBRARY , "." , entry_name`,
- * et `entry_name = ( letter | digit ) , { … }`. Les accordages et les tempéraments portent des noms
- * d'usage qui commencent par leur nombre de degrés — `12TET`, `22shruti`.
+ * Romain, 2026-08-23 : un nom peut commencer par un chiffre s'il porte AU MOINS UNE LETTRE.
+ * `12TET` et `22shruti` sont des noms, `12` est un nombre. Les accordages et les tempéraments
+ * portent des noms d'usage qui commencent par leur nombre de degrés.
  *
- * ⛔ C'EST UNE PRODUCTION DISTINCTE, PAS UN `IDENT` ÉLARGI, et le volet C est là pour ça. `IDENT`
- * sert aussi aux acteurs, aux variables, aux définitions et aux terminaux : l'élargir ferait entrer
- * les chiffres dans toutes ces places d'un coup, ce que la décision ne demande pas.
+ * ⛔ LA CLAUSE SE POSE AU PARSEUR, ET UNE MESURE LE DIT. La décision écrivait : « si le tokenizer
+ * rend `12TET` et `12` sous le même jeton, la clause se pose chez lui ». Mesuré le 2026-08-24 :
+ * `12TET` sort en DEUX jetons — `INT(12)` puis `IDENT(TET)` — et `12` en un seul. Il les distingue
+ * déjà ; c'est le RECOLLAGE qui décide, et il vit dans le lecteur de nom.
+ *
+ * ⛔ C'EST UNE PRODUCTION DISTINCTE, PAS UN `IDENT` ÉLARGI. `IDENT` sert aussi aux acteurs et aux
+ * terminaux ; la production `NOM_DECLARE` ne vaut qu'aux places où un nom se DÉCLARE, et l'acteur
+ * n'en fait pas partie — volet C3.
  *
  * ⚠️ ET LA LECTURE EXISTAIT DÉJÀ, EN UN EXEMPLAIRE MAL PLACÉ. Le canal de provenance
  * (`@factory.`/`@mine.`) la portait — son commentaire nommait `12TET` et `22shruti` — et
@@ -69,27 +74,57 @@ const compiler = (tete) => {
      + `valide ; c'est l'entrée qui n'existe pas.`);
 }
 
-// ── C. LE LECTEUR D'ENTRÉE NE SE BRANCHE NULLE PART AILLEURS ────────────────────────────────
-// La production ne vaut que pour un nom d'ENTRÉE. Un acteur, une variable, une définition
-// commencent toujours par une lettre.
+// ── C. LA MATRICE — chaque PLACE où un nom se DÉCLARE × chaque forme de NOM ─────────────────
+// ⛔ CE VOLET DISAIT L'INVERSE, ET LA DÉCISION DU 2026-08-23 L'A RETOURNÉ. Il gardait que la
+// production « ne vaut QUE pour un nom d'entrée » — un état antérieur, où l'invocation acceptait
+// le chiffre et la déclaration le refusait. Romain a tranché la règle générale : *« un nom peut
+// commencer par un chiffre s'il contient au moins une lettre »*, et son état d'avant cite
+// `interval 12TET` — une DÉCLARATION.
 //
-// ⚠️ CE VOLET GARDE LA FAUTE RÉALISABLE, ET J'AI DÛ CHERCHER LAQUELLE. Ma première injection
-// élargissait `IDENT` dans le tokenizer : elle N'A PAS MORDU, et ce n'était pas le volet qui était
-// creux — la branche des NOMBRES précède celle des identifiants, donc un chiffre initial est
-// consommé avant que la règle des identifiants s'applique. L'élargissement y est inopérant.
-// La faute qui peut réellement arriver est de BRANCHER LE NOUVEAU LECTEUR AILLEURS, en croyant
-// bien faire. Injectée sur les acteurs, elle fait rougir ce volet.
+// ⚠️ ET LE NOM SE DÉCLARE À QUATRE POINTS, PAS UN : `def`, la déclaration par le type, sa garde de
+// reconnaissance, et le nom SUIVANT d'une liste (`symbol a12, 12TET`). Une liste aurait vérifié
+// celui qui a mordu ; la matrice croise les places avec les noms de la donnée.
 {
-  for (const [quoi, tete] of [
-    ['un acteur',      'actor 1perc alphabet.western out.midi'],
-    ['une variable',   'symbol 2pivot'],
-    ['une définition', 'def 3cloche  register:5'],
-  ]) {
-    ok(messages(compiler(tete)) !== '',
-       `C. ${quoi} dont le nom commence par un chiffre doit rester REFUSÉ — la production neuve ne `
-       + `vaut QUE pour un nom d'entrée. Si ce volet passe au vert, le lecteur d'entrée a été `
-       + `branché ailleurs, et les chiffres sont entrés dans toutes ces places d'un coup.`);
+  const PLACES = [
+    ['def',              (n) => `def ${n} (x:1)`],
+    ['object',           (n) => `object ${n} (x:1)`],
+    ['symbol seul',      (n) => `symbol ${n}`],
+    ['symbol, 2e nom',   (n) => `symbol a12, ${n}`],
+    ['symbol, 1er nom',  (n) => `symbol ${n}, a12`],
+    ['valeur',           (n) => `def w (t:${n})`],
+    ['clé texte',        (n) => `def w ("${n}":1)`],
+  ];
+  for (const [place, forme] of PLACES) {
+    for (const n of ['12TET', '22shruti', '53TET', '24TET']) {
+      const msg = messages(compiler(forme(n)));
+      ok(msg === '', `C. « ${forme(n)} » doit compiler (${place}) : ${msg.slice(0, 70)}`);
+    }
   }
+}
+
+// ── C2. ⛔ LA CLAUSE — un nombre pur n'est PAS un nom, et le refus le DIT ────────────────────
+// Sans ce volet, « les noms chiffrés passent » ne se distingue pas de « le lecteur a cessé de
+// distinguer un nom d'un nombre ». C'est la seule ambiguïté que la clause ferme.
+{
+  for (const [place, tete] of [['def', 'def 12 (x:1)'], ['object', 'object 7 (x:1)'],
+                               ['symbol', 'symbol a, 12']]) {
+    ok(messages(compiler(tete)) !== '',
+       `C2. « ${tete} » doit être REFUSÉ (${place}) — un nombre pur n'est pas un nom.`);
+  }
+  const msg = messages(compiler('symbol a, 12'));
+  ok(/au moins une lettre/.test(msg),
+     `C2. le refus doit NOMMER la clause — reçu : ${msg.slice(0, 90)}. Un « Expected IDENT » `
+     + `envoie corriger une graphie au lieu de dire la règle.`);
+}
+
+// ── C3. ⛔ L'ACTEUR RESTE REFUSÉ, ET C'EST UN ÉCART QUE JE NE TRANCHE PAS ────────────────────
+// La décision cite des déclarations par le type ; elle ne nomme pas l'acteur, et ce volet en
+// gardait le refus. Il tient donc tel quel, et l'écart est remonté plutôt que résolu ici : si
+// Romain étend la règle à l'acteur, c'est CE volet qui doit basculer, en le disant.
+{
+  ok(messages(compiler('actor 1perc alphabet.western out.midi')) !== '',
+     `C3. un acteur dont le nom commence par un chiffre reste REFUSÉ. Si ce volet passe au vert `
+     + `sans décision, la règle s'est étendue à une place que personne n'a nommée.`);
 }
 
 // ── D-bis. LE NOM DE LA LIBRAIRIE PORTE AUSSI UN TIRET ──────────────────────────────────────
@@ -125,14 +160,14 @@ const compiler = (tete) => {
 }
 
 // ── SOCLE ────────────────────────────────────────────────────────────────────────────────────
-ok(passe >= 10, `SOCLE : ${passe} vérifications seulement — la matrice s'est vidée sans rougir.`);
+ok(passe >= 30, `SOCLE : ${passe} vérifications seulement — la matrice s'est vidée sans rougir.`);
 
 if (echecs.length) {
   console.error(`❌ un nom d'entrée peut commencer par un chiffre : ${echecs.length} échec(s)`);
   for (const e of echecs) console.error(`   - ${e}`);
   process.exit(1);
 }
-console.log(`✅ Une entrée de librairie peut commencer par un chiffre — mesuré sur les entrées que `
-          + `la DONNÉE porte, avec le refus qui nomme l'entrée absente au lieu de la forme, et sans `
-          + `que 'IDENT' bouge pour les acteurs, variables et définitions. Un seul lecteur sert les `
-          + `deux voies. ${passe} vérification(s) passée(s).`);
+console.log(`✅ Un nom peut commencer par un chiffre s'il porte au moins une lettre — mesuré sur les `
+          + `entrées que la DONNÉE porte, dans sept places de déclaration et d'invocation, avec le `
+          + `refus qui nomme l'entrée absente au lieu de la forme et celui qui nomme la clause pour `
+          + `un nombre pur. L'acteur reste refusé. ${passe} vérification(s) passée(s).`);

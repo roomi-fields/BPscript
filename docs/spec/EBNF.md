@@ -64,7 +64,7 @@ declaration_typee = "flag"   , IDENT , ":" , INT
                   | CONVENTION , nom_pose
                   | IDENT , nom_pose            (* un prototype declare par une librairie
                                                   invoquee : interval q1, apres `types` *)
-                  | TYPE_DECLARE , IDENT , setting_bag ;
+                  | TYPE_DECLARE , NOM_DECLARE , setting_bag ;
 
 (* TYPE_DECLARE — un type que la DONNEE declare : `core`, schema.declarationTypes. AUCUN NOM
    N EST ECRIT ICI : une production est une prescription, et une liste ecrite a deux endroits en
@@ -74,7 +74,7 @@ TYPE_DECLARE = IDENT ;
 
 (* Le nom porte sa valeur de depart, COLLEE a son deux-points. Le sujet est le nom, jamais
    le type : "signal:0.5 grain" lierait la valeur a "signal" et se lit faux. *)
-nom_pose   = IDENT , [ ":" , ( INT | FLOAT | NOM ) ] ;   (* signal grain:0.5 *)
+nom_pose   = NOM_DECLARE , [ ":" , ( INT | FLOAT | NOM ) ] ;   (* signal grain:0.5 *)
 
 NOM        = [ "_" ] , IDENT ;   (* une valeur porte le tiret bas des gestes natifs *)
 CONVENTION = "signal" | "pitch" | "phase" | "logic" ;
@@ -88,11 +88,11 @@ qui n est ni une note ni un nom de regle. Un mot du catalogue de modules declare
 ce module.
 
 ```ebnf
-object_directive = "object" , IDENT , setting_bag ;
+object_directive = "object" , NOM_DECLARE , setting_bag ;
 
 (* `object` nomme une RACINE : le premier objet d une famille, celui qui ne derive de rien. *)
 
-def_directive = ( "def" | "terminal" ) , IDENT , [ param_list ] , [ CONVENTION ] , def_body ;
+def_directive = ( "def" | "terminal" ) , NOM_DECLARE , [ param_list ] , [ CONVENTION ] , def_body ;
 
 param_list = "(" , IDENT , { "," , IDENT } , ")" ;      (* collé au nom *)
 
@@ -740,6 +740,7 @@ STRING      = '"' , { (* tout caractère sauf " *) } , '"' ;
 value       = [ "-" ] , INT | FLOAT | IDENT
             | INT , { "+" , INT } , "/" , INT ;   (* 7/8, 4+4/4 — la signature rythmique *)
 KEY         = IDENT | TEXTE ;   (* nue quand c'est un identifiant, entre guillemets sinon *)
+NOM_DECLARE = IDENT | ( digit+ , { letter | digit } ) ;   (* au moins une lettre *)
 TAG         = IDENT ;
 CODE        = (* tout caractère sauf ` non échappé *) ;
 TEXT        = (* tout caractère jusqu'à fin de ligne *) ;
@@ -747,6 +748,10 @@ letter      = "a"-"z" | "A"-"Z" ;
 digit       = "0"-"9" ;
 blank_line  = (* ligne vide ou espaces seuls *) ;
 ```
+
+Un **nom déclaré** peut commencer par un chiffre s'il porte au moins une lettre : `12TET` et
+`22shruti` sont des noms, `12` est un nombre. La position qualifie — en tête de déclaration le mot
+est un nom, en valeur c'est une grandeur avec son unité.
 
 **L'apostrophe et le guillemet appartiennent au nom**, à la suite d'une lettre : `a'`, `a''`, `a"`,
 `A'16`, `a'_b`. Ils se lisent comme n'importe quelle lettre du nom. Un nom qui **commence** par l'un

@@ -528,16 +528,50 @@ function parse(tokens, opts = {}) {
    * atteindre un tempérament, faute d'autre voie. Deux endroits lisaient un nom d'entrée, un seul
    * savait le lire ; il n'y en a plus qu'un.
    */
+  /**
+   * UN NOM PEUT COMMENCER PAR UN CHIFFRE S'IL PORTE AU MOINS UNE LETTRE — Romain, 2026-08-23.
+   *
+   *     12TET · 22shruti      des noms
+   *     12                    un nombre
+   *
+   * ⛔ LA CLAUSE SE POSE ICI, PAS AU TOKENIZER, ET C'EST UNE MESURE QUI LE DIT. La décision écrivait
+   * « si le tokenizer rend `12TET` et `12` sous le même jeton, la clause se pose chez lui ». Mesuré :
+   * il rend DEUX jetons pour `12TET` — `INT(12)` puis `IDENT(TET)` — et UN seul pour `12`. Il les
+   * distingue déjà ; c'est le recollage qui décide, et il vit dans ce lecteur.
+   *
+   * ⚠️ LA POSITION QUALIFIE, et les deux positions ne se rencontrent jamais : en tête de déclaration
+   * le mot est un NOM, en valeur c'est une grandeur avec son unité — `100c`, `20ms`. Le même
+   * recollage sert les deux, et seule cette clause les sépare.
+   */
   function lireNomDEntree(tok) {
     if (!at(T.IDENT) && !at(T.INT)) {
       throw new ParseError(`Expected ${T.IDENT}, got ${current().type} (${current().value})`, tok || current());
     }
+    const chiffreDAbord = at(T.INT);
+    const depart = current();
     let nom = String(advance().value);
     // ⚠️ LE TIRET FAIT PARTIE D'UN NOM D'ENTREE, et il est ici le SEUL endroit où il le
     // fait : le tokenizer le détache partout ailleurs, parce qu'il y est un silence.
     // `temperaments.bp3_Bohlen-Pierce` — neuf entrées du bundle en portent un.
     while ((at(T.IDENT) || at(T.INT) || at(T.REST)) && !current().spaceBefore) nom += String(advance().value);
+    // ⛔ « AU MOINS UNE LETTRE » FERME LA SEULE AMBIGUÏTÉ RÉELLE : sans elle, `12` en tête serait à
+    // la fois un nom et un nombre.
+    if (chiffreDAbord && !/[A-Za-z]/.test(nom)) {
+      throw new ParseError(
+        `'${nom}' est un NOMBRE, pas un nom. Un nom peut commencer par un chiffre s'il porte au `
+        + `moins une lettre — '12TET' et '22shruti' sont des noms, '${nom}' n'en est pas un.`,
+        depart);
+    }
     return nom;
+  }
+
+  /** Ce qui suit ouvre-t-il un nom déclaré ? Un IDENT, ou un chiffre qui commence un nom. */
+  function ouvreUnNom(offset = 0) {
+    if (peek(offset).type === T.IDENT) return true;
+    if (peek(offset).type !== T.INT) return false;
+    // Le nom se poursuit dans le jeton COLLÉ suivant : `12TET` est `INT(12)` puis `IDENT(TET)`.
+    const suite = peek(offset + 1);
+    return (suite.type === T.IDENT || suite.type === T.INT) && suite.spaceBefore === false;
   }
 
   function at(type) { return current().type === type; }
@@ -2054,7 +2088,7 @@ function parse(tokens, opts = {}) {
     // ⚠️ UN TYPE SANS NOM N'EST PAS UNE DÉCLARATION, et ne doit pas en devenir une par accident :
     // `signal:0.5` affecte une valeur à un mot, ce n'est pas `signal grain:0.5`. On ne prend la
     // ligne que si un NOM suit, et on refuse en le nommant si le type est seul sur sa ligne.
-    if (peek(1).type !== T.IDENT) {
+    if (!ouvreUnNom(1)) {
       if (peek(1).type === T.NEWLINE || peek(1).type === T.EOF) {
         throw new ParseError(`'${mot}' doit nommer ce qu'il déclare — le type vient en tête, le `
           + `nom ensuite ('${mot} <nom>').`, tok);
@@ -2062,7 +2096,7 @@ function parse(tokens, opts = {}) {
       return null;
     }
     advance();                                     // le type
-    const premier = expect(T.IDENT).value;
+    const premier = lireNomDEntree(tok);
 
     // ── LE DRAPEAU — `flag <nom>(<état>:<entier>, …)` ──────────────────────────────────────
     // La parenthèse porte ce qui appartient à ce qui la précède : les états appartiennent au
@@ -2183,7 +2217,9 @@ function parse(tokens, opts = {}) {
     // liste serait une invention — la ligne énumère des symboles distincts.
     const noms = [premier];
     while (at(T.COMMA) && advance()) {
-      const n = expect(T.IDENT).value;
+      // Le NOM SUIVANT d'une liste se lit comme le premier — sinon `symbol a12, 12TET` refuse le
+      // second alors que `symbol 12TET` accepte le premier : la même règle, deux sorts.
+      const n = lireNomDEntree(tok);
       noms.push(n);
       const dn = lireDepart(n);
       if (dn !== null) departs.push({ name: n, value: dn });
@@ -2619,12 +2655,12 @@ function parse(tokens, opts = {}) {
     // l'étaient déjà.
     if (name === 'def' || name === 'terminal') {
       const motDeclarant = name;
-      if (!at(T.IDENT)) {
+      if (!ouvreUnNom()) {
         throw new ParseError(
           `'${motDeclarant}' doit nommer ce qu'il définit : '${motDeclarant} <nom> <corps>'. Le nom `
           + "vient d'abord, ce qu'il vaut ensuite — comme 'actor'.", tok);
       }
-      const defName = expect(T.IDENT).value;
+      const defName = lireNomDEntree(tok);
       // La parenthèse porte ce qui appartient à ce qui la précède — ici les clés du terminal. Elle
       // s'ajoute aux deux corps que `def` lit déjà (même ligne, bloc indenté) ; aucun ne change.
       const clesParenthesees = motDeclarant === 'terminal' && at(T.LPAREN);
