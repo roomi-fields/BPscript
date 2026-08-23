@@ -3,41 +3,6 @@
 > En-tête (date/build/mesure S4 vs S5) retirée le 2026-07-31 : plus de référent depuis la
 > suppression du pipeline S4/S5 le 2026-07-19 (détail : item BPS-2 ci-dessous).
 
-## Frontières — l'ORDRE des librairies dans le paquet décide d'une résolution
-
-- **BPS-76** `ouvert` — **Une prédiction de conversion doit porter sur l'ordre des LIBRAIRIES, pas
-  seulement sur celui des clés** (mesuré et rendu par BPx le 2026-08-23, confirmé chez moi).
-  La conversion `bff1ed7` a changé le rang de **21 librairies sur 26** dans le paquet publié — les
-  converties quittent le premier bloc pour la fin. Ma prédiction ne portait que sur l'ordre des clés
-  de tête de trois catalogues ; cette dimension-là n'était pas annoncée.
-  ⛔ **Pourquoi ça compte** : un lecteur qui résout une clé en doublon par « la première librairie
-  qui la porte » dépend de cet ordre. Une seule clé est dans ce cas — `volume`, porté par `audio`,
-  `expression` et `midi` — et le mot NU **compile** : mesuré, aucun refus d'ambiguïté ne mord dessus.
-  ⚠️ **L'innocuité d'aujourd'hui tient à DEUX accidents indépendants**, pas un :
-    1. l'ordre RELATIF `audio < expression < midi` est préservé (17/19/20 → 13/16/17) ;
-    2. les TROIS déclarations sont identiques — `range [0,127]` partout.
-  Le jour où l'une des deux jambes cède — une conversion qui déplace `audio` sans `expression`, ou
-  une borne qui diffère d'une seule unité — la valeur part au mauvais destinataire **en silence** :
-  la scène compile, rien ne rougit. C'est le cas que `bpxAst.js` documente déjà sur `pan` (« jugé
-  sur la plage d'audio, aucune erreur ne nommait l'ambiguïté, l'ordre de chargement décidait »).
-  ⇒ **À faire** : au prochain lot de conversion, mesurer l'ordre des librairies ET vérifier si les
-  déclarations en doublon sont identiques. La seconde jambe peut céder sans que la première bouge.
-
-## Frontières — un voisin lit une de mes sources par son CHEMIN
-
-- **BPS-75** `ouvert` — **Prévenir bp3-frontend NOMMÉMENT avant de convertir `lib/test_alphabets.json`
-  en `.bpsl`** (mesuré et rendu par lui le 2026-08-23). Son banc
-  `test/test_alphabets_conformance.test.ts:20` lit ce fichier **par son chemin en dur** — le seul de
-  tout son dépôt — parce qu'il en garde les MEMBRES un par un, et que le paquet publié ne les lui rend
-  pas sous cette forme. Sortie réelle du jour où le fichier bougera :
-  `Command failed: git … show <commit>:lib/test_alphabets.json`.
-  ⛔ **Ce catalogue est aujourd'hui dans les huit que le convertisseur refuse** (clés qui ne sont pas
-  des noms, guillemets internes) : la frappe du 2026-08-23 ne l'a pas touché. Le jour où ces deux
-  limites tombent, il convertit — et son banc tombe avec, sans que rien ne le prévienne.
-  « Une minute de travail chez moi, et zéro si je l'apprends par un banc rouge après coup. »
-  ⚠️ **Un préavis qui nomme la clé publiée ne suffit pas ici** : ce qui mord chez lui est le CHEMIN de
-  la source, pas la valeur — le même motif que l'accord dossier↔paquet qu'il garde par ailleurs.
-
 ## Données — cohérence chaîne pitch (alphabet → fréquence)
 
 - **BPS-1** `ouvert` — Tri des `bp3_*` dans temperaments.json (différé, 2026-06-17). `lib/temperaments.json` traîne ~150 entrées legacy `bp3_*` qui MÉLANGENT de vrais tempéraments (`bp3_werckmeister_3`, `bp3_meantone_*`, `bp3_kirnberger_*`…) avec des GAMMES déguisées en tempéraments (`bp3_Cmaj`, `bp3_todi1`, `bp3_asavari1`, `bp3_*_murcchana`…). À TRIER : les vrais tempéraments restent ; les « gammes » partent dans `scales.json`. Même nature de ménage que la consolidation maqams. Reporté (décision Romain) — à faire après la migration jins/maqams.
@@ -194,3 +159,5 @@ Bugs restants. Détail dans `memory/backlog_s5_transpiler.md`.
 - **BPS-77** `ouvert` [P3] — Une porte pour le PARSEUR — un outil de migration qui tournerait DEPUIS DEHORS n'a aucun moyen d'atteindre l'arbre syntaxique. Ma porte publique n'expose que compileToBPxAST et describeVocabulary ; parse et tokenize ne sont atteignables que DANS le depot. L'outil actuel y vit, donc il y a acces — le jour ou il tourne chez un voisin, la porte manque.
 - **BPS-78** `ouvert` [P1] — Une TROISIEME VOIE entre parse seul et compileToBPxAST entier — resoudre un arbre SANS rendre de verdict. Mesure : basculer l outil de migration sur parse(tokenize) fait tomber un volet sur quatre, parce que collisions() a besoin d annotations que la resolution POSE SUR l arbre. La resolution ne s applique pas a cote du parse, elle s applique dessus. Bloque la frappe du refus qui ne livre pas d arbre. A concevoir A FROID : que rend-elle quand la resolution echoue, et qui d autre en a besoin (formateur, renommage, migrateur depuis dehors).
 - **BPS-79** `ouvert` [P2] — (2026-08-21) La fiche d'etat se PERIME a chaque garde pose, et rien ne le dit — elle a declare 180 gardes pour 181, rattrapee A LA MAIN deux fois en six heures. Son garde ne compare pas ce champ : le regenerer LANCE le portillon, donc un garde qui le ferait depuis le portillon le relancerait a l'interieur de lui-meme. Trou STRUCTUREL, pas un oubli de vigilance.
+- **BPS-80** `ouvert` [P2] — ⛔ **L'ordre des librairies dans le paquet décide d'une résolution, et le refus d'ambiguïté ne mord pas dessus.** Mesuré par BPx le 2026-08-23 sur la frappe `.bpsl` : **21 librairies sur 26 changent de rang**, les converties quittant le premier bloc pour la fin. Le mot nu `volume` **COMPILE**, aucun refus d'ambiguïté ne mord dessus, donc sa résolution dépend de cet ordre. ⛔ **L'innocuité tient à UN SEUL accident — l'ordre relatif `audio` < `expression` < `midi` préservé.** L'affinage de BPscript (« leurs trois déclarations identiques ») est FAUX, abattu le jour même par BPx et bp3-frontend indépendamment, sur le paquet publié : `range`, `args` et `scope` coïncident, mais `implements`, `bp3`, `description` et `transportGroup` non — **seul `midi.controls.volume` porte `bp3: "_volume"`**. Une résolution qui bascule fait donc apparaître une correspondance vers le moteur natif là où il n'y en avait aucune, ou la fait disparaître. ⛔ **Et il y a une QUATRIÈME déclaration, plus haut que les trois** : `settings.directive_map.volume` = `{"DeftVolume":"@value"}`, `settings` au rang #8 quand `audio` est au #12. Le lecteur de BPx l'écarte (il exige `args` ou `bp3`) ; **rien ne dit que le résolveur de BPscript applique la même règle**. Si non, le doublon est à quatre branches et la première servie n'est aucune des trois mesurées. ⚠️ Fait nommé sans être qualifié : la valeur de cette quatrième déclaration porte une arobase, sortie du langage le 2026-08-16 — un `directive_map` peut porter son propre gabarit interne, personne n'a lu comment il le consomme. ⇒ Deux volets : le refus d'ambiguïté a un trou de périmètre · et une prédiction de conversion porte sur l'ordre des LIBRAIRIES autant que sur celui des clés.
+- **BPS-81** `ouvert` [P2] — **Prévenir bp3-frontend NOMMÉMENT avant de convertir `lib/test_alphabets.json`.** Ce catalogue est dans les huit encore bloqués, et bp3-frontend écrit son chemin **EN DUR** — c'est le seul chemin de fichier en dur de tout son dépôt. **Le jour où il converti, son banc tombe.** Il l'a rendu nommément avec sa sortie d'erreur réelle.
