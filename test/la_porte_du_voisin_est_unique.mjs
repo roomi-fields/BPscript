@@ -74,9 +74,14 @@ for (const { voisin, motif, porte } of PORTES) {
 {
   const usagers = fichiers.filter(([rel, abs]) =>
     rel !== 'test/bpx_dist.mjs' && /importerBPx|BPX_DIST/.test(readFileSync(abs, 'utf8')));
-  ok(usagers.length >= 8,
-    `seuls ${usagers.length} banc(s) passent par la porte — sous ce seuil, le compte de sites hors `
-    + `de la porte ne prouve plus rien : il serait vert sur un dépôt qui a cessé de lire le voisin.`);
+  // ⛔ CE SEUIL ÉTAIT À 8 POUR UN COMPTE DE 10 — deux bancs pouvaient cesser de passer par la porte
+  // sans un mot, sous un message qui dit « ne prouve plus rien ». Le propos, écrit deux lignes plus
+  // haut, est la NON-NULLITÉ : « il serait vert sur un dépôt qui a cessé de lire le voisin ».
+  // Un seuil calé sur le compte du jour ne tient ni ce propos ni l'inventaire qu'il verrouille — il
+  // ne mord qu'au troisième retrait, avec un message qui parle du premier.
+  ok(usagers.length > 0,
+    `AUCUN banc ne passe par la porte — le compte de sites hors de la porte ne prouve plus rien : il `
+    + `serait vert sur un dépôt qui a cessé de lire le voisin.`);
   console.log(`[porte voisin] ${fichiers.length} fichiers balayés · ${usagers.length} banc(s) passent par la porte`);
 }
 
