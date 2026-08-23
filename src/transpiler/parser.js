@@ -5249,7 +5249,22 @@ function parse(tokens, opts = {}) {
       // lisible dans un membre ». Les 2246 rapports du catalogue portaient donc des guillemets
       // faute d'autre forme — et les cents, eux, passaient déjà nus. Deux notations de la même
       // famille, dans les mêmes collections, deux sorts opposés.
-      if (!at(T.IDENT) && (at(T.INT) || at(T.FLOAT) || at(T.STRING)
+      // ⛔ UNE CLE DE MEMBRE PEUT ETRE UN TEXTE ENTRE GUILLEMETS — arbitrage de Romain, 2026-08-23 :
+      // « la forme propre est `alterations = {"bb":-2, "b":-1, "":0, "#":1, "##":2}` et il faut
+      // qu elle passe ». Une cle s ecrit NUE quand c est un identifiant, entre GUILLEMETS sinon, et
+      // les deux graphies designent le meme fait : `x:1` vaut `"x":1`.
+      //
+      // ⚠️ CE QUI SE PASSAIT : un texte en position de cle tombait dans cette branche — celle des
+      // membres NUS — et repartait avec `value: true`. Le `:` qui suivait n avait plus de lecteur, et
+      // le refus accusait le SIGNE (« un membre est un nom ») alors que le membre etait juste. Le
+      // discriminant est ce qui SUIT le texte : un `:` en fait une CLE, son absence un membre nu.
+      //
+      // ⚠️ ET CETTE DECISION ANNULE CELLE DU MATIN sur les alterations comme exemplaires nommes. C est
+      // la mesure du doublon de cle qui l a tranchee : trois `alteration(…)` portant la meme cle
+      // s ecrasaient dans le paquet — trois ecrites, UNE rendue, sans un mot. La sur-modelisation
+      // fabriquait la perte qu elle voulait eviter.
+      if (at(T.STRING) && peek(1).type === T.COLON) { /* une CLE : la lecture ordinaire la prend */ }
+      else if (!at(T.IDENT) && (at(T.INT) || at(T.FLOAT) || at(T.STRING)
                            || (at(T.REST) && (peek(1).type === T.INT || peek(1).type === T.FLOAT)
                                && !peek(1).spaceBefore))) {
         const signe = at(T.REST) ? advance().value : '';
@@ -5268,7 +5283,12 @@ function parse(tokens, opts = {}) {
         finirTerme();
         continue;
       }
-      let key = expect(T.IDENT).value;
+      // ⛔ ET LA LECTURE ORDINAIRE PREND LE TEXTE AUSSI. Ecarter la branche des membres nus ne
+      // suffisait pas : ce lecteur-ci exigeait un IDENT, et le refus passait simplement de « un
+      // membre est un nom » a « Expected IDENT, got STRING ». Deux sites decident de ce qu est une
+      // cle, et n en corriger qu un DEPLACE le refus au lieu de le lever — c est la meme moitie
+      // manquante que ce matin sur les deux portees du doublon, au meme endroit de ma journee.
+      let key = (at(T.STRING) && peek(1).type === T.COLON) ? advance().value : expect(T.IDENT).value;
       // ── `<librairie>.<contrôle>` — LE PRÉFIXE SE CONSOMME ICI, AVANT TOUTE LECTURE ───────────
       // RÈGLE DE ROMAIN (2026-08-13), déjà écrite dans `EBNF.md:153` : « Le préfixe est optionnel :
       // un nom nu passe s'il vit dans une seule librairie invoquée. Porté par deux, la compilation
