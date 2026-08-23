@@ -801,7 +801,8 @@ function terminauxEnPortee(ast) {
   // ⚠️ UNE SCÈNE NE DÉCLARE QU'UN ALPHABET — tranché par Romain le 2026-08-07 : « on ne déclare
   // pas plusieurs acteurs implicites, un seul ; sinon c'est explicite. » Un acteur porte UN
   // alphabet et UNE sortie ; deux vocabulaires appellent donc deux acteurs, et deux acteurs se
-  // DÉCLARENT. Le second `alphabet` de scène est refusé plus bas (`refuserAlphabetsMultiples`),
+  // DÉCLARENT. Le second `alphabet` de scène était refusé plus bas ; ce refus est SORTI le
+  // 2026-08-23 — le dernier écrit gagne, y compris `alphabet`.
   // il n'est plus ignoré en silence — c'est pour ça qu'on lit le premier sans remords.
   const sceneAlpha = (ast.directives || []).find((d) => d.name === 'alphabet' && d.subkey);
   const sceneOct = (ast.directives || []).find((d) => d.name === 'octaves' && (d.subkey || d.runtime));
@@ -1253,34 +1254,20 @@ function validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet) {
 }
 
 /**
- * UNE SCÈNE NE DÉCLARE QU'UN ALPHABET — l'acteur implicite est UNIQUE.
+ * ⛔ LE REFUS DU SECOND ALPHABET DE SCÈNE EST SORTI — arbitrage de Romain, 2026-08-23 :
+ * « un axe redéclaré se redéfinit : le dernier écrit gagne, Y COMPRIS `alphabet`. LE REFUS et le
+ * premier-qui-tient sortent tous les deux. »
  *
- * ⚠️ RÈGLE DE ROMAIN, 2026-08-07, mot pour mot : « on ne déclare pas plusieurs acteurs implicites,
- * un seul ; sinon c'est explicite. » Combinée à « un alphabet par acteur » (même jour), elle ferme
- * la question : deux vocabulaires — a fortiori liés à deux sorties — demandent deux acteurs, et
- * deux acteurs se DÉCLARENT.
+ * ⚠️ ET SON JUMEAU D'ACTEUR EST SORTI DANS LE MÊME COMMIT, mais celui-ci a failli rester : ma frappe
+ * ne visait que la clé d'acteur, et le refus de SCÈNE vivait ici, dans un autre fichier, sous un
+ * autre nom. C'est le TÉMOIN POSITIF de Kanopi qui l'a montré — elle compilait une scène à deux
+ * alphabets pour prouver que sa sonde savait voir le cas, et la scène a été refusée. Sans ce témoin,
+ * je poussais un geste à moitié fait : le doublon autorisé chez l'acteur, refusé chez la scène.
  *
- * ⚠️ AVANT CE REFUS, LE SECOND ALPHABET ÉTAIT IGNORÉ EN SILENCE : le calcul des terminaux lisait
- * le premier et jetait les autres. Une ligne entière ne servait à rien et rien ne le disait — le
- * mode d'échec muet, pire qu'un refus. La `LANGUAGE.md` §« Déclarer un symbole » écrit encore la
- * forme à deux alphabets ; elle est donc à corriger vers `actor`, et c'est une décision de
- * langage, pas une déduction : le cliquet des exemples la porte, datée.
- *
- * Mesuré avant de livrer : ZÉRO scène du corpus (274) déclare plus d'un `alphabet`. Ce fail-loud
- * n'invalide aucune écriture vivante.
+ * ⚠️ LE MOTIF, POUR LA PROCHAINE FOIS : « le même fait vivait à deux places, une seule était gardée »
+ * était écrit dans le refus que je retirais. Je l'ai lu en le supprimant sans voir qu'il décrivait
+ * l'endroit où l'autre moitié m'attendait.
  */
-function refuserAlphabetsMultiples(ast) {
-  const alphabets = (ast?.directives || []).filter((d) => d.name === 'alphabet' && d.subkey);
-  if (alphabets.length <= 1) return [];
-  const second = alphabets[1];
-  return [{
-    message: `une scène ne déclare qu'UN alphabet, et 'alphabet.${second.subkey}' est le `
-           + `${alphabets.length === 2 ? 'second' : alphabets.length + 'e'} — l'acteur implicite `
-           + `est unique et ne porte qu'un vocabulaire. Pour en jouer plusieurs, les déclarer : `
-           + `'actor <nom>' avec sa clé 'alphabet.<nom>' et sa clé 'out.<canal>', un bloc par voix`,
-    line: second.line || 0,
-  }];
-}
 
 function applyDefaultActor(ast) {
   if (!ast) return [];
@@ -2948,7 +2935,6 @@ export function resoudreSource(source, environnement) {
     canonicalizeContexts(ast); // frontière AST Palier 3 : contextes → forme canonique (inline/remote)
     result.errors.push(...annotateBackticks(ast));   // _btName + payload.interp/nature:'code' ; CRIE si backtick orphelin sans langage
     applyEnvironmentDefaults(ast, environnement);  // défauts d'environnement → AST (point 1)
-    result.errors.push(...refuserAlphabetsMultiples(ast));
     result.errors.push(...applyDefaultActor(ast));   // acteur implicite `default` (transport ← binding alphabet) + garde anti-chevauchement (LAN-5 / KAI-9 / décision 2026-07-05)
     resolveHomomorphismMarkers(ast);  // symbole nu → marqueur d'invocation d'homo par nom (AVANT les validateurs : le marqueur n'est pas un terminal)
     emitActorLibRefs(ast);           // provenance des liaisons d'acteur → `actors[].libRefs` (contrat bpx-kairos-arbre §2.1)
