@@ -178,6 +178,43 @@ const chaines = (ligne) => {
    + `voudrait rien dire. reçu d=${JSON.stringify(par('d'))} e=${JSON.stringify(par('e'))}`);
 }
 
+// ── F. LE BLOC DE CODE EST OPAQUE — LE DOUBLEMENT NE L'ATTEINT PAS ───────────────────────────
+// ⛔ CE VOLET VIENT D'UN TROU QUE MON PRÉAVIS NE COUVRAIT PAS, ET C'EST KAIROS QUI L'A NOMMÉ.
+// J'avais mesuré les guillemets dans les NOMS et dans les CHAÎNES ; une voix de code en porte
+// quatre qui ne sont ni l'un ni l'autre :
+//     BATTERIE -> drums.`note("c3 e3 g3").s("sine")`
+// Un témoin qui compte les noms de terminaux est VERT sur cette scène sans rien mesurer — l'arbre
+// transporte ces guillemets dans le champ `code`, verbatim. Sa question : « ton lecteur de chaîne
+// entre-t-il DANS un bloc de code, ou le traverse-t-il comme opaque ? »
+//
+// La réponse est OPAQUE, et elle se mesure : le lecteur de backtick lit jusqu'à son fermant sans
+// jamais passer la main au lecteur de chaîne. Un doublement écrit dans un bloc de code n'est donc
+// PAS un doublement — il voyage tel quel, et c'est ce que ce volet fige.
+{
+  const jetons = (ligne) => {
+    try {
+      const t = tokenize(`core\ntempo:120\n\n-----\n${ligne}\n`);
+      return { bt: t.filter((x) => x.type === 'BACKTICK').map((x) => x.value),
+               st: t.filter((x) => x.type === 'STRING').map((x) => x.value) };
+    } catch (e) { return { jet: String(e.message).slice(0, 90) }; }
+  };
+  const cas = [
+    ['S -> d.`note("c3").s("sine")`', 'note("c3").s("sine")', 'guillemets ordinaires'],
+    ['S -> d.`note(""x"")`',          'note(""x"")',          'un DOUBLEMENT, transporté tel quel'],
+    ['S -> d.`note("c3)`',            'note("c3)',            'un guillemet IMPAIR'],
+  ];
+  for (const [ligne, attendu, ou] of cas) {
+    const v = jetons(ligne);
+    if (v.jet) { echecs.push(`F. bloc de code — ${ou} : le découpeur JETTE : ${v.jet}`); continue; }
+    ok(v.st.length === 0,
+       `F. bloc de code — ${ou} : le lecteur de CHAÎNE est entré dans le bloc et en a tiré `
+     + `${JSON.stringify(v.st)}. Un bloc de code est opaque : ce qu'il porte n'est pas du langage.`);
+    ok(v.bt.length === 1 && v.bt[0] === attendu,
+       `F. bloc de code — ${ou} : le contenu doit voyager VERBATIM. attendu ${JSON.stringify(attendu)}, `
+     + `reçu ${JSON.stringify(v.bt)}.`);
+  }
+}
+
 if (echecs.length) {
   console.error(`❌ le guillemet se double dans une chaîne : ${echecs.length} échec(s)`);
   for (const e of echecs) console.error(`   - ${e}`);
