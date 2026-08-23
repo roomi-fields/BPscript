@@ -6,7 +6,7 @@
 /**
  * LE NOM D'UNE ENTRÉE DE LIBRAIRIE PEUT COMMENCER PAR UN CHIFFRE.
  *
- * Romain, 2026-08-23 : un nom peut commencer par un chiffre s'il porte AU MOINS UNE LETTRE.
+ * Romain, 2026-08-23 : un nom qui commence par un chiffre porte AU MOINS UNE LETTRE.
  * `12TET` et `22shruti` sont des noms, `12` est un nombre. Les accordages et les tempéraments
  * portent des noms d'usage qui commencent par leur nombre de degrés.
  *
@@ -117,14 +117,29 @@ const compiler = (tete) => {
      + `envoie corriger une graphie au lieu de dire la règle.`);
 }
 
-// ── C3. ⛔ L'ACTEUR RESTE REFUSÉ, ET C'EST UN ÉCART QUE JE NE TRANCHE PAS ────────────────────
-// La décision cite des déclarations par le type ; elle ne nomme pas l'acteur, et ce volet en
-// gardait le refus. Il tient donc tel quel, et l'écart est remonté plutôt que résolu ici : si
-// Romain étend la règle à l'acteur, c'est CE volet qui doit basculer, en le disant.
+// ── C3. L'ACTEUR EST UNE PLACE COMME LES AUTRES ─────────────────────────────────────────────
+// ⛔ CE VOLET GARDAIT L'INVERSE, ET IL A BASCULÉ SUR UN MOT DE L'ARCHITECTE. J'avais laissé
+// l'acteur refusé en remontant l'écart plutôt qu'en le tranchant : la décision cite des
+// déclarations par le type et ne nomme pas l'acteur. Sa réponse : elle dit « un NOM », et elle
+// cite ces formes parce que c'est ce que la mesure du jour avait sous la main — elle ne restreint
+// rien. C'est la PORTÉE, pas l'exemple, pour la cinquième fois de la semaine.
 {
-  ok(messages(compiler('actor 1perc alphabet.western out.midi')) !== '',
-     `C3. un acteur dont le nom commence par un chiffre reste REFUSÉ. Si ce volet passe au vert `
-     + `sans décision, la règle s'est étendue à une place que personne n'a nommée.`);
+  for (const [quoi, tete] of [
+    ['nom d\'acteur',          'actor 12lead alphabet.western'],
+    ['nom d\'acteur, 2 clés',  'actor 1perc alphabet.western out.midi'],
+  ]) {
+    ok(messages(compiler(tete)) === '',
+       `C3. ${quoi} — « ${tete} » doit compiler : ${messages(compiler(tete)).slice(0, 70)}`);
+  }
+  // Et la clause vaut ici aussi : un nombre pur ne nomme pas un acteur.
+  ok(messages(compiler('actor 12 alphabet.western')) !== '',
+     `C3. « actor 12 » doit être REFUSÉ — un nombre pur n'est pas un nom, à cette place comme aux `
+     + `autres. Si ce volet passe au vert, la clause a sauté au lieu de s'étendre.`);
+  // ⛔ ET LE TÉMOIN QUI DISCRIMINE : le nom QUALIFIÉ d'un acteur ne doit pas avoir été mangé par
+  // le lecteur de nom, qui recolle les jetons collés. Sans lui, « les chiffres passent » ne se
+  // distingue pas de « le point a cessé de porter la dérivation ».
+  const r = compiler('actor midi.actor(ch:1)');
+  ok(messages(r) === '', `C3-témoin. le nom QUALIFIÉ doit rester lisible — ${messages(r).slice(0, 70)}`);
 }
 
 // ── D-bis. LE NOM DE LA LIBRAIRIE PORTE AUSSI UN TIRET ──────────────────────────────────────
@@ -163,11 +178,11 @@ const compiler = (tete) => {
 ok(passe >= 30, `SOCLE : ${passe} vérifications seulement — la matrice s'est vidée sans rougir.`);
 
 if (echecs.length) {
-  console.error(`❌ un nom d'entrée peut commencer par un chiffre : ${echecs.length} échec(s)`);
+  console.error(`❌ un nom qui commence par un chiffre : ${echecs.length} échec(s)`);
   for (const e of echecs) console.error(`   - ${e}`);
   process.exit(1);
 }
-console.log(`✅ Un nom peut commencer par un chiffre s'il porte au moins une lettre — mesuré sur les `
+console.log(`✅ Un nom qui commence par un chiffre porte au moins une lettre — mesuré sur les `
           + `entrées que la DONNÉE porte, dans sept places de déclaration et d'invocation, avec le `
           + `refus qui nomme l'entrée absente au lieu de la forme et celui qui nomme la clause pour `
-          + `un nombre pur. L'acteur reste refusé. ${passe} vérification(s) passée(s).`);
+          + `un nombre pur, à toutes les places, l'acteur compris. ${passe} vérification(s) passée(s).`);

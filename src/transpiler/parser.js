@@ -558,8 +558,8 @@ function parse(tokens, opts = {}) {
     // la fois un nom et un nombre.
     if (chiffreDAbord && !/[A-Za-z]/.test(nom)) {
       throw new ParseError(
-        `'${nom}' est un NOMBRE, pas un nom. Un nom peut commencer par un chiffre s'il porte au `
-        + `moins une lettre — '12TET' et '22shruti' sont des noms, '${nom}' n'en est pas un.`,
+        `'${nom}' est un NOMBRE, pas un nom. Un nom qui commence par un chiffre porte au moins une `
+        + `lettre — '12TET' et '22shruti' sont des noms, '${nom}' n'en est pas un.`,
         depart);
     }
     return nom;
@@ -3018,7 +3018,10 @@ function parse(tokens, opts = {}) {
       // parenthésé accepte de PLUS qu'un corps nu ; on lui donne donc EXACTEMENT le même lecteur.
       // Une forme non montrée qui refuse se répare en une ligne ; une forme inventée qui compile
       // devient la spécification.
-      let actorName = expect(T.IDENT).value;
+      // ⛔ UN NOM D'ACTEUR EST UN NOM — la règle du chiffre initial dit « un NOM », pas « un nom de
+      // déclaration typée ». Elle cite des déclarations par le type parce que c'est ce que la mesure
+      // du jour avait sous la main ; elle ne restreint rien. C'est la PORTÉE, pas l'exemple.
+      let actorName = lireNomDEntree(tok);
       // Le POINT porte la dérivation — `extends` a été effacé pour ça (même décision, « ce qui
       // s'efface »). Le nom qualifié voyage TEL QUEL dans `name`, comme le langage l'écrit : aucun
       // champ neuf, donc aucun contrat déplacé chez qui lit l'arbre.

@@ -306,8 +306,8 @@ object w (alterations("bb":-2, "b":-1, "":0, "#":1, "##":2))
 object w (sections("*"(dha:ta, ge:ke)))
 ```
 
-Un **nom** peut commencer par un chiffre s'il porte au moins une lettre. `12TET` et `22shruti` sont
-des noms ; `12` est un nombre. La position qualifie : en tete de declaration le mot est un nom, en
+Un **nom** qui commence par un chiffre porte au moins une lettre. `12TET` et `22shruti` sont des
+noms ; `12` est un nombre. La position qualifie : en tete de declaration le mot est un nom, en
 valeur c'est une grandeur avec son unite.
 
 ```text
