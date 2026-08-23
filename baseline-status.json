@@ -1,7 +1,7 @@
 {
   "component": "BPScript — le langage, son transpileur et ses librairies",
   "updated": "2026-08-23",
-  "commit": "26ea50f",
+  "commit": "bcb4cbc",
   "derivee": "baseline-status.json est GÉNÉRÉE par scripts/fiche-etat.mjs — ne pas éditer à la main.",
   "voie_de_compilation": "compileToBPxAST — voie unique, l'AST est agnostique du moteur",
   "corpus": {
@@ -133,7 +133,7 @@
   "portillon": {
     "verts": 195,
     "echecs": 0,
-    "assertions": 9018
+    "assertions": 9030
   },
   "librairies": {
     "vocabulaire_en_bpscript": [
@@ -149,12 +149,13 @@
       "scales",
       "settings",
       "sounds",
+      "test_alphabets",
       "time",
       "transpo",
       "tunings",
       "types",
       "variation"
     ],
-    "catalogues_en_json": 6
+    "catalogues_en_json": 5
   }
 }

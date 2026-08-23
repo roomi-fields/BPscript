@@ -1,0 +1,65 @@
+// LA LIBRAIRIE « test_alphabets » — écrite dans le langage qu'elle sert.
+// Convertie depuis le JSON : le bundle en rend la MÊME donnée, champ par champ. Les
+// consommateurs ne voient aucun changement — c'est l'AUTHORING qui change, pas la donnée.
+//
+// ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
+//    voyage pas jusqu'aux consommateurs, une clé si.
+
+def test_alphabets (resolvedBy:Kairos, resolves:alphabet)
+
+// abc · Reproduction FIDELE du fichier natif `-al.abc`, lue en SOUMETTANT chaque candidat au
+// moteur plutot qu'en interpretant le format : une fleche `a --> a'` y declare DEUX TERMES, pas
+// une correspondance. Les marqueurs de section — `*`, `TR`, `sync` — ne sont PAS des termes ;
+// l'alphabet fabrique `{a,b,c}` les separe, puisque `TR` y passe comme VARIABLE tandis que
+// `chik` y est refuse.
+// abc · -al.abc / -ho.abc in bp3-engine/test-data/
+def abc (description:"Single-character alphabet a-z (Bernard's -al.abc / -ho.abc)", runtime:audio, resolvesPitch:false, alterations(), terminals(a(), b(), c(), d(), e(), f(), g(), h(), i(), j(), k(), l(), m(), n(), o(), p(), q(), r(), s(), t(), u(), v(), w(), x(), y(), z(), "a'"(), "b'"(), "c'"(), "d'"(), "e'"(), "f'"(), "g'"(), "h'"(), "i'"(), "j'"(), "k'"(), "l'"(), "m'"(), "n'"(), "o'"(), "p'"(), "q'"(), "r'"(), "s'"(), "t'"(), "u'"(), "v'"(), "w'"(), "x'"(), "y'"(), "z'"()))
+
+// abc1 · Reproduction FIDELE du fichier natif `-al.abc1`, lue en SOUMETTANT chaque candidat au
+// moteur plutot qu'en interpretant le format : une fleche `a --> a'` y declare DEUX TERMES, pas
+// une correspondance. Les marqueurs de section — `*`, `TR`, `sync` — ne sont PAS des termes ;
+// l'alphabet fabrique `{a,b,c}` les separe, puisque `TR` y passe comme VARIABLE tandis que
+// `chik` y est refuse. SEULES CINQ LETTRES portent une prime — a, c, d, f, g ; `b`, `e` et `h`
+// sont declarees NUES. Ce n'est pas une troncature : le fichier natif est ainsi, et completer
+// par symetrie inventerait trois termes.
+// abc1 · -al.abc1 / -ho.abc1 in bp3-engine/test-data/
+def abc1 (description:"Single-character alphabet a-h (Bernard's -al.abc1 / -ho.abc1)", runtime:audio, resolvesPitch:false, alterations(), terminals(chik(), a(), "a'"(), b(), c(), "c'"(), d(), "d'"(), e(), f(), "f'"(), g(), "g'"(), h(), cycle1(), cycle2()))
+
+// conway · d1='1', d2='2', d3='3'. Bare numbers are durations in BPscript.
+// conway · -gr.look-and-say
+def conway (description:"Conway look-and-say sequence digits", runtime:audio, resolvesPitch:false, alterations(), terminals(d1(), d2(), d3()))
+
+// kathak_count · Subset of tabla bols used for counting patterns.
+// kathak_count · -al.EkDoTin in bp3-engine/test-data/
+def kathak_count (description:"Kathak counting bols (ek-do-tin)", runtime:audio, resolvesPitch:false, alterations(), terminals(ek(), do(), tin(), char(), panch(), che(), sat(), at(), nau(), das(), gyara(), bara(), tera(), chauda(), pandra(), sola()))
+
+// structural · Used by checkNegativeContext, tryAllItems, and other structural grammar tests
+// from Bernard.
+// structural · Various test grammars in bp3-engine/test-data/
+def structural (description:"Opaque structural symbols for grammar tests (no pitch, no sound)", runtime:audio, resolvesPitch:false, alterations(), terminals(A(), A1(), A2(), A3(), B(), C(), D(), E(), F(), G(), H(), I(), J(), K(), L(), M(), N(), S1(), S2(), T(), X(), Y(), Z()))
+
+// dhati · Reproduction FIDELE d'un fichier natif, pour que la grammaire `-gr.dhati` tourne
+// AS-IS. Ce catalogue ne se compose pas : il recopie. Un bol atomique qui manquerait a une
+// grammaire se declare ICI, jamais dans `alphabets`, dont le contenu suit la musicologie.
+def dhati (description:"Les dix bols de l'alphabet natif `-al.dhati`, reproduits tels quels", runtime:audio, resolvesPitch:false, alterations(), terminals(dha(), dhee(), ge(), ke(), kt(), na(), ta(), tee(), ti(), tr()))
+
+// checkhomo · Reproduction FIDELE du fichier natif, lue en SOUMETTANT chaque candidat au moteur
+// plutot qu'en interpretant le format. LES MARQUEURS DE SECTION NE SONT PAS DES TERMES : le
+// compilateur d'alphabet enregistre les siens comme terminaux, ce qui se prouve sur un alphabet
+// FABRIQUE — avec la ligne de marqueur il est accepte, sans elle il ne l'est pas. Les VARIABLES
+// sont ecartees par le meme controle : repassees sur un alphabet fabrique qui ne les contient
+// pas, elles passent quand meme. `a`, `a'` et `a"` sont TROIS termes distincts : l'apostrophe
+// et le guillemet font partie du nom parce que l'alphabet les declare. `H`, `TR` et `OCT` sont
+// des VARIABLES, ecartees.
+def checkhomo (description:"Les sept termes de l'alphabet natif `-al.checkhomo`", runtime:audio, resolvesPitch:false, alterations(), terminals(a(), "a'"(), "a"""(), b(), "b'"(), c(), "c'"()))
+
+// dhin · Reproduction FIDELE du fichier natif, lue en SOUMETTANT chaque candidat au moteur
+// plutot qu'en interpretant le format. LES MARQUEURS DE SECTION NE SONT PAS DES TERMES : le
+// compilateur d'alphabet enregistre les siens comme terminaux, ce qui se prouve sur un alphabet
+// FABRIQUE — avec la ligne de marqueur il est accepte, sans elle il ne l'est pas. Les VARIABLES
+// sont ecartees par le meme controle : repassees sur un alphabet fabrique qui ne les contient
+// pas, elles passent quand meme. `-al.dhin--` et `-ho.dhin--` sont le MEME FICHIER — 247
+// octets, meme empreinte — retenus par le registre pour deux grammaires. Une seule entree les
+// sert.
+def dhin (description:"Les quatorze bols de l'alphabet natif `-al.dhin--`", runtime:audio, resolvesPitch:false, alterations(), terminals(dha(), ta(), ti(), ra(), na(), ki(), dhee(), tee(), ne(), ge(), ke(), ka(), dhin(), tin()))
+
