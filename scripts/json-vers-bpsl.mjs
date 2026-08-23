@@ -57,9 +57,22 @@ function rendValeur(cle, v, ou) {
   const s = String(v);
   // ⚠️ LE TEXTE TYPÉ EST OBLIGATOIRE DÈS QU'IL Y A UNE ESPACE — sans lui, la valeur se découperait
   // en PARTIES et une description deviendrait une liste de mots.
-  // L'accent grave DÉLIMITE le texte typé et ne s'échappe pas : une valeur qui en porte un n'est
-  // pas rendable, et se refuse au lieu d'être tronquée en silence.
-  if (s.includes('`')) throw new Error(`${ou}.${cle} : la valeur contient un accent grave`);
+  //
+  // ⛔ L'ACCENT GRAVE SE REFUSAIT ICI, ET LE LANGAGE SAIT L'ÉCRIRE. Ce refus tenait sur une
+  // affirmation — « l'accent grave délimite le texte typé et ne s'échappe pas » — que personne
+  // n'avait passée au compilateur. Mesuré le 2026-08-23, les quatre formes compilent :
+  //     def x (audio:`js: saw(p)`)                        le code typé NU
+  //     def x (audio:"`js: saw(p)`")                      le même entre guillemets
+  //     def x (description:"le mot `midi` porte")         une prose, paire d'accents graves
+  //     def x (description:"natif `-al.abc et suite")     une prose, accent grave IMPAIR
+  // Une valeur qui en porte un est donc rendable, et le guillemet suffit : il n'échappe rien, il
+  // délimite, et l'accent grave voyage à l'intérieur sans être lu comme une ouverture de code.
+  //
+  // ⚠️ CE QUE JE NE TRANCHE PAS ICI : la forme NUE pour une valeur qui EST un code typé complet
+  // (`voices.*.audio`, 15 valeurs). Les deux compilent, et laquelle RELIT juste ne se prouve que
+  // par la porte du bundle — sur un catalogue qui se convertit. Les seuls qui portent du code typé
+  // butent encore sur l'objet imbriqué, donc aucune preuve n'est possible aujourd'hui. On rend
+  // donc la forme PROUVÉE, et le nu attend son témoin plutôt qu'un raisonnement.
   if (s === '' || CLES_LISTES.has(cle) || !/^[A-Za-z0-9_/#.+-]+$/.test(s) || /^-?[0-9.]+$/.test(s)) {
     return JSON.stringify(s);
   }
@@ -186,7 +199,16 @@ export function convertir(nom, j) {
   return { texte: out.join('\n'), refus };
 }
 
-const cible = process.argv[2];
+// ⛔ CET OUTIL ÉCRIVAIT DANS `lib/` SANS QU'ON LE LUI DEMANDE, ET IL M'A EU. Une mesure des 14
+// catalogues — « lequel se convertit ? » — a CRÉÉ cinq fichiers dans le dépôt : sa sortie standard
+// ne porte qu'une ligne de confirmation, donc rediriger sa sortie pour lire le résultat ne montre
+// rien et écrit quand même. Un instrument qui modifie ce qu'il observe est une sonde absorbée.
+//
+// `--essai` rend la conversion sur la SORTIE STANDARD sans rien écrire : mesurer redevient un geste
+// qui ne laisse pas de trace. Le refus, lui, part sur la sortie d'erreur dans les deux modes.
+const args = process.argv.slice(2);
+const essai = args.includes('--essai');
+const cible = args.find((a) => !a.startsWith('--'));
 if (cible) {
   const j = JSON.parse(readFileSync(`lib/${cible}.json`, 'utf-8'));
   const { texte, refus } = convertir(cible, j);
@@ -195,6 +217,9 @@ if (cible) {
     for (const r of [...new Set(refus)]) console.error(`   - ${r}`);
     process.exit(1);
   }
-  writeFileSync(`lib/${cible}.bpsl`, texte + '\n');
-  console.log(`✅ lib/${cible}.bpsl écrit`);
+  if (essai) { process.stdout.write(texte + '\n'); }
+  else {
+    writeFileSync(`lib/${cible}.bpsl`, texte + '\n');
+    console.log(`✅ lib/${cible}.bpsl écrit`);
+  }
 }
