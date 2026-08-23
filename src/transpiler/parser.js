@@ -1960,19 +1960,23 @@ function parse(tokens, opts = {}) {
     // ── L'ENTRÉE — `in.<canal> <rôle> [mapping.<table>]` ────────────────────────────────────
     // Les trois contraintes de la décision du 2026-07-27 ne bougent pas : aucun nom de port,
     // aucun alphabet, aucune table par défaut. Elles changent seulement de côté de la ligne.
-    // ⛔ `in zz` EST UN MODÈLE INCOMPLET, PAS UNE FAUTE — alignement du 2026-08-22, sur les canons du
-    // prototypal pur que Romain a demandé d'appliquer. `in.midi pedale` EST le type en tête avec sa
-    // dérivation pointée : `in` le type, `midi` la sorte, `pedale` le nom — la même forme que
-    // `actor midi.actor(ch)`. La table de `LANGUAGE.md:300` ne se trompait donc pas ; c'est le refus
-    // de la forme NUE qui était en retard.
+    // ⛔ UNE ENTRÉE DÉCLARE SON CANAL — arbitrage Romain du 2026-08-23, ses mots : « à un moment on
+    // doit savoir quel runtime d'entrée est adressé », puis « on empêche car ça n'a pas de sens ».
     //
-    // ⚠️ UN NOM NU VAUT UN OBJET VIDE, et l'incomplétude se refuse à l'USAGE : `flag zz` compile,
-    // `actor basse` compile — `in zz` compile aussi, et c'est au moment où le flux attend son
-    // trigger que le canal manquant se voit. Refuser à la déclaration interdirait le modèle.
+    // ⚠️ CE QUI VIVAIT ICI TENAIT `in zz` POUR UN MODÈLE INCOMPLET, et posait `transport: null`.
+    // L'incomplétude qui se refuse à l'usage vaut pour un membre SANS DÉFAUT ; le canal n'est pas
+    // un membre de l'entrée, c'est ce qui DÉSIGNE le destinataire. Un rôle sans canal n'est pas une
+    // entrée partielle, c'est une entrée qui n'adresse personne — et rien ne pouvait la compléter
+    // plus tard, aucune graphie n'existant pour poser le canal après coup.
+    //
+    // ⚠️ ET TROIS DÉPÔTS EN PORTAIENT DÉJÀ LA CONSÉQUENCE pendant que je l'émettais : le validateur
+    // de BPx la refusait, le type publié de runtime-in la déclarait impossible, et son code
+    // l'ignorait en silence — un `null` n'apparie aucun canal. La forme traversait trois frontières
+    // pour mourir sans un mot à la quatrième.
     if (mot === 'in' && peek(1).type === T.IDENT && !directiveDeclareeParLaLibrairie('core', 'in')) {
-      advance();
-      const roleName = advance().value;
-      return { type: 'InDirective', name: roleName, transport: null, mapping: null, line: tok.line };
+      throw new ParseError(`'in ${peek(1).value}' est refusé — une entrée déclare son CANAL : `
+        + `'in.<canal> ${peek(1).value}'. Les canaux d'entrée sont ${[...inChannels()].join(', ')}. `
+        + `Sans lui, aucun runtime n'est adressé et rien ne déclenche.`, tok);
     }
     if (mot === 'in' && peek(1).type === T.PERIOD && !peek(1).spaceBefore
         && peek(2).type === T.IDENT) {

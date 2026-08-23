@@ -1708,30 +1708,16 @@ function refuserAttenteNonDeclaree(ast) {
     }
   }
 
-  // ⛔ UNE ENTRÉE SANS CANAL EST UN MODÈLE, ET SON INCOMPLÉTUDE SE REFUSE À L'USAGE.
-  // `in zz` compile depuis le 2026-08-22 — un nom nu vaut un objet vide, comme `flag zz` et
-  // `actor basse`. Ce qui ne peut pas passer, c'est de l'EMPLOYER : un point d'attente sur un rôle
-  // dont aucun canal ne dit d'où le signal vient attend quelque chose que rien n'apportera, et la
-  // dérivation s'arrête sans un mot — exactement le défaut que le cri d'à côté existe pour fermer.
-  const sansCanal = new Set(
-    (ast.inputs || []).filter((i) => i && !i.transport).map((i) => i.name));
-
+  // ⛔ LE REFUS À L'USAGE D'UNE ENTRÉE SANS CANAL A ÉTÉ ÉLAGUÉ AVEC LA FORME QU'IL GARDAIT.
+  // Un rôle sans canal se refusait ICI, au point d'attente qui l'employait ; depuis l'arbitrage de
+  // Romain du 2026-08-23, il se refuse à la DÉCLARATION (`parser.js`, `in <rôle>`). Le filtre qui
+  // vivait à cette place ne pouvait plus trouver une seule entrée : garder un refus dont l'accusé
+  // ne peut plus naître, c'est laisser croire qu'un cas est couvert quand il est devenu impossible.
   const erreurs = [];
   const vus = new Set();
   (function marcher(n) {
     if (!n || typeof n !== 'object') return;
     if (Array.isArray(n)) { for (const e of n) marcher(e); return; }
-    if (n.type === 'Wait' && typeof n.name === 'string'
-        && sansCanal.has(n.name) && !vus.has(n.name)) {
-      vus.add(n.name);
-      erreurs.push({
-        message: `'<!${n.name}' emploie une entrée DÉCLARÉE SANS CANAL — 'in ${n.name}' nomme un `
-          + `rôle et ne dit pas d'où son signal vient. La forme nue est un MODÈLE : elle se `
-          + `déclare, elle ne s'emploie pas. Écrire 'in.<canal> ${n.name}'.`,
-        line: n.line,
-      });
-      return;
-    }
     if (n.type === 'Wait' && typeof n.name === 'string'
         && !connus.has(n.name) && !directions.has(n.name) && !vus.has(n.name)) {
       vus.add(n.name);
