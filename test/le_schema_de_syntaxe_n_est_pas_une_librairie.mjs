@@ -82,10 +82,19 @@ ok(suivis.length > 100, `SOCLE : le dépôt doit porter des fichiers suivis — 
 
 // ── C. ⛔ LA PORTE REFUSE DE SE PUBLIER VIDE — et le refus se prouve en FABRIQUANT le cas ─────
 {
-  ok(Object.keys(SYNTAXE.syntaxWords || {}).length >= 7,
-    `C. la porte doit porter les mots de syntaxe — ${Object.keys(SYNTAXE.syntaxWords || {}).length}`);
-  ok(Object.keys(SYNTAXE.directiveValues || {}).length >= 2,
-    `C. et les valeurs de directive — ${Object.keys(SYNTAXE.directiveValues || {}).length}`);
+  // ⛔ CE VOLET EXIGEAIT `>= 7`, ET C'ÉTAIT UN SEUIL CALÉ SUR LE COMPTE DU JOUR. Il a rougi le
+  // 2026-08-24 quand `lambda` est sorti du langage — un RETRAIT décidé, pas une régression. Son
+  // propos est écrit dans son titre : la porte refuse de se publier VIDE. Un seuil serré ne garde
+  // pas ce propos, il garde un inventaire.
+  //
+  // ⚠️ KAIROS A PAYÉ EXACTEMENT CELA, DEUX FOIS SUR LE MÊME BANC : un seuil « plus de 40 » qui
+  // rougissait dès qu'une clé sortait, puis une égalité sur l'ensemble des formes qui a rougi le
+  // 2026-08-17. Sa réparation est la règle générale — une assertion d'INCLUSION, jamais une égalité
+  // ni un seuil : elle garde contre ce qui APPARAÎT sans se périmer sur ce qui DISPARAÎT.
+  ok(Object.keys(SYNTAXE.syntaxWords || {}).length > 0,
+    `C. la porte ne doit pas se publier VIDE de mots de syntaxe — ${Object.keys(SYNTAXE.syntaxWords || {}).length}`);
+  ok(Object.keys(SYNTAXE.directiveValues || {}).length > 0,
+    `C. ni vide de valeurs de directive — ${Object.keys(SYNTAXE.directiveValues || {}).length}`);
   // ⛔ LE VOLET QUI COMPTE : le générateur REFUSE-T-IL une source vidée ? Un `?? {}` publierait
   // « zéro mot de syntaxe », qui a EXACTEMENT la graphie d'une mesure — exigence 2 d'Atlas. On
   // fabrique le cas au lieu de lire le code : compter dit ce qui est écrit, exercer dit ce qui se

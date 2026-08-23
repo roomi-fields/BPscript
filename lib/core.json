@@ -152,13 +152,7 @@
       }
     }
   },
-  "symbols": {
-    "lambda": {
-      "type": "special",
-      "bp3": "lambda",
-      "description": "Symbole vide — supprime le non-terminal. Utilisé pour effacer un symbole de la dérivation."
-    }
-  },
+  "symbols": {},
   "settings": {
     "on_fail": {
       "type": "directive",

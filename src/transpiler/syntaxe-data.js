@@ -20,11 +20,6 @@ const SYNTAXE = {
    "description": "Déclare un modulateur à valeur continue (ADSR, LFO, rampe), purement descriptif",
    "syntax": "cv name : mod.type(params)"
   },
-  "lambda": {
-   "kind": "keyword",
-   "description": "Efface le non-terminal (production epsilon) : le symbole disparaît de la dérivation",
-   "syntax": "S -> lambda"
-  },
   "->": {
    "kind": "operator",
    "description": "Règle de production : le membre gauche est réécrit en membre droit (défaut gauche→droite)",

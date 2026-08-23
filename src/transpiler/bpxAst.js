@@ -1079,7 +1079,6 @@ function validateTerminals(ast) {
 
   // Vocabulaire VALIDE = terminaux de TOUS les alphabets effectifs (octaviés + formes nues).
   const { terminaux: known, aUnAlphabet: anyAlphabet } = terminauxEnPortee(ast);
-  known.add('lambda');
   const declared = nomsDeclares(ast);
 
   errors.push(...validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet));

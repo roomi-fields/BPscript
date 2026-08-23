@@ -97,7 +97,6 @@ const T = Object.freeze({
   GATE:         'GATE',        // gate
   TRIGGER:      'TRIGGER',     // trigger
   CV:           'CV',          // cv
-  LAMBDA:       'LAMBDA',      // lambda
 
   // Literals
   INT:          'INT',         // 123
@@ -117,7 +116,6 @@ const KEYWORDS = {
   'gate': T.GATE,
   'trigger': T.TRIGGER,
   'cv': T.CV,
-  'lambda': T.LAMBDA,
 };
 
 function tokenize(source, opts = {}) {

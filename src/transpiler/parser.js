@@ -5845,15 +5845,6 @@ function parse(tokens, opts = {}) {
   function parseRhsElement() {
     const tok = current();
 
-    // Lambda (check for ! after)
-    if (at(T.LAMBDA)) {
-      advance();
-      if (at(T.BANG)) {
-        return parseSimultaneousGroup('lambda', tok);
-      }
-      return { type: 'NilString' };
-    }
-
     // Silence -
     if (at(T.REST)) {
       advance();
@@ -6806,9 +6797,7 @@ function parse(tokens, opts = {}) {
 
   function parseSimultaneousGroup(primaryName, tok, primaryArgs = null) {
     let primary;
-    if (primaryName === 'lambda') {
-      primary = { type: 'NilString' };
-    } else if (primaryArgs) {
+    if (primaryArgs) {
       primary = { type: 'SymbolCall', name: primaryName, args: primaryArgs, line: tok.line };
     } else {
       primary = { type: 'Symbol', name: normalizeName(primaryName), line: tok.line };
