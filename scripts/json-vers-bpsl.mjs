@@ -20,9 +20,11 @@
  * les chaînes numériques, celle-ci savait les sections et les refus. Chacune ignorait ce que
  * l'autre avait appris, et les deux produisaient des sources qui se ressemblaient.
  *
- * ⚠️ LA GRAPHIE DE SORTIE VIT EN UN SEUL POINT — `ecrireEntree`. La forme à parenthèse est tranchée
- * mais son COLLAGE ne l'est pas encore (`(x)` collé est déjà la liste de paramètres d'une
- * définition, `(vel:60)` séparé est un corps) ; quand il le sera, une seule fonction bouge.
+ * ⚠️ LA GRAPHIE DE SORTIE VIT EN UN SEUL POINT — `ecrireEntree`, et c'est UNE LIGNE à parenthèse
+ * SÉPARÉE, la forme des dix `.bpsl` du dépôt. Le collage était réputé non tranché ici ; il l'est par
+ * le code, mesuré le 2026-08-23 : `def w(a:1)` collé est refusé (liste de paramètres), `def w (a:1)`
+ * séparé compile (corps). Il n'y avait pas de question ouverte, mais une distinction non mesurée —
+ * et la forme multi-ligne que ce fichier écrivait refusait l'objet imbriqué que celle-ci accepte.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 
@@ -55,6 +57,14 @@ function rendValeur(cle, v, ou) {
   }
   if (typeof v === 'object' && v !== null) throw new Error(`${ou}.${cle} : objet imbriqué, non rendu`);
   const s = String(v);
+  // ⛔ LE GUILLEMET INTERNE SORTAIT EN `\"` ET LE LANGAGE REFUSE L'ANTISLASH. `JSON.stringify` échappe
+  // à la mode JSON ; le fichier produit ne compilait pas, et l'outil disait « ✅ écrit » — un refus
+  // muet à l'écriture, découvert par la seule preuve d'égalité. Mesuré sur `temperaments` :
+  //     … 2 grades of scale \"Ma05\" (23 grades) …   ⛔ Caractère inattendu '\'
+  // Tant que la graphie d'un guillemet dans un texte n'est pas tranchée, on REFUSE au lieu de rendre
+  // un fichier invalide : un refus nommé se répare, un fichier qui ne compile pas se cherche.
+  if (s.includes('"')) throw new Error(`${ou}.${cle} : la valeur contient un GUILLEMET — il sortirait `
+    + `en \\" et l'antislash n'a aucun emploi dans le langage`);
   // ⚠️ LE TEXTE TYPÉ EST OBLIGATOIRE DÈS QU'IL Y A UNE ESPACE — sans lui, la valeur se découperait
   // en PARTIES et une description deviendrait une liste de mots.
   //
@@ -79,6 +89,51 @@ function rendValeur(cle, v, ou) {
   return s;
 }
 
+/**
+ * UNE CLÉ DE MEMBRE COMMENCE PAR UNE LETTRE — borné au compilateur, pas supposé.
+ *     bb · b · x · a1 · sa · Ma05 · western_12TET · maqam-sikah · n5     acceptées
+ *     _note (souligné initial) · 12TET (chiffre initial) · 2 (nombre)    refusées
+ */
+const CLE_DE_MEMBRE = /^[A-Za-z][A-Za-z0-9_-]*$/;
+
+/**
+ * UNE PAIRE — `k:valeur` quand la valeur est simple, `k(…)` quand elle est composée.
+ *
+ * ⛔ L'OBJET IMBRIQUÉ SE REFUSAIT ICI, ET LE LANGAGE LE PORTE. Deuxième refus de ce fichier fondé
+ * sur une affirmation jamais mesurée — après l'accent grave, le même jour. Mesuré le 2026-08-23 :
+ *     def w (alterations(bb:-2, b:-1), n:3)     ✓ à un niveau
+ *     def w (a(b(c:1), d:2))                    ✓ à deux
+ *
+ * ⚠️ ET CE QUI BLOQUAIT N'ÉTAIT PAS LE LANGAGE MAIS LA FORME QUE CET OUTIL ÉCRIVAIT. La même donnée
+ * en corps multi-ligne est REFUSÉE — `def w` puis `  alterations(bb:-2)` sort « n'est ni un appel de
+ * composant ni une affectation ». Les dix `.bpsl` du dépôt, eux, sont tous écrits EN UNE LIGNE à
+ * parenthèse séparée. Cet outil produisait donc une graphie que le dépôt n'emploie nulle part, et
+ * c'est elle qui refusait l'imbrication — pas la grammaire.
+ *
+ * ⚠️ LE COLLAGE EST TRANCHÉ PAR LE CODE, contrairement à ce que disait le commentaire d'à côté :
+ *     def w(a:1)    ⛔ « la liste de paramètres ne porte que des NOMS »   — collé = paramètres
+ *     def w (a:1)   ✓                                                     — séparé = corps
+ * Il n'y avait pas de question ouverte, il y avait une distinction que personne n'avait mesurée.
+ */
+function rendPaire(k, v, ou) {
+  if (!CLE_DE_MEMBRE.test(k)) {
+    throw new Error(`${ou}.${k} : la clé « ${k} » n'est pas un nom — un membre commence par une `
+      + `lettre. La graphie d'une clé qui n'en est pas une n'est pas tranchée.`);
+  }
+  if (Array.isArray(v)) {
+    // En une ligne, une liste se PARENTHÈSE : `scope:a b` sort « dans la partie DÉCLARATIVE… ».
+    return `${k}(${v.map((p) => rendValeur(k, p === null ? '' : p, ou)).join(', ')})`;
+  }
+  if (v && typeof v === 'object') {
+    const dedans = Object.entries(v)
+      .filter(([kk]) => !kk.startsWith('_'))
+      .map(([kk, vv]) => rendPaire(kk, vv, `${ou}.${k}`));
+    if (!dedans.length) throw new Error(`${ou}.${k} : objet SANS membre rendable`);
+    return `${k}(${dedans.join(', ')})`;
+  }
+  return `${k}:${rendValeur(k, v, ou)}`;
+}
+
 /** Une note devient un COMMENTAIRE : elle ne voyage plus jusqu'aux consommateurs. */
 function enCommentaire(texte, largeur = 96) {
   const mots = String(texte).replace(/\s+/g, ' ').trim().split(' ');
@@ -100,7 +155,14 @@ function enCommentaire(texte, largeur = 96) {
 function ecrireEntree(nom, lignesDeCles) {
   // L'arobase est SORTIE du langage (decision Romain, 2026-08-18) : une librairie s'ecrit dans la
   // graphie de la tete de scene, et la tete de scene ne la porte plus.
-  return [`def ${nom}`, ...lignesDeCles.map((l) => `  ${l}`)];
+  //
+  // ⛔ LA FORME EST CELLE DU DÉPÔT, ET CE FICHIER EN ÉCRIVAIT UNE AUTRE. Les dix `.bpsl` suivis sont
+  // tous en UNE LIGNE à parenthèse séparée — `def scales (resolvedBy:"Kairos", resolves:scale)` ;
+  // cet outil rendait un corps multi-ligne que rien d'autre n'emploie, et ce corps REFUSE l'objet
+  // imbriqué que la forme à parenthèse accepte. La divergence de graphie de l'outil se lisait comme
+  // une limite du langage — pendant six jours, et sur 82 valeurs.
+  if (!lignesDeCles.length) return [`def ${nom}`];
+  return [`def ${nom} (${lignesDeCles.join(', ')})`];
 }
 
 /**
@@ -166,7 +228,7 @@ export function convertir(nom, j) {
   const enTete = [];
   for (const c of CHAMPS_DE_FICHIER) {
     if (j[c] === undefined) continue;
-    try { enTete.push(`${c}:${rendValeur(c, j[c], nom)}`); } catch (e) { refus.push(e.message); }
+    try { enTete.push(rendPaire(c, j[c], nom)); } catch (e) { refus.push(e.message); }
   }
   if (majoritaire) enTete.push(`section:${majoritaire}`);
   out.push(...ecrireEntree(nom, enTete));
@@ -190,7 +252,7 @@ export function convertir(nom, j) {
         if (k.startsWith('_')) continue;
         // Une liste VIDE s'écrit en n'écrivant pas la clé — le bundle la rétablit (libs-bundle.js).
         if (Array.isArray(v) && v.length === 0) continue;
-        try { cles.push(`${k}:${rendValeur(k, v, nomE)}`); } catch (e) { refus.push(e.message); }
+        try { cles.push(rendPaire(k, v, nomE)); } catch (e) { refus.push(e.message); }
       }
       out.push(...ecrireEntree(nomE, cles));
       out.push('');
@@ -217,9 +279,28 @@ if (cible) {
     for (const r of [...new Set(refus)]) console.error(`   - ${r}`);
     process.exit(1);
   }
+  // ⛔ CET OUTIL DISAIT « ✅ ÉCRIT » SUR UN FICHIER QUI NE COMPILE PAS, et c'est le défaut qui les
+  // contient tous. `temperaments`, `voices` et `core` sont sortis d'ici sans un refus, et c'est le
+  // BUNDLE qui les a rejetés — trois frontières plus loin, dans un message qui parle d'un fichier
+  // que personne n'a écrit à la main. Un convertisseur qui ne relit pas sa propre sortie ne convertit
+  // pas, il produit du texte.
+  //
+  // ⚠️ ET LE RELECTEUR EST LE COMPILATEUR, PAS UNE VÉRIFICATION À MOI. C'est lui qui tranche ce que
+  // le langage accepte ; toute autre porte réintroduirait la seconde autorité que ce fichier existe
+  // pour éviter. Deux refus de ce script — l'accent grave, l'objet imbriqué — étaient précisément
+  // des règles inventées ici et jamais confrontées à lui.
+  const { compileToBPxAST } = await import('../src/transpiler/index.js');
+  const essaiCompile = compileToBPxAST(`core\n${texte}\n\n-----\nS -> -\n`, {});
+  const fautes = (essaiCompile.errors || []).map((e) => e.message || String(e));
+  if (fautes.length) {
+    console.error(`⛔ ${cible} : la source produite NE COMPILE PAS — rien n'est écrit.`);
+    console.error(`   ${fautes[0].slice(0, 200)}`);
+    process.exit(1);
+  }
+
   if (essai) { process.stdout.write(texte + '\n'); }
   else {
     writeFileSync(`lib/${cible}.bpsl`, texte + '\n');
-    console.log(`✅ lib/${cible}.bpsl écrit`);
+    console.log(`✅ lib/${cible}.bpsl écrit — source relue par le compilateur avant écriture`);
   }
 }
