@@ -141,11 +141,20 @@ const chaines = (ligne) => {
     ok(JSON.stringify(vu) === JSON.stringify(attendu),
        `D-borne. ${ou} — attendu ${JSON.stringify(attendu)}, rendu ${JSON.stringify(vu)}`);
   }
-  // Une chaîne non terminée ne doit pas faire boucler le lecteur ni avaler le reste du fichier.
+  // ⛔ CE VOLET DISAIT « rendre une chaîne et s'arrêter », ET IL A BASCULÉ LE 2026-08-24. Il gardait
+  // que la boucle du doublement ne dépasse pas la fin du texte — vrai, et insuffisant : elle ne
+  // dépassait pas, elle sortait en SILENCE, et le texte ouvert avalait tout ce qui suivait. La
+  // scène compilait en rendant ZÉRO règle.
+  //
+  // ⚠️ C'EST LE CAS QUE J'ANNONÇAIS AUX VOISINS — « si un de vos bancs VERROUILLE le refus, il
+  // tombera ». Le premier à tomber est le mien, posé la veille par la même frappe.
+  //
+  // Le comportement vit désormais dans `un_texte_ouvert_ne_mange_pas_le_fichier.mjs` ; ici on garde
+  // seulement que la chaîne ouverte ne passe PAS en silence.
   const ouverte = chaines('def t (d:"jamais fermee');
-  ok(Array.isArray(ouverte) && ouverte.length === 1,
-     `D-borne. une chaîne NON TERMINÉE doit rendre une chaîne et s'arrêter — rendu `
-   + `${JSON.stringify(ouverte)}. La boucle du doublement ne doit pas dépasser la fin du texte.`);
+  ok(ouverte && ouverte.jet,
+     `D-borne. une chaîne NON TERMINÉE doit être REFUSÉE, pas rendue — rendu `
+   + `${JSON.stringify(ouverte)}. Sans refus, elle avale le reste du fichier et la scène compile à vide.`);
 }
 
 // ── E. LA VALEUR ARRIVE, ET ELLE ARRIVE TYPÉE ────────────────────────────────────────────────
@@ -222,5 +231,6 @@ if (echecs.length) {
 }
 console.log(`✅ le guillemet se double dans une chaîne — un doublement rend UN jeton portant un `
   + `guillemet littéral, en tête, au milieu et en queue ; la chaîne VIDE reste vide, seule, répétée `
-  + `et en liste ; la donnée d'octaves garde ses vides dans le bundle ; et une chaîne ordinaire, un `
-  + `accent grave interne et une chaîne non terminée ne bougent pas. ${passe} vérification(s) passée(s).`);
+  + `et en liste ; la donnée d'octaves garde ses vides dans le bundle ; une chaîne ordinaire et un `
+  + `accent grave interne ne bougent pas ; et une chaîne NON TERMINÉE est refusée au lieu d'avaler `
+  + `le reste du fichier. ${passe} vérification(s) passée(s).`);

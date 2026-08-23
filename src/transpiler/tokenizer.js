@@ -210,9 +210,25 @@ function tokenize(source, opts = {}) {
     if (ch === '"') {
       advance(); // opening "
       let str = '';
+      const ouvert = { line, col };
       for (;;) {
         while (i < source.length && peek() !== '"') str += advance();
-        if (i >= source.length) break;
+        // ⛔ UN TEXTE OUVERT ET JAMAIS FERMÉ AVALE LE RESTE DU FICHIER, ET LA SCÈNE COMPILE À VIDE.
+        // Cette sortie était MUETTE — ma propre frappe du guillemet doublé l'a laissée telle quelle.
+        // Mesuré le 2026-08-24 : `def x a:1 "b` compile et rend ZÉRO règle au lieu d'une ; le
+        // séparateur `-----` et la grammaire entière partent dans la valeur, sans un mot.
+        // ⚠️ LE REFUS SE POSE À LA FIN DU FICHIER, PAS À LA FIN DE LIGNE : un texte sur plusieurs
+        // lignes est légitime et vit dans la donnée. La fin de ligne refuserait une forme vivante.
+        if (i >= source.length) {
+          // ⚠️ ET LE CANAL EST `LexError`, PAS UNE `Error` NUE. Le commentaire du refus de caractère,
+          // vingt lignes plus bas, décrit exactement la faute que ma première écriture a refaite :
+          // « il partait en Error nue, que la façade relançait, donc l'appelant PLANTAIT au lieu de
+          // recevoir une erreur de compilation ». La forme d'un refus compte autant que le refus.
+          throw new LexError(
+            `Texte ouvert à la ligne ${ouvert.line}, colonne ${ouvert.col} et jamais fermé — il avale `
+            + `tout ce qui suit, et la scène compile à vide. Un texte se ferme par un guillemet ; un `
+            + `guillemet À L'INTÉRIEUR d'un texte se double.`, ouvert.line, ouvert.col);
+        }
         advance();                              // le guillemet qui ferme… ou le premier des deux
         if (peek() === '"') { str += advance(); continue; }   // doublé → un guillemet littéral
         break;
