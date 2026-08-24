@@ -104,6 +104,14 @@ const CLASSES = {
     documented: true, name: 'z', resolves: 'z', apporte: ['un', 'deux'], t: { a: { b: 1 } },
   },
   'membre imbriqué': { documented: true, name: 'z', resolves: 'z', t: { a: { b: { c: 1 } } } },
+  // ⚠️ CETTE CLASSE EXISTE POUR SURVIVRE À UN RETRAIT. `lib/mapping.json` est aujourd'hui le SEUL
+  // catalogue réel qui n'a aucune entrée, donc le seul qui exerce le refus anti-vacuité du
+  // convertisseur — « ZÉRO entrée recensée ». Le jour où il sera retiré, ce chemin cesserait d'être
+  // traversé par quoi que ce soit, **et rien ne le dirait** : un contrôle ne signale pas qu'il a
+  // perdu son objet. La forme est fabriquée ici ; le retrait ne la lui reprend pas.
+  'catalogue sans aucune entrée': {
+    __refuse: 'ZÉRO entrée', documented: true, name: 'z', resolves: 'z', _note: 'que de la glose',
+  },
   'membre homonyme à plusieurs branches': {
     documented: true, name: 'z', resolves: 'z',
     t: { une: { default: { x: 1 } }, deux: { default: { y: 2 } }, trois: { default: { z: 3 } } },
