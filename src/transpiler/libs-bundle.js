@@ -15,6 +15,7 @@
 import { readFileSync, readdirSync, statSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { CHAMPS_DE_FICHIER } from './libs-champs.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const LIB_DIR = join(__dirname, '../../lib');
@@ -81,11 +82,8 @@ function captureDigitalBodies(dir) {
 // seule partie y reste donc une liste d'un élément, sans quoi `args:type` rendrait une chaîne là où
 // tout le reste de la donnée porte un tableau, et chaque lecteur devrait gérer les deux.
 const CLES_LISTES = new Set(['args', 'values', 'scope', 'range', 'registers']);
-// ⚠️ `section` DIT OU LES ENTREES DE CE FICHIER SE RANGENT, en un endroit. Sans lui, le
-// generateur DEVINAIT — `controls` par defaut — et le silence voulait dire deux choses
-// opposees : `controls` pour une librairie de controles, la RACINE pour un catalogue.
-// Une convention implicite qui decide a la place de la donnee est le defaut qu'on retire.
-const CHAMPS_DE_FICHIER = new Set(['resolvedBy', 'resolves', 'name', 'description', 'version', 'type', 'section']);
+// ⛔ LA LISTE DES CHAMPS DE FICHIER VIT EN UN SEUL ENDROIT — `libs-champs.js`, importé en tête. Ce
+// fichier en portait une copie, et il y en avait CINQ dans l'écosystème, déjà divergentes.
 
 /**
  * RANGE UNE ENTRÉE ÉCRITE DANS UNE PLACE — et descend tant que la place a des étages.

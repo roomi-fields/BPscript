@@ -5,7 +5,7 @@
 // ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
 //    voyage pas jusqu'aux consommateurs, une clé si.
 
-def digital (resolvedBy:Kairos, resolves:function, name:digital, type:digital, section:objects)
+def digital (documented:yes, resolvedBy:Kairos, resolves:function, name:digital, type:digital, section:objects)
 
 def scaleshift (description:"Transposition SCALAIRE (diatonique) : décalage de N degrés d'alphabet (Sa +2 → Ga). Préserve les degrés, pas les intervalles (en gamme inégale). Anciennement rotate-HAUTEUR ; distinct du ![rotate] de structure (moteur BPx).", rank:10, params(n(from:value, coerce:raw, default:0, description:"Nombre de degrés de décalage dans l'alphabet (peut être négatif ; report de registre aux bornes).")))
 

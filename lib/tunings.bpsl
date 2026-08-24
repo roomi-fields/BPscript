@@ -5,7 +5,7 @@
 // ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
 //    voyage pas jusqu'aux consommateurs, une clé si.
 
-def tunings (resolvedBy:Kairos, resolves:tuning)
+def tunings (documented:yes, resolvedBy:Kairos, resolves:tuning)
 
 def western_12TET (description:"Standard Western equal temperament", alphabet:western, temperament:12TET, degrees(0, 2, 4, 5, 7, 9, 11))
 

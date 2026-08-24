@@ -20,6 +20,7 @@
 
 import { LIBS as BUNDLED_LIBS } from './libs-data.js';
 import { SYNTAXE } from './syntaxe-data.js';
+import { CHAMPS_DE_FICHIER } from './libs-champs.js';
 
 // Registry: pre-loaded libs (browser or Node pre-registration)
 const registry = {};
@@ -1261,7 +1262,10 @@ function describeVocabulary(directives = []) {
   const allDirs = aUneScene ? directives : Object.keys(registry).map((name) => ({ name }));
   const ctx = loadLibsFromDirectives(allDirs);
   const isEntry = (v) => v && typeof v === 'object' && !Array.isArray(v);
-  const META = new Set(['name', 'description', 'version', 'resolvedBy']);
+  // ⛔ LA LISTE DES CHAMPS DE FICHIER NE SE RECOPIE PLUS ICI — celle qui vivait à cette ligne
+  // avait perdu `resolves`, `type`, `section` : elle ne tenait que parce que `isEntry` écarte
+  // déjà les valeurs simples. Une liste redondante est une liste qui périmera sans rougir.
+  const META = CHAMPS_DE_FICHIER;
   const components = {};
   for (const axis of ctx.catalogAxes) {
     const file = loadLib(axis);

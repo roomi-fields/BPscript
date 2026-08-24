@@ -56,11 +56,12 @@ import { readFileSync } from 'node:fs';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
 
-// LES MÉTADONNÉES DU FICHIER, par opposition à ses ENTRÉES. Elles se nomment ICI, une fois : ce
-// garde itère sur les clés de premier niveau, et un champ neuf posé sur le fichier serait sinon lu
-// comme une entrée d'alphabet. Mesuré le 2026-08-10 — `resolves` (l'axe que la librairie résout,
-// nommé avec Kairos) a fait rougir ce garde pour cette seule raison.
-const META_FICHIER = new Set(['name', 'description', 'version', 'domain', 'resolvedBy', 'resolves']);
+// ⛔ CETTE LISTE ÉTAIT UNE COPIE, ET ELLE A FAIT ROUGIR CE GARDE TROIS FOIS POUR LA MÊME RAISON :
+// `resolves` le 2026-08-10, `documented` le 2026-08-24, et son propre commentaire annonçait la
+// troisième — « un champ neuf posé sur le fichier serait sinon lu comme une entrée d'alphabet ».
+// Elle vit désormais en un seul endroit, `libs-champs.js`, et elle y portait `domain`, un nom à
+// ZÉRO occurrence dans la donnée publiée.
+import { CHAMPS_DE_FICHIER as META_FICHIER } from '../src/transpiler/libs-champs.js';
 
 let passe = 0;
 const echecs = [];

@@ -27,6 +27,7 @@
  * et la forme multi-ligne que ce fichier écrivait refusait l'objet imbriqué que celle-ci accepte.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
+import { CHAMPS_DE_FICHIER } from '../src/transpiler/libs-champs.js';
 
 const CLES_LISTES = new Set(['args', 'values', 'scope', 'range']);
 
@@ -41,7 +42,10 @@ const CLES_LISTES = new Set(['args', 'values', 'scope', 'range']);
 function enTexte(s) {
   return '"' + String(s).replace(/"/g, '""') + '"';
 }
-const CHAMPS_DE_FICHIER = new Set(['resolvedBy', 'resolves', 'name', 'description', 'version', 'type']);
+// ⛔ CETTE LISTE ÉTAIT UNE COPIE, ET ELLE AVAIT DÉJÀ DIVERGÉ : elle ignorait `section`, que le
+// générateur du bundle emploie depuis le 2026-08-22. Un champ de fichier qui manque ici ne rougit
+// pas — la boucle des entrées écrit en COMMENTAIRE toute valeur qui n'est pas un objet, donc le
+// champ quitte la donnée sans un mot. Prouvé par injection le 2026-08-24 : `// documented : no`.
 
 /**
  * Une valeur simple se rend nue ; une phrase passe par le texte typé.

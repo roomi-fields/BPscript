@@ -26,7 +26,7 @@
 // (ConsoleMain.c:116). AUCUNE PLAGE N'EST DÉCLARÉE : elle n'a pas été mesurée, et une plage
 // supposée refuserait des valeurs justes ou en accepterait de fausses sans que rien ne le dise.
 
-def time (resolvedBy:Kronos, resolves:time, name:time, description:"Le temps qui S'ÉCOULE — le métronome de la scène. Librairie d'EN-TÊTE, résolue par KRONOS.", version:"1.0.0", section:subgrammar)
+def time (documented:yes, resolvedBy:Kronos, resolves:time, name:time, description:"Le temps qui S'ÉCOULE — le métronome de la scène. Librairie d'EN-TÊTE, résolue par KRONOS.", version:"1.0.0", section:subgrammar)
 
 def tempo (bp3:_mm, args("bpm"), unit:bpm, description:"Metronome absolu de la scene ou de la sous-grammaire, en BPM.", scope("subgrammar", "scene"), unicite:metronome)
 

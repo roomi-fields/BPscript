@@ -23,6 +23,7 @@ import { compileToBPxAST } from '../src/transpiler/index.js';
 // pas les étages. Ce banc vit dans le dépôt, donc il y a accès.
 import { resoudreSource } from '../src/transpiler/bpxAst.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
+import { entreesDe } from '../src/transpiler/libs-champs.js';
 
 let passe = 0;
 const echecs = [];
@@ -161,8 +162,10 @@ for (const [corps, quoi, mot] of [
   // comptait une métadonnée comme une table. Ce qu'il existe pour interdire est une TABLE DE
   // DÉMONSTRATION, qui finirait citée comme référence ; ce qui identifie la librairie elle-même
   // n'en est pas une, et l'écrire est même ce qui empêche son mot d'être déduit du nom de fichier.
-  const METADONNEES = new Set(['domain', 'resolvedBy', 'resolves', 'name', 'description', 'version']);
-  const entrees = Object.keys(LIBS.mapping || {}).filter((k) => !k.startsWith('_') && !METADONNEES.has(k));
+  // ⛔ ET LA LISTE DES CHAMPS DE FICHIER NE SE RECOPIE PLUS ICI. Celle qui vivait à cette ligne a
+  // fait rougir ce volet une seconde fois le 2026-08-24, sur `documented` — même mécanique que
+  // `resolves` deux jours plus tôt. Elle vit en un seul endroit, `libs-champs.js`.
+  const entrees = entreesDe(LIBS.mapping);
   ok(entrees.length === 0,
      `4. lib/mapping.json doit rester VIDE de TABLES — un contenu de démonstration finirait cité `
      + `comme référence. Reçu : ${JSON.stringify(entrees)}`);

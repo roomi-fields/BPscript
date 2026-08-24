@@ -5,7 +5,7 @@
 // ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
 //    voyage pas jusqu'aux consommateurs, une clé si.
 
-def test_alphabets (resolvedBy:Kairos, resolves:alphabet)
+def test_alphabets (documented:no, resolvedBy:Kairos, resolves:alphabet)
 
 // abc · Reproduction FIDELE du fichier natif `-al.abc`, lue en SOUMETTANT chaque candidat au
 // moteur plutot qu'en interpretant le format : une fleche `a --> a'` y declare DEUX TERMES, pas

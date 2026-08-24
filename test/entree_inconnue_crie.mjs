@@ -26,6 +26,7 @@
 // de l'écosystème qui écrivaient l'ancien mot sont migrées. Ce garde suit le mot vivant.
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
+import { CHAMPS_DE_FICHIER } from '../src/transpiler/libs-champs.js';
 
 let passe = 0;
 const echecs = [];
@@ -59,7 +60,7 @@ const SANS_CATALOGUE = Object.entries(LIBS)
   .filter(([nom, lib]) => !CATALOGUES.has(nom) && lib && typeof lib === 'object' && lib.resolvedBy)
   .map(([nom, lib]) => [lib.resolves || nom,
     Object.keys(lib).filter((k) => !k.startsWith('_')
-      && !['name', 'description', 'version', 'resolvedBy', 'resolves'].includes(k))])
+      && !CHAMPS_DE_FICHIER.has(k))])
   // ⚠️ ET LE FILTRE DES CATALOGUES SE REJOUE APRES LA TRADUCTION : `test_alphabets` n'etait pas
   // reconnu comme un axe a catalogue tant qu'on le nommait par son fichier. Traduit en `alphabet`,
   // il l'est — et il doit sortir d'ici, parce que le volet 4 garde deja les axes a catalogue et que

@@ -37,7 +37,7 @@
 // forme n existe ni au moteur d origine, ni dans une seule des 274 scenes, et l arbre ne l
 // appliquait nulle part. Romain l a supprimee. L axe tombe avec elle.
 
-def transpo (resolves:transpo, resolvedBy:"Kairos", name:transpo, description:"Transformations de hauteur résolues par Kairos.", section:controls)
+def transpo (documented:yes, resolves:transpo, resolvedBy:"Kairos", name:transpo, description:"Transformations de hauteur résolues par Kairos.", section:controls)
 
 // _comment : Resolved by the dispatcher before reaching any transport — musical transformations
 

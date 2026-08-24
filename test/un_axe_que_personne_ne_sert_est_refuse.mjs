@@ -25,6 +25,7 @@
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
+import { CHAMPS_DE_FICHIER } from '../src/transpiler/libs-champs.js';
 
 let passe = 0;
 const echecs = [];
@@ -52,7 +53,10 @@ const compiler = (tete) => compileToBPxAST(`core\nalphabet.western\n${tete}\n---
   for (const [nom, f] of Object.entries(LIBS)) {
     if (!f || typeof f !== 'object') continue;
     const entrees = Object.keys(f).filter((k) => !k.startsWith('_')
-      && !['resolvedBy', 'resolves', 'name', 'description', 'version', 'schema', 'defaults', 'symbols', 'settings', 'apporte'].includes(k)
+      && ![...CHAMPS_DE_FICHIER,
+      // Les PLACES de `core`, un autre fait : ce ne sont pas des champs de fichier mais des
+      // conteneurs d'entrées, et `apporte` est la liste des librairies que le socle amène.
+      'schema', 'defaults', 'symbols', 'settings', 'apporte'].includes(k)
       && f[k] && typeof f[k] === 'object' && !Array.isArray(f[k]));
     if (!entrees.length) continue;
     const axe = ALIAS[nom] || nom;

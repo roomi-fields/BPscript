@@ -16,12 +16,16 @@
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
+import { CHAMPS_DE_FICHIER } from '../src/transpiler/libs-champs.js';
 
 let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const messages = (r) => (r.errors || []).map((e) => e.message ?? e).join(' | ');
-const METAS = ['resolvedBy', 'resolves', 'name', 'description', 'version', 'schema', 'defaults', 'symbols', 'settings', 'apporte'];
+const METAS = [...CHAMPS_DE_FICHIER,
+      // Les PLACES de `core`, un autre fait : ce ne sont pas des champs de fichier mais des
+      // conteneurs d'entrées, et `apporte` est la liste des librairies que le socle amène.
+      'schema', 'defaults', 'symbols', 'settings', 'apporte'];
 const entreesDe = (lib) => Object.keys(lib).filter((k) => !k.startsWith('_') && !METAS.includes(k)
   && lib[k] && typeof lib[k] === 'object' && !Array.isArray(lib[k]));
 
