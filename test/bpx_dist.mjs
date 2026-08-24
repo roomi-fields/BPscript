@@ -1,3 +1,6 @@
+// GARDE-SOURCE-VOISINE: porte — ce fichier EST l'unique entrée vers l'artefact de BPx, créée le
+// 2026-08-14 parce que huit de mes gardes y entraient chacun par son chemin. Compter sa ligne, c'est
+// compter la réparation — et la retirer rouvrirait les huit.
 /**
  * LA PORTE UNIQUE VERS L'ARTEFACT CONSTRUIT DE BPx — et elle nomme sa cause quand il manque.
  *

@@ -1,3 +1,6 @@
+// GARDE-SOURCE-VOISINE: instrument — ce fichier PREND L'EMPREINTE de `BPx/dist`, `kairos/dist` et
+// `kronos/dist` : NOMMER ces trois chemins EST son travail, et il ne peut pas faire autrement sans
+// cesser d'être ce qu'il est. Compter ses lignes comme une dette pousse à retirer la mesure.
 /**
  * EMPREINTE DES MOTEURS VOISINS — pour qu'une campagne ne puisse pas mesurer un remplacement en cours.
  *
