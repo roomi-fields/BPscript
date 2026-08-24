@@ -7,6 +7,18 @@
  * voyage pas jusqu'aux consommateurs** — et sortait en **code 0**. Une entrée sur cinq disparaissait
  * du bundle sans qu'un seul signe le dise, et l'outil déclarait la conversion réussie.
  *
+ * ⛔ ET LA RÉPARATION D'ALORS ÉTAIT FAUSSE À SON TOUR — c'est le second temps, et il coûte plus cher
+ * que le premier. J'ai remplacé le commentaire par `def apporte (expression, midi, …)` sur une mesure
+ * que j'avais faite moi-même : *« mesuré à l'oracle, cette graphie COMPILE »*. Elle compile. Elle rend
+ * `{expression:true, midi:true, …}` — un objet de booléens là où la source porte une liste ordonnée de
+ * neuf, et rangé sous la section majoritaire au lieu de la racine. **J'avais mesuré la COMPILATION et
+ * conclu sur la DONNÉE.** La perte muette était devenue un DÉPLACEMENT muet, et ce garde restait vert
+ * parce qu'il cherchait le NOM dans le texte produit. Seule la preuve d'égalité par la porte du bundle
+ * l'a vu : 53 feuilles avant, 59 après, `apporte` parti, neuf booléens venus.
+ *
+ * ⇒ **COMPTER dit ce qui est ÉCRIT ; EXERCER dit ce qui SE PASSE.** Un nom présent dans une source
+ * produite ne dit rien de la donnée qu'elle publiera.
+ *
  * ⇒ **Le refus est bruyant, la perte est muette.** C'est la classe que ce fichier a déjà payée une
  * fois — trois champs laissés derrière avec un « ✅ » — et le compte d'entrées avait été ajouté pour
  * ça. Il ne mordait pas ici : `recenser()` saute les tableaux, donc l'entrée perdue n'était même pas
@@ -58,6 +70,7 @@ ok(catalogues.length > 0,
   + "s'il reste des JSON qu'il ne voit pas, son périmètre est faux. Dans les deux cas il ne veille plus.");
 
 let entreesVues = 0;
+let convertissent = 0;
 for (const nom of catalogues) {
   const j = donneeDe(nom);
   const attendues = entreesDe(j);
@@ -72,6 +85,7 @@ for (const nom of catalogues) {
   }
 
   // Sortie en code 0 : alors CHAQUE entrée doit être là, hors commentaire.
+  convertissent++;
   const rendu = sansCommentaires(r.stdout || '');
   for (const entree of attendues) {
     entreesVues++;
@@ -84,8 +98,21 @@ for (const nom of catalogues) {
   }
 }
 
-ok(entreesVues > 0 || catalogues.every((n) => true),
-  '⛔ aucune entrée examinée sur les catalogues qui convertissent.');
+// ⛔ CE TÉMOIN ÉTAIT MORT-NÉ, ET IL A LAISSÉ PASSER LE JOUR OÙ IL COMPTAIT. Il s'écrivait
+// `entreesVues > 0 || catalogues.every(() => true)` : la seconde branche est vraie par construction,
+// donc l'assertion ne pouvait RIEN refuser. Le 2026-08-24, les deux derniers catalogues réels se sont
+// mis à refuser tous les deux, le volet réel a examiné ZÉRO entrée, et ce garde a rendu vert en
+// affichant « 0 entrée(s) rendue(s) ». **Un garde qui compte doit refuser d'avoir compté zéro** — et
+// un `||` dont un membre est une tautologie neutralise l'autre en silence.
+ok(convertissent === 0 || entreesVues > 0,
+  `⛔ ${convertissent} catalogue(s) convertissent et ZÉRO entrée n'a été examinée — le volet des `
+  + `catalogues réels ne mesure plus rien.`);
+// Et l'inverse : quand plus aucun catalogue ne convertit, le volet réel est ÉTEINT. Ce n'est pas une
+// faute, c'est la fin de son objet — mais il ne veille plus, et ça se dit à voix haute.
+if (!convertissent) {
+  console.log(`[convertisseur sans perte] ⚠️ VOLET RÉEL ÉTEINT — les ${catalogues.length} catalogue(s) `
+    + `restants REFUSENT tous. Ce volet n'exerce plus rien ; seule la matrice fabriquée veille.`);
+}
 
 // ── LA MATRICE DES CLASSES — FABRIQUÉE, jamais espérée dans `lib/` ──────────────────────────────
 // ⛔ UN TOTAL NON NUL CACHE UNE CLASSE VIDE. Compter « 7 entrées rendues » ne dit pas qu'une entrée
@@ -100,7 +127,15 @@ const CLASSES = {
   'valeur scalaire à la racine': {
     __refuse: 'quoi', documented: true, name: 'z', resolves: 'z', quoi: 42, t: { a: { b: 1 } },
   },
+  // ⛔ CETTE CLASSE A CHANGÉ D'ISSUE, ET LE MOTIF VAUT D'ÊTRE RETENU. Elle attendait un SUCCÈS :
+  // l'outil écrivait `def apporte (un, deux)`, la source compilait, le nom apparaissait dans le
+  // rendu, et ce garde était vert. **Il comptait le NOM ÉCRIT ; personne n'exerçait la DONNÉE.**
+  // Passée par le générateur du bundle, cette graphie rend `{un:true, deux:true}` — un objet de
+  // booléens là où la source porte une liste ordonnée. Aucune graphie ne rend une liste en position
+  // d'ENTRÉE (la même parenthèse la rend en position de MEMBRE) : question de langage ouverte, donc
+  // l'outil REFUSE en nommant l'entrée. Ce que ce garde exige ici est ce refus, pas une conversion.
   'tableau à la racine': {
+    __refuse: 'entrée-LISTE',
     documented: true, name: 'z', resolves: 'z', apporte: ['un', 'deux'], t: { a: { b: 1 } },
   },
   'membre imbriqué': { documented: true, name: 'z', resolves: 'z', t: { a: { b: { c: 1 } } } },

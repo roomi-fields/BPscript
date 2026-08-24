@@ -377,17 +377,36 @@ export function convertir(nom, j) {
       // cinq disparaissait du bundle sans qu'un seul signe le dise. Le refus est bruyant, la perte
       // est muette — c'est la seconde fois que ce fichier la paie.
       if (Array.isArray(def)) {
-        // Mesuré à l'oracle, sur le paquet publié : `def apporte (expression, midi, audio)` COMPILE,
-        // à un élément comme à neuf, en noms nus comme en textes. La forme existe ; c'est cet outil
-        // qui ne l'écrivait pas.
-        corps.push(...ecrireEntree(nomE, def.map((x) => rendValeur(nomE, x === null ? '' : x, nom))));
-        corps.push('');
+        // ⛔ ET CE REFUS EN REMPLACE UN RENDU FAUX QUE J'AVAIS ÉCRIT MOI-MÊME, SUR MA PROPRE MESURE.
+        // La ligne d'ici disait : « mesuré à l'oracle, `def apporte (expression, midi, audio)`
+        // COMPILE ». C'était vrai, et ça ne prouvait pas ce que j'en tirais — **j'avais mesuré la
+        // COMPILATION, jamais la DONNÉE**. Passée par le générateur du bundle, cette graphie rend
+        // `{expression:true, midi:true, audio:true}` : un objet de booléens là où la source portait
+        // une liste ordonnée de neuf. La perte muette réparée en mars était revenue sous la forme
+        // d'un DÉPLACEMENT muet — et c'est la forme la plus discrète du repli, celle qui rend un
+        // résultat qui a l'air juste.
+        //
+        // ⇒ AUCUNE GRAPHIE NE REND UNE LISTE COMME ENTRÉE DE LIBRAIRIE, mesuré le 2026-08-24 sur le
+        // générateur, quatre écritures dans le même fichier de sonde :
+        //     def w (a, b)                    →  { a: true, b: true }          objet
+        //     def w ("a", "b")                →  { a: true, b: true }          objet
+        //     def w (liste(a, b))             →  { liste: ["a", "b"] }         LISTE
+        //     def w (x(liste(a, b)))          →  { x: { liste: [...] } }       LISTE
+        //     w(a, b) en tête de fichier      →  REFUSÉ : pas un champ de fichier
+        // La même parenthèse de noms nus rend une LISTE à tous les étages SAUF au premier. C'est une
+        // question de langage ouverte à Romain, pas une graphie à chercher : tant qu'elle n'est pas
+        // tranchée, on REFUSE en nommant l'entrée. Un refus se répare, un déplacement se cherche.
+        refus.push(`${nomE} : entrée-LISTE de ${def.length} élément(s) à la racine — aucune graphie `
+          + `du langage ne rend une liste comme ENTRÉE. Écrite \`def ${nomE} (…)\`, elle revient du `
+          + `bundle en OBJET DE BOOLÉENS et la donnée publiée change. Question de langage ouverte : `
+          + `une parenthèse de noms nus rend une liste en position de MEMBRE et un objet en position `
+          + `d'ENTRÉE.`);
         continue;
       }
       if (typeof def !== 'object' || def === null) {
         refus.push(`${nomE} : une entrée qui vaut ${typeof def} n'a pas de graphie d'entrée — elle `
-          + `serait perdue. Une entrée porte un objet ou une liste ; un scalaire à la racine se `
-          + `déclare comme champ de fichier, pas comme entrée.`);
+          + `serait perdue. Une entrée porte un objet ; un scalaire à la racine se déclare comme `
+          + `champ de fichier, pas comme entrée.`);
         continue;
       }
       for (const [k, v] of Object.entries(def)) {
