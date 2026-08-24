@@ -5561,11 +5561,23 @@ function parse(tokens, opts = {}) {
           + `ni une instance déclarée dans cette scène. Déclarer l'instance d'abord : '<module> ${key}'`,
           keyTok);
       }
-      // v0.8 — référence pointée : `sound.bell_short` (sans COLON)
+      // ⛔ UNE RÉFÉRENCE POINTÉE EST **UN NOM**, JAMAIS UNE PAIRE. Ce site rendait
+      // `{key:'tuning', value:'diapason'}` pour `tuning.diapason` — c'est-à-dire **exactement ce
+      // qu'il rend pour `tuning:diapason`**. Le point APPELLE un composant, le deux-points AFFECTE
+      // une valeur (`LANGUAGE.md:390`) : les confondre ici inverse la règle d'or mot pour mot, et
+      // fait perdre deux choses d'un coup — la liste devient un objet, et l'ORDRE disparaît alors
+      // qu'une parenthèse doit le préserver (`FORME-OBJET.md:288`).
+      //
+      // ⇒ Le membre porte donc son nom ENTIER — `tuning.diapason` — et `value:true` comme tout nom
+      // nu. `overriddenBy(tuning.diapason, alphabet.diapason)` redevient une LISTE de deux noms.
+      //
+      // ⚠️ RÉPARATION GÉNÉRIQUE, PAS UN CAS : elle porte sur toute référence pointée dans un sac, à
+      // toute profondeur, pas sur `overriddenBy`. Décision de Romain du 2026-08-24 — le compilateur
+      // est générique de bout en bout, aucun contournement.
       if (at(T.PERIOD)) {
         advance(); // .
         const name = expect(T.IDENT).value;
-        pairs.push({ key, value: name, ...sub, ...pos });
+        pairs.push({ key: `${key}.${name}`, value: true, reference: true, ...sub, ...pos });
         finirTerme();
         continue;
       }

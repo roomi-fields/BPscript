@@ -355,8 +355,13 @@ S -> Sa(sound.bell_short) Re`);
   assert('has suffixQualifiers', Array.isArray(sa.suffixQualifiers));
   const rq = sa.suffixQualifiers[0];
   assert('is SettingBag', rq.type === 'SettingBag');
-  assert('pair key=sound', rq.pairs[0].key === 'sound');
-  assert('pair value=bell_short', rq.pairs[0].value === 'bell_short');
+  // ⛔ UNE RÉFÉRENCE POINTÉE EST **UN NOM**, PAS UNE PAIRE. Ce banc assertait `{key:'sound',
+  // value:'bell_short'}` — exactement ce que le parseur rendait pour `sound:bell_short`. Le point
+  // APPELLE un composant, le deux-points AFFECTE une valeur (`LANGUAGE.md:390`) : les deux
+  // graphies rendaient la même chose, et ce banc gravait la confusion.
+  assert('pair key=sound.bell_short', rq.pairs[0].key === 'sound.bell_short');
+  assert('pair est une RÉFÉRENCE, pas une affectation', rq.pairs[0].reference === true
+    && rq.pairs[0].value === true);
 }
 
 // ============================================================
@@ -372,7 +377,10 @@ S -> Sa(vel:80, sound.bell, pan:64)`);
   const rq = ast.subgrammars[0].rules[0].rhs[0].suffixQualifiers[0];
   assert('3 pairs', rq.pairs.length === 3);
   assert('vel:80', rq.pairs[0].key === 'vel' && rq.pairs[0].value === 80);
-  assert('sound:bell', rq.pairs[1].key === 'sound' && rq.pairs[1].value === 'bell');
+  // Même raison qu'au §13 : `sound.bell` est UN nom, `vel:80` est une affectation. Le banc mixte
+  // est justement celui qui doit montrer les DEUX formes côte à côte, distinctes.
+  assert('sound.bell est une référence', rq.pairs[1].key === 'sound.bell'
+    && rq.pairs[1].reference === true && rq.pairs[1].value === true);
   assert('pan:64', rq.pairs[2].key === 'pan' && rq.pairs[2].value === 64);
 }
 

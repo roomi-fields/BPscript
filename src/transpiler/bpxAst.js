@@ -1796,7 +1796,21 @@ function validateReferences(ast, libCtx = {}) {
   const estModeDeParametre = (k) => MODES.some((mode) =>
     k.endsWith(mode) && signauxDeclares.has(k.slice(0, -mode.length)));
 
-  const knownParamKey = (k) => controlNames.has(k) || registry.has(k) || addressKeys.has(k) || digitalFns.has(k) || qualifierKeys.has(k) || instancesDeclarees.has(k) || estModeDeParametre(k);
+  const connuNu = (k) => controlNames.has(k) || registry.has(k) || addressKeys.has(k) || digitalFns.has(k) || qualifierKeys.has(k) || instancesDeclarees.has(k) || estModeDeParametre(k);
+  /**
+   * ⛔ UN NOM POINTÉ DÉSIGNE UN ÉLÉMENT DANS UN ESPACE DE NOMS — sa TÊTE dit où chercher.
+   *
+   * Depuis que le parseur rend `mute.all` comme UN nom au lieu d'une paire `{mute: 'all'}`
+   * (le point APPELLE, le deux-points AFFECTE — `LANGUAGE.md:390`), cette table doit savoir lire
+   * un nom pointé. **La règle est générique et vaut pour toute tête** : la clé est connue quand sa
+   * tête l'est. Que le composant existe est une question DISTINCTE — et elle n'a aujourd'hui aucun
+   * refus, ce qui est inscrit au chantier des refus positionnels (BPS-91), pas ici.
+   */
+  const knownParamKey = (k) => {
+    if (connuNu(k)) return true;
+    const point = typeof k === 'string' ? k.indexOf('.') : -1;
+    return point > 0 && connuNu(k.slice(0, point));
+  };
   // DÉDUPLICATION PAR CLÉ ET PAR LIGNE — et surtout : une paire vue DEUX FOIS ne compte qu'une.
   //
   // La même paire est collectée à deux endroits : dans `payload.params` (replié par le parser,
