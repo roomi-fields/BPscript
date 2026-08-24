@@ -45,6 +45,21 @@ const RETRAITS_ASSUMES = [
     pourquoi: "un gabarit de réglages natifs n'est pas une librairie (décision Romain 2026-08-21) — "
             + 'il a sa porte, `src/transpiler/gabarits-data.js`, et sa CLÉ ne change pas. '
             + 'bp3-frontend a simulé la bascule chez lui avant la frappe : 30/30 → 29/29, vert.' },
+  { cle: 'mapping', date: '2026-08-24',
+    pourquoi: "une place qui ne porte aucune donnée n'a pas de fichier (décision Romain 2026-08-24, "
+            + '« à supprimer ») — quatre clés, ZÉRO table, 911 octets entièrement de métadonnée et de '
+            + 'glose. MESURÉ AVANT LA FRAPPE sur DEUX compilateurs complets, l\'un avec le catalogue '
+            + "et l'autre sans : `in.midi pedale mapping.fcb_std` est refusé des deux côtés, avec LE "
+            + "MÊME MESSAGE mot pour mot. Le mot ne se dérive pas du catalogue, et les deux états "
+            + 'sont indiscernables pour un auteur. Les 14 dépôts rendus par `tour lecteurs --sur '
+            + 'mapping` préavisés avant la frappe, avec le FICHIER et la CLÉ nommés séparément — un '
+            + 'miroir recopié à la main ne reconnaît que le premier — et QUATRE issues, dont celle '
+            + "qui casse : un compte de librairies figé sur 26. ⛔ ET L'AFFIRMATION QUE LE FICHIER "
+            + "PORTAIT A ÉTÉ RE-MESURÉE AVANT D'ÊTRE OPPOSÉE : `_resolves_doc` écrivait que sans ce "
+            + 'champ le chargeur retombe sur le nom du fichier. Vrai — une librairie sans `resolves` '
+            + "s'invoque bien par son nom de fichier. Et incomplet : écrire `resolves` n'empêche pas "
+            + "cette invocation, la librairie répond aux DEUX mots. Le champ AJOUTE un mot, il n'en "
+            + 'FIXE pas un.' },
   { cle: 'mod', date: '2026-08-23',
     pourquoi: "le catalogue des modules est ARCHIVÉ (décision Romain 2026-08-23, « on sort `mod` "
             + "et la section correspondante est sortie/archivée. Idem pour `module.X` ») — il vit "

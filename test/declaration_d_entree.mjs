@@ -23,7 +23,6 @@ import { compileToBPxAST } from '../src/transpiler/index.js';
 // pas les étages. Ce banc vit dans le dépôt, donc il y a accès.
 import { resoudreSource } from '../src/transpiler/bpxAst.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
-import { entreesDe } from '../src/transpiler/libs-champs.js';
 
 let passe = 0;
 const echecs = [];
@@ -44,8 +43,9 @@ const compile = (corps) => {
  * La séparation était déjà écrite ici (§2, « on sépare donc les deux questions »), et elle tenait
  * par un défaut : la porte livrait l'arbre d'un refus, donc une seule fonction servait les deux. Un
  * compilateur qui refuse ne livre plus rien en aval ; la seconde question passe donc par l'étage,
- * qui est fait pour elle. `lib/mapping.json` est VIDE par décision de Romain (2026-07-27), donc
- * TOUTE table invoquée crie — et sans l'étage, aucune scène qui en nomme une ne serait mesurable.
+ * qui est fait pour elle. AUCUNE table n'existe — le catalogue `mapping` est retiré depuis le
+ * 2026-08-24 — donc TOUTE table invoquée crie, et sans l'étage aucune scène qui en nomme une ne
+ * serait mesurable.
  */
 const resoudre = (corps) => {
   try { return resoudreSource(`${EN_TETE}${corps}\n`); }
@@ -68,8 +68,9 @@ ok(SORTIE.includes('audio') && !ENTREE.includes('audio'),
    "1. 'audio' est une SORTIE et pas une entrée — les deux listes ne se confondent pas");
 
 // ─── 2. LA DÉCLARATION, dans ses formes valides ──────────────────────────────────────────────
-// ⚠️ UNE TABLE INEXISTANTE CRIE depuis l'arbitrage du 2026-07-27 (`lib/mapping.json` est vide par
-// décision, donc TOUTE table invoquée crie aujourd'hui). Ce n'est pas ce que ce §2 mesure : il
+// ⚠️ UNE TABLE INEXISTANTE CRIE depuis l'arbitrage du 2026-07-27, et depuis le 2026-08-24 il n'y a
+// plus de catalogue du tout — le refus est le MÊME, mesuré mot pour mot sur deux compilateurs
+// complets avant le retrait. Ce n'est pas ce que ce §2 mesure : il
 // mesure que la DÉCLARATION est LUE telle qu'écrite. On sépare donc les deux questions — la forme
 // est-elle portée, et la référence résout-elle — au lieu de les confondre dans un seul verdict.
 for (const [corps, quoi, attendu, crie] of [
@@ -150,32 +151,27 @@ for (const [corps, quoi, mot] of [
   ok((r.ast?.libRefs || []).includes('mapping.fcb_std'),
      `4. l'adresse de la table doit être ÉMISE — libRefs = ${JSON.stringify(r.ast?.libRefs ?? null)}`);
 }
-// La librairie existe et reste VIDE tant que Romain n'a pas donné de table.
-// ⚠️ 2026-08-10 (mise en conformité des librairies) : `domain` est retiré partout, remplacé par
-// `resolvedBy` — mais lib/mapping.json n'en porte PAS : aucune source mesurée ne nomme l'outil qui
-// résout une table à l'exécution (cf. son `_resolvedBy_doc`), signalé à Romain plutôt qu'inventé.
-// Cette assertion ne teste donc plus qu'un champ ABSENT, ce qui reste vrai des deux côtés du
-// renommage.
-{
-  // ⛔ « VIDE DE CONTENU » N'EST PAS « VIDE DE TOUT », et ce volet ne le distinguait pas. Le
-  // 2026-08-22, écrire la clé `resolves` — le MOT qui invoque la librairie — l'a fait rougir : il
-  // comptait une métadonnée comme une table. Ce qu'il existe pour interdire est une TABLE DE
-  // DÉMONSTRATION, qui finirait citée comme référence ; ce qui identifie la librairie elle-même
-  // n'en est pas une, et l'écrire est même ce qui empêche son mot d'être déduit du nom de fichier.
-  // ⛔ ET LA LISTE DES CHAMPS DE FICHIER NE SE RECOPIE PLUS ICI. Celle qui vivait à cette ligne a
-  // fait rougir ce volet une seconde fois le 2026-08-24, sur `documented` — même mécanique que
-  // `resolves` deux jours plus tôt. Elle vit en un seul endroit, `libs-champs.js`.
-  const entrees = entreesDe(LIBS.mapping);
-  ok(entrees.length === 0,
-     `4. lib/mapping.json doit rester VIDE de TABLES — un contenu de démonstration finirait cité `
-     + `comme référence. Reçu : ${JSON.stringify(entrees)}`);
-  // ET LA CONTREPARTIE : la librairie s'identifie quand même, sinon « vide » deviendrait un prétexte
-  // à ne rien déclarer du tout, et son mot repartirait se déduire du nom du fichier.
-  ok(typeof LIBS.mapping?.resolves === 'string' && LIBS.mapping.resolves,
-     `4. lib/mapping.json déclare le MOT qui l'invoque — sans lui le chargeur retombe sur le nom du `
-     + `fichier, et renommer le fichier changerait le langage sans un mot. Reçu : `
-     + `${JSON.stringify(LIBS.mapping?.resolves)}`);
-}
+// ⛔ LE CATALOGUE `mapping` N'EXISTE PLUS, ET CE VOLET PART AVEC LUI. Décision de Romain,
+// 2026-08-24 : *une place qui ne porte aucune donnée n'a pas de fichier*. Quatre clés, zéro table.
+// Ce qu'il mesurait — « la librairie reste VIDE de tables » — n'a plus d'objet : il n'y a plus de
+// librairie. Le remplacer par un volet « la clé est absente » ferait un garde qui surveille un
+// fichier supprimé, c'est-à-dire rien.
+//
+// ⛔ ET L'AFFIRMATION QU'IL RÉPÉTAIT A ÉTÉ RE-MESURÉE AVANT DE PARTIR, plutôt que retirée en
+// silence. Elle disait : *« sans ce champ le chargeur retombe sur le NOM DU FICHIER : le mot est
+// alors juste par coïncidence. »* Mesuré le 2026-08-24 sur deux librairies fabriquées, avec témoin
+// négatif et témoin positif :
+//     librairie SANS `resolves`, invoquée par son nom de fichier          ✓ ACCEPTÉE
+//     librairie dont `resolves` DIFFÈRE, par son nom de fichier           ✓ ACCEPTÉE
+//     la même, par son `resolves`                                         ✓ ACCEPTÉE
+//     un mot qu'aucune librairie ne porte                                 ⛔ REFUSÉ
+// ⇒ Le premier membre est VRAI, le second FAUX EN CREUX : écrire `resolves` n'empêche pas
+// l'invocation par le nom de fichier — la librairie répond aux DEUX. **Le champ AJOUTE un mot, il
+// n'en FIXE pas un.** L'écart est routé aux consommateurs avec sa pièce, jamais opposé sans elle.
+//
+// ⚠️ CE QUE LE §2 CI-DESSUS CONTINUE DE COUVRIR : `mapping.<table>` reste refusé, et la forme de la
+// déclaration reste lue telle qu'écrite. Mesuré avant la frappe sur deux compilateurs complets — le
+// message de refus est IDENTIQUE mot pour mot avec et sans le catalogue.
 
 // ─── 5. L'ADRESSE AU POINT D'USAGE — côté droit IDENTIFIANT ──────────────────────────────────
 {

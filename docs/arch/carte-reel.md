@@ -5,7 +5,7 @@
 > vit dans le document d'architecture, chez Atlas, qui cite celui-ci.
 ## Ce qui est mesuré
 
-- **19 modules** dans `src/transpiler/`, **14570 lignes**.
+- **19 modules** dans `src/transpiler/`, **14568 lignes**.
 - Le **rôle** est lu dans l'en-tête de chaque fichier, verbatim — jamais interprété.
 - Les **arêtes** sont les imports d'un module vers un voisin du même dossier.
 
@@ -26,7 +26,7 @@
 | `libs-champs.js` | 78 | 0 | 2 | LES CHAMPS DE FICHIER D'UNE LIBRAIRIE — déclarés UNE FOIS, pour tous mes lecteurs. |
 | `libs-bundle-check.js` | 76 | 0 | 0 | — |
 | `syntaxe-bundle.mjs` | 64 | 0 | 0 | GÉNÉRATEUR DE LA PORTE DU SCHÉMA DE SYNTAXE. |
-| `libs-data.js` *(généré)* | 62 | 0 | 3 | — |
+| `libs-data.js` *(généré)* | 60 | 0 | 3 | — |
 | `gabarits-bundle.mjs` | 57 | 0 | 0 | GÉNÉRATEUR DE LA PORTE DES GABARITS DE RÉGLAGES NATIFS. |
 | `libs-types.js` | 56 | 1 | 0 | GÉNÉRATEUR DU TYPE DU PAQUET — `libs-data.d.ts`. |
 | `index.js` | 38 | 2 | 1 | BPScript Transpiler — Façade |

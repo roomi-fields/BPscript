@@ -34,7 +34,7 @@
  * l'architecte pour routage, PAS corrigé ici : le contenu appartient à qui le spécifie, la forme
  * seule est ma part.
  */
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { LIBS } from '../src/transpiler/libs-data.js';
 import path from 'node:path';
 
@@ -110,19 +110,48 @@ for (const [f, donnee] of Object.entries(LIBS)) {
 }
 
 // ── SOCLE — contre le vert obtenu en ne lisant plus rien ─────────────────────────────────────
-// SOCLE ABAISSÉ DE 15 À 14 le 2026-08-22 : `lib/modulation.json` est ARCHIVÉE (décision de
-// Romain, remplacée par FaustX) et a quitté le dossier. Le seuil suit le dossier, il ne le
-// commande pas — le laisser à 15 aurait fait rougir ce garde pour un retrait voulu, et l'abaisser
-// sans cette ligne aurait rendu le prochain retrait indolore.
-// PUIS DE 14 À 13 le 2026-08-23 : `lib/mod.json` est ARCHIVÉ à son tour (décision de Romain,
-// « on sort `mod` et la section correspondante est sortie/archivée »). Chaque abaissement porte sa
-// cause et sa date — un socle qui descend sans dire pourquoi ne se distingue pas d'un socle desserré.
-// ⚠️ LE SOCLE COMPTE MAINTENANT DES CLÉS DU PAQUET, plus des fichiers d'un dossier : 26 clés
-// publiées le 2026-08-23. C'est le MÊME espace — toutes les librairies — mesuré par la porte qui ne
-// dépend pas du format des sources.
-ok(champs >= 26,
-   `SOCLE : ${champs} librairie(s) lue(s), 26 au moins attendues. Sous ce seuil ce garde est vert `
- + `parce qu'il ne balaie plus la donnée, pas parce qu'elle est propre.`);
+//
+// ⛔ CE SOCLE ÉTAIT UN SEUIL CALÉ SUR L'EXISTANT, ET IL PORTAIT LE DÉFAUT QUE ROMAIN A NOMMÉ LE
+// 2026-08-24 : il s'écrivait `champs >= 26`, et il a été abaissé trois fois — 15, puis 14, puis 13,
+// puis recompté en clés à 26. **Un seuil réajusté à chaque retrait ne mord jamais sur le retrait
+// qu'il accompagne : il mord sur le SUIVANT, avec un message qui parle du PRÉCÉDENT.** Il refusait
+// donc toujours le mauvais geste, un cran trop tard.
+//
+// ⇒ IL DEVIENT UNE ASSERTION D'INCLUSION, DANS LES DEUX SENS, et plus aucun nombre ne s'y écrit :
+//     tout fichier posé à la racine de `lib/` a sa clé dans le paquet   — sinon le producteur
+//                                                                        a cessé de le lire en silence
+//     toute clé non préfixée du paquet a son fichier à la racine        — sinon le paquet publie
+//                                                                        un fantôme
+// Un retrait VOULU retire les deux ensemble et reste vert. Un rétrécissement SUBI en casse un seul
+// et rougit — ce qu'aucun seuil ne distinguait.
+//
+// ⚠️ ET L'INCLUSION NE CONNAÎT AUCUNE EXTENSION. C'est exactement le point qui a rendu ce garde
+// aveugle le 2026-08-23, quand quatre catalogues sont passés de `.json` à `.bpsl` : il n'en lisait
+// plus que 9 sur 13, et seul le socle l'a dit. On compare des NOMS, jamais des formats.
+{
+  const racine = readdirSync(LIB).filter((e) => !statSync(path.join(LIB, e)).isDirectory());
+  const nomDe = (f) => f.slice(0, f.lastIndexOf('.'));
+  const clesNues = Object.keys(LIBS).filter((k) => !k.includes('/'));
+
+  ok(racine.length > 0 && clesNues.length > 0,
+     `SOCLE : ${racine.length} fichier(s) à la racine de lib/ et ${clesNues.length} clé(s) nue(s) au `
+   + `paquet. Un ensemble vide rend l'inclusion vraie sans rien avoir comparé.`);
+
+  const nonLus = racine.filter((f) => !clesNues.includes(nomDe(f)));
+  ok(nonLus.length === 0,
+     `SOCLE : ${nonLus.length} fichier(s) de lib/ SANS clé au paquet — ${nonLus.join(', ')}. Le `
+   + `producteur a cessé de les lire, et rien d'autre ne le dirait : un lecteur qui range par `
+   + `extension continue sur moins de données en restant vert.`);
+
+  const fantomes = clesNues.filter((k) => !racine.some((f) => nomDe(f) === k));
+  ok(fantomes.length === 0,
+     `SOCLE : ${fantomes.length} clé(s) publiée(s) SANS fichier à la racine — ${fantomes.join(', ')}. `
+   + `Le paquet publie une librairie que la source ne porte plus.`);
+
+  ok(champs === Object.keys(LIBS).length,
+     `SOCLE : ${champs} librairie(s) balayée(s) pour ${Object.keys(LIBS).length} clé(s) au paquet — `
+   + `le volet A n'a pas traversé tout l'espace qu'il prétend couvrir.`);
+}
 
 if (echecs.length) {
   console.error(`❌ on ne spécifie que ce qui est présent : ${echecs.length} échec(s)`);
