@@ -9,7 +9,7 @@
     "typecheck": "npm run typecheck:digital && npm run typecheck:homomorphism",
     "typecheck:digital": "tsc -p tsconfig.digital.json",
     "typecheck:homomorphism": "tsc -p tsconfig.homomorphism.json",
-    "verify": "npm run arch --silent && npm run typecheck --silent && npm run bundle:check --silent && node test/ast_conformance.mjs && node test/run_guards.mjs && npm run garde:documentaires --silent && npm run garde:source-voisine --silent && npm run garde:carte --silent",
+    "verify": "npm run arch --silent && npm run typecheck --silent && npm run bundle:check --silent && node test/ast_conformance.mjs && node test/run_guards.mjs && npm run garde:documentaires --silent && npm run garde:source-voisine --silent && npm run garde:carte --silent && npm run garde:assiette --silent",
     "bundle:libs": "node src/transpiler/libs-bundle.js > src/transpiler/libs-data.js.tmp && node scripts/basculer-le-paquet.mjs src/transpiler/libs-data.js.tmp && mv src/transpiler/libs-data.js.tmp src/transpiler/libs-data.js && npm run bundle:types --silent && npm run bundle:syntaxe --silent && npm run bundle:gabarits --silent",
     "bundle:check": "node src/transpiler/libs-bundle-check.js",
     "prepare": "npm run bundle:libs && (npm run gate:install || true)",
@@ -21,6 +21,8 @@
     "garde:source-voisine": "python3 ~/dev/bp/hub/tools/garde-source-voisine.py",
     "carte": "node scripts/carte-du-reel.mjs",
     "garde:carte": "node scripts/carte-du-reel.mjs --verifier",
+    "assiette": "node scripts/assiette.mjs",
+    "garde:assiette": "node scripts/assiette.mjs --verifier",
     "bundle:syntaxe": "node src/transpiler/syntaxe-bundle.mjs > src/transpiler/syntaxe-data.js.tmp && mv src/transpiler/syntaxe-data.js.tmp src/transpiler/syntaxe-data.js",
     "bundle:gabarits": "node src/transpiler/gabarits-bundle.mjs > src/transpiler/gabarits-data.js.tmp && mv src/transpiler/gabarits-data.js.tmp src/transpiler/gabarits-data.js"
   },
@@ -47,5 +49,25 @@
     "./src/transpiler/libs-champs.js": "./src/transpiler/libs-champs.js",
     "./src/transpiler/syntaxe-data.js": "./src/transpiler/syntaxe-data.js",
     "./src/transpiler/gabarits-data.js": "./src/transpiler/gabarits-data.js"
-  }
+  },
+  "files": [
+    "public/editor/bp3-parser.js",
+    "public/editor/bpscript-lang.js",
+    "public/editor/bpscript-parser.js",
+    "src/transpiler/actorResolver.js",
+    "src/transpiler/bpxAst.js",
+    "src/transpiler/constants.js",
+    "src/transpiler/controlValidation.js",
+    "src/transpiler/gabarits-data.js",
+    "src/transpiler/index.js",
+    "src/transpiler/libs-champs.js",
+    "src/transpiler/libs-data.d.ts",
+    "src/transpiler/libs-data.js",
+    "src/transpiler/libs.js",
+    "src/transpiler/orderTokens.js",
+    "src/transpiler/parser.js",
+    "src/transpiler/segmentation.js",
+    "src/transpiler/syntaxe-data.js",
+    "src/transpiler/tokenizer.js"
+  ]
 }
