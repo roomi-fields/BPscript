@@ -444,6 +444,12 @@ for (const [name, data] of Object.entries(libs).sort(([a], [b]) => (a < b ? -1 :
   output += `LIBS["${name}"] = ${JSON.stringify(data)};\n\n`;
 }
 
+// ⛔ CHAQUE CLÉ PUBLIÉE PORTE SON ENTRÉE, VIDE SI ELLE N'A AUCUNE PLACE. Ma première écriture ne
+// nommait que les treize catalogues qui en ont : pour les treize autres, `PLACES[nom]` rendait
+// `undefined`, et « je n'ai pas de place » ne se distinguait pas de « je n'ai rien déclaré ».
+// Atlas et runtime-midi l'ont relevé le même jour, indépendamment — et c'est le TROISIÈME ÉTAT que
+// runtime-midi venait de me faire fermer sur `documented`, deux heures plus tôt, sur un autre champ.
+//
 // ⛔ LES PLACES SE PUBLIENT, parce qu'un consommateur ne peut pas les déduire. Pour une source
 // écrite dans le langage, ce générateur les CONNAÎT — il vient de les créer. Pour un catalogue
 // encore en JSON, il les déduit par la forme, et cette déduction rate une place VIDE : le champ
@@ -458,14 +464,14 @@ for (const [nom, data] of Object.entries(libs).sort(([a2], [b2]) => (a2 < b2 ? -
   // ⛔ UNE SOURCE ÉCRITE DANS LE LANGAGE NE SE DÉDUIT JAMAIS : ce générateur a créé ses places, donc
   // il les connaît, y compris quand il n'y en a AUCUNE. Le repli est réservé à ce qu'il n'a pas écrit.
   if (ecritesDansLeLangage.has(nom)) {
-    const connues = places[nom];
-    if (connues) PLACES[nom] = [...connues].sort();
+    PLACES[nom] = [...(places[nom] || [])].sort();
     continue;
   }
   const parLaForme = Object.keys(data || {}).filter((k) => !k.startsWith('_')
     && !CHAMPS_DE_FICHIER.has(k) && data[k] && typeof data[k] === 'object'
     && !Array.isArray(data[k]) && tousObjets(data[k]));
-  if (parLaForme.length) { PLACES[nom] = parLaForme.sort(); deduites.push(nom); }
+  PLACES[nom] = parLaForme.sort();
+  deduites.push(nom);
 }
 output += `const PLACES = ${JSON.stringify(PLACES)};\n`;
 output += `PLACES._deduites = ${JSON.stringify(deduites.sort())};\n\n`;

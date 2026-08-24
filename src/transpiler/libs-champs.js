@@ -36,15 +36,25 @@
  * voyage JAMAIS jusqu'aux consommateurs : **zéro occurrence dans le paquet publié**, mesuré à
  * toutes les profondeurs. Tous les autres champs se publient.
  *
+ * ⚠️ ET UNE PLACE DIT OÙ UNE CHOSE VIT, JAMAIS CE QU'UN AUTEUR PEUT ÉCRIRE. Atlas a branché ses
+ * fiches sur `PLACES` et publié 79 fausses entrées : `engine.print` vit dans une place et il est
+ * REFUSÉ à l'invocation. Les deux questions se ressemblent et n'ont pas la même réponse — ce
+ * registre sert à ÉCARTER les enveloppes, pas à y descendre chercher du vocabulaire.
+ *
  * ⚠️ Le 2026-08-24 j'ai écrit à Kairos et à Atlas « `section`, que je publie depuis le 2026-08-22 ».
  * C'était faux, et la phrase juste était écrite dans mon propre générateur, à trois lignes de la
  * liste que je lisais. Kairos a mesuré 0 occurrence dans trois de mes états et a répondu avec sa
  * mesure au lieu de me croire. **Un champ de fichier n'est pas un champ publié.**
  *
- * `documented` DIT SI LE CATALOGUE ENTRE DANS L'AIDE PUBLIÉE, en DEUX MOTS, `yes` et `no`. Ce
- * n'est pas un booléen, et c'est une mesure qui le dit : le langage n'a pas de littéral booléen,
- * donc `documented:false` écrit dans une source de librairie rend la CHAÎNE "false", qui est VRAIE.
- * Compare le MOT, jamais la vérité de la valeur, et refuse un troisième mot.
+ * `documented` DIT SI LE CATALOGUE ENTRE DANS L'AIDE PUBLIÉE, en DEUX MOTS, `yes` et `no`.
+ * **Compare le MOT, jamais la vérité de la valeur** — `Boolean("no")` est VRAI — et refuse un
+ * troisième mot.
+ *
+ * ⛔ ET LA RAISON QUE CETTE PORTE PORTAIT ÉTAIT FAUSSE, sur une surface publiée. Elle disait « le
+ * langage n'a pas de littéral booléen, donc `documented:false` rend la CHAÎNE "false" ». Mesuré au
+ * PARSEUR — vrai — et conclu sur le PAQUET, où c'est faux : le générateur rend `'true'` et `'false'`
+ * à leur nature, et ce paquet porte 74 booléens réels. **Mesuré à un étage, conclu sur le suivant**,
+ * puis routé à quatre destinataires comme un argument. runtime-midi l'a réfuté avec ce paquet même.
  */
 export const CHAMPS_DE_FICHIER = new Set([
   'resolvedBy', 'resolves', 'name', 'description', 'version', 'type', 'section', 'documented',

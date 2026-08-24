@@ -16,6 +16,14 @@
     "midi_default"
   ],
   "schema": {
+    "_grammarWords_doc": "LES MOTS AVEC LESQUELS ON ECRIT LA STRUCTURE. Decision Romain, 2026-08-21 : le vocabulaire se partage en trois — la GRAMMAIRE, qu un auteur ne peut jamais ombrer ; le SOCLE, qui ne bouge pas ; les LIBRAIRIES, ombrables et dont l ombrage s annonce. Cette liste porte la premiere categorie. Elle est un PLANCHER : ce qui n a pas su etre construit ne compte pas comme une absence.",
+    "grammarWords": {
+      "qualite": "plancher",
+      "methode": "epreuve de substitution : la meme ligne ecrite deux fois — avec le mot puis avec un nom fabrique. Si la ligne cesse d etre lue de la meme facon alors le mot porte la structure. Un releve sur le code ne l etablit PAS : il rend un melange de natures de noeud et de mots du langage.",
+      "perimetre": "19 candidats eprouves le 2026-08-24 depuis trois sources : les comparaisons du parseur · le schema de syntaxe publie · les cinq mots que la decision du 2026-08-21 nomme.",
+      "mots": ["actor", "core", "def", "in", "init", "mode", "object", "out", "seed", "terminal"],
+      "sortisDuLangage": ["object"]
+    },
     "catalogAxes": [
       "alphabet",
       "tuning",

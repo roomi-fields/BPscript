@@ -8,11 +8,18 @@
  * ⛔ LA SÉPARATION SE FAIT À LA DOCUMENTATION, PAS À L'INVOCATION. `alphabet.abc` compile
  * exactement comme avant — c'est le volet C, et il FABRIQUE le cas au lieu de le supposer.
  *
- * ⛔ ET LE CHAMP N'EST PAS UN BOOLÉEN, PAR MESURE. Le langage n'a pas de littéral booléen : dans un
- * `.bpsl`, `documented:false` rend la CHAÎNE "false", qui est VRAIE. Un lecteur qui teste la vérité
- * de la valeur publie exactement ce que la donnée lui demande de cacher. Deux mots, `yes` et `no`,
- * et le troisième est refusé — sans quoi une faute de frappe (`non`, `No`) se lit comme `yes` chez
- * qui compare, et comme rien chez qui compte.
+ * ⛔ LE CHAMP PORTE UN MOT, ET LE TROISIÈME MOT EST REFUSÉ — une faute de frappe (`non`, `No`) se
+ * lit comme `yes` chez qui compare la vérité de la valeur, et comme rien chez qui compte.
+ *
+ * ⚠️ ET LA RAISON QUE CE GARDE PORTAIT ÉTAIT FAUSSE. Il disait « le langage n'a pas de littéral
+ * booléen : `documented:false` rend la CHAÎNE "false" ». Mesuré au PARSEUR — vrai — et conclu sur le
+ * PAQUET, où c'est faux : `libs-bundle.js` rend `'true'` et `'false'` à leur nature, et mon paquet
+ * porte 74 booléens réels. **J'ai mesuré à un étage et conclu sur le suivant**, puis routé
+ * l'argument à quatre destinataires. runtime-midi l'a réfuté avec mon propre paquet publié.
+ *
+ * ⇒ Ce qui reste vrai est plus étroit : le champ porte UNE graphie. Deux graphies pour un fait — un
+ * mot ici, un booléen là — se lisent différemment chez deux lecteurs, et c'est ce que ce garde tient.
+ * **Le choix entre le mot et le booléen se refait sur la mesure juste ; il n'est pas tranché ici.**
  *
  * ⚠️ CE QUI A RENDU LA DÉCISION NÉCESSAIRE, ET QUI EST DE MOI : `test_alphabets` et `alphabets`
  * déclarent LE MÊME MOT. Le 2026-08-23 la conversion d'`alphabets` a changé son rang dans le
@@ -21,7 +28,7 @@
  *
  * LES VOLETS :
  *   A. tout catalogue qui déclare un mot porte le champ — et le compte refuse d'avoir vu zéro
- *   B. la valeur est l'un des DEUX MOTS, jamais un booléen, jamais un troisième mot
+ *   B. TOUT le paquet le porte — l'absence était un TROISIÈME état, mesuré par runtime-midi
  *   C. la séparation n'est PAS à l'invocation : une entrée non documentée compile
  *   D. le champ DISCRIMINE — un champ qui dirait `yes` partout n'exercerait rien chez le lecteur
  *   E. le convertisseur rend le champ, et on l'EXERCE au lieu de le compter
@@ -54,8 +61,10 @@ function juger(nom, lib) {
   }
   const v = lib.documented;
   if (typeof v !== 'string') {
-    return `${nom}.documented porte un ${typeof v} (${JSON.stringify(v)}) — le champ est un MOT. `
-      + `Un booléen ne survit pas à l'authoring \`.bpsl\` : il en ressort en chaîne, et "false" est vrai.`;
+    return `${nom}.documented porte un ${typeof v} (${JSON.stringify(v)}) — le champ porte UN MOT, `
+      + `et une seule graphie. Deux graphies pour un même fait se lisent différemment chez deux `
+      + `lecteurs : celui qui compare au mot ne voit pas le booléen, celui qui teste la vérité ne `
+      + `voit pas la différence entre "no" et "yes".`;
   }
   if (!MOTS.has(v)) {
     return `${nom}.documented vaut ${JSON.stringify(v)} — les deux mots sont ${[...MOTS].join(' et ')}. `
@@ -78,16 +87,31 @@ ok(catalogues.length >= 20,
   console.log(`[documented] ${catalogues.length} catalogue(s) examiné(s) sur ${Object.keys(LIBS).length} clés publiées`);
 }
 
-// ── B. LES TROIS CATALOGUES SANS MOT NE LE PORTENT PAS ───────────────────────────────────────
-// ⛔ ET CE VOLET DIT LE PROPOS, PAS L'INVENTAIRE. Les instantanés de réglages BP3 ne déclarent
-// aucun mot, donc aucune fiche ne les recense : leur donner le champ affirmerait qu'ils sont
-// documentés. On n'exige pas leur nombre — on exige que le champ ne s'y invite pas.
+// ── B. ⛔ TOUT LE PAQUET LE PORTE — L'ABSENCE ÉTAIT UN TROISIÈME ÉTAT ─────────────────────────
+// ⛔ CE VOLET DISAIT L'INVERSE, ET C'EST runtime-midi QUI L'A RENVERSÉ, LE JOUR MÊME. J'avais borné
+// le champ aux catalogues qui déclarent un mot, parce que c'est ce que le générateur de fiches lit.
+// Sa mesure :
+//
+//     23 catalogues le portent · 3 ne le portent pas · ABSENT n'est pas "no"
+//
+// ⇒ Un lecteur qui énumère TOUT le paquet et écrit `=== "yes"` a raison 23 fois et se trompe 3 fois
+//   EN SILENCE. Un champ qui dit un fait à deux états en portait TROIS à la lecture.
+//
+// Les trois instantanés de réglages BP3 portent donc `documented:no`, et c'est vrai : aucune fiche
+// ne les recense. Le périmètre du générateur de fiches n'a pas à décider de la forme d'un champ que
+// tout le monde lit.
 {
-  const sansMot = Object.entries(LIBS).filter(([, l]) => l && typeof l === 'object' && !l.resolves);
-  const bavards = sansMot.filter(([, l]) => 'documented' in l).map(([n]) => n);
-  ok(bavards.length === 0,
-    `B. ${bavards.join(', ')} ne déclare aucun mot et porte pourtant 'documented' — le champ dirait `
-    + `d'une donnée qu'elle est documentée là où aucune fiche ne la recense.`);
+  const muets = Object.entries(LIBS)
+    .filter(([, l]) => l && typeof l === 'object' && !Object.prototype.hasOwnProperty.call(l, 'documented'))
+    .map(([n]) => n);
+  ok(muets.length === 0,
+    `B. ⛔ ${muets.join(', ')} ne porte pas 'documented' — l'absence rouvre le TROISIÈME ÉTAT : un `
+    + `lecteur qui compare au mot y lit \`undefined\`, et ABSENT n'est ni "yes" ni "no".`);
+  // ⚠️ ET LE COMPTE COUVRE PLUS QUE LES CATALOGUES À MOT, sinon ce volet répéterait le volet A.
+  const porteurs = Object.values(LIBS).filter((l) => l && typeof l === 'object' && 'documented' in l).length;
+  ok(porteurs > catalogues.length,
+    `B. le champ doit couvrir le paquet ENTIER, pas les seuls catalogues qui déclarent un mot — `
+    + `${porteurs} porteur(s) pour ${catalogues.length} catalogue(s) à mot sur ${Object.keys(LIBS).length} clés.`);
 }
 
 // ── C. LA SÉPARATION EST À LA DOCUMENTATION, PAS À L'INVOCATION ──────────────────────────────

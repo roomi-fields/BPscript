@@ -21,6 +21,13 @@
  *
  * LES VOLETS :
  *   A. chaque place publiée EXISTE dans la donnée et porte des entrées
+ *  A2. chaque clé publiée porte SON entrée, vide si elle n'a pas de place — l'absence était un
+ *      TROISIÈME état, relevé le même jour par Atlas et par runtime-midi, indépendamment
+ *
+ * ⚠️ ET UNE PLACE DIT OÙ UNE CHOSE VIT, JAMAIS CE QU'UN AUTEUR PEUT ÉCRIRE. Atlas a branché ses
+ * fiches dessus et publié 79 fausses entrées — `engine.print` est REFUSÉ, et sa page l'annonçait
+ * comme invocable. Les deux questions se ressemblent et n'ont pas la même réponse : ces places
+ * servent à ÉCARTER les enveloppes, pas à y descendre pour y lire du vocabulaire.
  *   B. la provenance est dite — les déduites sont nommées, et ce sont bien les catalogues en JSON
  *   C. aucune place n'est un champ de fichier, et réciproquement
  *   D. ce que la porte ferme : on FABRIQUE le cas que la forme seule rate
@@ -36,9 +43,9 @@ const nomsDePlaces = Object.entries(PLACES).filter(([k]) => k !== '_deduites');
 
 // ── A. CHAQUE PLACE PUBLIÉE EXISTE ET CONTIENT ───────────────────────────────────────────────
 {
-  ok(nomsDePlaces.length >= 10,
-    `A. SOCLE : au moins dix catalogues doivent déclarer une place — ${nomsDePlaces.length}. Un `
-    + `registre vide serait vert sans rien dire.`);
+  ok(nomsDePlaces.filter(([, c]) => c.length).length >= 10,
+    `A. SOCLE : au moins dix catalogues doivent déclarer une place — `
+    + `${nomsDePlaces.filter(([, c]) => c.length).length}. Un registre vide serait vert sans rien dire.`);
   let comptees = 0;
   const fautives = [];
   for (const [lib, cles] of nomsDePlaces) {
@@ -53,6 +60,24 @@ const nomsDePlaces = Object.entries(PLACES).filter(([k]) => k !== '_deduites');
     `A. ⛔ ${fautives.length} place(s) publiée(s) ne désignent rien : ${fautives.slice(0, 4).join(' · ')}. `
     + `Une place qui nomme un chemin mort est pire qu'une absence : elle a l'air vérifiable.`);
   console.log(`[places] ${nomsDePlaces.length} catalogue(s) · ${comptees} place(s) publiée(s)`);
+}
+
+// ── A2. ⛔ CHAQUE CLÉ PUBLIÉE PORTE SON ENTRÉE — L'ABSENCE ÉTAIT UN TROISIÈME ÉTAT ────────────
+// ⛔ RELEVÉ LE MÊME JOUR PAR DEUX VOISINS, INDÉPENDAMMENT. `PLACES` ne nommait que 13 catalogues :
+// pour les treize autres, `PLACES[nom]` rend `undefined`, et **l'absence ne se distingue pas d'un
+// catalogue SANS places**. C'est le défaut exact que runtime-midi venait de me faire fermer sur
+// `documented` — deux fois dans la même journée, de ma main, sur deux champs différents.
+{
+  const sansEntree = Object.keys(LIBS)
+    .filter((nom) => !Object.prototype.hasOwnProperty.call(PLACES, nom));
+  ok(sansEntree.length === 0,
+    `A2. ⛔ ${sansEntree.length} clé(s) publiée(s) n'ont AUCUNE entrée dans PLACES : `
+    + `${sansEntree.slice(0, 6).join(', ')}. Un lecteur y lit \`undefined\`, et « je n'ai pas de `
+    + `place » ne se distingue pas de « je n'ai rien déclaré ».`);
+  const vides = Object.entries(PLACES).filter(([k, v]) => k !== '_deduites' && Array.isArray(v) && v.length === 0);
+  ok(vides.length > 0,
+    `A2. SOCLE : au moins un catalogue doit publier une liste VIDE — sinon ce volet ne distingue pas `
+    + `« tout le monde a des places » de « l'absence est encore un état ».`);
 }
 
 // ── B. LA PROVENANCE EST DITE ────────────────────────────────────────────────────────────────
