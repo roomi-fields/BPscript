@@ -254,6 +254,21 @@ function loadJsonFile(name) {
  */
 function loadLib(name, subkey) {
   if (subkey) {
+    // ⛔ UN CHAMP DE FICHIER N'EST PAS UNE ENTRÉE, ET CE CHARGEUR LE SERVAIT COMME TELLE. Le repli
+    // final lit `file[subkey]` sans rien écarter : `temperament.resolvedBy` résolvait, et le contrôle
+    // d'existence d'entrée (`bpxAst.js`, « l'entrée n'existe pas ») l'ACCEPTAIT donc en silence.
+    //
+    // ⚠️ CE QUE ÇA COÛTAIT, MESURÉ LE 2026-08-24 EN POSANT `documented` :
+    //     temperament.documented     ACCEPTÉ — une entrée fantôme invocable
+    //     octaves.documented         PLANTAGE — `octaveDef.registers is not iterable`
+    // Un champ neuf sur un catalogue ouvrait donc une porte par axe, dont une qui ne refuse pas mais
+    // JETTE. Le défaut était déjà là sur `resolvedBy` et `description` ; c'est Kairos qui a nommé la
+    // classe — un champ au sommet du sac devient chez lui une entrée fantôme INVOCABLE — après
+    // l'avoir réparée chez lui sur `description` et `version`.
+    //
+    // La réparation se pose ICI, dans le chargeur, et non à chacun des lecteurs : ils sont sept à
+    // écarter ces noms, chacun avec sa liste, et c'est cette dispersion qui a laissé le trou ouvert.
+    if (CHAMPS_DE_FICHIER.has(subkey)) return null;
     // ⛔ UN MOT PEUT DESIGNER PLUSIEURS FICHIERS — `alphabets.json` et `test_alphabets.json`
     // declarent tous deux `alphabet`. On les parcourt donc TOUS, dans l'ordre, jusqu'a celui qui
     // porte l'entree. Ne lire que le premier laisserait la moitie du mot inatteignable, et le

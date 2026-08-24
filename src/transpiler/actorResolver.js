@@ -28,7 +28,17 @@ function expandAlphabetTerminals(alphabetLib, octavesOverride) {
   // `actor X octaves.Y` SURCHARGE la convention de registre ; sinon défaut =
   // convention héritée de l'alphabet (alphabetLib.octaves).
   const octaveConvention = octavesOverride != null ? octavesOverride : alphabetLib.octaves;
-  const octaveDef = octaveConvention ? loadLib('octaves')?.[octaveConvention] : null;
+  // ⛔ UNE CONVENTION DE REGISTRE SE CHARGE PAR LA PORTE, ET ELLE PORTE SES RANGS. Cette ligne
+  // lisait `loadLib('octaves')?.[nom]` — une propriété prise directement sur le fichier, donc TOUT
+  // champ de fichier passait pour une convention. Mesuré le 2026-08-24 :
+  //     octaves.resolvedBy    ⛔ PLANTAGE  « octaveDef.registers is not iterable »
+  //     octaves.documented    ⛔ le même, par le champ posé ce jour-là
+  // Pas un refus : une EXCEPTION, jetée avant le validateur qui aurait nommé la référence — la
+  // classe de faute que ce dépôt a déjà tranchée pour un caractère illisible. La porte écarte les
+  // champs de fichier, et `registers` est exigé plutôt qu'espéré : une entrée mal formée retombe
+  // sur les notes nues, et le validateur de références dit son mot.
+  const candidate = octaveConvention ? loadLib('octaves', octaveConvention) : null;
+  const octaveDef = candidate && Array.isArray(candidate.registers) ? candidate : null;
 
   const alts = alphabetLib.alterations && typeof alphabetLib.alterations === 'object'
       && !Array.isArray(alphabetLib.alterations)
