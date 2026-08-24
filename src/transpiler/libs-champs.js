@@ -50,7 +50,18 @@ export const CHAMPS_DE_FICHIER = new Set([
   'resolvedBy', 'resolves', 'name', 'description', 'version', 'type', 'section', 'documented',
 ]);
 
-/** Les entrées d'un objet de librairie, à un niveau donné : ni champ de fichier, ni note privée. */
+/**
+ * Les entrées d'un objet de librairie, à un niveau donné : ni champ de fichier, ni note privée.
+ *
+ * ⚠️ CE QUE CETTE FONCTION NE FAIT PAS : distinguer une ENTRÉE d'une PLACE. Les deux vivent à la
+ * même profondeur, et **la forme ne les sépare pas** — une place vide (`core.symbols`) ressemble à
+ * une entrée vide, et une entrée dont tous les membres sont des objets ressemble à une place.
+ *
+ * ⇒ **Les places se lisent dans `PLACES`, publié par `libs-data.js`** : pour une source écrite dans
+ * le langage, le générateur les CONNAÎT — il vient de les créer ; pour un catalogue encore en JSON,
+ * il les déduit par la forme, et `PLACES._deduites` nomme lesquels. **Un lecteur qui descend dans
+ * les places lit ce champ ; il ne le devine pas.**
+ */
 export function entreesDe(objet) {
   return Object.keys(objet || {}).filter((k) => !CHAMPS_DE_FICHIER.has(k) && !k.startsWith('_'));
 }

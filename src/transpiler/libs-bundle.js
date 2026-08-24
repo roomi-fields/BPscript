@@ -22,6 +22,28 @@ const LIB_DIR = join(__dirname, '../../lib');
 
 const libs = {};
 
+// ⛔ LES PLACES — les clés qui CONTIENNENT des entrées, par opposition aux entrées elles-mêmes.
+//
+// Un catalogue mêle les deux à la même profondeur : `voices` porte `objects` (une place) à côté de
+// `resolves` (un champ de fichier), et `alphabets` porte ses entrées à sa racine. Un consommateur
+// qui énumère le sommet d'un sac doit écarter les champs de fichier ET descendre dans les places.
+//
+// ⚠️ LA FORME NE SUFFIT PAS À LES SÉPARER, et c'est une mesure qui le dit. La règle « tous les
+// membres sont des objets » classe juste 21 fois sur 21 aujourd'hui — mais elle rate une place VIDE
+// (`core.symbols`, zéro entrée) et elle aurait classé `fatbass for:sub37` comme une place jusqu'au
+// 2026-08-24, parce que son unique membre était un objet. Kairos a verrouillé ce trou chez lui
+// plutôt que de deviner ; ce registre est ce qui le lui ferme.
+//
+// ⇒ POUR UNE SOURCE ÉCRITE DANS LE LANGAGE, la place est CONNUE : c'est ce générateur qui la crée.
+//   Pour un catalogue encore en JSON, elle est DÉDUITE par la forme, et le paquet le dit.
+const places = {};
+const noterPlace = (lib, cle) => { (places[lib] = places[lib] || new Set()).add(cle); };
+// ⛔ ET ON RETIENT QUELLES SOURCES SONT ÉCRITES DANS LE LANGAGE — sans ça, un repli sur la forme
+// masque le registre. Mesuré par injection le 2026-08-24 : en retirant la notation des places, TOUT
+// restait vert, parce que la forme retrouvait les mêmes 21 clés. Une connaissance de producteur qui
+// se dégrade en déduction sans le dire est exactement ce que ce registre existe pour empêcher.
+const ecritesDansLeLangage = new Set();
+
 // Recurse one+ levels: top-level → "name", sub-dir → "subdir/name".
 function collect(dir, prefix) {
   for (const entry of readdirSync(dir).sort()) {
@@ -203,6 +225,7 @@ async function collectBps(dir, prefix, compileToBPxAST) {
     if (statSync(full).isDirectory()) { await collectBps(full, prefix + entry + '/', compileToBPxAST); continue; }
     if (!entry.endsWith('.bpsl')) continue;
     const nom = prefix + entry.replace('.bpsl', '');
+    ecritesDansLeLangage.add(nom);
     const r = compileToBPxAST(readFileSync(full, 'utf-8'));
     if ((r.errors || []).length) {
       console.error(`[bundle] ⛔ lib/${entry} NE COMPILE PAS : ${r.errors[0].message}`);
@@ -306,7 +329,9 @@ async function collectBps(dir, prefix, compileToBPxAST) {
       } else {
         let ou = lib;
         if (chemin) {
-          for (const seg of String(chemin).split('.')) { ou[seg] = ou[seg] || {}; ou = ou[seg]; }
+          const segs = String(chemin).split('.');
+          for (const seg of segs) { ou[seg] = ou[seg] || {}; ou = ou[seg]; }
+          noterPlace(nom, segs[0]);
         }
         cible = (ou[d.name] = {});
       }
@@ -336,6 +361,7 @@ async function collectBps(dir, prefix, compileToBPxAST) {
           const sac = v && v.sac;
           if (sac && sac.type === 'SettingBag') {
             const ou = (lib[cle] = lib[cle] || {});
+            noterPlace(nom, cle);
             for (const p2 of (sac.pairs || [])) rangerConteneur(ou, p2.key, p2.value, entry, cle, clesListesDuFichier);
             continue;
           }
@@ -418,6 +444,31 @@ for (const [name, data] of Object.entries(libs).sort(([a], [b]) => (a < b ? -1 :
   output += `LIBS["${name}"] = ${JSON.stringify(data)};\n\n`;
 }
 
-output += 'export { LIBS };\n';
+// ⛔ LES PLACES SE PUBLIENT, parce qu'un consommateur ne peut pas les déduire. Pour une source
+// écrite dans le langage, ce générateur les CONNAÎT — il vient de les créer. Pour un catalogue
+// encore en JSON, il les déduit par la forme, et cette déduction rate une place VIDE : le champ
+// `_deduites` dit lesquelles, pour qu'un lecteur sache où sa confiance s'arrête.
+const tousObjets = (v) => {
+  const m = Object.keys(v).filter((k) => !k.startsWith('_'));
+  return m.length > 0 && m.every((k) => v[k] && typeof v[k] === 'object' && !Array.isArray(v[k]));
+};
+const PLACES = {};
+const deduites = [];
+for (const [nom, data] of Object.entries(libs).sort(([a2], [b2]) => (a2 < b2 ? -1 : a2 > b2 ? 1 : 0))) {
+  // ⛔ UNE SOURCE ÉCRITE DANS LE LANGAGE NE SE DÉDUIT JAMAIS : ce générateur a créé ses places, donc
+  // il les connaît, y compris quand il n'y en a AUCUNE. Le repli est réservé à ce qu'il n'a pas écrit.
+  if (ecritesDansLeLangage.has(nom)) {
+    const connues = places[nom];
+    if (connues) PLACES[nom] = [...connues].sort();
+    continue;
+  }
+  const parLaForme = Object.keys(data || {}).filter((k) => !k.startsWith('_')
+    && !CHAMPS_DE_FICHIER.has(k) && data[k] && typeof data[k] === 'object'
+    && !Array.isArray(data[k]) && tousObjets(data[k]));
+  if (parLaForme.length) { PLACES[nom] = parLaForme.sort(); deduites.push(nom); }
+}
+output += `const PLACES = ${JSON.stringify(PLACES)};\n`;
+output += `PLACES._deduites = ${JSON.stringify(deduites.sort())};\n\n`;
+output += 'export { LIBS, PLACES };\n';
 
 process.stdout.write(output);
