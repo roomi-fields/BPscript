@@ -3055,32 +3055,21 @@ export function resoudreSource(source, environnement) {
     result.errors.push(...validateControls(ast, libCtx.controls, libCtx.controlsQualified || {}));
     result.errors.push(...refuserAttenteNonDeclaree(ast));  // un point d'attente nomme ce qu'il attend
 
-    // LE DIAGNOSTIC PRÉCIS SUBSUME LE GÉNÉRIQUE (arbitrage architecte [778]).
+    // ⛔ LE DÉDOUBLONNAGE DES DIAGNOSTICS EST ÉLAGUÉ — il n'avait plus de producteur vivant.
     //
-    // Une même faute déclenchait DEUX messages : le générique « attribut '(X:…)' inconnu — ni
-    // contrôle, ni valeur… » et un diagnostic NOMMÉ sur la même clé, qui dit tout ce que dit le
-    // premier PLUS la forme attendue. Le générique n'ajoute rien et noie le seul message utile.
-    // Producteur vivant mesuré sur le corpus (2026-08-22) : « 'script(…)' n'est lisible ni comme
-    // un SAC DE RÉGLAGES… », sur trois scènes. L'exemple d'origine citait le validateur de
-    // modulation, élagué le même jour — le mécanisme, lui, sert tous les diagnostics nommés.
-    // On le retire donc pour les clés qui ont déjà un diagnostic nommé. Une clé sans
-    // diagnostic ciblé garde évidemment le générique — c'est le seul qu'elle ait.
-    {
-      // ⛔ CE FILTRE RECONNAISSAIT LE MESSAGE GÉNÉRIQUE PAR SA FORMULATION. Une expression sur le
-      // TEXTE du refus le liait à sa graphie : le jour où le refus a cessé d'écrire un deux-points
-      // sur un nom nu, cette expression aurait cessé de reconnaître ses propres messages, EN
-      // SILENCE — le générique serait revenu doubler chaque diagnostic nommé. Le producteur pose
-      // désormais un champ, et le filtre le lit.
-      const clesDiagnostiquees = new Set(
-        result.errors
-          .filter((e) => e && !e.generique && typeof e.message === 'string')
-          .map((e) => (e.message.match(/^'(.+?)'/) || [])[1])
-          .filter(Boolean),
-      );
-      if (clesDiagnostiquees.size > 0) {
-        result.errors = result.errors.filter((e) => !(e && e.generique && clesDiagnostiquees.has(e.cle)));
-      }
-    }
+    // Il retirait le message générique « attribut inconnu » pour une clé portant déjà un diagnostic
+    // nommé (arbitrage architecte, 2026-08-22). Mesuré le 2026-08-24 sur le corpus entier, par la
+    // porte `corpus.mjs` : **89 scènes, 12 messages, ZÉRO générique — et le débrancher ne changeait
+    // AUCUN message.** Les diagnostics nommés lèvent depuis le PARSEUR, donc le générique de cet
+    // étage ne s'exécute jamais sur la même clé.
+    //
+    // ⇒ **Le code mort s'élague dans le mouvement qui le rend mort.** Je l'avais inscrit au backlog
+    // au lieu de le retirer ; l'architecte a tranché le même soir, et il a raison : une protection
+    // sans producteur reste VERTE POUR TOUJOURS, et le jour où un producteur revient, personne ne
+    // sait si elle mord encore. L'inscrire ne change pas ça — un backlog n'est pas exécuté.
+    //
+    // ⚠️ CE QUI LE RAMÈNERAIT : un diagnostic nommé posé à CET étage plutôt qu'au parseur. Il
+    // doublerait alors le générique, et c'est visible — deux messages pour une faute.
 
     // Découpeur frontal mono-char (flip Palier 4, étape A) — EN DERNIER :
     // annotateBackticks et les validateurs ci-dessus voient l'AST NON découpé,
