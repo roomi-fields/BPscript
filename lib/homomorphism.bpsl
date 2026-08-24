@@ -1,0 +1,47 @@
+// LA LIBRAIRIE « homomorphism » — écrite dans le langage qu'elle sert.
+// Convertie depuis le JSON : le bundle en rend la MÊME donnée, champ par champ. Les
+// consommateurs ne voient aucun changement — c'est l'AUTHORING qui change, pas la donnée.
+//
+// ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
+//    voyage pas jusqu'aux consommateurs, une clé si.
+
+def homomorphism (documented:true, resolvedBy:Kairos, name:homomorphism, type:homomorphism, resolves:homomorphism, section:tables)
+
+def substitute (section:objects, description:"Applicateur universel d'homomorphisme : itère la portée active et substitue chaque symbole par son image dans la table plate (last-write-wins), identité si symbole absent. Image de l'ancien `applyImage` BPx, re-placé en résolution Kairos (décision 2026-07-17). C'est la seule fonction de la lib fournie : elle traite TOUS les homos en portée (multiplicité = empilement, homos différents = séquence).")
+
+def tabla_stroke (description:"Tabla open→closed stroke mapping (qa'ida)", mappings(dha:ta, dhin:tin, ge:ke, ghe:khe, dhagena:takena, dheene:teene, dheena:teena))
+
+def ruwet_mineur (description:"Ruwet — transformation thème majeur → mineur (DÉPRÉCIÉ)", mappings(fa4:re4, la4:fa4, sol4:mi4))
+
+def ruwet (description:"Ruwet — 3 transformations mélodiques (fidèle à bp3-engine/test-data/-ho.Ruwet)", sections(m1(la4:sib4), m2(la4:sol4), mineur(fa4:re4, la4:fa4)))
+
+def dhati (description:"Dhati — homomorphisme tabla (fidèle à -ho.dhati, section *, identités conservées)", sections("*"(dha:ta, ti:ti, ge:ke, na:na, dhee:tee, tr:tr, kt:kt)))
+
+def dhin (description:"Dhin -- homomorphisme tabla (fidèle à -ho.dhin--, section *, identités conservées)", sections("*"(dha:ta, ta:ta, ti:ti, ra:ra, na:na, ki:ki, dhee:tee, ne:ne, ge:ke, ka:ka, dhin:tin)))
+
+def tryhomomorphism (description:"Homomorphisme de test (fidèle à -ho.tryhomomorphism, chaîne c-->fa4-->d dépliée)", sections("*"(a:b, do4:re4, c:fa4, fa4:d)))
+
+def checkhomo (description:"Test homomorphism — 3 sections (*, H, TR)", sections("*"(a:"a'", "a'":"a""", b:"b'", "b'":b), H(a:c, c:"c'", "c'":"a"""), TR("a'":"b'", "b'":b)))
+
+def transposition (description:"Auto-transposer H. Visser 1997 — homomorphisme à CHAÎNES (fidèle à bp3-engine/test-data/-ho.transposition, section TR, 3 chaînes indexées par profondeur d'invocation)", sections(TR(chains(C3(B3, F4, C6), B3(C3, B4, F6), F4(C6, F2, B5)))))
+
+def Ruwet (description:"Porté depuis bp3-engine/test-data/-ho.Ruwet le 2026-08-13, section par section et maillon par maillon. Vérifié : le dépliage en paires consécutives redonne exactement le natif.", sections(m1(chains(la4(sib4))), m2(chains(la4(sol4))), mineur(chains(fa4(re4), la4(fa4)))))
+
+def abc (description:"Porté depuis bp3-engine/test-data/-ho.abc le 2026-08-13, section par section et maillon par maillon. Vérifié : le dépliage en paires consécutives redonne exactement le natif.", sections("*"(chains(a("a'"), b("b'"), c("c'"), d("d'"), e("e'"), f("f'"), g("g'"), h("h'"), i("i'"), j("j'"), k("k'"), l("l'"), m("m'"), n("n'"), o("o'"), p("p'"), q("q'"), r("r'"), s("s'"), t("t'"), u("u'"), v("v'"), w("w'"), x("x'"), y("y'"), z("z'"))), TR(chains(a(b), b(c), c(d)), sync:true)))
+
+def abc1 (description:"Porté depuis bp3-engine/test-data/-ho.abc1 le 2026-08-13, section par section et maillon par maillon. Vérifié : le dépliage en paires consécutives redonne exactement le natif.", sections(chik(chains(a("a'"), b("b'"), c("c'"), d("d'"))), e(chains(f("f'"), g("g'")))))
+
+def abc2 (description:"Porté depuis bp3-engine/test-data/-ho.abc2 le 2026-08-13. ⚠️ La section est `sync` et non `*` : le fichier écrit `*` puis `sync` sans séparateur entre les deux, et une ÉTIQUETTE QUI SUIT UNE ÉTIQUETTE LA REMPLACE — le natif n'ouvre une section que sur un séparateur. J'avais d'abord lu `sync` comme un MODIFICATEUR de la section courante ; c'était une invention, le mot `sync` n'existe nulle part dans la source du moteur. Corrigé sur signalement de bp3-frontend, dont le critère vient du moteur.", sections(sync(chains(a("a'"), b("b'"), c("c'"), d("d'"), e("e'"), f("f'"), g("g'"), h("h'"), i("i'"), j("j'"), k("k'"), l("l'"), m("m'"), n("n'"), o("o'"), p("p'"), q("q'"), r("r'"), s("s'"), t("t'"), u("u'"), v("v'"), w("w'"), x("x'"), y("y'"), z("z'")))))
+
+def abc3 (description:"Porté depuis bp3-engine/test-data/-ho.abc3 le 2026-08-13, section par section et maillon par maillon. Vérifié : le dépliage en paires consécutives redonne exactement le natif.", sections("*"(chains(a("a'"), b("b'"), c("c'"), d("d'"), e("e'"), f("f'"), g("g'"), h("h'"), i("i'"), j("j'"), k("k'"), l("l'"), m("m'"), n("n'"), o("o'"), p("p'"), q("q'"), r("r'"), s("s'"), t("t'"), u("u'"), v("v'"), w("w'"), x("x'"), y("y'"), z("z'"))), TR(chains(a(b), b(c), c(d)), sync:true)))
+
+def cloches1 (description:"Cloches — homomorphisme à CHAÎNES, fidèle à bp3-engine/test-data/-ho.cloches1 (section TR, 4 chaînes indexées par profondeur d'invocation). ⚠️ PORTÉ À NOUVEAU LE 2026-08-10 : la version précédente APLATISSAIT les chaînes en paires — elle gardait le premier maillon de chaque ligne et perdait les suivants, soit 15 maillons sur 19. Une chaîne ne dit pas « do3 devient mib3 » : elle dit « au premier appel mib3, au deuxième fa#3, au troisième la4 » — l'aplatir change le sens, pas seulement la quantité.", sections(TR(chains(do3(mib3, fa#3, la4, do4, mib4, fa#4, la5), sol3(si4, re#4, sol4, si5), re3(mi4, fab4, fa3, fa4), mi3(re4, reb3, do#4)), terminaux_sans_image(re5, mi5))))
+
+def dhadhatite (default(dha:ta, ti:ti, te:te, na:na, dhee:tee, tr:tr))
+
+def dhin-- (default(dha:ta, ta:ta, ti:ti, ra:ra, na:na, ki:ki, dhee:tee, ne:ne, ge:ke, ka:ka, dhin:tin))
+
+def tabla (default(dha:ta, dhin:tin, dhee:tee, ge:ke))
+
+def trial_mohanam (description:"Porté depuis bp3-engine/test-data/-ho.trial.mohanam le 2026-08-13, section par section et maillon par maillon. Vérifié : le dépliage en paires consécutives redonne exactement le natif.", sections(trn(chains(sa6(ga6), re6(pa6), ga6(dha6), pa6(sa7), dha6(re7), sa7(ga7)))))
+

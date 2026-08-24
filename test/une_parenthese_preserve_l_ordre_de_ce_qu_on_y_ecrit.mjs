@@ -94,7 +94,11 @@ function listesEcrites(corps) {
   const marcher = (texte, brut, chemin) => {
     let i = 0;
     while (i < texte.length) {
-      const m = /(\w+)\(/g;
+      // ⛔ UNE CLÉ N'EST PAS TOUJOURS UN NOM NU. `homomorphism` écrit sa section universelle `"*"(…)` —
+      // entre guillemets, parce que `*` n'est pas écrivable nu. Un motif en `\w+` saute ce niveau,
+      // le chemin perd un cran, et le garde cherche `sections.chains.a` là où vit
+      // `sections.*.chains.a`. **Une clé se lit dans ses DEUX graphies, ou le chemin est faux.**
+      const m = /("([^"]*)"|\w+)\(/g;
       m.lastIndex = i;
       const t = m.exec(texte);
       if (!t) return;
@@ -103,9 +107,9 @@ function listesEcrites(corps) {
       while (j < texte.length && n > 0) { if (texte[j] === '(') n++; else if (texte[j] === ')') n--; j++; }
       const dedans = texte.slice(m.lastIndex, j - 1);
       const dedansBrut = brut.slice(m.lastIndex, j - 1);
-      const ici = [...chemin, t[1]];
+      const ici = [...chemin, t[2] !== undefined ? t[2] : t[1]];
       if (dedans.includes('(')) marcher(dedans, dedansBrut, ici);
-      else out.push({ cle: t[1], membres: dedansBrut, chemin: ici });
+      else out.push({ cle: ici[ici.length - 1], membres: dedansBrut, chemin: ici });
       i = j;
     }
   };
