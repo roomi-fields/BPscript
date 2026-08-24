@@ -28,7 +28,10 @@ let p = 0;
 const e = [];
 const ok = (cond, quoi) => { if (cond) p++; else e.push(quoi); };
 
-const fichiers = execFileSync('git', ['ls-files', 'lib/'], { encoding: 'utf8' })
+// ⛔ L'APPEL EST ANCRÉ, JAMAIS LAISSÉ AU RÉPERTOIRE COURANT — git REMONTE jusqu'au premier dépôt
+// trouvé au-dessus, et rend alors un résultat plausible sur un autre dépôt.
+const RACINE = new URL('..', import.meta.url).pathname;
+const fichiers = execFileSync('git', ['-C', RACINE, 'ls-files', 'lib/'], { encoding: 'utf8' })
   .split('\n').filter((f) => f.endsWith('.bpsl'));
 ok(fichiers.length > 0, "le dossier doit porter des librairies en BPScript — sans elles le garde examine zéro");
 

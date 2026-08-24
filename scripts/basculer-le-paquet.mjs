@@ -76,7 +76,11 @@ const RETRAITS_ASSUMES = [
 const clesCommitees = () => {
   let texte;
   try {
-    texte = execFileSync('git', ['show', 'HEAD:src/transpiler/libs-data.js'],
+    // ⛔ L'APPEL EST ANCRÉ, JAMAIS LAISSÉ AU RÉPERTOIRE COURANT. Sans ancre, git REMONTE jusqu'au
+    // premier dépôt trouvé au-dessus : lancé d'ailleurs, ce script mesurerait un autre dépôt et
+    // rendrait un résultat parfaitement plausible. BPx l'a payé deux fois en dix minutes le
+    // 2026-08-24 — « 28 fichiers sales » qui étaient ceux d'un dossier parent.
+    texte = execFileSync('git', ['-C', RACINE, 'show', 'HEAD:src/transpiler/libs-data.js'],
       { encoding: 'utf8', cwd: RACINE, maxBuffer: 64 * 1024 * 1024 });
   } catch {
     return null;              // pas de commit, pas de dépôt : rien à comparer, on laisse passer
