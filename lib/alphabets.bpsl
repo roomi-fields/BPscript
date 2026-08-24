@@ -72,7 +72,7 @@ def shakuhachi (description:"Shakuhachi — 5 base fingerings (Kinko-ryū)", run
 def bohlen_pierce (description:"Bohlen-Pierce — 13 pitch classes in a tritave", runtime:audio, tuning:bohlen_pierce_equal, diapason:440, resolvesPitch:true, alterations(), baseNote:C, terminals(C(), Db(), D(), E(), F(), Gb(), G(), H(), Jb(), J(), A(), Bb(), B()))
 
 // tabla · Alphabet de percussion : aucune hauteur a resoudre, donc aucun tuning. Le champ
-// `voice` lie un terminal a une voix de `lib/voices.json`. CONTENU : les vingt bols de
+// `voice` lie un terminal a une voix du catalogue du mot `voice`. CONTENU : les vingt bols de
 // l'alphabet natif le plus complet du corpus, plus `ki` et `ka`, declares par `-al.dhin--` et
 // `-al.kathak`. Tous sont INDIVISIBLES : aucun ne se decoupe sur les autres, mesure bol par bol
 // en le retirant de la liste. UN BOL COMPOSE NE SE DECLARE PAS — il se segmente. `dhagena` est

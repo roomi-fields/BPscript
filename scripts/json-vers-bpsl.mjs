@@ -116,6 +116,17 @@ function rendValeur(cle, v, ou) {
 const CLE_DE_MEMBRE = /^[A-Za-z][A-Za-z0-9_-]*$/;
 
 /**
+ * UN NOM D'ENTREE QUE LE LANGAGE ECRIT NU — le recollage du parseur, borne au compilateur.
+ *     western · 12TET · bp3_Bohlen-Pierce · western_just_c        nu
+ *     fatbass for:sub37 · B#_instead_of_C · a.b                   PAS nu
+ * Le parseur recolle IDENT/INT/tiret tant qu'ils se touchent ; l'espace, le point et le diese
+ * portent un sens ailleurs. Un nom entre guillemets est REFUSE en tete de `def` (mesure du
+ * 2026-08-24) : la seule place qui accepte un nom quelconque est une CLE DE MEMBRE.
+ */
+const NOM_D_ENTREE = /^[A-Za-z0-9_-]+$/;
+const nomNu = (s) => NOM_D_ENTREE.test(s) && /[A-Za-z]/.test(s);
+
+/**
  * UNE PAIRE — `k:valeur` quand la valeur est simple, `k(…)` quand elle est composée.
  *
  * ⛔ L'OBJET IMBRIQUÉ SE REFUSAIT ICI, ET LE LANGAGE LE PORTE. Deuxième refus de ce fichier fondé
@@ -206,7 +217,12 @@ function sections(j) {
       // objet dont les valeurs sont des feuilles. La donnée le dit par sa forme.
       const fils = Object.values(v).filter((x) => x && typeof x === 'object' && !Array.isArray(x));
       const estSection = fils.length > 0 && fils.length === Object.values(v).filter((x) => x !== null).length;
-      if (estSection && chemin.length < 2) explorer(v, [...chemin, k]);
+      // ⛔ UNE PLACE PORTE UN NOM QUE LE LANGAGE ÉCRIT NU, et sans cette clause l'entrée
+      // `fatbass for:sub37` était prise pour une place : son unique membre est un objet, donc elle a
+      // EXACTEMENT la forme d'une section. L'outil descendait dedans et émettait `def device
+      // (section:objects.fatbass for:sub37, …)` — une entrée fabriquée, sous une section dont le nom
+      // ne s'écrit pas. Un nom qu'on ne peut pas écrire ne peut pas nommer une place où l'on range.
+      if (estSection && chemin.length < 2 && nomNu(k)) explorer(v, [...chemin, k]);
     }
     if (chemin.length) trouvees.push(chemin.join('.'));
   };
@@ -247,15 +263,35 @@ export function convertir(nom, j) {
     ? trouvees.slice().sort((a, b) => compte(b) - compte(a))[0]
     : '';
 
+  // ⛔ UNE PLACE S'ÉCRIT ENTIÈREMENT EN MEMBRES DÈS QU'UN SEUL DE SES NOMS N'EST PAS ÉCRIVABLE NU, et
+  // c'est l'ORDRE qui l'exige. Un nom non nu n'a qu'une graphie — une clé de membre — et une place
+  // ne se pose que sur la déclaration DU FICHIER, donc en tête. Mélanger les deux graphies déplaçait
+  // l'entrée en PREMIÈRE position : `[wobble, fatbass, fatbass for:sub37, …]` devenait
+  // `[fatbass for:sub37, wobble, fatbass, …]`. Toutes en membres, l'ordre de la source est tenu.
+  const placesEnMembres = new Set(
+    [...new Set([...trouvees, ''])].filter((s) => Object.keys(lire(s))
+      .some((k) => !k.startsWith('_') && !CHAMPS_DE_FICHIER.has(k) && !nomNu(k)
+        && lire(s)[k] && typeof lire(s)[k] === 'object' && !Array.isArray(lire(s)[k])))
+      .filter((s) => s !== ''),
+  );
+
   // ── LE BLOC DU FICHIER ──
   const enTete = [];
+  // L'ordre de CETTE boucle ne décide de rien : l'assemblage plus bas repose chaque ligne au rang
+  // qu'elle porte DANS LA SOURCE. Deux mécanismes pour un seul fait, c'est un de trop — et c'est une
+  // injection qui ne mordait pas qui l'a montré.
   for (const c of CHAMPS_DE_FICHIER) {
     if (j[c] === undefined) continue;
     try { enTete.push(rendPaire(c, j[c], nom)); } catch (e) { refus.push(e.message); }
   }
-  if (majoritaire) enTete.push(`section:${majoritaire}`);
-  out.push(...ecrireEntree(nom, enTete));
-  out.push('');
+  // `section` ROUTE les `def` d'entrée ; une place écrite en membres n'en produit aucun, donc la clé
+  // n'aurait rien à router.
+  if (majoritaire && !placesEnMembres.has(majoritaire)) enTete.push(`section:${majoritaire}`);
+  // ⛔ LE CORPS S'ECRIT AVANT L'EN-TETE, et ce n'est pas de la mise en page. Un nom d'entree que le
+  // langage n'ecrit pas NU n'a qu'une place ou vivre : une CLE DE MEMBRE, dans la PLACE portee par la
+  // declaration du fichier. Il faut donc avoir lu toutes les entrees avant d'ecrire cette ligne.
+  const corps = [];
+  const horsNom = new Map();   // place -> [`"<nom>"(<cles>)`]
 
   // ── LE COMPTE : CE QUE LA SOURCE PORTE, AVANT DE REGARDER CE QU'ON EN ÉCRIT ──
   // ⛔ CET OUTIL A LAISSÉ TROIS CHAMPS DERRIÈRE LUI ET A DIT « ✅ ». `settings` porte
@@ -305,10 +341,50 @@ export function convertir(nom, j) {
         if (Array.isArray(v) && v.length === 0) continue;
         try { cles.push(rendPaire(k, v, nomE)); } catch (e) { refus.push(e.message); }
       }
-      out.push(...ecrireEntree(nomE, cles));
-      out.push('');
+      if (!placesEnMembres.has(sec)) {
+        corps.push(...ecrireEntree(nomE, cles));
+        corps.push('');
+        continue;
+      }
+      // ⛔ UN NOM QUE LE LANGAGE N'ECRIT PAS NU DEVIENT UNE CLE DE MEMBRE DE SA PLACE. `def "a b"` est
+      // REFUSE ; `place("a b"(…))` est accepte, et le bundle range une place posee sur la declaration
+      // du fichier. Sans cette voie, huit noms du paquet — sept reglages a diese et
+      // `fatbass for:sub37` — n'avaient AUCUNE graphie, et cet outil sortait un fichier qui ne
+      // compile pas en disant « ecrit ».
+      const place = sec;
+      if (!place) {
+        refus.push(`${nom}.${nomE} : nom non ecrivable NU et AUCUNE place ou le poser — une cle de `
+          + `membre exige une place, et ce fichier range ses entrees a la racine.`);
+        continue;
+      }
+      if (!horsNom.has(place)) horsNom.set(place, []);
+      const ecrit = CLE_DE_MEMBRE.test(nomE) ? nomE : enTexte(nomE);
+      horsNom.get(place).push(`${ecrit}(${cles.filter((c) => !c.startsWith('section:')).join(', ')})`);
     }
   }
+  // Un membre par ligne : le corps d'un `def` accepte les sauts de ligne entre ses parenthèses
+  // (mesuré au compilateur), et seize entrées sur une seule ligne ne se relisent pas.
+  // ⛔ TOUT SE REPOSE AU RANG DE LA SOURCE — les champs de fichier ET les places. C'est le seul
+  // endroit qui décide de l'ordre publié, et il a fallu deux mesures pour l'écrire :
+  //     [wobble, fatbass, fatbass for:sub37, …]   →   [fatbass for:sub37, wobble, fatbass, …]
+  //     [documented, resolvedBy, name, objects…]  →   [resolvedBy, resolves, name, documented…]
+  // Le rang d'une clé n'est pas de la mise en page : c'est lui qui a fait du catalogue de TEST
+  // l'autorité de l'axe `alphabet` le 2026-08-23, et sept gardes sont tombés d'un coup. Une preuve
+  // d'égalité qui compare les VALEURS ne le voit pas.
+  const rendrePlace = (place) => `${place}(\n  ${horsNom.get(place).join(',\n  ')})`;
+  const posees = new Set();
+  const enTeteOrdonne = [];
+  for (const c of Object.keys(j)) {
+    const dejaPosee = enTete.find((l) => l.startsWith(`${c}:`) || l.startsWith(`${c}(`));
+    if (dejaPosee) { enTeteOrdonne.push(dejaPosee); continue; }
+    if (horsNom.has(c)) { enTeteOrdonne.push(rendrePlace(c)); posees.add(c); }
+  }
+  for (const l of enTete) if (!enTeteOrdonne.includes(l)) enTeteOrdonne.push(l);
+  for (const place of horsNom.keys()) if (!posees.has(place)) enTeteOrdonne.push(rendrePlace(place));
+  out.push(...ecrireEntree(nom, enTeteOrdonne));
+  out.push('');
+  out.push(...corps);
+
   // ⚠️ UN COMPTE QUI N'A RIEN EXAMINÉ NE PROUVE RIEN — il le dit lui-même.
   if (!attendues.size) refus.push(`${nom} : ZÉRO entrée recensée — le compte n'a rien examiné.`);
   for (const a of attendues) {

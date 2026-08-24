@@ -331,7 +331,7 @@ function writableChannels() {
 }
 
 /**
- * Index des VOIX (lib/voices.json, LANG-SONS-2 [438], spec hub/projets/2026-06-24-lang-sons-spec/README.md §3-§5).
+ * Index des VOIX (catalogue du mot `voice`, LANG-SONS-2 [438], spec hub/projets/2026-06-24-lang-sons-spec/README.md §3-§5).
  * Une clé `nom for:<device>` = spécialisation par-device (cascade fin > général, résolue en
  * AVAL) ; ici on indexe par nom de base : { nom → { base?: def, forDevices: { device → def } } }.
  * Validation de FORME à l'indexation : une réalisation `audio` DOIT être un backtick TYPÉ
@@ -342,8 +342,10 @@ let _voicesIndex = null;
 function voicesIndex() {
   if (_voicesIndex) return _voicesIndex;
   _voicesIndex = new Map();
-  // ⛔ PAR LE MOT DECLARE, jamais par le nom du fichier (Romain, 2026-08-17) : `voices.json`
-  // declare `voice`, et c est ce mot qui adresse la librairie partout ailleurs.
+  // ⛔ PAR LE MOT DECLARE, jamais par le nom du fichier (Romain, 2026-08-17) : le catalogue
+  // declare `voice`, et c est ce mot qui adresse la librairie partout ailleurs. Son FICHIER a
+  // change d extension le 2026-08-24 sans qu une seule ligne d ici ne bouge — c est la preuve du
+  // decouplage, et la raison pour laquelle aucun message de refus ne nomme plus un fichier.
   const lib = loadLib('voice');
   for (const [key, def] of Object.entries((lib && lib.objects) || {})) {
     const m = key.match(/^(\S+)\s+for:(\S+)$/);
@@ -370,14 +372,14 @@ function assertVoiceRef(name, where, token) {
   if (!entry) {
     throw new ParseError(
       `${where} : voix '${name}' inconnue — aucune entrée '${name}' (ni '${name} for:<device>') `
-      + `dans lib/voices.json (LANG-SONS §3).`, token,
+      + `dans le catalogue du mot 'voice' (LANG-SONS §3).`, token,
     );
   }
   const defs = [...(entry.base ? [entry.base] : []), ...Object.values(entry.forDevices)];
   for (const def of defs) {
     if (def.audio !== undefined && !isTypedBacktick(def.audio)) {
       throw new ParseError(
-        `${where} : voix '${name}' — réalisation 'audio' invalide dans lib/voices.json : un `
+        `${where} : voix '${name}' — réalisation 'audio' invalide dans le catalogue du mot 'voice' : un `
         + `backtick TYPÉ est requis (\`js: …\`, \`faust: …\`) ; reçu ${JSON.stringify(def.audio)}.`, token,
       );
     }

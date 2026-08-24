@@ -285,7 +285,7 @@ function loadLib(name, subkey) {
     if (file) {
       // Look for subkey in known collection fields, or directly on root.
       // `objects` AJOUTÉ le 2026-08-06 : c'est le champ que les librairies de CODE emploient
-      // (`mod.json`, `voices.json`, et `eval.json` depuis la décision Romain du jour). Sans lui,
+      // (`mod`, `voice`, et `eval` depuis la décision Romain du jour). Sans lui,
       // une entrée de ces librairies était INATTEIGNABLE par `loadLib(axe, entrée)` — la donnée
       // existait, le chargeur regardait ailleurs et rendait `null`.
       const entry = file.alphabets?.[subkey] || file.tables?.[subkey] || file.objects?.[subkey]
@@ -1286,7 +1286,7 @@ function describeVocabulary(directives = []) {
     const file = loadLib(axis);
     // DEUX FORMES DE FICHIER, ET LE CHOIX EST MESURÉ. Les librairies de DONNÉES posent leurs
     // entrées à la RACINE (`alphabets.json` → western, sargam…) ; celles de CODE les groupent
-    // sous `objects` (`mod.json`, `voices.json`, et `eval.json` depuis le 2026-08-06). Aucun
+    // sous `objects` (`mod`, `voice`, et `eval` depuis le 2026-08-06). Aucun
     // fichier ne fait les deux — vérifié sur les huit concernés avant d'écrire cette ligne, ce
     // qui est la raison pour laquelle `objects` peut primer sans rien ambiguïser.
     // Sans ce cas, un axe de catalogue dont les entrées vivent sous `objects` rendait une liste
@@ -1310,7 +1310,7 @@ function describeVocabulary(directives = []) {
   // ⚠️ ET LE `|| {}` EST PARTI AVEC : la porte REFUSE de se publier vide (`syntaxe-bundle.mjs`).
   // Un repli sur l'objet vide publiait « zéro mot de syntaxe », qui a la graphie d'une mesure.
   const langLib = SYNTAXE;
-  // Voix (LANG-SONS-2, lib/voices.json §3) : noms de BASE pour `voice.<nom>` — les clés
+  // Voix (LANG-SONS-2, catalogue du mot `voice` §3) : noms de BASE pour `voice.<nom>` — les clés
   // `nom for:<device>` (spécialisations §5) se replient sur leur nom de base.
   // Même geste : l'AXE `voice`, pas le fichier `voices`.
   const voicesLib = loadJsonFile('voice');

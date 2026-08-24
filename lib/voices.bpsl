@@ -1,0 +1,25 @@
+// LA LIBRAIRIE « voices » — écrite dans le langage qu'elle sert.
+// Convertie depuis le JSON : le bundle en rend la MÊME donnée, champ par champ. Les
+// consommateurs ne voient aucun changement — c'est l'AUTHORING qui change, pas la donnée.
+//
+// ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
+//    voyage pas jusqu'aux consommateurs, une clé si.
+
+def voices (documented:yes, resolvedBy:Kairos, name:voices, objects(
+  wobble(audio:"`js: saw(pitch) >> lpf(cutoff) >> adsr(gate)`"),
+  fatbass(audio:"`js: (saw(pitch) | saw(pitch*1.01)) >> lpf(cutoff) >> adsr(gate)`"),
+  "fatbass for:sub37"(device(preset:bass-init, glide:0.2, osc1-wave:saw)),
+  bayan_open(audio:"`js: (noise() >> bpf(80) | sin(80)) >> adsr(decay:350ms)`"),
+  bayan_muted(audio:"`js: noise() >> bpf(120) >> adsr(decay:80ms)`"),
+  dayan_ring(audio:"`js: (sin(320) | sin(480)) >> adsr(decay:400ms)`"),
+  dayan_tap(audio:"`js: noise() >> hpf(1200) >> adsr(decay:60ms)`"),
+  dayan_dry(audio:"`js: (sin(494) | sin(587)) >> adsr(decay:60ms)`"),
+  dayan_open(audio:"`js: (sin(392) | sin(494) | sin(523) | sin(587)) >> adsr(decay:220ms)`"),
+  dummy_csound_a(audio:"`js: sin(220) >> adsr(decay:200ms)`"),
+  dummy_csound_b(audio:"`js: sin(220) >> adsr(decay:200ms)`"),
+  dummy_csound_c(audio:"`js: sin(220) >> adsr(decay:200ms)`"),
+  dummy_csound_d(audio:"`js: sin(220) >> adsr(decay:200ms)`"),
+  dummy_csound_e(audio:"`js: sin(220) >> adsr(decay:200ms)`"),
+  dummy_csound_f(audio:"`js: sin(220) >> adsr(decay:200ms)`"),
+  dummy_csound_midiobject(audio:"`js: sin(220) >> adsr(decay:200ms)`")), resolves:voice)
+
