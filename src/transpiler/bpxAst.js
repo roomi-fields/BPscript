@@ -2178,8 +2178,44 @@ function validateReferences(ast, libCtx = {}) {
     Object.values(LIBS).map((l) => l && typeof l === 'object' ? l.resolves : null).filter(Boolean));
   const libExiste = (nom) => motsDeclares().has(nom);
   const motsDuLangage = new Set(loadLib('core')?.schema?.reservedDirectives || []);
+  // ⛔ LA TÊTE NUE ACCEPTAIT ENCORE LE NOM DE FICHIER, ET C'ÉTAIT LA DERNIÈRE BRÈCHE.
+  //
+  // Ce juge écartait les directives SANS sous-clé — `if (!d.subkey) continue` — donc `alphabets` seul
+  // en tête passait pendant que `alphabets.western` était refusé. Mesuré le 2026-08-24, place par
+  // place, chacune éprouvée avec le mot déclaré ET le nom de fichier :
+  //     tête NUE                     ✓ accepté   ⬅ LA BRÈCHE, 8 noms physiques sur 8
+  //     tête POINTÉE                 ⛔ refusé
+  //     clé d'ACTEUR                 ⛔ refusé
+  //     préfixe de contrôle           ⛔ refusé
+  //
+  // ⇒ La décision de Romain du 2026-08-17 l'ordonnait déjà, sous « Ce qui est décidé », ligne 23 :
+  // *« Une invocation et une clé d'acteur emploient LE MÊME MOT. »* Ce que sa section « L'état
+  // mesuré » écrit — *« l'invocation admet les deux »* — est un CONSTAT de la divergence, pas une
+  // permission. **Le rang des sections décidait, et personne ne l'avait regardé pendant sept jours.**
+  //
+  // ⚠️ ET LE PRINCIPE NE TIENT QUE SI LE NOM PHYSIQUE N'INVOQUE PAS : *« un fichier se renomme, se
+  // scinde ou s'ajoute sans qu'aucune scène change »*. Quatre places conformes ne protègent rien
+  // tant que la cinquième est ouverte.
+  //
+  // ⚠️ RIEN N'EST ÉCRIT EN DUR : le juge compare le nom au champ `resolves` de la librairie que ce
+  // nom désigne. Un fichier dont le nom ÉGALE son mot déclaré n'est pas touché, et un fichier
+  // ajouté demain l'est le jour même.
   for (const d of ast.directives || []) {
-    if (!d || !d.name || !d.subkey) continue;
+    if (!d || !d.name) continue;
+    if (!d.subkey) {
+      const fichierNu = LIBS[d.name];
+      const motNu = fichierNu && typeof fichierNu === 'object' ? fichierNu.resolves : null;
+      if (motNu && motNu !== d.name) {
+        errors.push({
+          message: `'${d.name}' : '${d.name}' est le NOM DU FICHIER, pas le mot qui l'invoque. `
+            + `Ecrire '${motNu}'. Une librairie s'invoque par le mot qu'elle DECLARE (decision `
+            + `Romain, 2026-08-17) : le nom logique se separe du nom physique, et un fichier se `
+            + `renomme sans qu'aucune scene change.`,
+          line: d.line,
+        });
+      }
+      continue;
+    }
     if (catalogAxes.includes(d.name)) continue;   // déjà couvert par checkComponent, ci-dessous
     // ⛔ UN AXE QUE PERSONNE NE SERT EST REFUSE. Cette ligne disait « pas une librairie : autre
     // faute, autre message » — et AUCUN autre message n'existait. `module.adsr`, `patch.x`,
