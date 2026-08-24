@@ -1922,7 +1922,25 @@ function validateReferences(ast, libCtx = {}) {
   };
 
   const vus = new Map();
-  const flag = (key, line, col) => {
+  /**
+   * ⛔ UN REFUS ÉCRIT LA GRAPHIE QUE L'AUTEUR A ÉCRITE — TROISIÈME DOMICILE DE LA RÈGLE.
+   *
+   * Ce message rendait `attribut '(sound.bell_short:…)' inconnu` sur une scène qui écrit
+   * `C4(sound.bell_short)` : **un DEUX-POINTS là où l'auteur a mis un POINT**. Il enseignait donc
+   * la règle d'or à l'envers — `.` appelle un composant, `:` affecte une valeur — et invitait à
+   * poser une valeur là où la forme n'en admet aucune.
+   *
+   * ⇒ **Une règle du langage habite TROIS endroits : la spec, le REFUS qui l'applique, et le garde
+   * qui le tient.** La réparation du nom pointé du 2026-08-24 a touché le lecteur et le garde ; le
+   * refus est resté sur l'ancien modèle, et **celui qui lit un refus apprend la règle par lui**.
+   * Relevé le même soir par BPx, par Kairos et par l'architecte, chacun de son côté.
+   *
+   * ⚠️ LA DISTINCTION VIENT DU PARSEUR, pas d'une heuristique sur le nom — mesuré avant d'écrire :
+   *     C4(zzznu)       →  { key:'zzznu', value: true }     le BOOLÉEN : écrit nu
+   *     C4(zzznu:true)  →  { key:'zzznu', value: "true" }   la CHAÎNE : une valeur écrite
+   * Une valeur strictement `true` dit donc « aucun deux-points n'a été écrit », et rien d'autre.
+   */
+  const flag = (key, line, col, ecritNu = false) => {
     if (knownParamKey(key)) return;
     const deja = vus.get(key);
     if (deja) {
@@ -1930,7 +1948,11 @@ function validateReferences(ast, libCtx = {}) {
       if (deja.line === undefined && line !== undefined) { deja.line = line; deja.col = col; }
       return;
     }
-    const err = { message: `attribut '(${key}:…)' inconnu — ni contrôle, ni valeur de librairie, ni adresse`, line, col };
+    // ⛔ ET LE MARQUEUR N'EST PLUS DANS LE TEXTE. La déduplication d'en bas reconnaissait ce message
+    // par une expression sur sa FORMULATION — donc changer un mot du refus l'aurait débranchée en
+    // silence, sans qu'aucun garde ne le dise. Un champ porte ce que le texte n'a plus à porter.
+    const err = { message: `attribut '(${key}${ecritNu ? '' : ':…'})' inconnu — ni contrôle, ni valeur de librairie, ni adresse`,
+      line, col, generique: true, cle: key };
     vus.set(key, err);
     errors.push(err);
   };
@@ -1955,7 +1977,13 @@ function validateReferences(ast, libCtx = {}) {
       for (const sq of (node.suffixQualifiers || [])) noter(sq && sq.pairs);
       for (const k of Object.keys(node.payload.params)) {
         if (!prefixees.has(k)) { signalerAmbiguite(k, node.line); signalerRealisationManquante(k, node.line); }
-        flag(k, node.line);
+        // ⛔ LA MÊME RÈGLE AUX DEUX ÉTAGES, ET C'EST ICI QUE LE MESSAGE SORTAIT. `flag` déduplique
+        // par clé : ce chemin — le repli `payload.params` — est visité AVANT le sac, donc c'est SON
+        // message qui gagne, et réparer le sac seul ne changeait rien. Mesuré plutôt que supposé :
+        //     C4(zzznu)          →  params { zzznu: true }        le booléen : écrit nu
+        //     C4(zzzaffecte:1)   →  params { zzzaffecte: 1 }      une valeur écrite
+        // Le repli porte la même distinction que la paire ; un seul mécanisme sert les deux étages.
+        flag(k, node.line, undefined, node.payload.params[k] === true);
       }
     }
     // ⚠️ LES DEUX SIGNES, PAS UN SEUL. Le mode s'écrit aussi bien entre parenthèses (`SettingBag`)
@@ -1969,7 +1997,7 @@ function validateReferences(ast, libCtx = {}) {
         if (node.type === 'SettingBag') {
           // Une paire ÉCRITE sans préfixe : c'est ici, et seulement ici, que l'ambiguïté se voit.
           if (!p.lib) { signalerAmbiguite(p.key, p.line, p.col); signalerRealisationManquante(p.key, p.line, p.col); }
-          flag(p.key, p.line, p.col);
+          flag(p.key, p.line, p.col, p.value === true);
         }
         // ⛔ LE MODE NE CHANGE PAS EN COURS DE TIRAGE — décision de Romain, 2026-08-08.
         //
@@ -2218,10 +2246,15 @@ function validateReferences(ast, libCtx = {}) {
     if (!e || !e.mapping) continue;
     if (loadLib('mapping', e.mapping)) continue;
     errors.push({
-      message: `'in ${e.name} … mapping.${e.mapping}' : la table '${e.mapping}' n'existe pas dans `
-             + `la librairie 'mapping'. Une entrée qui invoque une table inexistante croirait `
-             + `traduire et ne traduirait rien. Sans table, écrire l'entrée seule et employer des `
-             + `adresses nues ('<!${e.name}.60').`,
+      // ⛔ CE REFUS NOMMAIT UNE LIBRAIRIE QUI N'EXISTE PLUS. `lib/mapping.json` est retiré le
+      // 2026-08-24 — décision de Romain, une place qui ne porte aucune donnée n'a pas de fichier —
+      // et le message envoyait l'auteur « ajouter la table dans la librairie 'mapping' », c'est-à-dire
+      // dans un fichier supprimé. Le refus est le domicile où l'auteur apprend la règle : il dit
+      // désormais ce qui EST, à savoir qu'aucune librairie ne déclare de table.
+      message: `'in ${e.name} … mapping.${e.mapping}' : la table '${e.mapping}' n'est déclarée par `
+             + `aucune librairie chargée — aucune n'en porte aujourd'hui. Une entrée qui invoque une `
+             + `table inexistante croirait traduire et ne traduirait rien. Écrire l'entrée seule et `
+             + `employer des adresses nues ('<!${e.name}.60').`,
       line: e.line,
     });
   }
@@ -2997,18 +3030,19 @@ export function resoudreSource(source, environnement) {
     // On le retire donc pour les clés qui ont déjà un diagnostic nommé. Une clé sans
     // diagnostic ciblé garde évidemment le générique — c'est le seul qu'elle ait.
     {
-      const genericRe = /^attribut '\((.+?):…\)' inconnu/;
+      // ⛔ CE FILTRE RECONNAISSAIT LE MESSAGE GÉNÉRIQUE PAR SA FORMULATION. Une expression sur le
+      // TEXTE du refus le liait à sa graphie : le jour où le refus a cessé d'écrire un deux-points
+      // sur un nom nu, cette expression aurait cessé de reconnaître ses propres messages, EN
+      // SILENCE — le générique serait revenu doubler chaque diagnostic nommé. Le producteur pose
+      // désormais un champ, et le filtre le lit.
       const clesDiagnostiquees = new Set(
         result.errors
-          .filter((e) => e && typeof e.message === 'string' && !genericRe.test(e.message))
+          .filter((e) => e && !e.generique && typeof e.message === 'string')
           .map((e) => (e.message.match(/^'(.+?)'/) || [])[1])
           .filter(Boolean),
       );
       if (clesDiagnostiquees.size > 0) {
-        result.errors = result.errors.filter((e) => {
-          const m = e && typeof e.message === 'string' ? e.message.match(genericRe) : null;
-          return !(m && clesDiagnostiquees.has(m[1]));
-        });
+        result.errors = result.errors.filter((e) => !(e && e.generique && clesDiagnostiquees.has(e.cle)));
       }
     }
 

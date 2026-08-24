@@ -5555,6 +5555,32 @@ function parse(tokens, opts = {}) {
             `'${key}.${composant}:…' — la librairie '${key}' ne déclare aucun contrôle `
             + `'${composant}'. Le préfixe est bon, le contrôle n'est pas chez lui.`, keyTok);
         }
+        // ⛔ ET CE REFUS ACCUSAIT « PAS UNE LIBRAIRIE INVOQUÉE » UNE LIBRAIRIE QUI L'EST.
+        //
+        // `prefixesConnus` juste au-dessus se dérive de la table des CONTRÔLES qualifiés : une
+        // librairie invoquée qui ne déclare AUCUN contrôle n'y figure pas, et tombait ici. Mesuré le
+        // 2026-08-24 sur une scène qui écrit `digital` en tête — dont le mot déclaré est `function` :
+        //     !(function.transpose:2)   « 'function' n'est ni une librairie invoquée … »
+        // **Elle est invoquée, elle est écrite en tête.** Le refus est juste sur le fond — cette
+        // librairie porte des fonctions, pas des contrôles — et il accusait le mauvais fait.
+        //
+        // ⇒ Troisième message d'une même cause, avec celui qui écrivait un deux-points pour un point
+        // et celui qui nommait un catalogue supprimé : **le refus décrivait un état qui n'est plus
+        // celui de la chaîne**. Et celui qui lit un refus apprend la règle par lui.
+        //
+        // ⚠️ RIEN NE CHANGE À LA RÉSOLUTION — la forme est refusée exactement comme avant. Seul ce
+        // que le refus DIT change, et il dit désormais lequel des deux faits est en cause.
+        const motsInvoques = new Set();
+        for (const [fichier, lib] of Object.entries(libCtx._libs || {})) {
+          motsInvoques.add(fichier);
+          if (lib && typeof lib.resolves === 'string' && lib.resolves) motsInvoques.add(lib.resolves);
+        }
+        if (motsInvoques.has(key)) {
+          throw new ParseError(
+            `'${key}.${composant}:…' — la librairie '${key}' est bien invoquée, et elle ne déclare `
+            + `AUCUN contrôle : rien ne s'y affecte par une parenthèse. Le préfixe est bon, la `
+            + `librairie n'est pas de celles qui portent des contrôles.`, keyTok);
+        }
         throw new ParseError(
           `'${key}.${composant}:…' affecte une valeur au composant '${composant}' de `
           + `'${key}' — mais '${key}' n'est ni une librairie invoquée, ni un contrôle à composants, `

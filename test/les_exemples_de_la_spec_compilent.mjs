@@ -526,7 +526,12 @@ const RETARD_BLOCS = new Map([
   //    l isolement, pas un defaut du langage. Mesure faite : les deux blocs REUNIS compilent.
   //    Il sort du retard le jour ou le branchement entre au langage et ou les deux blocs
   //    fusionnent — ou si le garde apprend a chainer un bloc a son voisin.
-  ['Motif -> C4 D4 E4 #0', /attribut '\(E4:…\)' inconnu/],
+  // ⚠️ LA GRAPHIE DU REFUS A CHANGE LE 2026-08-24, LA CAUSE DU RETARD N A PAS BOUGE. Le message
+  //    ecrivait `attribut '(E4:…)' inconnu` — un deux-points sur un nom que l auteur ecrit NU. Le
+  //    refus rend desormais la graphie ecrite. Le motif suit ce que le code ECRIT ; ce n est pas une
+  //    assertion ajustee a ce qui sort, c est la meme cause dite par le bon bout, et le cliquet a
+  //    rougi des la reparation — ce qui est son travail.
+  ['Motif -> C4 D4 E4 #0', /attribut '\(E4\)' inconnu/],
   // RÉVISÉ 2026-08-08 : le bloc porte `(tempx:…)`, un mot RETIRÉ du langage. Le refus le nomme
   // maintenant au lieu de buter sur la barre de fraction de sa valeur.
 ]);
