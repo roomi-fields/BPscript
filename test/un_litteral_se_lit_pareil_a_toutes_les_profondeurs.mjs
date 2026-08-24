@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * GARDE — UN LITTÉRAL SE LIT PAREIL À TOUTES LES PROFONDEURS.
+ * GARDE — UN LITTÉRAL ET UNE SUITE SE LISENT PAREIL À TOUTES LES PROFONDEURS.
  *
  * `true`, `false` et un nombre écrits dans une source de librairie doivent ressortir du paquet avec
  * la MÊME NATURE, qu'ils soient posés sur la déclaration du fichier, dans une entrée, ou au fond
@@ -47,6 +47,8 @@ def zz_temoin (documented:false, resolvedBy:zz, resolves:zz_temoin, section:obje
 def surface (vrai:true, faux:false, nombre:12, mot:oui)
 
 def profond (place(dedans(vrai:true, faux:false, nombre:12, mot:oui)))
+
+def suites (surface(a, b), place(dedans(profonde(a, b))))
 `;
 
 const bac = mkdtempSync(join(tmpdir(), 'zz-litteral-'));
@@ -104,6 +106,31 @@ if (publie) {
       `B. ⛔ les deux profondeurs doivent rendre les MÊMES natures — surface [${nature(surface)}] `
       + `contre profond [${nature(profond)}]. C'est l'écart exact qui a vécu ici : deux lecteurs de `
       + `valeur, et la profondeur qui décide lequel s'applique.`);
+  }
+
+  // ── B2. ⛔ UNE SUITE DE NOMS NUS EST UNE LISTE, À TOUTES LES PROFONDEURS AUSSI ────────────
+  // ⛔ MÊME DÉFAUT, MÊME FICHIER, TROUVÉ LE MÊME JOUR — et j'avais fermé la moitié. Le littéral
+  // était typé partout depuis le matin ; la SUITE, elle, devenait une LISTE à l'étage de l'entrée
+  // (reconnue à sa FORME) et un OBJET plus bas (reconnue à une LISTE DE CLÉS écrite à la main).
+  //
+  //     surface(a, b)                 →  ["a","b"]
+  //     place(dedans(profonde(a, b))) →  {"a":true,"b":true}      AVANT la réparation
+  //
+  // ⚠️ C'est l'architecte qui l'a fait mesurer, en refusant de relayer à Romain une affirmation que
+  // je lui avais donnée : « une liste de noms n'a pas de graphie ». **Elle en a une, et elle passe.**
+  // Ce qui ne passait pas était la LECTURE, un étage plus bas — et ma phrase désignait le langage
+  // quand le défaut était dans mon générateur.
+  {
+    const s = publie.objects?.suites;
+    ok(Array.isArray(s?.surface),
+      `B2. ⛔ 'suites.surface' doit être une LISTE — reçu ${JSON.stringify(s?.surface)}.`);
+    ok(Array.isArray(s?.place?.dedans?.profonde),
+      `B2. ⛔ 'suites.place.dedans.profonde' doit être une LISTE elle aussi — reçu `
+      + `${JSON.stringify(s?.place?.dedans?.profonde)}. Une suite lue comme un objet perd son ORDRE `
+      + `et sa NATURE : un lecteur qui fait \`[0]\` rend undefined.`);
+    ok(JSON.stringify(s?.surface) === JSON.stringify(s?.place?.dedans?.profonde),
+      `B2. et les deux profondeurs rendent la MÊME chose — ${JSON.stringify(s?.surface)} contre `
+      + `${JSON.stringify(s?.place?.dedans?.profonde)}.`);
   }
 
   // ── C. ET LE CHAMP DE FICHIER SUIT LA MÊME RÈGLE ──────────────────────────────────────────

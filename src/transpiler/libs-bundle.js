@@ -137,7 +137,7 @@ function rangerConteneur(ou, nom, val, entry, place, clesListesDuFichier = CLES_
       // ⚠️ UNE CLÉ-LISTE PASSE PAR `suite`, jamais par l'aplatissement : lui rendrait `args(seed)`
       // en `{seed:true}` au lieu de `['seed']`, ET perdrait l'ordre — un objet JavaScript réordonne
       // ses clés entières. Mesuré : 228 valeurs publiées changeaient sans cette distinction.
-      entree[p.key] = clesListesDuFichier.has(p.key) ? suite(p.value, entry, nom, p.key) : sacEnObjet(p.value);
+      entree[p.key] = clesListesDuFichier.has(p.key) ? suite(p.value, entry, nom, p.key) : sacEnObjet(p.value, entry, nom);
       continue;
     }
     let x = valeurDeCle({ kind: 'value', value: p.value, ...(p.texte ? { texte: true } : {}) });
@@ -233,11 +233,28 @@ function suite(sac, fichier, declaration, cle) {
  * Aucune source du langage n'écrit aujourd'hui un littéral typable au fond d'un sac ; la réparation
  * ferme la porte avant que quelqu'un la pousse.
  */
-function sacEnObjet(sac) {
+function sacEnObjet(sac, fichier = '?', declaration = '?') {
   const out = {};
   for (const p of sac.pairs || []) {
+    // ⛔ UNE SUITE DE NOMS NUS EST UNE LISTE, À CETTE PROFONDEUR COMME AUX AUTRES. Ce lecteur en
+    // faisait un OBJET — `liste(a, b)` rendait `{a:true, b:true}` — quand `rangerConteneur`, un
+    // étage plus haut, rend `["a","b"]` pour la MÊME graphie.
+    //
+    // ⚠️ DEUX MÉCANISMES POUR UN SEUL FAIT, ET LA PROFONDEUR CHOISISSAIT : à l'étage de l'entrée la
+    // suite se reconnaît à sa FORME (aucun membre ne porte de valeur) ; plus bas, elle ne se
+    // reconnaissait qu'à la LISTE DE CLÉS écrite à la main. **C'est le même défaut que les deux
+    // lecteurs de valeur réparés le matin même, dans le même fichier** — j'avais fermé le littéral
+    // et laissé la suite.
+    //
+    // ⛔ RAYON D'IMPACT MESURÉ AVANT LA FRAPPE : 7331 feuilles, ZÉRO valeur publiée change. Aucune
+    // source du langage n'écrit aujourd'hui une suite à cette profondeur.
+    if (p.value && p.value.type === 'SettingBag'
+        && (p.value.pairs || []).length && (p.value.pairs || []).every((q) => q.value === true)) {
+      out[p.key] = suite(p.value, fichier, declaration, p.key);
+      continue;
+    }
     out[p.key] = (p.value && p.value.type === 'SettingBag')
-      ? sacEnObjet(p.value)
+      ? sacEnObjet(p.value, fichier, declaration)
       : valeurDeCle({ kind: 'value', value: p.value, ...(p.texte ? { texte: true } : {}) });
   }
   return out;
@@ -292,7 +309,7 @@ async function collectBps(dir, prefix, compileToBPxAST) {
               // réordonne ses clés entières. Mesuré : 228 valeurs publiées changeaient.
               // ⚠️ Ce commentaire a été amputé une première fois : je l'avais inséré par le shell
               // avec des accents graves, que le shell a exécutés. Cinquième fois du même signe.
-              : { kind: 'value', value: sacEnObjet(p.value), sac: p.value })
+              : { kind: 'value', value: sacEnObjet(p.value, entry, d.name), sac: p.value })
           : { kind: 'value', value: p.value, ...(p.texte ? { texte: true } : {}) };
       }
       return out;
