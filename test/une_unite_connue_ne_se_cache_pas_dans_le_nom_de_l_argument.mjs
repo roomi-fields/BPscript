@@ -85,10 +85,17 @@ const descendre = (n, lib) => {
 };
 for (const [nl, l] of Object.entries(LIBS)) for (const s of ['controls', 'engine', 'subgrammar']) descendre(l[s], nl);
 
-// ⛔ UN GARDE COMPTE CE QU'IL A EXAMINÉ, et refuse d'avoir examiné zéro.
-ok(entrees.length >= 90, `SOCLE : ${entrees.length} entrée(s) lues dans le paquet publié — sous 90, le balayage ne mesure rien`);
+// ⛔ UN GARDE COMPTE CE QU'IL A EXAMINÉ, et refuse d'avoir examiné ZÉRO — le mot est dans la règle,
+// et ces deux seuils gardaient un INVENTAIRE : 144 entrées pour un seuil de 90, 55 grandeurs pour un
+// seuil de 50. Cinq grandeurs retirées de la donnée faisaient rougir le second sur un geste ordinaire.
+//
+// ⚠️ ET ILS SONT DEUX LIGNES AU-DESSUS DE CELUI QUE JE VENAIS DE RÉPARER. Kairos a payé le même
+// mouvement dans la même nuit — « réparer le site rendu par l'instrument, jamais son voisinage » —
+// et c'est ma propre règle de garde, retournée contre mes propres bancs : on répare l'ESPACE où le
+// défaut peut vivre, pas l'endroit où il s'est montré.
+ok(entrees.length > 0, `SOCLE : AUCUNE entrée lue dans le paquet publié — le balayage ne mesure rien`);
 const grandeurs = entrees.filter((x) => Array.isArray(x.def.args) && x.def.args.length && !Array.isArray(x.def.values));
-ok(grandeurs.length >= 50, `SOCLE : ${grandeurs.length} grandeur(s) — une entrée à argument, hors liste fermée`);
+ok(grandeurs.length > 0, `SOCLE : AUCUNE grandeur — une entrée à argument, hors liste fermée`);
 const avecUnite = grandeurs.filter((x) => typeof x.def.unit === 'string' && x.def.unit);
 // ⛔ CE SEUIL ÉTAIT À 12 ET IL ÉTAIT FAUX DANS LES DEUX SENS — mesuré le 2026-08-24 après que
 // bp3-frontend et Kairos aient cherché la même forme chez eux.

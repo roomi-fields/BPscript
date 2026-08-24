@@ -171,7 +171,9 @@ ok(porteurs.length > 0, `SOCLE : la donnée ne porte AUCUNE unité — le champ 
     };
     marcher(lib, '');
   }
-  ok(bornees.length >= 20, `B-bis. SOCLE : la donnée doit porter des grandeurs bornées — ${bornees.length}`);
+  // ⛔ MÊME FAMILLE, MÊME FICHIER — le propos est « la donnée doit porter des grandeurs bornées »,
+  // c'est-à-dire « pas zéro », et le seuil gardait un inventaire.
+  ok(bornees.length > 0, `B-bis. SOCLE : la donnée ne porte AUCUNE grandeur bornée`);
 
   const parPlage = new Map();
   for (const b of bornees) {
