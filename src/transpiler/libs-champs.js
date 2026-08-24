@@ -28,12 +28,23 @@
  * Les noms qu'un catalogue emploie pour parler DE LUI-MÊME. Tout le reste, à ce niveau, est une
  * entrée du vocabulaire qu'il apporte.
  *
- * `section` DIT OÙ LES ENTRÉES DE CE FICHIER SE RANGENT : il ROUTE à la construction et ne voyage
- * pas jusqu'aux consommateurs — zéro occurrence dans les librairies publiées.
+ * ⛔ CETTE PORTE EST PUBLIÉE — déclarée dans le champ d'exports le 2026-08-24, à la demande d'Atlas
+ * et de Kairos, qui en tenaient chacun une copie. Ce qui suit vaut donc comme contrat.
+ *
+ * ⛔ DEUX NATURES DANS UNE SEULE LISTE, ET J'AI DIT LE CONTRAIRE À DEUX VOISINS. `section` ROUTE à
+ * la CONSTRUCTION — il dit au générateur du bundle où ranger les entrées du fichier — et il ne
+ * voyage JAMAIS jusqu'aux consommateurs : **zéro occurrence dans le paquet publié**, mesuré à
+ * toutes les profondeurs. Tous les autres champs se publient.
+ *
+ * ⚠️ Le 2026-08-24 j'ai écrit à Kairos et à Atlas « `section`, que je publie depuis le 2026-08-22 ».
+ * C'était faux, et la phrase juste était écrite dans mon propre générateur, à trois lignes de la
+ * liste que je lisais. Kairos a mesuré 0 occurrence dans trois de mes états et a répondu avec sa
+ * mesure au lieu de me croire. **Un champ de fichier n'est pas un champ publié.**
  *
  * `documented` DIT SI LE CATALOGUE ENTRE DANS L'AIDE PUBLIÉE, en DEUX MOTS, `yes` et `no`. Ce
  * n'est pas un booléen, et c'est une mesure qui le dit : le langage n'a pas de littéral booléen,
- * donc `documented:false` dans un `.bpsl` rend la CHAÎNE "false", qui est VRAIE.
+ * donc `documented:false` écrit dans une source de librairie rend la CHAÎNE "false", qui est VRAIE.
+ * Compare le MOT, jamais la vérité de la valeur, et refuse un troisième mot.
  */
 export const CHAMPS_DE_FICHIER = new Set([
   'resolvedBy', 'resolves', 'name', 'description', 'version', 'type', 'section', 'documented',

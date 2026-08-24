@@ -2660,9 +2660,16 @@ function parse(tokens, opts = {}) {
       if (!ouvreUnNom()) {
         throw new ParseError(
           `'${motDeclarant}' doit nommer ce qu'il définit : '${motDeclarant} <nom> <corps>'. Le nom `
-          + "vient d'abord, ce qu'il vaut ensuite — comme 'actor'.", tok);
+          + `vient d'abord, ce qu'il vaut ensuite — comme 'actor'. UN NOM COMMENCE PAR UNE LETTRE, `
+          + `ou par un chiffre s'il porte au moins une lettre : 'western', 'a_b', '12TET' en sont ; `
+          + `'12', '_ab', '#a', '-ab' et '"ab"' n'en sont pas. Reçu : `
+          + `${JSON.stringify(String(current().value ?? current().type))}.`, tok);
       }
       const defName = lireNomDEntree(tok);
+      // ⛔ LE JETON QUI SUIT LE NOM, CAPTURÉ ICI. Quand aucun corps n'est lisible, c'est LUI qui dit
+      // pourquoi : collé au nom, il l'a ARRÊTÉ. `def ab_` refuse en citant `'def ab'` — le nom lu,
+      // pas le nom écrit — et rien dans le message ne dit que le souligné est tombé.
+      const apresLeNom = current();
       // La parenthèse porte ce qui appartient à ce qui la précède — ici les clés du terminal. Elle
       // s'ajoute aux deux corps que `def` lit déjà (même ligne, bloc indenté) ; aucun ne change.
       const clesParenthesees = motDeclarant === 'terminal' && at(T.LPAREN);
@@ -2949,7 +2956,15 @@ function parse(tokens, opts = {}) {
 
       if (lu === 0) {
         throw new ParseError(
-          `'${motDeclarant} ${defName}' ne déclare rien. Ce palier lit DEUX corps : la DÉCLARATION DE `
+          // ⚠️ LE NOM CITÉ EST CELUI QUI A ÉTÉ LU, pas celui qui a été écrit. Quand un signe COLLÉ
+          // l'a arrêté, le message doit le dire avant tout le reste : sans ça, l'auteur relit sa
+          // ligne, y voit son nom entier, et cherche la faute dans le corps.
+          `${apresLeNom && apresLeNom.spaceBefore === false && apresLeNom.type !== T.EOF
+            ? `le nom lu s'arrête à '${defName}' : le signe `
+              + `${JSON.stringify(String(apresLeNom.value ?? apresLeNom.type))} qui le suit n'entre `
+              + `pas dans un nom, et ce qui reste ne se lit comme aucun corps. `
+            : ''}`
+          + `'${motDeclarant} ${defName}' ne déclare rien. Ce palier lit DEUX corps : la DÉCLARATION DE `
           + `TERMINAL — un nom puis ses clés, sur la même ligne ('def ${defName}  voice.sec') ou `
           + `dans un bloc indenté, une clé par ligne — et la STRUCTURE, un nom qui vaut une suite `
           + `de termes ('def ${defName} sa re ga pa'). Les autres corps que la spécification `

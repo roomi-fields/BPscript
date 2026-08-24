@@ -41,6 +41,7 @@
       "types": "./src/transpiler/libs-data.d.ts",
       "default": "./src/transpiler/libs-data.js"
     },
+    "./src/transpiler/libs-champs.js": "./src/transpiler/libs-champs.js",
     "./src/transpiler/syntaxe-data.js": "./src/transpiler/syntaxe-data.js",
     "./src/transpiler/gabarits-data.js": "./src/transpiler/gabarits-data.js"
   }

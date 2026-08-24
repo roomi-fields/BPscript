@@ -51,8 +51,13 @@ const CARACTERES_CONNUS_MAIS_ETRANGERS = new Map([
 // d'octave que je n'ai pas pu retrouver dans les specs. Un refus muet vaut mieux qu'un refus
 // qui enseigne une forme inventée : le premier fait ouvrir la doc, le second fait écrire faux.
 
+// ⛔ AUCUN COMPTE DANS UN INTITULÉ. Les trois rubriques de cette table en portaient un — « (24) »,
+// « (7) », « (3 + 1) » — et deux étaient FAUX le 2026-08-24 : 27 signes structurels pour 24
+// annoncés, et le « + 1 » désignait `lambda`, sorti du langage la veille. Un compte figé dans un
+// commentaire est un recensement tenu à la main : il se périme au premier ajout, sans rougir, et
+// il se lit comme une mesure. Atlas l'a relevé en comparant sa fiche à cette table.
 const T = Object.freeze({
-  // Structural symbols (24)
+  // Structural symbols
   AT:           'AT',           // @
   ARROW_R:      'ARROW_R',     // ->
   ARROW_L:      'ARROW_L',     // <-
@@ -84,7 +89,7 @@ const T = Object.freeze({
   // Tempo operators (in [] qualifiers)
   STAR:         'STAR',        // *
 
-  // Flag operators (7)
+  // Flag operators
   EQ:           'EQ',          // ==
   NEQ:          'NEQ',         // !=
   GT:           'GT',          // >
@@ -93,7 +98,7 @@ const T = Object.freeze({
   LTE:          'LTE',         // <=
   PLUS:         'PLUS',        // +
 
-  // Keywords (3 + 1)
+  // Keywords
   GATE:         'GATE',        // gate
   TRIGGER:      'TRIGGER',     // trigger
   CV:           'CV',          // cv

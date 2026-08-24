@@ -177,6 +177,43 @@ const compiler = (tete) => {
 // ── SOCLE ────────────────────────────────────────────────────────────────────────────────────
 ok(passe >= 30, `SOCLE : ${passe} vérifications seulement — la matrice s'est vidée sans rougir.`);
 
+
+// ─── H. LE REFUS ENSEIGNE LE CRITÈRE, ET LA TRONCATURE SE DIT ────────────────────────────────
+// ⛔ UNE RÈGLE DU LANGAGE HABITE TROIS SURFACES : la spécification, le REFUS qui l'applique, le
+// garde qui la tient. La troisième — celle qu'un auteur lit vraiment — ne portait AUCUN critère :
+// `def _ab`, `def 12`, `def #a` et `def "ab"` rendaient le MÊME texte, « doit nommer ce qu'il
+// définit », qui n'apprend pas ce qui fait un nom. Geste ouvert par l'architecte le 2026-08-24,
+// après contre-mesure d'Atlas : écrire ce que le code applique déjà n'est pas définir une règle.
+//
+// ⛔ ET UN CAS COUPE LE NOM. `def ab_` cite `'def ab'` — le nom LU, pas le nom ÉCRIT. L'auteur relit
+// sa ligne, y voit son nom entier, et cherche la faute dans le corps. Le message doit dire OÙ le nom
+// s'est arrêté et QUEL signe l'a arrêté.
+{
+  const refuseAvecCritere = ['_ab', '12', '#a', '-ab', '"ab"', '$a'];
+  for (const n of refuseAvecCritere) {
+    const msg = messages(compileToBPxAST(`def ${n} (x:1)`));
+    ok(/UN NOM COMMENCE PAR UNE LETTRE/.test(msg) && /12TET/.test(msg),
+       `H. 'def ${n}' doit REFUSER en disant ce qui fait un nom — reçu : ${msg.slice(0, 120) || 'aucune erreur'}`);
+    ok(/Reçu :/.test(msg),
+       `H. et le refus doit citer LE SIGNE reçu, sinon l'auteur ne sait pas lequel de ses caractères `
+       + `est en cause — reçu : ${msg.slice(0, 120)}`);
+  }
+  // ⚠️ LA TRONCATURE : le nom lu, le signe qui l'a arrêté, tous deux nommés.
+  for (const [n, lu, signe] of [['ab_', 'ab', '_'], ['a.b', 'a', '.'], ['a$', 'a', '$']]) {
+    const msg = messages(compileToBPxAST(`def ${n} (x:1)`));
+    ok(new RegExp(`le nom lu s'arrête à '${lu.replace('$', '\\$')}'`).test(msg),
+       `H. 'def ${n}' doit DIRE que le nom s'arrête à '${lu}' — reçu : ${msg.slice(0, 140)}`);
+    ok(msg.includes(JSON.stringify(signe)),
+       `H. et NOMMER le signe ${JSON.stringify(signe)} qui l'a arrêté — reçu : ${msg.slice(0, 140)}`);
+  }
+  // ⛔ ET LE COMPLÉMENT : un nom LÉGITIME ne déclenche aucun de ces deux messages. Sans lui, un refus
+  // universel rendrait tout ce volet vert.
+  for (const n of ['ab', 'a_b', '12a', 'a#', 'a-b', 'ab-', '12TET', 'bp3_Bohlen-Pierce']) {
+    const msg = messages(compileToBPxAST(`def ${n} (x:1)`));
+    ok(msg === '', `H. 'def ${n}' est un nom LÉGITIME et doit compiler — reçu : ${msg.slice(0, 100)}`);
+  }
+}
+
 if (echecs.length) {
   console.error(`❌ un nom qui commence par un chiffre : ${echecs.length} échec(s)`);
   for (const e of echecs) console.error(`   - ${e}`);
