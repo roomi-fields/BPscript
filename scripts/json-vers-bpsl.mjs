@@ -26,8 +26,20 @@
  * séparé compile (corps). Il n'y avait pas de question ouverte, mais une distinction non mesurée —
  * et la forme multi-ligne que ce fichier écrivait refusait l'objet imbriqué que celle-ci accepte.
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { CHAMPS_DE_FICHIER } from '../src/transpiler/libs-champs.js';
+
+// ⛔ LE DOSSIER RESTE RELATIF AU RÉPERTOIRE COURANT, ET C'EST UN JOINT, PAS UNE NÉGLIGENCE. DEUX
+// GARDES DU PORTILLON injectent en fabriquant un `lib/` dans un dossier temporaire puis en s'y
+// plaçant : `un_catalogue_declare_s_il_est_documente` et
+// `un_nom_que_le_langage_n_ecrit_pas_nu_garde_sa_place`. Je l'ai calculé depuis ce fichier pour le
+// rendre insensible au cwd — et **les deux gardes ont cessé de mordre dans le même geste**, parce
+// que l'outil lisait alors le VRAI `lib/` au lieu de leur bac à sable.
+// ⇒ **On ne durcit pas un chemin sans mesurer qui s'en sert comme prise.** La fragilité au cwd est
+// inscrite au backlog ; elle se lèvera en donnant aux deux gardes une autre prise, pas en leur
+// retirant celle-ci.
+const DOSSIER = 'lib';
 
 const CLES_LISTES = new Set(['args', 'values', 'scope', 'range']);
 
@@ -222,12 +234,43 @@ function sections(j) {
       // EXACTEMENT la forme d'une section. L'outil descendait dedans et émettait `def device
       // (section:objects.fatbass for:sub37, …)` — une entrée fabriquée, sous une section dont le nom
       // ne s'écrit pas. Un nom qu'on ne peut pas écrire ne peut pas nommer une place où l'on range.
-      if (estSection && chemin.length < 2 && nomNu(k)) explorer(v, [...chemin, k]);
+      // ⛔ LA DESCENTE S'ARRÊTE À UN NIVEAU, et c'est le bundle qui le dit, pas une préférence.
+      // À deux niveaux, `homomorphism.tables.dhadhatite` était pris pour une SECTION : son unique
+      // membre `default` remontait en `def default` au premier niveau, et **trois tables portent ce
+      // même membre** — la source produite ne compilait plus. ⇒ **Un catalogue dont toutes les
+      // entrées sont des objets a exactement la forme d'une section** ; rien dans la donnée ne les
+      // distingue. Ce que le bundle publie tranche : `tables.dhadhatite` vaut `{default:{…}}`,
+      // imbriqué, et `default` n'existe pas à la racine. La preuve d'égalité par la porte du bundle
+      // est l'arbitre — pas cette borne, qui n'en est que la conséquence.
+      if (estSection && chemin.length < 1 && nomNu(k)) explorer(v, [...chemin, k]);
     }
     if (chemin.length) trouvees.push(chemin.join('.'));
   };
   explorer(j, []);
   return trouvees.filter((s) => s !== '');
+}
+
+/**
+ * LES CATALOGUES ENCORE EN JSON, ET LEUR DONNÉE — LE SEUL ENDROIT QUI CONNAÎT LA DISPOSITION.
+ *
+ * ⛔ POURQUOI ÇA VIT ICI ET NULLE PART AILLEURS. Un lecteur qui construit `lib/<nom>.json` de son côté
+ * **devient aveugle à une bascule SANS CASSER** : le jour où le catalogue passe en `.bpsl`, il
+ * continue sur moins de données et son portillon reste vert. Cinq lecteurs s'y sont pris le même
+ * jour, et un garde du portillon refuse désormais tout chemin construit à la main vers `lib/`.
+ *
+ * ⇒ **Cet outil EST celui dont le travail est de connaître la disposition** — il convertit d'un
+ * format vers l'autre. Il l'expose donc, et ses éprouveurs le lui demandent au lieu de le redériver.
+ */
+export function cataloguesEnJson() {
+  return readdirSync(DOSSIER)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => f.replace(/\.json$/, ''))
+    .sort();
+}
+
+/** La donnée d'un catalogue encore en JSON, lue par son NOM — jamais par un chemin reconstruit. */
+export function donneeDe(nom) {
+  return JSON.parse(readFileSync(join(DOSSIER, `${nom}.json`), 'utf8'));
 }
 
 export function convertir(nom, j) {
@@ -323,8 +366,24 @@ export function convertir(nom, j) {
       // À la racine, ce qui EST une section se lit dans sa propre passe, jamais deux fois.
       if (sec === '' && trouvees.includes(nomE)) continue;
       vues.add(sec ? `${sec}.${nomE}` : nomE);
-      if (typeof def !== 'object' || def === null || Array.isArray(def)) {
-        out.push(...enCommentaire(`${nomE} : ${def}`), ''); continue;
+      // ⛔ UNE ENTRÉE QUI N'EST PAS UN OBJET NE SE DÉGRADE PAS EN COMMENTAIRE. Cette branche rendait
+      // `core.apporte` — un TABLEAU de neuf — sous forme de `// apporte : expression,midi,…`, et
+      // sortait en code 0. **Un commentaire ne voyage pas jusqu'aux consommateurs** : une entrée sur
+      // cinq disparaissait du bundle sans qu'un seul signe le dise. Le refus est bruyant, la perte
+      // est muette — c'est la seconde fois que ce fichier la paie.
+      if (Array.isArray(def)) {
+        // Mesuré à l'oracle, sur le paquet publié : `def apporte (expression, midi, audio)` COMPILE,
+        // à un élément comme à neuf, en noms nus comme en textes. La forme existe ; c'est cet outil
+        // qui ne l'écrivait pas.
+        corps.push(...ecrireEntree(nomE, def.map((x) => rendValeur(nomE, x === null ? '' : x, nom))));
+        corps.push('');
+        continue;
+      }
+      if (typeof def !== 'object' || def === null) {
+        refus.push(`${nomE} : une entrée qui vaut ${typeof def} n'a pas de graphie d'entrée — elle `
+          + `serait perdue. Une entrée porte un objet ou une liste ; un scalaire à la racine se `
+          + `déclare comme champ de fichier, pas comme entrée.`);
+        continue;
       }
       for (const [k, v] of Object.entries(def)) {
         if (k.startsWith('_') && typeof v === 'string') out.push(...enCommentaire(`${nomE} · ${v}`));
@@ -404,7 +463,7 @@ const args = process.argv.slice(2);
 const essai = args.includes('--essai');
 const cible = args.find((a) => !a.startsWith('--'));
 if (cible) {
-  const j = JSON.parse(readFileSync(`lib/${cible}.json`, 'utf-8'));
+  const j = donneeDe(cible);
   const { texte, refus } = convertir(cible, j);
   if (refus.length) {
     console.error(`⛔ ${cible} : ${refus.length} valeur(s) non rendue(s) — rien n'est écrit.`);
@@ -432,7 +491,7 @@ if (cible) {
 
   if (essai) { process.stdout.write(texte + '\n'); }
   else {
-    writeFileSync(`lib/${cible}.bpsl`, texte + '\n');
+    writeFileSync(join(DOSSIER, `${cible}.bpsl`), texte + '\n');
     console.log(`✅ lib/${cible}.bpsl écrit — source relue par le compilateur avant écriture`);
   }
 }
