@@ -7,8 +7,8 @@
 
 def voices (documented:yes, resolvedBy:Kairos, name:voices, objects(
   wobble(audio:"`js: saw(pitch) >> lpf(cutoff) >> adsr(gate)`"),
-  fatbass(audio:"`js: (saw(pitch) | saw(pitch*1.01)) >> lpf(cutoff) >> adsr(gate)`"),
-  "fatbass for:sub37"(device(preset:bass-init, glide:0.2, osc1-wave:saw)),
+  fatbass(audio:"`js: (saw(pitch) | saw(pitch*1.01)) >> lpf(cutoff) >> adsr(gate)`",
+          for(sub37(device(preset:bass-init, glide:0.2, osc1-wave:saw)))),
   bayan_open(audio:"`js: (noise() >> bpf(80) | sin(80)) >> adsr(decay:350ms)`"),
   bayan_muted(audio:"`js: noise() >> bpf(120) >> adsr(decay:80ms)`"),
   dayan_ring(audio:"`js: (sin(320) | sin(480)) >> adsr(decay:400ms)`"),

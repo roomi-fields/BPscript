@@ -1311,11 +1311,12 @@ function describeVocabulary(directives = []) {
   // Un repli sur l'objet vide publiait « zéro mot de syntaxe », qui a la graphie d'une mesure.
   const langLib = SYNTAXE;
   // Voix (LANG-SONS-2, catalogue du mot `voice` §3) : noms de BASE pour `voice.<nom>` — les clés
-  // `nom for:<device>` (spécialisations §5) se replient sur leur nom de base.
+  // La spécialisation par appareil vit dans le membre `for` de la voix (§5), plus dans son nom.
   // Même geste : l'AXE `voice`, pas le fichier `voices`.
   const voicesLib = loadJsonFile('voice');
-  const voiceNames = [...new Set(Object.keys((voicesLib && voicesLib.objects) || {})
-    .map((k) => k.replace(/\s+for:\S+$/, '')))];
+  // ⛔ LE NOM EST UN NOM — le repli sur une clé qui portait sa destination est retiré avec la donnée
+  // qui le rendait nécessaire (décision Romain, 2026-08-24).
+  const voiceNames = Object.keys((voicesLib && voicesLib.objects) || {});
   return {
     voices: voiceNames,
     keywords: [...ctx.reservedDirectiveNames],

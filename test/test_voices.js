@@ -16,6 +16,7 @@
 
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
+import { registerLib } from '../src/transpiler/libs.js';
 
 let pass = 0, fail = 0;
 const check = (cond, label) => { if (cond) { pass++; } else { fail++; console.error('  ✗ ' + label); } };
@@ -55,12 +56,33 @@ console.log('--- 4. LA LIBRAIRIE DES VOIX TIENT — elle ne part pas avec la cl�
 {
   const objets = (LIBS.voices || {}).objects || {};
   const noms = Object.keys(objets);
-  check(noms.length >= 10, `lib/voices.json doit rester peuplée — ${noms.length} entrée(s)`);
+  check(noms.length >= 10, `le catalogue du mot 'voice' doit rester peuplé — ${noms.length} entrée(s)`);
   // Les deux réalisations que la spec LANG-SONS distingue : le code qui synthétise, le preset
   // d'un appareil. Une entrée de chaque au moins, sinon la librairie a perdu la moitié de sa forme.
   check(noms.some((n) => objets[n].audio), 'au moins une voix porte une réalisation `audio`');
-  check(noms.some((n) => objets[n].device), 'au moins une voix porte une réalisation `device`');
+  // ⛔ LE PRÉRÉGLAGE D'APPAREIL A CHANGÉ D'ÉTAGE, ET C'EST UNE DÉCISION. Romain, 2026-08-24 : la
+  // spécialisation par appareil est un MEMBRE, jamais un nom. Elle vivait dans une clé plate
+  // (`fatbass for:sub37`) que deux dépôts découpaient et rassemblaient ; elle vit maintenant sous
+  // `for(<appareil>)`, à l'intérieur de la voix. Ce banc cherchait `device` À PLAT — il l'aurait
+  // trouvé nulle part et dit « la librairie a perdu la moitié de sa forme », sur une donnée juste.
+  const avecDevice = noms.filter((n) => objets[n].device
+    || Object.values(objets[n].for || {}).some((r) => r && r.device));
+  check(avecDevice.length > 0, 'au moins une voix porte une réalisation `device`, à plat ou sous `for`');
+  // ⚠️ ET LA RELATION NE REVIENT PAS DANS UN NOM. Le garde du retrait, pas seulement celui de la pose.
+  check(!noms.some((n) => /\s+for:/.test(n)),
+    `aucun nom de voix ne porte sa destination — reçu : ${noms.filter((n) => /\s+for:/.test(n)).join(', ')}`);
 }
+
+// ⛔ CE QUE JE N'AI PAS SU ÉPROUVER, ET JE LE DIS PLUTÔT QUE DE L'OMETTRE. La lecture du membre
+// `for` par le compilateur (`voicesIndex`, `assertVoiceRef`) n'est observable par AUCUN banc que je
+// puisse écrire : `loadLib('voice')` ne consulte que le PREMIER fichier servant le mot, l'index des
+// voix est mémoïsé au chargement du module, et la donnée réelle ne porte aucune spécialisation avec
+// une réalisation `audio`. Injection faite le 2026-08-24 : désarmer entièrement la lecture du membre
+// ne fait rougir RIEN — ni ce banc, ni le portillon.
+//
+// ⚠️ Ce n'est pas une lacune de vigilance, c'est l'état du mécanisme : Kairos l'a mesuré des deux
+// bouts — 0 terminal ne lie la voix spécialisée, 0 fiche d'acteur sur 181 ne cible un appareil.
+// **La donnée est morte, et une donnée morte ne prouve aucune lecture.** Reporté à l'architecte.
 
 console.log(`\n${pass} OK / ${fail} KO`);
 if (fail > 0) process.exit(1);

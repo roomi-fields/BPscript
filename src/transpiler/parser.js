@@ -332,7 +332,7 @@ function writableChannels() {
 
 /**
  * Index des VOIX (catalogue du mot `voice`, LANG-SONS-2 [438], spec hub/projets/2026-06-24-lang-sons-spec/README.md §3-§5).
- * Une clé `nom for:<device>` = spécialisation par-device (cascade fin > général, résolue en
+ * Le membre `for` porte la carte APPAREIL → RÉALISATION (cascade fin > général, résolue en
  * AVAL) ; ici on indexe par nom de base : { nom → { base?: def, forDevices: { device → def } } }.
  * Validation de FORME à l'indexation : une réalisation `audio` DOIT être un backtick TYPÉ
  * (`js:…`/`faust:…` — spec §3 : compilé par le runtime comme la CV expr). Donnée non conforme
@@ -347,12 +347,17 @@ function voicesIndex() {
   // change d extension le 2026-08-24 sans qu une seule ligne d ici ne bouge — c est la preuve du
   // decouplage, et la raison pour laquelle aucun message de refus ne nomme plus un fichier.
   const lib = loadLib('voice');
-  for (const [key, def] of Object.entries((lib && lib.objects) || {})) {
-    const m = key.match(/^(\S+)\s+for:(\S+)$/);
-    const name = m ? m[1] : key;
-    const entry = _voicesIndex.get(name) || { base: null, forDevices: {} };
-    if (m) entry.forDevices[m[2]] = def; else entry.base = def;
-    _voicesIndex.set(name, entry);
+  // ⛔ LA RELATION SE LIT DANS UN MEMBRE, ELLE NE SE RECONSTRUIT PLUS D'UN NOM. Décision Romain,
+  // 2026-08-24, `une-specialisation-par-appareil-est-un-membre-jamais-un-nom` : le nom redevient un
+  // nom, la destination devient une clé, et le compilateur peut la lire.
+  //
+  // ⚠️ CE QUI VIVAIT ICI, ET C'ÉTAIT LA MOITIÉ DU DÉFAUT : un découpage de `<nom> for:<appareil>` sur
+  // la clé du catalogue. Kairos portait l'autre moitié — il ASSEMBLAIT la même chaîne pour adresser
+  // l'entrée. Deux dépôts reconstruisaient une structure que personne n'avait écrite, et la donnée
+  // ne la portait nulle part. Le découpage est RETIRÉ, pas doublé.
+  for (const [name, def] of Object.entries((lib && lib.objects) || {})) {
+    const forDevices = def && typeof def.for === 'object' && def.for ? { ...def.for } : {};
+    _voicesIndex.set(name, { base: def, forDevices });
   }
   return _voicesIndex;
 }
@@ -364,14 +369,14 @@ function isTypedBacktick(v) {
 
 /**
  * Valide une référence de voix (`voice.<nom>` d'acteur, ou binding alphabet→voix) :
- * la voix existe (base ou spécialisation for:) et chaque réalisation `audio` portée
+ * la voix existe et chaque réalisation `audio` portée
  * par ses définitions est un backtick typé. Jette ParseError sinon (fail-loud).
  */
 function assertVoiceRef(name, where, token) {
   const entry = voicesIndex().get(name);
   if (!entry) {
     throw new ParseError(
-      `${where} : voix '${name}' inconnue — aucune entrée '${name}' (ni '${name} for:<device>') `
+      `${where} : voix '${name}' inconnue — aucune entrée '${name}' `
       + `dans le catalogue du mot 'voice' (LANG-SONS §3).`, token,
     );
   }

@@ -124,9 +124,14 @@ function convertir(source) {
   ok(nonNus.length > 0,
     `C. SOCLE : le paquet doit porter au moins un nom non écrivable nu, sinon ce garde protège une `
     + `classe vide et le volet A mesure un cas de laboratoire.`);
-  ok(nonNus.includes('voices.objects.fatbass for:sub37'),
-    `C. la spécialisation par appareil doit survivre à la conversion, VERBATIM — c'est le seul `
-    + `exemplaire vivant du mécanisme. Noms non écrivables trouvés : ${nonNus.join(', ')}`);
+  // ⛔ ET LA SPÉCIALISATION PAR APPAREIL N'EN FAIT PLUS PARTIE — décision Romain, 2026-08-24. Ce
+  // volet EXIGEAIT `voices.objects.fatbass for:sub37` : c'était juste au pas 1, où la conversion ne
+  // devait rien changer, et FAUX au pas 3, où la relation quitte le nom. Un garde de conversion
+  // n'est pas un garde de conservation : il tient que rien ne se perd EN CONVERTISSANT, pas qu'une
+  // forme survive à une décision qui la retire.
+  ok(!nonNus.some((n) => /\s+for:/.test(n)),
+    `C. ⛔ un nom de voix porte de nouveau sa destination : ${nonNus.filter((n) => /\s+for:/.test(n)).join(', ')}. `
+    + `La relation vit dans le membre 'for', jamais dans le nom.`);
   console.log(`[nom non nu] ${nonNus.length} nom(s) non écrivable(s) dans le paquet : ${nonNus.join(' · ')}`);
 }
 
