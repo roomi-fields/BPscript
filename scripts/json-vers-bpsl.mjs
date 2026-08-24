@@ -344,7 +344,12 @@ export function convertir(nom, j) {
   const recenser = (obj, chemin) => {
     for (const [k, v] of Object.entries(obj)) {
       if (k.startsWith('_') || CHAMPS_DE_FICHIER.has(k)) continue;
-      if (!v || typeof v !== 'object' || Array.isArray(v)) continue;
+      // ⛔ UNE LISTE EST UNE ENTRÉE, ET CE COMPTE NE LA VOYAIT PAS. C'est le trou par lequel
+      // `core.apporte` — tableau de neuf — est sorti en commentaire sous un code 0 : le rendu le
+      // dégradait, et le compte censé rattraper la perte SAUTAIT la même forme. **Deux mécanismes
+      // aveugles au même endroit ne font pas une vérification, ils font un angle mort partagé.**
+      if (!v || typeof v !== 'object') continue;
+      if (Array.isArray(v)) { attendues.add([...chemin, k].join('.')); continue; }
       const ici = [...chemin, k].join('.');
       if (trouvees.includes(ici)) { recenser(v, [...chemin, k]); continue; }
       attendues.add(ici);
