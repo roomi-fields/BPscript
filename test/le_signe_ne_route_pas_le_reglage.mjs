@@ -56,7 +56,9 @@ const runtimeSample = ['vel', 'pan'].filter((k) => !QUALIFIER_KEYS.includes(k));
 // `qualifierKeys` sur décision de Romain — « on ne change pas de mode en cours de tirage ».
 // Ce n'est donc pas un socle qu'on baisse pour verdir : c'est le langage qui a perdu une clé
 // de sac, et le socle qui suit. Il garde son office — refuser que la liste se VIDE.
-ok(QUALIFIER_KEYS.length >= 7, `0. schema.qualifierKeys doit rester peuplé — reçu ${QUALIFIER_KEYS.length}`);
+// ⛔ « PEUPLÉ » EST LE PROPOS, ET LE SEUIL EN GARDAIT SEPT — la donnée en porte exactement sept,
+// marge ZÉRO. Troisième de mes bancs sur ce même objet, troisième seuil : 7, 7 et 6, jamais accordés.
+ok(QUALIFIER_KEYS.length > 0, `0. schema.qualifierKeys est VIDE — reçu ${QUALIFIER_KEYS.length}`);
 ok(runtimeSample.length === 2, `0. l'échantillon runtime (vel, pan) doit être hors qualifierKeys — reçu ${JSON.stringify(runtimeSample)}`);
 
 function valeurExemple(spec) {

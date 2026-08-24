@@ -45,9 +45,16 @@ const ENGINE_SPECS = LIBS.engine?.engine || {};
 // `qualifierKeys` sur décision de Romain — « on ne change pas de mode en cours de tirage ».
 // Ce n'est donc pas un socle qu'on baisse pour verdir : c'est le langage qui a perdu une clé
 // de sac, et le socle qui suit. Il garde son office — refuser que la liste se VIDE.
-ok(Array.isArray(QUALIFIER_KEYS) && QUALIFIER_KEYS.length >= 7,
-   `0. lib/core.json schema.qualifierKeys doit rester >= 7 entrées — reçu ${JSON.stringify(QUALIFIER_KEYS)}`);
-// (plancher 9 -> 8 le 2026-08-06 : `tempx` SUPPRIMÉ, décision Romain — doublon de `! (/N)`)
+// ⛔ CE PLANCHER A DÉJÀ ÉTÉ ABAISSÉ DEUX FOIS À LA MAIN — 9 → 8 le 2026-08-06 quand `tempx` est
+// sorti sur décision de Romain, puis 8 → 7. Son historique est écrit dans le garde : chaque retrait
+// LÉGITIME a coûté une édition, et la donnée en porte exactement SEPT aujourd'hui — MARGE ZÉRO.
+// La huitième clé retirée l'aurait fait rougir avant même qu'on y pense.
+//
+// ⚠️ ET TROIS DE MES BANCS GARDENT CE MÊME OBJET À TROIS SEUILS DIFFÉRENTS — 7, 7 et 6. Aucun ne
+// s'accorde avec les autres : ce ne sont pas trois spécifications, ce sont trois recopies du compte
+// du jour, faites à trois jours différents. Le propos écrit à côté dit « une liste NON VIDE ».
+ok(Array.isArray(QUALIFIER_KEYS) && QUALIFIER_KEYS.length > 0,
+   `0. lib/core.json schema.qualifierKeys est VIDE — reçu ${JSON.stringify(QUALIFIER_KEYS)}`);
 for (const exclu of ['goto', 'repeat', 'failed', 'rndtime']) {
   ok(!QUALIFIER_KEYS.includes(exclu),
      `0. '${exclu}' ne doit PAS être dans qualifierKeys — sa lecture côté BPx dépend de ast.qualifiers `

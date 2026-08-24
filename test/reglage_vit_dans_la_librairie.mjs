@@ -27,8 +27,10 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 // ─── 0. Témoin anti-rétrécissement — la liste source n'est pas vide ──────────────────────────
 const qualifierKeys = LIBS.core?.schema?.qualifierKeys;
-ok(Array.isArray(qualifierKeys) && qualifierKeys.length >= 6,
-   `0. lib/core.json → schema.qualifierKeys doit rester une liste non vide (reçu ${JSON.stringify(qualifierKeys)})`);
+// ⛔ LE MESSAGE DIT « une liste NON VIDE » ET LE SEUIL EN GARDE SIX. Même objet que deux autres de
+// mes bancs, à deux autres seuils — 7 et 7. Trois recopies du compte du jour, jamais accordées.
+ok(Array.isArray(qualifierKeys) && qualifierKeys.length > 0,
+   `0. lib/core.json → schema.qualifierKeys est VIDE (reçu ${JSON.stringify(qualifierKeys)})`);
 
 // ─── 1. TOUTE clé de réglage vit dans lib/controls.json ──────────────────────────────────────
 const noms = universeControlNames();
