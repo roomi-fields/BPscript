@@ -135,6 +135,28 @@ j'attends.
 
 autorité « en attendant ». Face au blocage, j'attends.
 
+## ⛔ Ce que je construis est un COMPILATEUR, de bout en bout
+
+Décision de Romain, 2026-08-24 — `le-compilateur-est-generique-de-bout-en-bout-aucun-contournement`.
+
+- **Une règle du langage s'applique PARTOUT où sa forme apparaît**, à tous les étages et à toutes les
+  profondeurs. Un mécanisme qui vaut à l'entrée et pas au fond d'un sac n'est pas une règle, c'est un
+  cas. **Deux mécanismes pour un seul fait, et la profondeur choisit lequel** : c'est la forme que
+  prend ce défaut, et elle se répare en n'en laissant qu'un.
+- **Rien ne se code en dur de ce qui se DÉCLARE.** Ce qu'une configuration racine ou une librairie
+  peut porter, elle le porte ; le compilateur **lit**, il ne connaît pas de liste de noms. Une valeur
+  écrite en dur est invisible — personne ne peut la lire ni la surcharger.
+- **Un contournement n'est pas une réparation.** Quand une forme ne rend pas ce que la spécification
+  décrit, on **répare le mécanisme** ; on ne cherche pas la graphie qui passe.
+
+⛔ **LA FORME LA PLUS DISCRÈTE DU REPLI EST CELLE QUI REND UN RÉSULTAT JUSTE.** Éprouver trois
+graphies, mesurer que deux échouent, garder la troisième et conclure « mon outil doit l'apprendre » —
+c'est ajuster l'écriture à ce que l'instrument accepte au lieu de constater que **l'instrument est
+fautif**. La donnée publiée serait correcte, et ce qui a disparu ne rougirait nulle part.
+
+⚠️ **Un contournement ANNONCÉ se refuse ; un contournement APPLIQUÉ se relit comme une réparation.**
+Nommer ce qu'on s'apprête à faire, et remonter la pièce, est ce qui laisse une chance de le refuser.
+
 ## Coder
 
 - **Le code mort s'élague** dans le mouvement qui le rend mort. Une branche sans appelant vivant sort.
