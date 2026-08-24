@@ -14,7 +14,7 @@
 // Les prototypes de ce catalogue vivent dans `types` — invoquée ci-dessous.
 types
 
-def scales (documented:yes, resolvedBy:"Kairos", resolves:scale)
+def scales (documented:true, resolvedBy:"Kairos", resolves:scale)
 
 // ── interval — 135 exemplaires ────────────────────────────────────
 interval maqam_sikah (description:"Maqam Sikah — starts on sikah (E half-flat) — Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de vérité ; le 24-TET est une projection de rendu, pas l'ontologie. [décomposition en jins À ÉTABLIR (vérification musicologique) ; ratios exacts conservés en attendant].", culture:arabic, notes_count:7, ratios(1, 12/11, 27/22, 4/3, 16/11, 18/11, 11/6), system:"zalzal-ji")

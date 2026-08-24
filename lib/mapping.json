@@ -1,5 +1,5 @@
 {
-  "documented": "yes",
+  "documented": true,
   "resolves": "mapping",
   "_resolves_doc": "LE MOT QUI INVOQUE CETTE LIBRAIRIE, ÉCRIT AU LIEU D'ÊTRE DÉDUIT. Sans ce champ le chargeur retombe sur le NOM DU FICHIER : le mot est alors juste par coïncidence, et renommer le fichier change le langage sans que rien ne le dise. Mesuré avant l'écriture : 'in.midi pedale mapping.fcb_std' est refusé en nommant la librairie 'mapping', donc le mot était déjà celui-là — ce champ le rend lisible, il ne le décide pas.",
   "_comment": [

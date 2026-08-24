@@ -15,7 +15,7 @@
 // `directional` dérive de `degree` : une échelle dont la montée diffère de la descente EST une
 // échelle à degrés, avec une propriété en plus.
 
-def types (documented:yes, resolves:types)
+def types (documented:true, resolves:types)
 
 object gamut (description)
 gamut interval (ratios)

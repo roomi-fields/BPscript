@@ -1,5 +1,5 @@
 {
-  "documented": "no",
+  "documented": false,
   "AllItems": {
     "name": "Produce all items",
     "value": "1",

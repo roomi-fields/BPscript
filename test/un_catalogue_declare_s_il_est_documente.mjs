@@ -29,6 +29,10 @@
  * LES VOLETS :
  *   A. tout catalogue qui déclare un mot porte le champ — et le compte refuse d'avoir vu zéro
  *   B. TOUT le paquet le porte — l'absence était un TROISIÈME état, mesuré par runtime-midi
+ *
+ * ⛔ ET LE CHAMP EST UN BOOLÉEN DEPUIS LE 2026-08-24 — arbitrage de Romain, ouvert par ma raison
+ * fausse. `!lib.documented` est JUSTE ; avec les deux mots, `Boolean("no")` valait VRAI et piégeait
+ * tout lecteur qui l'ignorait. La graphie qui a remplacé l'autre est celle que j'avais refusée.
  *   C. la séparation n'est PAS à l'invocation : une entrée non documentée compile
  *   D. le champ DISCRIMINE — un champ qui dirait `yes` partout n'exercerait rien chez le lecteur
  *   E. le convertisseur rend le champ, et on l'EXERCE au lieu de le compter
@@ -47,7 +51,9 @@ let p = 0;
 const e = [];
 const ok = (cond, quoi) => { if (cond) p++; else e.push(quoi); };
 
-const MOTS = new Set(['yes', 'no']);
+// ⛔ DEUX VALEURS, ET CE SONT DES BOOLÉENS DEPUIS LE 2026-08-24 — arbitrage de Romain, ouvert par
+// une raison FAUSSE de ma part. Voir l'en-tête : j'avais mesuré au parseur et conclu sur le paquet.
+const VALEURS = [true, false];
 
 /**
  * LE JUGE — écrit une fois, employé par le volet A et par son injection. Un juge recopié dans
@@ -60,15 +66,10 @@ function juger(nom, lib) {
       + `montages de test se documentaient sous le mot 'alphabet'.`;
   }
   const v = lib.documented;
-  if (typeof v !== 'string') {
-    return `${nom}.documented porte un ${typeof v} (${JSON.stringify(v)}) — le champ porte UN MOT, `
-      + `et une seule graphie. Deux graphies pour un même fait se lisent différemment chez deux `
-      + `lecteurs : celui qui compare au mot ne voit pas le booléen, celui qui teste la vérité ne `
-      + `voit pas la différence entre "no" et "yes".`;
-  }
-  if (!MOTS.has(v)) {
-    return `${nom}.documented vaut ${JSON.stringify(v)} — les deux mots sont ${[...MOTS].join(' et ')}. `
-      + `Un troisième mot se lit comme 'yes' chez qui compare la vérité de la valeur.`;
+  if (typeof v !== 'boolean') {
+    return `${nom}.documented porte un ${typeof v} (${JSON.stringify(v)}) — le champ est un BOOLÉEN. `
+      + `Une CHAÎNE y est le piège que ce champ a porté jusqu'au 2026-08-24 : \`Boolean("no")\` vaut `
+      + `VRAI, donc un lecteur qui teste la vérité publie exactement ce que la donnée demande de cacher.`;
   }
   return null;
 }
@@ -97,7 +98,7 @@ ok(catalogues.length >= 20,
 // ⇒ Un lecteur qui énumère TOUT le paquet et écrit `=== "yes"` a raison 23 fois et se trompe 3 fois
 //   EN SILENCE. Un champ qui dit un fait à deux états en portait TROIS à la lecture.
 //
-// Les trois instantanés de réglages BP3 portent donc `documented:no`, et c'est vrai : aucune fiche
+// Les trois instantanés de réglages BP3 portent donc `documented:false`, et c'est vrai : aucune fiche
 // ne les recense. Le périmètre du générateur de fiches n'a pas à décider de la forme d'un champ que
 // tout le monde lit.
 {
@@ -119,7 +120,7 @@ ok(catalogues.length >= 20,
 // COMPTE ne peut pas dire : un catalogue retiré du langage et un catalogue caché de l'aide ont la
 // même empreinte dans la donnée. Seule la compilation les distingue.
 {
-  const nonDocumentes = catalogues.filter(([, l]) => l.documented === 'no');
+  const nonDocumentes = catalogues.filter(([, l]) => l.documented === false);
   ok(nonDocumentes.length >= 1,
     `C. SOCLE : au moins un catalogue doit se déclarer non documenté, sinon ce volet compile une `
     + `invocation ordinaire et ne prouve rien.`);
@@ -133,7 +134,7 @@ ok(catalogues.length >= 20,
     for (const entree of entrees) {
       const r = compileToBPxAST(`core\n${mot}.${entree}\n\n-----\nS -> -\n`);
       ok((r.errors ?? []).length === 0,
-        `C. ⛔ '${mot}.${entree}' (${nom}, documented:no) NE COMPILE PLUS — la décision sépare à la `
+        `C. ⛔ '${mot}.${entree}' (${nom}, documented:false) NE COMPILE PLUS — la décision sépare à la `
         + `DOCUMENTATION, pas à l'invocation. Reçu : ${JSON.stringify((r.errors ?? [])[0]?.message ?? null)}`);
     }
   }
@@ -143,8 +144,8 @@ ok(catalogues.length >= 20,
 // Assertion d'INCLUSION, jamais un compte : elle rougit le jour où le champ cesse de séparer deux
 // familles, et se tait quand un catalogue s'ajoute d'un côté ou de l'autre.
 {
-  const oui = catalogues.filter(([, l]) => l.documented === 'yes').length;
-  const non = catalogues.filter(([, l]) => l.documented === 'no').length;
+  const oui = catalogues.filter(([, l]) => l.documented === true).length;
+  const non = catalogues.filter(([, l]) => l.documented === false).length;
   ok(oui > 0 && non > 0,
     `D. le champ doit SÉPARER deux familles — ${oui} documenté(s), ${non} non documenté(s). Un champ `
     + `qui dirait le même mot partout n'exercerait jamais la lecture du générateur de fiches, et sa `
@@ -184,11 +185,13 @@ ok(catalogues.length >= 20,
 // ── F. INJECTION DANS LE JUGE — les quatre formes qu'il doit refuser ─────────────────────────
 {
   ok(juger('zz', { resolves: 'zz' }) !== null, "F. (mord) un catalogue SANS le champ doit être refusé");
-  ok(juger('zz', { resolves: 'zz', documented: true }) !== null, 'F. (mord) un booléen VRAI doit être refusé');
-  ok(juger('zz', { resolves: 'zz', documented: false }) !== null, 'F. (mord) un booléen FAUX doit être refusé');
-  ok(juger('zz', { resolves: 'zz', documented: 'non' }) !== null, "F. (mord) un troisième mot doit être refusé");
-  ok(juger('zz', { resolves: 'zz', documented: 'yes' }) === null, 'F. (se tait) le mot yes passe');
-  ok(juger('zz', { resolves: 'zz', documented: 'no' }) === null, 'F. (se tait) le mot no passe');
+  ok(juger('zz', { resolves: 'zz', documented: 'yes' }) !== null, "F. (mord) l'ANCIENNE graphie doit être refusée");
+  ok(juger('zz', { resolves: 'zz', documented: 'no' }) !== null, "F. (mord) et l'autre — sinon les deux graphies coexistent");
+  ok(juger('zz', { resolves: 'zz', documented: 'true' }) !== null, 'F. (mord) la CHAÎNE "true" est le piège exact, pas le booléen');
+  ok(juger('zz', { resolves: 'zz', documented: 1 }) !== null, 'F. (mord) un nombre non plus');
+  ok(juger('zz', { resolves: 'zz', documented: true }) === null, 'F. (se tait) le booléen VRAI passe');
+  ok(juger('zz', { resolves: 'zz', documented: false }) === null, 'F. (se tait) le booléen FAUX passe');
+  ok(VALEURS.length === 2, 'F. socle : le champ a exactement deux valeurs');
 }
 
 // ── G. AUCUNE SECONDE LISTE DES CHAMPS DE FICHIER ────────────────────────────────────────────

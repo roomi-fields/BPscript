@@ -18,7 +18,7 @@
 // C'est la mesure qui a fait tomber la première règle de découpage des paires — celle qui
 // réservait une paire aux seuls gestes vrais au natif.
 
-def midi_default (documented:yes, resolvedBy:runtime-MIDI, resolves:midi_default, name:midi_default, description:"L'ENVIRONNEMENT MIDI PAR DÉFAUT — la valeur que porte chaque mot de `midi` tant qu'une scène n'en écrit pas d'autre.", version:"0.2.0")
+def midi_default (documented:true, resolvedBy:runtime-MIDI, resolves:midi_default, name:midi_default, description:"L'ENVIRONNEMENT MIDI PAR DÉFAUT — la valeur que porte chaque mot de `midi` tant qu'une scène n'en écrit pas d'autre.", version:"0.2.0")
 
 def controlDefaults (chan:1, mod:0, pitchbend:0, pitchrange:200, pressure:0, press:0, volume:90, volumerate:50, modrate:50, pitchrate:50, pressrate:50, rate:50, volumecontrol:7, pancontrol:10, fadeout:2, resetnotes:false, letring:true, strikeagain:true, sustain:false, pedalrelease:true, pedalhold:false, resetcontrols:false, keepcontrols:true)
 

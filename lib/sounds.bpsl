@@ -9,6 +9,6 @@
 //    formellement à toute forme de parsing en fonction de l'indentation ». Un fichier reformaté
 //    ne change pas de sens.
 
-def sounds (documented:yes, resolvedBy:"BPx", resolves:sound, name:sounds)
+def sounds (documented:true, resolvedBy:"BPx", resolves:sound, name:sounds)
 
 def tabla_perc (description:"Percussions de tabla — bols de bayan (grave) et de dayan (aigu). Prototype AUX DÉFAUTS MOTEUR : il ne surcharge aucune propriété métrique. Invoqué par dhati, dhin et leurs jumelles (6 scènes du corpus). Le nom vient du corpus, pas d'un catalogue externe.")

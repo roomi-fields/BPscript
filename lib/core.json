@@ -1,5 +1,5 @@
 {
-  "documented": "yes",
+  "documented": true,
   "resolves": "core",
   "name": "core",
   "description": "BPscript core — silences, prolongation, contrôles moteur, SOCLE des défauts de scène",
