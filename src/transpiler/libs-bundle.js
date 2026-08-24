@@ -211,10 +211,34 @@ function suite(sac, fichier, declaration, cle) {
 }
 
 /** Un sac imbriqué devient un objet — une parenthèse, un niveau. */
+/**
+ * ⛔ UN LITTÉRAL SE LIT PAREIL À TOUTES LES PROFONDEURS, ET CE LECTEUR DISAIT LE CONTRAIRE.
+ *
+ * Cette fonction recopiait `p.value` BRUT, quand `valeurDeCle` — l'autre lecteur, à trois cents
+ * lignes d'ici — rend `'true'` en booléen et `'12'` en nombre. **Deux lecteurs pour un seul fait**,
+ * et la profondeur décidait lequel s'appliquait :
+ *
+ *     champ de fichier, sur la déclaration     documented:false   →  false     LE BOOLÉEN
+ *     membre au fond d'une place               out:true           →  "true"    LA CHAÎNE
+ *
+ * ⚠️ CE QUE ÇA A COÛTÉ, ET C'EST DE MOI : le 2026-08-24 j'ai mesuré le premier cas, conclu sur le
+ * second, et routé « le langage n'a pas de littéral booléen » à quatre destinataires — dont une
+ * surface publiée. runtime-MIDI l'a réfuté avec mon propre paquet, et sa question était la bonne :
+ * **pas si le langage a un booléen, mais QUELLE POSITION le perd.** Celle-ci.
+ *
+ * ⚠️ ET C'EST L'UNE DES TROIS PERTES QUI TIENNENT `core` HORS DE LA CONVERSION — quatorze booléens
+ * de ses canaux devenaient des chaînes, et une chaîne non vide est VRAIE.
+ *
+ * ⛔ RAYON D'IMPACT MESURÉ AVANT LA FRAPPE : 7331 feuilles comparées, ZÉRO valeur publiée change.
+ * Aucune source du langage n'écrit aujourd'hui un littéral typable au fond d'un sac ; la réparation
+ * ferme la porte avant que quelqu'un la pousse.
+ */
 function sacEnObjet(sac) {
   const out = {};
   for (const p of sac.pairs || []) {
-    out[p.key] = (p.value && p.value.type === 'SettingBag') ? sacEnObjet(p.value) : p.value;
+    out[p.key] = (p.value && p.value.type === 'SettingBag')
+      ? sacEnObjet(p.value)
+      : valeurDeCle({ kind: 'value', value: p.value, ...(p.texte ? { texte: true } : {}) });
   }
   return out;
 }
