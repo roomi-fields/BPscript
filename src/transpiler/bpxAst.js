@@ -1948,11 +1948,20 @@ function validateReferences(ast, libCtx = {}) {
       if (deja.line === undefined && line !== undefined) { deja.line = line; deja.col = col; }
       return;
     }
-    // ⛔ ET LE MARQUEUR N'EST PLUS DANS LE TEXTE. La déduplication d'en bas reconnaissait ce message
-    // par une expression sur sa FORMULATION — donc changer un mot du refus l'aurait débranchée en
-    // silence, sans qu'aucun garde ne le dise. Un champ porte ce que le texte n'a plus à porter.
+    // ⛔ ET CET OBJET NE PORTE PLUS DE CHAMP DE MARQUAGE. J'avais ajouté `generique` et `cle` pour que
+    // la déduplication cesse de reconnaître ce message par une expression sur son TEXTE. Le filtre a
+    // été élagué le même soir — il n'avait plus de producteur — et les deux champs sont morts avec lui.
+    //
+    // ⚠️ ILS N'ÉTAIENT PAS INERTES POUR AUTANT, et c'est BPx qui l'a mesuré : son registre de rouges
+    // empreint l'OBJET D'ERREUR sérialisé, pas la phrase. **23 de ses 42 entrées ont changé
+    // d'empreinte**, toutes les 23 par ces deux champs, sur un texte identique mot pour mot.
+    //
+    // ⇒ **Mon préavis annonçait TROIS TEXTES et j'ai changé une FORME.** Entre « comparer un message »
+    // et « ne pas le lire », il y a **empreindre l'objet entier** — une issue que ma lettre n'avait pas.
+    // Deuxième faute de périmètre sur le même sujet en deux jours : l'instrument mesure une graphie et
+    // la conclusion porte sur un contrat.
     const err = { message: `attribut '(${key}${ecritNu ? '' : ':…'})' inconnu — ni contrôle, ni valeur de librairie, ni adresse`,
-      line, col, generique: true, cle: key };
+      line, col };
     vus.set(key, err);
     errors.push(err);
   };
