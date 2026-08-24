@@ -19,8 +19,8 @@
  * refus qu'on n'a vu que SE TAIRE peut être mort. Les deux, ou rien.
  */
 import {
-  refuserAssiette, refuserArbreSale, refuserCommitDejaPublie, refuserEmpreinte, refuserLien,
-  refusDePublication,
+  refuserAssiette, refuserArbreSale, refuserCommitDejaPublie, refuserNomDejaPris, refuserEmpreinte,
+  refuserLien, refusAvantConstruction, refusApresConstruction,
 } from '../scripts/publication-refus.mjs';
 
 let p = 0;
@@ -69,7 +69,7 @@ const refuse = (r, mot, quoi) => {
   refuse(refuserEmpreinte({ empreinte: { fichiers: 18 } }), 'pas de commit', 'D. (mord) empreinte sans commit');
   refuse(refuserEmpreinte({ empreinte: bonne, commitAttendu: 'zzz9999' }), 'visé à côté',
     'D. (mord) la gravure a visé à côté');
-  refuse(refuserEmpreinte({ empreinte: { commit: 'abc1234', fichiers: 0 } }), 'ZÉRO fichier',
+  refuse(refuserEmpreinte({ empreinte: { commit: 'abc1234', fichiers: 0 }, commitAttendu: 'abc1234' }), 'ZÉRO fichier',
     'D. (mord) ⛔ le témoin ANTI-VACUITÉ — zéro fichier rend toute comparaison verte');
 }
 
@@ -85,19 +85,55 @@ const refuse = (r, mot, quoi) => {
   refuse(refuserLien({ lien: null }), 'aucun lien', 'E. (mord) aucun lien');
 }
 
-// ── F. TOUS ENSEMBLE — la publication les pose dans l'ordre ──────────────────────────────────
+// ── E2. ⛔ LE NOM DÉJÀ PRIS — ce refus n'est PAS dans le patron, et c'est un trou mesuré ──────
+// Un nom de paquet est un commit ABRÉGÉ, les abrégés se collisionnent, et la longueur de l'abrégé
+// grandit avec le dépôt. Le patron protège « ne pas reconstruire un commit publié » ; il ne protège
+// pas « ne pas écrire sous un nom que tient un AUTRE commit ».
+{
+  const n = 'bpscript-abc1234';
+  ok(refuserNomDejaPris({ nom: n, cibleExiste: false, commitDuNom: null, commit: 'abc' }) === null,
+    'E2. (se tait) le nom est libre');
+  ok(refuserNomDejaPris({ nom: n, cibleExiste: true, commitDuNom: 'abc', commit: 'abc' }) === null,
+    'E2. (se tait) le nom porte DÉJÀ mon commit — c\'est la branche qui rebascule le lien');
+  refuse(refuserNomDejaPris({ nom: n, cibleExiste: true, commitDuNom: 'zzz', commit: 'abc' }),
+    'DÉJÀ PRIS', 'E2. (mord) ⛔ le nom est tenu par un AUTRE commit — collision d\'abrégés');
+  refuse(refuserNomDejaPris({ nom: n, cibleExiste: true, commitDuNom: null, commit: 'abc' }),
+    'aucune empreinte lisible', 'E2. (mord) un dossier sans empreinte — construction interrompue');
+}
+
+// ── F. TOUS ENSEMBLE — la publication les pose EN DEUX TEMPS ─────────────────────────────────
 {
   const sains = {
     assiette: { derivee: ['a.js'], declaree: ['a.js'] },
     arbre: { modifies: [], assiette: ['a.js'] },
     commit: { commit: 'abc1234', publies: [] },
+    nom: { nom: 'x-abc1234', cibleExiste: false, commitDuNom: null, commit: 'abc1234' },
     empreinte: { empreinte: { commit: 'abc1234', fichiers: 1 }, commitAttendu: 'abc1234' },
     lien: { lien: 'l', cible: '/paquets/x-abc', cibleExiste: true, racinePaquets: '/paquets/' },
   };
-  ok(refusDePublication(sains).length === 0, 'F. (se tait) des faits sains ne produisent AUCUN refus');
-  ok(refusDePublication({}).length === 5,
-    `F. (mord) des faits ABSENTS produisent les CINQ refus — reçu ${refusDePublication({}).length}. `
-    + `Un fait qui manque n'est pas un fait qui va bien.`);
+  ok(refusAvantConstruction(sains).length === 0, 'F. (se tait) des faits sains, AUCUN refus avant');
+  ok(refusApresConstruction(sains).length === 0, 'F. (se tait) des faits sains, AUCUN refus après');
+  ok(refusAvantConstruction({}).length === 4,
+    `F. (mord) des faits ABSENTS produisent les QUATRE refus d'avant — reçu ${refusAvantConstruction({}).length}.`);
+  ok(refusApresConstruction({}).length === 2,
+    `F. (mord) des faits ABSENTS produisent les DEUX refus d'après — reçu ${refusApresConstruction({}).length}.`);
+}
+
+// ── H. ⛔ LA MATRICE DU FAIT ABSENT — le quatrième « troisième état » de la journée ───────────
+// Sur des faits absents, QUATRE de ces refus rendaient `null` : « arbre propre », « rien de publié »,
+// « le nom est libre », « le lien est dans la racine ». Un `undefined` replié sur une valeur neutre a
+// exactement la forme d'une mesure qui n'a rien trouvé. ⇒ **La matrice porte sur les SIX**, y compris
+// ceux qui n'ont jamais eu le défaut : réparer les quatre qui ont mordu laisserait le cinquième
+// l'écrire à nouveau.
+{
+  const TOUS = { refuserAssiette, refuserArbreSale, refuserCommitDejaPublie, refuserNomDejaPris,
+    refuserEmpreinte, refuserLien };
+  for (const [nom, fn] of Object.entries(TOUS)) {
+    const r = fn({});
+    ok(typeof r === 'string' && r.length > 40,
+      `H. ⛔ ${nom}({}) doit REFUSER sur des faits absents — reçu ${JSON.stringify(r)}. `
+      + `Un fait qui manque n'est pas un fait qui va bien.`);
+  }
 }
 
 // ── G. ⛔ ET AUCUN DISQUE N'A BOUGÉ — c'est la raison d'être de ce banc ───────────────────────
@@ -121,4 +157,4 @@ if (e.length) {
   for (const x of e) console.error('  ✗ ' + x);
   process.exit(1);
 }
-console.log(`[refus publication] ${p} PASS / 0 FAIL — cinq refus exercés dans les deux sens, zéro écriture`);
+console.log(`[refus publication] ${p} PASS / 0 FAIL — six refus exercés dans les deux sens, zéro écriture`);

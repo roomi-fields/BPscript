@@ -20,6 +20,12 @@ if [ "${maj:-0}" -lt 20 ]; then echo "[gate] ERREUR : Node 20+ requis (actuel $(
 echo "[gate] node $(node -v) — npm run verify (definition UNIQUE du gate)…"
 npm run verify --silent
 echo "[gate] vert — push autorise."
+
+# ⛔ PUBLIER NE DEMANDE AUCUN GESTE. Un producteur qui doit penser a publier n y pensera pas : la
+# construction, la gravure et la bascule du lien vivent ICI, apres le vert, avant la poussee. Ce qui
+# atteint mes consommateurs est alors un etat ENREGISTRE et NOMME, jamais mon arbre de travail.
+# Les refus vivent dans `scripts/publication-refus.mjs`, en fonctions pures qui recoivent les faits.
+npm run publier --silent
 # ⛔ LES GARDES DOCUMENTAIRES NE VIVENT PLUS ICI — ils sont dans `verify`, appelés par
 # `scripts/garde-documentaires.sh` (bascule tranchée par Romain le 2026-08-14).
 # Ce bloc greffé les lançait au PUSH SEULEMENT : « verify vert » ne valait donc pas « portillon

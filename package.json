@@ -24,7 +24,8 @@
     "assiette": "node scripts/assiette.mjs",
     "garde:assiette": "node scripts/assiette.mjs --verifier",
     "bundle:syntaxe": "node src/transpiler/syntaxe-bundle.mjs > src/transpiler/syntaxe-data.js.tmp && mv src/transpiler/syntaxe-data.js.tmp src/transpiler/syntaxe-data.js",
-    "bundle:gabarits": "node src/transpiler/gabarits-bundle.mjs > src/transpiler/gabarits-data.js.tmp && mv src/transpiler/gabarits-data.js.tmp src/transpiler/gabarits-data.js"
+    "bundle:gabarits": "node src/transpiler/gabarits-bundle.mjs > src/transpiler/gabarits-data.js.tmp && mv src/transpiler/gabarits-data.js.tmp src/transpiler/gabarits-data.js",
+    "publier": "node scripts/publier.mjs"
   },
   "devDependencies": {
     "@lezer/generator": "^1.8.0",
@@ -48,12 +49,14 @@
     },
     "./src/transpiler/libs-champs.js": "./src/transpiler/libs-champs.js",
     "./src/transpiler/syntaxe-data.js": "./src/transpiler/syntaxe-data.js",
-    "./src/transpiler/gabarits-data.js": "./src/transpiler/gabarits-data.js"
+    "./src/transpiler/gabarits-data.js": "./src/transpiler/gabarits-data.js",
+    "./empreinte": "./src/empreinte.js"
   },
   "files": [
     "public/editor/bp3-parser.js",
     "public/editor/bpscript-lang.js",
     "public/editor/bpscript-parser.js",
+    "src/empreinte.js",
     "src/transpiler/actorResolver.js",
     "src/transpiler/bpxAst.js",
     "src/transpiler/constants.js",
