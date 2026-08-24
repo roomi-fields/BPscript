@@ -510,6 +510,12 @@ function parse(tokens, opts = {}) {
     if (opts.onWarning) opts.onWarning({ message, line });
   }
 
+  // ⛔ CINQ COMPARAISONS À `T.LAMBDA` ONT SURVÉCU À LA SORTIE DU MOT, et elles valaient toutes
+  // `undefined`. Le jeton est parti du lexeur le 2026-08-23 avec le mot ; ces lignes sont restées,
+  // inertes — aucun jeton ne porte le type `undefined`, donc elles ne mordaient rien et ne cassaient
+  // rien. Un code mort qui ne casse pas est le plus long à voir : il se lit comme une branche vivante
+  // et il fait croire que le mot est encore lu quelque part. Retirées le 2026-08-24, en retirant trois
+  // autres jetons — c'est en cherchant les leurs que je suis tombé sur les siennes.
   function current() { return tokens[pos] || { type: T.EOF, value: null, line: 0, col: 0 }; }
   function peek(offset = 0) { return tokens[pos + offset] || { type: T.EOF }; }
   function advance() { return tokens[pos++]; }
@@ -2288,9 +2294,6 @@ function parse(tokens, opts = {}) {
     if (at(T.PLUS)) {
       advance();
       name = '+';
-    } else if (atAny(T.GATE, T.TRIGGER, T.CV)) {
-      // @gate, @trigger, @cv — keywords used as directive names
-      name = advance().value;
     } else {
       // ⚠️ LE NOM D'UNE LIBRAIRIE PEUT PORTER UN TIRET, au meme titre qu'un nom d'entree —
       // `ragas-tunings.sargam_12TET`. Le tokenizer detache le tiret partout depuis qu'il est un
@@ -2748,7 +2751,7 @@ function parse(tokens, opts = {}) {
           // refusé se périme à chaque signe ajouté au langage.
           const PARTIE = new Set([T.IDENT, T.INT, T.FLOAT, T.STRING, T.SLASH, T.PERIOD, T.REST,
                                   T.PROLONG, T.HASH, T.PLUS, T.BACKTICK,
-                                  T.GATE, T.TRIGGER, T.CV, T.LAMBDA]);
+                                  ]);
           const parties = [];
           let courante = '';
           while (!atEnd() && !at(T.NEWLINE) && !at(T.COMMENT) && !ouvreUneCle() && !borneDuCorps()) {
@@ -4333,7 +4336,7 @@ function parse(tokens, opts = {}) {
     const t = current().type;
     return t === T.IDENT || t === T.HASH ||
            t === T.LPAREN || t === T.QUESTION || t === T.PIPE ||
-           t === T.LAMBDA || t === T.LBRACE || t === T.RBRACE || t === T.COMMA ||
+           t === T.LBRACE || t === T.RBRACE || t === T.COMMA ||
            t === T.REST || t === T.DOLLAR || t === T.RPAREN ||
            (t === T.LBRACKET && isGuardBracket());
   }
@@ -4753,7 +4756,7 @@ function parse(tokens, opts = {}) {
   function parseLhsElements() {
     const elements = [];
     while (!atAny(T.ARROW_R, T.ARROW_L, T.ARROW_BI, T.EOF, T.NEWLINE, T.SEPARATOR)) {
-      if (at(T.IDENT) || at(T.LAMBDA)) {
+      if (at(T.IDENT)) {
         elements.push({ type: 'Symbol', name: normalizeName(advance().value), line: current().line });
       } else if (at(T.PIPE)) {
         elements.push(parseVariable());
@@ -4826,7 +4829,10 @@ function parse(tokens, opts = {}) {
   function parseRhsElements() {
     const elements = [];
     let safety = 0;
-    while (!atAny(T.NEWLINE, T.EOF, T.SEPARATOR, T.COMMENT, T.GATE, T.TRIGGER, T.CV)) {
+    // ⛔ `gate`, `trigger` et `cv` ne coupaient plus rien : ce sont des noms ordinaires depuis que
+    // le lexeur a cessé d'en faire des jetons (2026-08-24), et les mots eux-mêmes sont sortis du
+    // langage. Un nom inconnu dans un flux se refuse comme tout autre — il n'arrête pas la lecture.
+    while (!atAny(T.NEWLINE, T.EOF, T.SEPARATOR, T.COMMENT)) {
       // [] or () with SPACE before → not attached to previous element → end of RHS
       // (rule-level qualifiers/flags handled by parseRule after this returns)
       // EXCEPTION (décision ratifiée 2026-07-18) : un flag qui PRÉFIXE un contrôle reste
@@ -6607,7 +6613,7 @@ function parse(tokens, opts = {}) {
     return t === T.IDENT || t === T.LBRACE || t === T.REST || t === T.PROLONG
         || t === T.UNDETERMINED || t === T.PERIOD || t === T.PIPE || t === T.QUESTION
         || t === T.DOLLAR || t === T.AMPERSAND || t === T.TILDE || t === T.BANG
-        || t === T.TRIGGER_IN || t === T.HASH || t === T.BACKTICK || t === T.LAMBDA || t === T.INT;
+        || t === T.TRIGGER_IN || t === T.HASH || t === T.BACKTICK || t === T.INT;
   }
 
   // ============================================================
@@ -6894,8 +6900,7 @@ function parse(tokens, opts = {}) {
       // After a newline, check if next non-newline token starts a new rule
       if (t === T.NEWLINE) { afterNewline = true; j++; continue; }
       if (afterNewline) {
-        // New rule starts with: IDENT/LAMBDA at line start (outside braces)
-        if (t === T.LAMBDA) return false;
+        // New rule starts with an IDENT at line start (outside braces)
         if (t === T.IDENT) {
           // Look ahead for arrow
           let k = j + 1;

@@ -99,9 +99,6 @@ const T = Object.freeze({
   PLUS:         'PLUS',        // +
 
   // Keywords
-  GATE:         'GATE',        // gate
-  TRIGGER:      'TRIGGER',     // trigger
-  CV:           'CV',          // cv
 
   // Literals
   INT:          'INT',         // 123
@@ -118,9 +115,16 @@ const T = Object.freeze({
 });
 
 const KEYWORDS = {
-  'gate': T.GATE,
-  'trigger': T.TRIGGER,
-  'cv': T.CV,
+  // ⛔ `gate`, `trigger` ET `cv` ONT QUITTÉ CETTE TABLE LE 2026-08-24, et ils y confisquaient trois
+  // noms pour rien. Les mots sont SORTIS du langage — `gate` et `trigger` le 2026-08-15, `cv` le
+  // 2026-08-08 — et le compilateur les refusait déjà PARTOUT : en tête de scène, en clé de `def`, en
+  // clé de sac, après `out.`. Tant qu'ils étaient des jetons ici, personne ne pouvait NOMMER un
+  // terminal `gate`, `cv` ou `trigger`, et le refus rendu était « Expected IDENT, got GATE » — une
+  // faute de lexeur pour un nom parfaitement ordinaire.
+  //
+  // ⚠️ ET LA VALEUR RESTE : `gate` et `trigger` sont les deux valeurs de `temporalType` sur une
+  // déclaration de terminal, et BPx les LIT. Le MOT que l'auteur écrit sort ; la VALEUR que l'arbre
+  // porte ne bouge pas. Ce n'est pas l'auteur qui l'écrit, c'est le compilateur qui l'émet.
 };
 
 function tokenize(source, opts = {}) {

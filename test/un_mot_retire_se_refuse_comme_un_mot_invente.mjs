@@ -124,11 +124,14 @@ const GRAPHIES = [
  * exemption ne porte rien et survit à ce qui l'a fait naître. Le volet du dessous EXIGE que chaque
  * entrée rougisse encore : celle qui a cessé de rougir doit sortir du registre, à la main.
  *
- *   cv · gate · trigger   ce sont des MOTS-CLÉS DU DÉCOUPEUR (`KEYWORDS`, tokenizer.js) : ils ne
- *                         sont pas lus comme des noms ordinaires, donc ils ne tombent pas dans le
- *                         refus du type en tête. Le registre du hub le dit déjà — « débranchés du
- *                         parser, mais déclarés dans une donnée ». Leur retrait est un geste du
- *                         DÉCOUPEUR, hors du périmètre tranché le 2026-08-19.
+ *   cv · gate · trigger   ✓ SORTIS DU REGISTRE LE 2026-08-24, et c'est ce garde qui l'a exigé : il a
+ *                         rougi à la frappe en disant « se refuse DÉSORMAIS comme un mot inventé —
+ *                         RETIRE-le du registre, daté ». Leur retard tenait à ce qu'ils étaient des
+ *                         MOTS-CLÉS DU DÉCOUPEUR : jamais lus comme des noms ordinaires, donc jamais
+ *                         tombés dans le refus du type en tête — et, au passage, TROIS NOMS
+ *                         CONFISQUÉS : personne ne pouvait nommer un terminal `gate`, `cv` ou
+ *                         `trigger`. Les jetons sont retirés, les trois mots sortent aussi de
+ *                         `syntaxWords`, et les noms redeviennent ordinaires.
  *   timepatterns          le lecteur le CONSOMME encore : le refus accuse son argument, et la
  *                         graphie à deux-points rend « Expected EQUALS ». Aucune décision datée ne
  *                         le retire — c'est une mesure d'Atlas relayée le 2026-08-19, et son sort
@@ -145,9 +148,6 @@ const GRAPHIES = [
  *                         Remonté à l'architecte le 2026-08-22 ; inscrit, pas jugé.
  */
 const RETARD = new Set([
-  'cv|nu, un argument',
-  'gate|nu, un argument',
-  'trigger|nu, un argument',
   'timepatterns|nu, seul',
   'timepatterns|nu, un argument',
   'timepatterns|deux-points, mot',

@@ -55,21 +55,6 @@
     }
   },
   "syntaxWords": {
-    "gate": {
-      "kind": "keyword",
-      "description": "Type temporel : occupe le temps (notes, samples, tout événement de durée)",
-      "syntax": "gate name:actor"
-    },
-    "trigger": {
-      "kind": "keyword",
-      "description": "Type temporel : événement instantané, sans durée (frappes, événements MIDI, triggers de signal)",
-      "syntax": "trigger name:actor"
-    },
-    "cv": {
-      "kind": "keyword",
-      "description": "Déclare un modulateur à valeur continue (ADSR, LFO, rampe), purement descriptif",
-      "syntax": "cv name : mod.type(params)"
-    },
     "->": {
       "kind": "operator",
       "description": "Règle de production : le membre gauche est réécrit en membre droit (défaut gauche→droite)",
