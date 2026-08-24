@@ -9,7 +9,7 @@
     "typecheck": "npm run typecheck:digital && npm run typecheck:homomorphism",
     "typecheck:digital": "tsc -p tsconfig.digital.json",
     "typecheck:homomorphism": "tsc -p tsconfig.homomorphism.json",
-    "verify": "npm run arch --silent && npm run typecheck --silent && npm run bundle:check --silent && node test/ast_conformance.mjs && node test/run_guards.mjs && npm run garde:documentaires --silent",
+    "verify": "npm run arch --silent && npm run typecheck --silent && npm run bundle:check --silent && node test/ast_conformance.mjs && node test/run_guards.mjs && npm run garde:documentaires --silent && npm run garde:source-voisine --silent",
     "bundle:libs": "node src/transpiler/libs-bundle.js > src/transpiler/libs-data.js.tmp && node scripts/basculer-le-paquet.mjs src/transpiler/libs-data.js.tmp && mv src/transpiler/libs-data.js.tmp src/transpiler/libs-data.js && npm run bundle:types --silent && npm run bundle:syntaxe --silent && npm run bundle:gabarits --silent",
     "bundle:check": "node src/transpiler/libs-bundle-check.js",
     "prepare": "npm run bundle:libs && (npm run gate:install || true)",
@@ -18,6 +18,7 @@
     "bundle:types": "node src/transpiler/libs-types.js > src/transpiler/libs-data.d.ts.tmp && mv src/transpiler/libs-data.d.ts.tmp src/transpiler/libs-data.d.ts",
     "fiche:etat": "node scripts/fiche-etat.mjs > baseline-status.json.tmp && mv baseline-status.json.tmp baseline-status.json",
     "garde:documentaires": "bash scripts/garde-documentaires.sh",
+    "garde:source-voisine": "python3 ~/dev/bp/hub/tools/garde-source-voisine.py",
     "bundle:syntaxe": "node src/transpiler/syntaxe-bundle.mjs > src/transpiler/syntaxe-data.js.tmp && mv src/transpiler/syntaxe-data.js.tmp src/transpiler/syntaxe-data.js",
     "bundle:gabarits": "node src/transpiler/gabarits-bundle.mjs > src/transpiler/gabarits-data.js.tmp && mv src/transpiler/gabarits-data.js.tmp src/transpiler/gabarits-data.js"
   },
