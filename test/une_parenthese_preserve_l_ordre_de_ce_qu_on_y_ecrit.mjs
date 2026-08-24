@@ -65,6 +65,54 @@ const trouver = (o, nom) => {
   return null;
 };
 
+/**
+ * LES LISTES ÉCRITES DANS UN CORPS, AVEC LEUR CHEMIN D'IMBRICATION.
+ *
+ * Une LISTE est une parenthèse dont aucun membre ne porte de valeur et qui n'en contient aucune
+ * autre. Ce marcheur suit les parenthèses au lieu de les apparier par motif : **un motif ne porte
+ * pas de profondeur**, et c'est ce qui a fait chercher `chains.C3` à la racine de sa déclaration.
+ *
+ * ⛔ ET LA STRUCTURE SE LIT SUR UN TEXTE MASQUÉ, JAMAIS SUR LE TEXTE BRUT. Les descriptions de `midi`
+ * portent des parenthèses DANS LEURS GUILLEMETS — `(mute.all)`, `(sync:start)` — et le marcheur les
+ * prenait pour des listes : quatre rouges sur une donnée intacte. **Une prose citée n'est pas une
+ * graphie.** Le masque remplace `(`, `)` et `,` par un point à l'intérieur des textes, uniquement
+ * pour TROUVER les bornes ; les membres se découpent ensuite dans le texte ORIGINAL, si bien qu'un
+ * membre écrit `"tuning.diapason"` ressort intact.
+ */
+function masquerTextes(t) {
+  let dedans = false;
+  let out = '';
+  for (const c of t) {
+    if (c === '"') { dedans = !dedans; out += c; continue; }
+    out += (dedans && '(),'.includes(c)) ? '.' : c;
+  }
+  return out;
+}
+
+function listesEcrites(corps) {
+  const out = [];
+  const marcher = (texte, brut, chemin) => {
+    let i = 0;
+    while (i < texte.length) {
+      const m = /(\w+)\(/g;
+      m.lastIndex = i;
+      const t = m.exec(texte);
+      if (!t) return;
+      let n = 1;
+      let j = m.lastIndex;
+      while (j < texte.length && n > 0) { if (texte[j] === '(') n++; else if (texte[j] === ')') n--; j++; }
+      const dedans = texte.slice(m.lastIndex, j - 1);
+      const dedansBrut = brut.slice(m.lastIndex, j - 1);
+      const ici = [...chemin, t[1]];
+      if (dedans.includes('(')) marcher(dedans, dedansBrut, ici);
+      else out.push({ cle: t[1], membres: dedansBrut, chemin: ici });
+      i = j;
+    }
+  };
+  marcher(masquerTextes(corps), corps, []);
+  return out;
+}
+
 const sources = readdirSync(LIB_DIR).filter((f) => f.endsWith('.bpsl')).sort();
 ok(sources.length >= 9, `B. le balayage doit voir les librairies du langage — ${sources.length} vue(s)`);
 
@@ -78,11 +126,18 @@ for (const fichier of sources) {
     const [, nomDecl, corps] = m;
     const publiee = nomDecl === nomLib ? LIBS[nomLib] : trouver(LIBS[nomLib], nomDecl);
     if (!publiee) { echecs.push(`B. ${nomLib}.${nomDecl} : déclaré dans la source, introuvable dans la donnée publiée`); continue; }
-    // ⚠️ ON NE LIT QUE LES PARENTHÈSES DE PREMIER NIVEAU DU CORPS : `cle(a, b, c)` sans imbrication.
-    // Une liste ne porte que des noms nus — une parenthèse imbriquée n'est pas une liste, et le
-    // générateur la refuse déjà bruyamment si un membre porte une valeur.
-    for (const l of corps.matchAll(/(?:^|,\s*)(\w+)\(([^()]*)\)/g)) {
-      const [, cle, membres] = l;
+    // ⛔ CE VOLET LISAIT LES PARENTHÈSES IMBRIQUÉES COMME SI ELLES ÉTAIENT DE PREMIER NIVEAU, PUIS
+    // CHERCHAIT LEUR CLÉ À LA RACINE DE LA DÉCLARATION. Son commentaire disait « on ne lit que le
+    // premier niveau » ; son motif `[^()]*` attrapait au contraire les parenthèses les PLUS
+    // INTÉRIEURES. Tant que les librairies écrites à la main restaient plates, les deux revenaient
+    // au même ; `homomorphism` porte `sections(TR(chains(C3(…))))` et le garde a rendu **190
+    // rouges** sur une donnée que la preuve d'égalité disait juste feuille à feuille.
+    //
+    // ⇒ **Le remède est de porter le CHEMIN, pas de chercher la clé plus loin.** Chercher `C3`
+    // n'importe où sous la déclaration retrouverait le premier homonyme — et deux sections peuvent
+    // porter le même nom de chaîne. Un chemin ne se devine pas, il se suit.
+    for (const l of listesEcrites(corps)) {
+      const { cle, membres, chemin } = l;
       const bruts = membres.split(',').map((x) => x.trim()).filter((x) => x !== '');
       if (!bruts.length || bruts.some((x) => x.includes(':'))) continue;   // pas une liste
       // ⛔ UN MEMBRE PORTE SA NATURE, ET LE GARDE LA LIT COMME LE COMPILATEUR : un texte entre
@@ -94,12 +149,12 @@ for (const fichier of sources) {
         if (t) return t[1];
         return /^-?\d+(\.\d+)?$/.test(x) ? Number(x) : x;
       });
-      const rendue = publiee[cle];
+      const rendue = chemin.reduce((o, k) => (o == null ? o : o[k]), publiee);
       listes++;
       ok(Array.isArray(rendue),
-        `B. ${nomLib}.${nomDecl}.${cle} doit être publiée comme une SUITE — reçu ${JSON.stringify(rendue)}`);
+        `B. ${nomLib}.${nomDecl}.${chemin.join('.')} doit être publiée comme une SUITE — reçu ${JSON.stringify(rendue)}`);
       ok(JSON.stringify(rendue) === JSON.stringify(ecrits),
-        `B. ${nomLib}.${nomDecl}.${cle} : la donnée publiée doit être la suite ÉCRITE, dans son ordre `
+        `B. ${nomLib}.${nomDecl}.${chemin.join('.')} : la donnée publiée doit être la suite ÉCRITE, dans son ordre `
         + `ET dans ses types. écrit ${JSON.stringify(ecrits)} · publié ${JSON.stringify(rendue)}`);
       const trie = [...ecrits].map(String).sort();
       if (JSON.stringify(trie) !== JSON.stringify(ecrits.map(String))) ordreNonTrivial++;
