@@ -275,6 +275,25 @@ async function collectBps(dir, prefix, compileToBPxAST) {
     }
     const lib = { controls: {} };
     let sectionDuFichier = null;
+    // ⛔ UNE LIBRAIRIE EN INVOQUE UNE AUTRE PAR UNE LIGNE NUE, ET C'EST `apporte` — décision Romain,
+    // 2026-08-20, `une-librairie-en-invoque-une-autre-a-la-lecture`. Le mécanisme existait déjà et
+    // n'était pas EMPLOYÉ à la lecture d'un fichier de librairie : `libs.js` suit la chaîne
+    // `apporte` transitivement, avec garde anti-cycle, et personne ne la remplissait depuis une
+    // source écrite dans le langage.
+    //
+    // ⚠️ `apporte` N'EST PAS UN CHAMP DE FICHIER — il ne s'écrit pas dans le corps du `def`. C'est
+    // l'invocation elle-même, à la tête du fichier, exactement comme une scène invoque : `types`
+    // seul sur sa ligne. Le générateur la relève ici et la publie sous le nom que le mécanisme
+    // porte déjà, plutôt que d'inventer un second nom pour un seul fait.
+    //
+    // ⚠️ ET LA LIGNE ÉTAIT INERTE JUSQU'ICI : `lib/scales.bpsl` écrit `types` depuis sa conversion
+    // pour que ses 135 exemplaires trouvent leur prototype À LA COMPILATION — et rien n'en
+    // arrivait au paquet, donc rien ne chargeait `types` derrière une invocation de `scale`.
+    // L'ordre d'écriture est l'ordre de la liste : la chaîne se résout dans l'ordre déclaré.
+    const invoquees = (r.ast.directives || [])
+      .filter((d) => d.name && !d.subkey)
+      .map((d) => d.name);
+    if (invoquees.length) lib.apporte = invoquees;
     // ⛔ UNE DÉCLARATION S'ÉCRIT SOUS DEUX FORMES, ET LE LECTEUR DOIT LES DEUX. Le corps INDENTÉ
     // rend `keys` ; le corps entre PARENTHÈSES rend `settings`. La seconde est celle que Romain a
     // tranchée le 2026-08-19 — « je m'oppose formellement à toute forme de parsing en fonction de

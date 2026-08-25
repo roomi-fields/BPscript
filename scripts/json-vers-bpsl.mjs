@@ -335,6 +335,8 @@ export function convertir(nom, j) {
   // declaration du fichier. Il faut donc avoir lu toutes les entrees avant d'ecrire cette ligne.
   const corps = [];
   const horsNom = new Map();   // place -> [`"<nom>"(<cles>)`]
+  /** Les librairies que ce fichier invoque — un nom nu par ligne, écrites AVANT la déclaration. */
+  const invocations = [];
 
   // ── LE COMPTE : CE QUE LA SOURCE PORTE, AVANT DE REGARDER CE QU'ON EN ÉCRIT ──
   // ⛔ CET OUTIL A LAISSÉ TROIS CHAMPS DERRIÈRE LUI ET A DIT « ✅ ». `settings` porte
@@ -396,11 +398,24 @@ export function convertir(nom, j) {
         // La même parenthèse de noms nus rend une LISTE à tous les étages SAUF au premier. C'est une
         // question de langage ouverte à Romain, pas une graphie à chercher : tant qu'elle n'est pas
         // tranchée, on REFUSE en nommant l'entrée. Un refus se répare, un déplacement se cherche.
+        // ⛔ ET `apporte` N'EST PAS UNE ENTRÉE DU TOUT — c'est L'INVOCATION TRANSITIVE, tranchée le
+        // 2026-08-20 (`une-librairie-en-invoque-une-autre-a-la-lecture`). La question ci-dessus
+        // cherchait une graphie d'ENTRÉE pour une liste ; il n'en fallait aucune. Ce champ est le
+        // mécanisme que `libs.js` suit déjà — chaîne transitive, garde anti-cycle — resté au niveau
+        // fichier faute d'avoir été relié à sa décision.
+        //
+        // ⇒ Il s'écrit comme une scène invoque : un nom NU par ligne, en tête de fichier, avant la
+        // déclaration. `lib/scales.bpsl` l'écrit ainsi depuis sa conversion. Aucune porte publiée ne
+        // bouge, et la donnée revient identique — le générateur relève ces lignes et republie
+        // `apporte` dans l'ordre écrit.
+        if (nomE === 'apporte' && sec === '' && def.every((x) => typeof x === 'string' && nomNu(x))) {
+          invocations.push(...def);
+          continue;
+        }
         refus.push(`${nomE} : entrée-LISTE de ${def.length} élément(s) à la racine — aucune graphie `
           + `du langage ne rend une liste comme ENTRÉE. Écrite \`def ${nomE} (…)\`, elle revient du `
-          + `bundle en OBJET DE BOOLÉENS et la donnée publiée change. Question de langage ouverte : `
-          + `une parenthèse de noms nus rend une liste en position de MEMBRE et un objet en position `
-          + `d'ENTRÉE.`);
+          + `bundle en OBJET DE BOOLÉENS et la donnée publiée change. Seul \`apporte\` échappe à ce `
+          + `refus, et pas par une graphie : ce n'est pas une entrée, c'est une invocation.`);
         continue;
       }
       if (typeof def !== 'object' || def === null) {
@@ -464,6 +479,14 @@ export function convertir(nom, j) {
   }
   for (const l of enTete) if (!enTeteOrdonne.includes(l)) enTeteOrdonne.push(l);
   for (const place of horsNom.keys()) if (!posees.has(place)) enTeteOrdonne.push(rendrePlace(place));
+  // ⛔ LES INVOCATIONS PRÉCÈDENT LA DÉCLARATION — l'ordre est celui du langage : ce dont on dérive
+  // est en portée avant qu'on s'en serve. C'est aussi ce que `lib/scales.bpsl` écrit à la main.
+  if (invocations.length) {
+    out.push('// Ce que ce catalogue APPORTE — chaque nom invoque une librairie, et sa chaîne se');
+    out.push('// résout transitivement. Décision Romain, 2026-08-20.');
+    out.push(...invocations);
+    out.push('');
+  }
   out.push(...ecrireEntree(nom, enTeteOrdonne));
   out.push('');
   out.push(...corps);

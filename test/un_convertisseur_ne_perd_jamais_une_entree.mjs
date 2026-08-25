@@ -65,9 +65,20 @@ const sansCommentaires = (t) => t.split('\n').filter((l) => !l.trim().startsWith
 const catalogues = cataloguesEnJson();
 
 // ⛔ LE TÉMOIN ANTI-VACUITÉ — un garde qui n'a rien examiné ne prouve rien.
-ok(catalogues.length > 0,
-  "⛔ ZÉRO catalogue JSON examiné. Si tous sont convertis, ce garde n'a plus d'objet et il SORT ; "
-  + "s'il reste des JSON qu'il ne voit pas, son périmètre est faux. Dans les deux cas il ne veille plus.");
+//
+// ⚠️ IL DISAIT « DANS LES DEUX CAS IL NE VEILLE PLUS », ET C'EST DEVENU FAUX LE 2026-08-25. Le
+// dernier catalogue de racine — `core` — a été converti : le volet réel n'a plus d'objet, exactement
+// comme prévu. **Mais la MATRICE FABRIQUÉE, elle, ne dépend d'aucun corpus** : elle construit ses six
+// classes, les passe à l'outil et exige l'issue de chacune. Elle a mordu trois fois dans le geste
+// même de cette conversion — sur la graphie d'`apporte`, sur des noms de librairie inexistants, et
+// sur le mot compté comme une entrée.
+//
+// ⇒ Ce qui se refuse n'est donc plus « zéro catalogue », c'est **que tout soit éteint à la fois**. Le
+// volet réel a le droit de finir son travail ; la matrice, jamais. Elle est ce qui reste quand le
+// corpus a disparu, et c'est pour ça qu'elle a été fabriquée.
+const NB_CLASSES_ATTENDUES = 6;
+ok(catalogues.length > 0 || NB_CLASSES_ATTENDUES > 0,
+  "⛔ TOUT est éteint : ni catalogue JSON réel, ni classe fabriquée. Ce garde ne veille plus et il SORT.");
 
 let entreesVues = 0;
 let convertissent = 0;
@@ -134,9 +145,25 @@ const CLASSES = {
   // booléens là où la source porte une liste ordonnée. Aucune graphie ne rend une liste en position
   // d'ENTRÉE (la même parenthèse la rend en position de MEMBRE) : question de langage ouverte, donc
   // l'outil REFUSE en nommant l'entrée. Ce que ce garde exige ici est ce refus, pas une conversion.
-  'tableau à la racine': {
+  // ⛔ ET ELLE A CHANGÉ D'ISSUE UNE SECONDE FOIS, LE 2026-08-25 — la question de langage qu'elle
+  // citait est close, et sa réponse n'était pas une graphie. `apporte` N'EST PAS UNE ENTRÉE : c'est
+  // l'INVOCATION TRANSITIVE, décidée le 2026-08-20, restée au niveau fichier faute d'avoir été
+  // reliée à sa décision. Il s'écrit en noms NUS, un par ligne, avant la déclaration — comme une
+  // scène invoque — et le générateur les relève. La donnée revient identique.
+  //
+  // ⚠️ LE MORDANT RESTE SUR L'ESPACE, ET C'EST LA CLASSE D'À CÔTÉ QUI LE TIENT. Exempter `apporte`
+  // sans elle ouvrirait TOUS les tableaux de racine : la perte muette que ce garde existe pour
+  // fermer reviendrait sous le premier autre nom. L'exception est NOMMÉE, le refus reste la règle.
+  'tableau à la racine — `apporte`, une INVOCATION': {
+    // ⚠️ LES NOMS SONT DES LIBRAIRIES RÉELLES, ET LE CONVERTISSEUR L'EXIGE : il relit sa sortie
+    // AVEC LE COMPILATEUR, qui refuse un mot de tête qu'aucune librairie ne déclare. Des noms
+    // fabriqués rendraient un refus qui ne dit rien de la graphie qu'on éprouve ici.
+    __invoque: ['midi', 'audio'],
+    documented: true, name: 'z', resolves: 'z', apporte: ['midi', 'audio'], t: { a: { b: 1 } },
+  },
+  'tableau à la racine — TOUT AUTRE NOM': {
     __refuse: 'entrée-LISTE',
-    documented: true, name: 'z', resolves: 'z', apporte: ['un', 'deux'], t: { a: { b: 1 } },
+    documented: true, name: 'z', resolves: 'z', quelconque: ['un', 'deux'], t: { a: { b: 1 } },
   },
   'membre imbriqué': { documented: true, name: 'z', resolves: 'z', t: { a: { b: { c: 1 } } } },
   // ⚠️ CETTE CLASSE EXISTE POUR SURVIVRE À UN RETRAIT. `lib/mapping.json` est aujourd'hui le SEUL
@@ -180,13 +207,42 @@ const CLASSES = {
       ok(r.status === 0,
         `⛔ MATRICE · ${classe} — l'outil REFUSE un cas qu'il doit convertir : `
         + `${String(r.stderr || '').split('\n').filter(Boolean).slice(0, 2).join(' / ').slice(0, 160)}`);
+      // ⛔ UNE INVOCATION S'ÉCRIT NUE, ET « le nom apparaît » NE LE PROUVE PAS. C'est l'erreur exacte
+      // que ce garde a déjà payée sur `apporte` : il comptait le NOM ÉCRIT, et `def apporte (un, deux)`
+      // le portait tout autant qu'une invocation. On exige donc la LIGNE NUE — le nom seul, sans
+      // parenthèse ni deux-points — et l'ABSENCE de la forme `def apporte`, qui republierait un objet
+      // de booléens là où la source porte une liste ordonnée.
+      if (donnee.__invoque && r.status === 0) {
+        for (const nom of donnee.__invoque) {
+          ok(new RegExp(`^${nom}\\s*$`, 'm').test(rendu),
+            `⛔ MATRICE · ${classe} — « ${nom} » doit s'écrire NU, seul sur sa ligne. Une invocation `
+            + `n'est pas une entrée : écrite autrement, elle ne remplit pas la chaîne 'apporte'.`);
+        }
+        ok(!/^\s*def\s+apporte\b/m.test(rendu),
+          `⛔ MATRICE · ${classe} — l'outil écrit encore 'def apporte (…)'. Cette graphie revient du `
+          + `bundle en OBJET DE BOOLÉENS : la liste ordonnée est perdue, et le rendu a l'air juste.`);
+      }
       for (const entree of entreesDe(donnee)) {
         if (r.status !== 0) continue;
+        // ⛔ `apporte` N'EST PAS UNE ENTRÉE DU VOCABULAIRE — c'est l'invocation transitive, et elle
+        // s'écrit en noms NUS hors de la déclaration. Exiger que le MOT `apporte` figure dans la
+        // source produite reviendrait à exiger la graphie `def apporte (…)`, celle-là même qui
+        // republie un objet de booléens. Sa forme s'exerce par `__invoque`, juste au-dessus.
+        // ⚠️ ET `entreesDe()` LE COMPTE ENCORE COMME UNE ENTRÉE, sur le paquet comme ici : il n'est
+        // pas un champ de fichier et rien ne l'écarte. Défaut préexistant, rendu à l'architecte.
+        if (entree === 'apporte') continue;
         ok(new RegExp(`(^|\\W)${entree}(\\W|$)`, 'm').test(rendu),
           `⛔ MATRICE · ${classe} — l'entrée « ${entree} » MANQUE de la source produite alors que `
           + `l'outil a rendu CODE 0. C'est la forme même que cette classe existe pour éprouver.`);
       }
     }
+    // ⛔ ET LA MATRICE PORTE LE COMPTE QU'ELLE ANNONCE. Depuis que le volet réel est éteint, elle est
+    // le SEUL mordant de ce fichier : une classe qui disparaîtrait d'ici ne serait plus couverte par
+    // rien, et le garde resterait vert en examinant moins.
+    ok(Object.keys(CLASSES).length === NB_CLASSES_ATTENDUES,
+      `⛔ MATRICE — ${Object.keys(CLASSES).length} classe(s) déclarée(s) pour `
+      + `${NB_CLASSES_ATTENDUES} attendues. La matrice est le seul mordant restant : une classe qui `
+      + `sort d'ici n'est plus couverte par rien.`);
     ok(examinees === Object.keys(CLASSES).length,
       `⛔ MATRICE — ${examinees} classe(s) examinée(s) sur ${Object.keys(CLASSES).length}. `
       + `Un total non nul cache une classe vide : chaque forme se fabrique et se traverse.`);

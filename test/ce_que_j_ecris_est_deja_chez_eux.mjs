@@ -265,9 +265,16 @@ for (const c of CONSOMMATEURS) {
 // ── CHAQUE VOISIN DIT COMMENT IL LIT, ET CE MODE EST OPPOSABLE ───────────────
 // ⚠️ SANS CET AXE, LA LISTE RÉPOND « QUI » ET « QUOI » SANS RÉPONDRE « CE QUI LE CASSE ».
 {
+  // ⛔ CE FILTRE ÉTAIT AVEUGLE À `.bpsl`, ET C'EST LE DÉFAUT QUE CE VOLET EXISTE POUR NOMMER. Il
+  // testait `/\.(json|bps)$/` — la fin de chaîne exclut `.bpsl` — donc il ne comptait que les JSON
+  // de racine. Le 2026-08-25, `core.json` a été converti, le dernier JSON de racine a disparu, et le
+  // socle est tombé à ZÉRO format sur un dossier qui en porte vingt-deux. **Le huitième lecteur
+  // trompé par l'extension d'une source de librairie, et cette fois c'est le garde qui l'énonce.**
   const formats = new Set(readdirSync(path.join(MOI, 'lib'))
-    .filter((f) => /\.(json|bps)$/.test(f)).map((f) => f.split('.').pop()));
-  ok(formats.size >= 1, 'MODE — SOCLE : le dossier lib/ doit porter au moins un format');
+    .filter((f) => /\.(json|bps|bpsl)$/.test(f)).map((f) => f.split('.').pop()));
+  ok(formats.size >= 1,
+    `MODE — SOCLE : le dossier lib/ doit porter au moins un format — ${formats.size} vu(s). Un zéro `
+    + `ici mesure le FILTRE, jamais le dossier : c'est ainsi qu'il est tombé la première fois.`);
 
   for (const c of CONSOMMATEURS) {
     ok(MODES.has(c.mode),
