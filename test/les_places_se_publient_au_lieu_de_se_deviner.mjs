@@ -133,17 +133,49 @@ const nomsDePlaces = Object.entries(PLACES).filter(([k]) => k !== '_deduites');
     `D. ⛔ ${vuesParLaFormeSeule.join(', ')} : la FORME les voit comme des places et la porte ne les `
     + `publie pas. Un lecteur qui descend dedans irait plus loin que ce que je déclare.`);
   // ⚠️ L'ÉCART INVERSE EST LA RAISON D'ÊTRE DE LA PORTE, et il peut être VIDE aujourd'hui sans que
-  // la porte devienne inutile : `core.symbols` est une place vide, donc invisible à la forme, et
-  // elle n'est pas publiée non plus — parce que `core` est le catalogue DÉDUIT. C'est exactement ce
-  // que `_deduites` sert à dire, et ce volet le CONSTATE au lieu de l'exiger.
+  // la porte devienne inutile.
   console.log(`[places] connues par la porte seule : ${vuesParLaPorteSeule.length ? vuesParLaPorteSeule.join(', ') : 'aucune aujourd\'hui'}`);
-  const placeVideNonPubliee = Object.entries(LIBS).flatMap(([lib, d]) => (d && typeof d === 'object'
+
+  // ⛔ CE VOLET AVAIT LE PÉRIMÈTRE INVERSE DE SON PROPOS — décision de méthode de l'architecte,
+  // 2026-08-25, voie (a). Il refusait un conteneur vide dans un catalogue NON déduit et le tolérait
+  // dans un catalogue DÉDUIT. **C'est exactement le contraire de ce qu'il existe pour nommer.**
+  //
+  //     catalogue NON déduit   `PLACES[lib]` est EXHAUSTIF — le générateur vient de créer ses
+  //                            places. L'absence d'un nom y est une information POSITIVE : ce
+  //                            n'est pas une place, donc c'est une entrée. AUCUNE ambiguïté.
+  //     catalogue DÉDUIT       `PLACES[lib]` vient de la FORME, et la forme ne voit pas un
+  //                            conteneur vide. L'absence n'y prouve rien : indécidable.
+  //
+  // ⚠️ CE QUI L'A MONTRÉ : cinq prototypes rendus vides le 2026-08-25 (« on ne fait pas de
+  // prédéfinition d'objet vide »). `PLACES.types` vaut la liste vide et `types` n'est pas déduit —
+  // le paquet DISAIT déjà que ces cinq sont des entrées, et le garde les refusait quand même.
+  //
+  // ⚠️ ET IL N'EXAMINE PAS ZÉRO POUR AUTANT : `core.symbols` est une PLACE — `libs.js` y descend
+  // pour en énumérer les membres — vide, non publiée, dans un catalogue déduit. C'est le seul cas
+  // qu'un lecteur ne peut pas classer, et c'est désormais celui-ci que ce volet nomme.
+  const conteneursVides = Object.entries(LIBS).flatMap(([lib, d]) => (d && typeof d === 'object'
     ? Object.keys(d).filter((k) => !k.startsWith('_') && !CHAMPS_DE_FICHIER.has(k)
       && d[k] && typeof d[k] === 'object' && !Array.isArray(d[k]) && Object.keys(d[k]).length === 0)
-      .map((k) => `${lib}.${k}`) : []));
-  ok(placeVideNonPubliee.every((x) => publiees.has(x) || (PLACES._deduites || []).includes(x.split('.')[0])),
-    `D. ⛔ ${placeVideNonPubliee.join(', ')} : un conteneur VIDE que ni la porte ni la forme ne voient, `
-    + `dans un catalogue qui n'est pas annoncé déduit. C'est le cas que ce garde existe pour nommer.`);
+      .map((k) => ({ lib, chemin: `${lib}.${k}` })) : []));
+  const deduits = new Set(PLACES._deduites || []);
+  const indecidables = conteneursVides
+    .filter(({ lib, chemin }) => deduits.has(lib) && !publiees.has(chemin))
+    .map(({ chemin }) => chemin);
+  ok(indecidables.length === 0,
+    `D. ⛔ ${indecidables.join(', ')} : un conteneur VIDE dans un catalogue DÉDUIT, que la porte ne `
+    + `publie pas comme place. La forme ne voit pas un conteneur vide et la déduction n'a donc rien `
+    + `pu en dire : un lecteur ne peut pas trancher entre une place et une entrée. C'est le cas que `
+    + `ce garde existe pour nommer.`);
+
+  // ── LE TÉMOIN QUI DISCRIMINE — sans lui, ce volet serait vert le jour où plus aucun catalogue
+  // ne serait déduit, et il aurait la même sortie qu'un volet qui mord. On rejoue le juge isolé.
+  const juger = (vides, dedu, pub) => vides.filter(({ lib, chemin }) => dedu.has(lib) && !pub.has(chemin));
+  ok(juger([{ lib: 'x', chemin: 'x.v' }], new Set(['x']), new Set()).length === 1,
+    `D-témoin. (mord) un conteneur vide dans un catalogue DÉDUIT et non publié doit être relevé.`);
+  ok(juger([{ lib: 'x', chemin: 'x.v' }], new Set(['x']), new Set(['x.v'])).length === 0,
+    `D-témoin. (se tait) le même, publié comme place, passe.`);
+  ok(juger([{ lib: 'x', chemin: 'x.v' }], new Set(), new Set()).length === 0,
+    `D-témoin. (se tait) dans un catalogue NON déduit, PLACES est exhaustif : c'est une entrée.`);
 }
 
 if (e.length) {
