@@ -157,7 +157,10 @@ for (const [quoi, corps, attendu, pourquoi] of CAS) {
      + `son nom disparaît.`);
 }
 
-ok(CAS.length >= 4 && CAS.some(([, , a]) => a[0] === 'RawBrace') && CAS.some(([, , a]) => a[0] === 'Rule'),
+// ⛔ COMPTE EXACT, PAS UN SEUIL — « refuser zéro n'est pas refuser une baisse » (kairos, 2026-08-25).
+// Un seuil calé sur l'existant ne mord qu'au SECOND retrait, avec un message qui parle du premier.
+// Ce nombre se met à jour DANS le geste qui ajoute un cas ; c'est ce qui le rend opposable.
+ok(CAS.length === 4 && CAS.some(([, , a]) => a[0] === 'RawBrace') && CAS.some(([, , a]) => a[0] === 'Rule'),
    `SOCLE : la matrice doit porter les DEUX destinations — ${CAS.length} écritures, dont au moins `
    + `une qui vise la fermante et une qui vise la règle. Avec une seule, elle ne mesure plus une `
    + `frontière.`);

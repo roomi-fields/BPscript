@@ -74,7 +74,10 @@ for (const [quoi, src] of DOIVENT_REFUSER) {
 }
 
 // ── SOCLE ─────────────────────────────────────────────────────────────────────────────────────
-ok(DOIVENT_PASSER.length >= 4 && DOIVENT_REFUSER.length >= 3,
+// ⛔ COMPTE EXACT, PAS UN SEUIL — « refuser zéro n'est pas refuser une baisse » (kairos, 2026-08-25).
+// Un seuil calé sur l'existant ne mord qu'au SECOND retrait, avec un message qui parle du premier.
+// Ce nombre se met à jour DANS le geste qui ajoute un cas ; c'est ce qui le rend opposable.
+ok(DOIVENT_PASSER.length === 4 && DOIVENT_REFUSER.length === 3,
    `SOCLE : les deux sens doivent être peuplés — ${DOIVENT_PASSER.length} qui passent, `
    + `${DOIVENT_REFUSER.length} qui refusent. Une seule famille mesurée laisserait l'autre libre.`);
 

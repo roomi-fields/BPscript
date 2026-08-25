@@ -135,7 +135,10 @@ for (const [quoi, src] of [
 }
 
 // ── SOCLE ────────────────────────────────────────────────────────────────────────────────────
-ok(FORMES.length >= 10 && ACCORDS.length >= 6,
+// ⛔ COMPTE EXACT, PAS UN SEUIL — « refuser zéro n'est pas refuser une baisse » (kairos, 2026-08-25).
+// Un seuil calé sur l'existant ne mord qu'au SECOND retrait, avec un message qui parle du premier.
+// Ce nombre se met à jour DANS le geste qui ajoute un cas ; c'est ce qui le rend opposable.
+ok(FORMES.length === 10 && ACCORDS.length === 6,
    `SOCLE : ${FORMES.length} formes et ${ACCORDS.length} accords. Une matrice qui rétrécirait ne `
    + `dirait pas que le langage a changé, elle dirait qu'elle ne le lit plus.`);
 

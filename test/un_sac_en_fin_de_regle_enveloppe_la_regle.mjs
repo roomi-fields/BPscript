@@ -97,7 +97,10 @@ for (const [rhs, attendu, pourquoi] of CAS) {
 }
 
 // ── SOCLE ─────────────────────────────────────────────────────────────────────────────────────
-ok(CAS.length >= 8 && CAS.filter(([, a]) => a === 0).length >= 4 && CAS.filter(([, a]) => a > 0).length >= 3,
+// ⛔ COMPTE EXACT, PAS UN SEUIL — « refuser zéro n'est pas refuser une baisse » (kairos, 2026-08-25).
+// Un seuil calé sur l'existant ne mord qu'au SECOND retrait, avec un message qui parle du premier.
+// Ce nombre se met à jour DANS le geste qui ajoute un cas ; c'est ce qui le rend opposable.
+ok(CAS.length === 9 && CAS.filter(([, a]) => a === 0).length === 5 && CAS.filter(([, a]) => a > 0).length === 4,
    `SOCLE : la matrice doit porter les DEUX natures — ${CAS.length} cas, `
    + `${CAS.filter(([, a]) => a === 0).length} suffixes et ${CAS.filter(([, a]) => a > 0).length} `
    + `flux. Une matrice qui ne garderait qu'une nature ne mesurerait plus la frontière.`);
