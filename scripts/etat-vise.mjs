@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * FABRIQUE L'ÉTAT VISÉ PAR LA PHASE 3, HORS DE L'ARBRE, ET REND SON ÉCART AU PAQUET PUBLIÉ.
+ * FABRIQUE L'ÉTAT VISÉ PAR LA PHASE 3, HORS DE L'ARBRE, ET REND SON ÉCART À L'ARBRE COURANT —
+ * QU'IL NOMME PAR SON COMMIT ET SA PROPRETÉ, jamais par un mot comme « publié » qui se périme seul.
  *
  * ⛔ CE QU'IL REMPLACE, ET POURQUOI. Mon préavis du 2026-08-25 portait un tableau de prédictions
  * RÉDIGÉ : quatre lignes, dont deux fausses, et l'une incompatible avec une autre du même tableau —
@@ -92,7 +93,25 @@ try {
   const apres = (await import(`${bac}/src/transpiler/libs-data.js`));
   const noms = [...new Set([...Object.keys(avant.LIBS), ...Object.keys(apres.LIBS)])].sort();
 
-  console.log(`ÉTAT VISÉ PAR LA PHASE 3 — écart au paquet publié (${suivis.length} fichiers copiés)\n`);
+  // ⛔ IL NOMME CE QU'IL A LU, IL NE LE QUALIFIE PAS. Ma première rédaction titrait « écart au PAQUET
+  // PUBLIÉ » — et cette fonction lit `src/transpiler/libs-data.js` DANS MON ARBRE. Les deux
+  // coïncident quand l'arbre est propre et poussé, et divergent en silence sinon.
+  //
+  // ⚠️ C'est le piège que l'architecte a nommé le 2026-08-25, pris par l'autre bout : *« une
+  // référence publiée peut être EN RETARD sur ce qui s'exécute ; lire l'état figé d'un voisin ne dit
+  // pas ce qu'il FAIT à cet instant. »* Ici c'est l'inverse — l'arbre est en AVANCE sur le publié —
+  // et le remède est le même, celui que BPx a payé sur ses bancs de conformité : **« 105 clés » ne se
+  // rejoue pas, « 105 clés à `861aaf7` » oui.**
+  const etat = (() => {
+    const commit = execFileSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8', cwd: RACINE }).trim();
+    const sale = execFileSync('git', ['status', '--porcelain', '--', 'src', 'lib', 'package.json'],
+      { encoding: 'utf8', cwd: RACINE }).trim();
+    return sale ? `${commit} + ${sale.split('\n').length} fichier(s) NON ENREGISTRÉS` : commit;
+  })();
+
+  console.log(`ÉTAT VISÉ PAR LA PHASE 3 — écart à MON ARBRE, lu à « ${etat} »`);
+  console.log(`  (${suivis.length} fichiers copiés · la référence est l'arbre, jamais le paquet `
+    + `publié : les deux coïncident quand l'arbre est propre et poussé, et pas autrement.)\n`);
   let bouge = 0;
   for (const n of noms) {
     const x = JSON.stringify(avant.LIBS[n]), y = JSON.stringify(apres.LIBS[n]);
