@@ -296,11 +296,29 @@ préfixe : `BP_AGENT=<nom> ~/dev/bp/hub/tour <commande>`.
 
 1. **Au réveil, le courrier d'abord** : `tour inbox`, puis `TABLEAU.md` et mes contrats.
    `tour inbox --ack` une fois traité.
-2. **Un livrable poussé se route aussitôt**, dans le même geste que le push : `tour send architecte`.
-   Sans cela, personne ne sait qu'il faut le confronter, et le chantier se cale en silence.
-3. **La dernière action avant de rendre la main est un courrier à l'architecte** : fini avec sa
-   preuve, en cours avec le prochain pas, ou bloqué avec ce qu'il me faut. Un commit ne vaut pas
+2. **Un livrable poussé se route à l'architecte S'IL ENTRE DANS L'UN DES QUATRE MOTIFS**, dans le
+   même geste que le push. Sinon il ne se route pas — **le pousser suffit**.
+3. **La dernière action avant de rendre la main est un courrier à l'architecte S'IL Y A MATIÈRE** :
+   fini avec sa preuve, en cours avec le prochain pas, ou bloqué avec ce qu'il me faut. **Sans
+   matière, je m'arrête sans écrire** — arbre propre et portillon vert sont un état normal, pas un
    rapport.
+
+> ⛔ **LES QUATRE MOTIFS, ET ILS VIVENT ICI** — décision de méthode de l'architecte, 2026-08-25. Une
+> charte ne renvoie pas à un message qui vit dans une boîte. Ce qui remonte :
+>
+>     · ce qui appelle une DÉCISION — la sienne ou celle de Romain
+>     · ce qui me BLOQUE
+>     · ce qui CASSE ou CASSERAIT chez un voisin
+>     · un fait qui RÉFUTE quelque chose qu'il a écrit ou relayé
+>
+> ⇒ **Ce qui n'entre pas** : une mesure qui confirme une règle chez moi, un inventaire sans
+> conséquence, un « ta règle passe chez moi » sans geste derrière. **Une dette mesurée se reporte en
+> UNE LIGNE**, et l'architecte l'inscrit — aucun registre parallèle.
+>
+> ⚠️ **CE QUE ÇA NE COUVRE PAS : le préavis de frappe reste dû.** Un changement qui casserait chez un
+> voisin est le troisième motif ; il n'a jamais été visé par l'économie.
+>
+> ⚠️ **ET CE N'EST PAS « MESURER MOINS ».** Ce qui change est ce qui REMONTE, jamais ce qui se fait.
 4. `tour send <dest>` porte une **demande** et réveille le destinataire ; `tour note <dest>` porte
    une **information**, lue à la prochaine levée. Le réveil appartient au démon : je dépose, je ne
    pingue personne.
@@ -322,9 +340,9 @@ une faute nomme l'endroit où elle s'est produite, jamais l'espace où elle vit.
 
 Mon identité : `BP_AGENT=bpscript`. Elle ne persiste pas entre appels shell, donc chaque commande se
 préfixe : `BP_AGENT=bpscript ~/dev/bp/hub/tour <commande>`.
-2. **La dernière action avant de rendre la main est un courrier à l'architecte** — et un livrable
-   poussé se route dans le même geste que le push : fini avec sa preuve, en cours avec le prochain
-   pas, ou bloqué avec ce qu'il me faut. **Un commit ne vaut pas rapport.**
+2. **La dernière action avant de rendre la main est un courrier à l'architecte S'IL Y A MATIÈRE** —
+   et un livrable poussé se route dans le même geste que le push **s'il entre dans l'un des quatre
+   motifs ci-dessus**. Sans matière, je m'arrête sans écrire.
 3. `tour send <dest>` porte une **demande** et réveille le destinataire ; `tour note <dest>` porte
 4. **Un contrat partagé se propose avant d'être figé**, par `tour` ; le code interne reste autonome.
 5. **Fin de session** : je mets à jour ma ligne du `TABLEAU.md`, ma fiche projet et ma colonne de
