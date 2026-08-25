@@ -1,5 +1,6 @@
 // Corps de la fonction digitale `scaleshift` — AUTHORING F1 (vrai .ts TYPÉ contre le SDK Kairos).
-// Source de vérité : ce fichier ; libs-bundle.js en capte le SOURCE dans lib/digital.json → libs-data.js.
+// Source de vérité : ce fichier ; libs-bundle.js greffe ce SOURCE sur l'entrée `objects.scaleshift`
+// déclarée dans lib/digital.bpsl → libs-data.js.
 // Kairos transpile (sucrase, qui STRIPE l'`import type`) puis exécute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.
 // ⚠️ TRANSPOSITION SCALAIRE (diatonique) : décalage de N DEGRÉS d'alphabet (Sa +2 → Ga), report de
 //    registre aux bornes. Anciennement `rotate` de HAUTEUR — renommé (décision 2026-07-11 : deux

@@ -167,6 +167,24 @@ const nomsDePlaces = Object.entries(PLACES).filter(([k]) => k !== '_deduites');
     + `pu en dire : un lecteur ne peut pas trancher entre une place et une entrée. C'est le cas que `
     + `ce garde existe pour nommer.`);
 
+  // ⛔ ET IL COMPTE SA CLASSE, PARCE QU'ELLE EST DEVENUE VIDE LE JOUR MÊME. Le 2026-08-25, `core`
+  // a été converti : les six conteneurs vides du paquet vivent tous dans `core` et `types`, qui ne
+  // sont plus déduits. **Le volet ci-dessus examine désormais ZÉRO**, et un volet qui verdit sur du
+  // vide sans le dire est exactement ce que ce dépôt refuse — personne ne saurait quand il a cessé
+  // de mesurer.
+  //
+  // ⚠️ CE N'EST PAS UN ASSOUPLISSEMENT, C'EST UNE RÉPARATION : le défaut a disparu parce qu'il a été
+  // traité. Mais la distinction ne se lit pas dans une sortie verte, seulement dans ce compte.
+  const candidats = conteneursVides.filter(({ lib }) => deduits.has(lib));
+  console.log(`[places] conteneurs vides : ${conteneursVides.length} au total, dont `
+    + `${candidats.length} dans un catalogue déduit — ${candidats.length ? 'la classe a un sujet'
+      : '⚠️ CLASSE VIDE : plus aucun catalogue déduit ne porte de conteneur vide, ce volet n\'exerce '
+        + 'plus rien. Il reste branché pour le jour où un catalogue JSON en portera un.'}`);
+  ok(deduits.size > 0,
+    `D-classe. PLUS AUCUN catalogue n'est déduit : ce volet n'a plus de sujet POSSIBLE, et ce n'est `
+    + `plus une classe vide mais un garde sans objet. Il sort, et ce qu'il gardait de juste se relit `
+    + `avant — la distinction place/entrée reste tenue par les volets A à C.`);
+
   // ── LE TÉMOIN QUI DISCRIMINE — sans lui, ce volet serait vert le jour où plus aucun catalogue
   // ne serait déduit, et il aurait la même sortie qu'un volet qui mord. On rejoue le juge isolé.
   const juger = (vides, dedu, pub) => vides.filter(({ lib, chemin }) => dedu.has(lib) && !pub.has(chemin));

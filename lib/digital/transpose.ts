@@ -1,5 +1,6 @@
 // Corps de la fonction digitale `transpose` — AUTHORING F1 (vrai .ts TYPÉ contre le SDK Kairos).
-// Source de vérité : ce fichier ; libs-bundle.js en capte le SOURCE dans lib/digital.json → libs-data.js.
+// Source de vérité : ce fichier ; libs-bundle.js greffe ce SOURCE sur l'entrée `objects.transpose`
+// déclarée dans lib/digital.bpsl → libs-data.js.
 // Kairos transpile (sucrase, qui STRIPE l'`import type`) puis exécute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.
 // ⚠️ TRANSPOSITION RÉELLE (chromatique) : décalage de l'ANCRE par un INTERVALLE fixe. Préserve les
 //    intervalles ET le nom de chaque note (on déplace le cadre, pas les notes contre un cadre figé).

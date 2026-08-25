@@ -1,5 +1,6 @@
 // Corps de la fonction d'HOMOMORPHISME `substitute` — AUTHORING F1 (vrai .ts TYPÉ contre le SDK Kairos).
-// Source de vérité : ce fichier ; libs-bundle.js en capte le SOURCE dans lib/homomorphism.json → libs-data.js.
+// Source de vérité : ce fichier ; libs-bundle.js greffe ce SOURCE sur l'entrée `objects.substitute`
+// déclarée dans lib/homomorphism.bpsl → libs-data.js.
 // Kairos transpile (sucrase, qui STRIPE l'`import type`) puis exécute au load, en BAC À SABLE déterministe.
 // ⚠️ SUBSTITUTION DE SYMBOLE (homomorphisme BP3 `-ho`/`-al`) sortie de BPx → RÉSOLUTION Kairos, VIA
 //    LIBRAIRIE (décision Romain/architecte 2026-07-17, hub/decisions/2026-07-17-bpx-ordonnanceur-opaque-

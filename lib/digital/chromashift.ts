@@ -1,5 +1,6 @@
 // Corps de la fonction digitale `chromashift` — AUTHORING F1 (vrai .ts TYPÉ contre le SDK Kairos).
-// Source de vérité : ce fichier ; libs-bundle.js en capte le SOURCE dans lib/digital.json → libs-data.js.
+// Source de vérité : ce fichier ; libs-bundle.js greffe ce SOURCE sur l'entrée `objects.chromashift`
+// déclarée dans lib/digital.bpsl → libs-data.js.
 // Kairos transpile (sucrase, qui STRIPE l'`import type`) puis exécute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.
 // ⚠️ TRANSPOSITION CHROMATIQUE (grille 12 clés) : image de BP3 _transpose (décision Romain
 //    2026-07-17, hub/decisions/2026-07-17-bp3-transpose-est-scaleshift-sur-grille-12-cles.md).

@@ -94,9 +94,9 @@ def pitchrange (bp3:_pitchrange, args(cents), unit:"cents", description:"Pitch b
 
 def pitchcont (bp3:_pitchcont, description:"Enable continuous pitch bend interpolation", scope(symbol, group, rule, flow), transportGroup:midi)
 
-def keymap (bp3:_keymap, args(p1, q1, p2, q2), range(0, 127), description:"Key mapping — remap MIDI key range (p1,p2) to (q1,q2). Args are key numbers (0..127) or note names; p2 must be greater than p1. BP3 _keymap (registre moteur console_strings.json:212, code 62/4 args).", scope(symbol, group, rule, flow), transportGroup:midi)
+def keymap (bp3:_keymap, args(p1, q1, p2, q2), range(0, 127), description:"Key mapping — remap MIDI key range (p1,p2) to (q1,q2). Args are key numbers (0..127) or note names; p2 must be greater than p1. BP3 _keymap — registre du moteur natif, bp3-engine `origin/wasm` : capture-run/console_strings.json porte « 62 4 _keymap ».", scope(symbol, group, rule, flow), transportGroup:midi)
 
-def mapcont (bp3:_mapcont, description:"Carte de touches en mode CONTINU — la carte glisse PENDANT les notes, par messages intermédiaires. BP3 _mapcont (console_strings.json:214, code 44/0 args). Ses deux frères discrets vivent dans la librairie variation ; leur destinataire se lit sur le champ resolvedBy de ce fichier-là, jamais ici.", scope(symbol, group, rule, flow), transportGroup:midi)
+def mapcont (bp3:_mapcont, description:"Carte de touches en mode CONTINU — la carte glisse PENDANT les notes, par messages intermédiaires. BP3 _mapcont — registre du moteur natif, bp3-engine `origin/wasm` : capture-run/console_strings.json porte « 44 0 _mapcont ». Ses deux frères discrets vivent dans la librairie variation ; leur destinataire se lit sur le champ resolvedBy de ce fichier-là, jamais ici.", scope(symbol, group, rule, flow), transportGroup:midi)
 
 def pressure (args(value), range(0, 127), description:"MIDI Channel Pressure (aftertouch)", scope(symbol, group, rule, flow), transportGroup:midi)
 
