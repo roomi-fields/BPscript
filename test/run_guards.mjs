@@ -26,7 +26,7 @@
  *
  * Usage :  node test/run_guards.mjs [--verbose]
  */
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 
@@ -127,6 +127,42 @@ for (const s of SEUILS) {
 console.log(`\n[gardes] ${passes} garde(s) vert(s), ${echecs} en échec.`);
 console.log(`[gardes] ${assertions} assertion(s) RÉELLEMENT exécutée(s)`
   + (sansCompte ? ` — ${sansCompte} fichier(s) n'annoncent pas leur compte, non totalisés.` : '.'));
+
+// ⛔ CE COMPTE ÉTAIT AFFICHÉ ET COMPARÉ À RIEN — « refuser zéro n'est pas refuser une baisse ».
+//
+// ⚠️ MESURÉ PAR INJECTION RÉELLE, le 2026-08-25 : en retirant UNE entrée d'une librairie
+// (`expression.offvel`), le portillon est passé de **10074 assertions à 9413** — **661 de moins** —
+// et **211 gardes sur 213 sont restés VERTS**. Deux seulement ont vu le retrait, dont un posé le
+// jour même parce qu'il compare à une RÉFÉRENCE ENREGISTRÉE.
+//
+// ⇒ **La forme qui voit une baisse est la référence, pas le seuil.** Un garde qui refuse zéro
+// protège d'une assiette illisible ; seul un nombre ÉCRIT protège d'un retrait — et l'écrire une
+// fois pour 213 gardes coûte moins que de le poser dans chacun.
+//
+// ⇒ La référence ne monte JAMAIS toute seule : `--maj` est un geste explicite, et le diff le montre.
+// Une hausse est annoncée sans mordre — ajouter un garde est légitime ; c'est la BAISSE qui se refuse.
+const REFERENCE = new URL('./assertions-du-portillon.json', import.meta.url);
+if (process.argv.includes('--maj')) {
+  writeFileSync(REFERENCE, `${JSON.stringify({ assertions, gardes: passes }, null, 1)}\n`);
+  console.log(`[gardes] référence mise à jour — ${assertions} assertion(s), ${passes} garde(s).`);
+} else if (existsSync(REFERENCE)) {
+  const ref = JSON.parse(readFileSync(REFERENCE, 'utf8'));
+  if (assertions < ref.assertions) {
+    echecs++;
+    console.error(`  ÉCHEC ⛔ LE PORTILLON A PERDU ${ref.assertions - assertions} ASSERTION(S) — `
+      + `${ref.assertions} attendues, ${assertions} exécutées.`);
+    console.error(`         Aucun garde n'a rougi : ils refusent tous ZÉRO, aucun ne refuse une BAISSE. `
+      + `Une entrée retirée d'une librairie en emporte des centaines sans un mot.`);
+    console.error(`         Vérifier CE QUI A DISPARU, puis, si le retrait est voulu : `
+      + `node test/run_guards.mjs --maj`);
+  } else if (assertions > ref.assertions) {
+    console.log(`[gardes] +${assertions - ref.assertions} assertion(s) depuis la référence — `
+      + `une hausse ne mord pas. '--maj' pour la fixer.`);
+  }
+} else {
+  console.error(`  ÉCHEC — la référence d'assertions est absente : node test/run_guards.mjs --maj`);
+  echecs++;
+}
 if (echecs === 0) {
   console.log(`[gardes] lane séparée : ${LANE_MOTEUR.size} test(s) exigeant un binaire construit.`);
 }
