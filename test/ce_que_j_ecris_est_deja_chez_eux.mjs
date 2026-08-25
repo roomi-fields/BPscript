@@ -166,7 +166,23 @@ const ok = (c, q) => { if (c) passe++; else echecs.push(q); };
 //     COMMITTER — un fichier enregistré est déjà chez eux, et `git push` n'y change rien.
 // Les confondre ferait donner le bon préavis au mauvais moment.
 const MOTIFS = [
-  { nom: 'par chemin', regex: "BPscript/lib\\|BPscript/src\\|from 'bpscript\\|require('bpscript\\|\\.\\./BPscript" },
+  // ⛔ DEUX RÉGIMES, DEUX NOMS — ils étaient groupés sous « par chemin » et ce nom était FAUX pour la
+  // moitié d'entre eux. Mesuré chez kanopi le 2026-08-26, ventilé graphie par graphie :
+  //
+  //     BPscript/lib        0        BPscript/src        0
+  //     ../BPscript         1        from 'bpscript     12   ⇐ le SPÉCIFICATEUR, pas un chemin
+  //
+  // ⇒ Douze de ses fichiers étaient annoncés « par chemin » et **aucun n'atteint mon arbre par un
+  // chemin de disque** : tous entrent par le spécificateur de paquet, donc par ce que mes `exports`
+  // désignent. C'est la distinction que j'ai moi-même versée le 2026-08-25 — *`files` dit ce qui
+  // VOYAGE, `exports` ce qu'on peut ADRESSER* — et mon propre affichage la perdait.
+  //
+  // ⚠️ ET CE N'EST PAS COSMÉTIQUE : le régime décide de QUELLE PORTE il faut prévenir. Un lecteur par
+  // chemin est atteint par tout fichier que j'écris ; un lecteur par la porte n'est atteint que par
+  // ce que je DÉCLARE. Les confondre fait donner le bon préavis pour la mauvaise raison — et fait
+  // croire à un rayon d'impact qui n'existe pas.
+  { nom: 'par chemin', regex: "BPscript/lib\\|BPscript/src\\|BPscript/public\\|\\.\\./BPscript" },
+  { nom: 'par la porte', regex: "from 'bpscript\\|require('bpscript\\|from \"bpscript" },
   // ⚠️ SEUL `HEAD:` SIGNE LA LECTURE AU COMMIT. Ma première version rangeait `../BPscript` ici et
   // annonçait 94 lecteurs-au-commit chez BPx : une racine relative est un import PAR CHEMIN, pas
   // une lecture au commit. Un motif trop large ne rend pas le garde plus prudent, il lui fait
