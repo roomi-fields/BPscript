@@ -444,6 +444,22 @@ empreintes de fichier, et une restauration en porte une neuve.
 **Éprouver un garde écrit DEUX FOIS dans le code de production**, et c'est le cas qui échappe : le
 travail se dit « poser un banc », il touche le parseur, et la fenêtre du voisin est réputée fermée.
 
+⛔ **ET CE QUI ME PROTÈGE PENDANT UNE FENÊTRE EST UNE DISCIPLINE, PAS UN MÉCANISME.** Le crochet de
+gel intercepte **mes outils d'édition**, jamais un **processus que je lance**. Mesuré le 2026-08-25 :
+`npm run bundle:libs` a réécrit deux fichiers sous `src` pendant une campagne de kanopi et l'a
+invalidée — **le crochet n'a rien refusé**, alors qu'il m'avait bloqué la main sur `parser.js` deux
+heures plus tôt.
+
+⇒ **Ce n'est pas un défaut du crochet, c'est sa portée** : un crochet placé devant un outil ne voit
+pas ce que fait un programme lancé par cet outil. ⇒ Donc : **ne lancer aucune construction,
+régénération ni publication tant qu'une fenêtre est ouverte**, et traiter une commande LONGUE comme
+une écriture qui dure — la fenêtre peut s'ouvrir pendant qu'elle tourne.
+
+⚠️ **Et j'ai écrit le contraire** : « le crochet porte maintenant la frontière ». Vrai pour ce qu'il
+intercepte, faux pour ce que je lance — **une description fausse d'un garde juste**.
+
+⚠️ **Le garde de POUSSÉE, lui, reste mécanique** : il refuse la poussée, jamais l'écriture.
+
 **Pendant la fenêtre d'un voisin, je n'enregistre RIEN — pas « rien sous ses racines ».** Le périmètre
 qu'il relève est le sien : il le dérive de mon manifeste et peut le changer sans me prévenir. Faire
 reposer ma discipline dessus, c'est lui demander de garantir une frontière que je ne tiens pas. La
