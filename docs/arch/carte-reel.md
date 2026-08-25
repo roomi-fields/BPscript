@@ -5,7 +5,7 @@
 > vit dans le document d'architecture, chez Atlas, qui cite celui-ci.
 ## Ce qui est mesuré
 
-- **19 modules** dans `src/transpiler/`, **14694 lignes**.
+- **20 modules** dans `src/transpiler/`, **14804 lignes**.
 - Le **rôle** est lu dans l'en-tête de chaque fichier, verbatim — jamais interprété.
 - Les **arêtes** sont les imports d'un module vers un voisin du même dossier.
 
@@ -14,13 +14,14 @@
 | Module | Lignes | Importe | Importé par | Rôle (lu dans l'en-tête) |
 | --- | ---: | ---: | ---: | --- |
 | `parser.js` | 7770 | 4 | 1 | BPScript Parser |
-| `bpxAst.js` | 3127 | 7 | 1 | POSE LE DESTINATAIRE DE CHAQUE RÉGLAGE SUR LE SAC QUI LE PORTE. |
+| `bpxAst.js` | 3138 | 8 | 1 | POSE LE DESTINATAIRE DE CHAQUE RÉGLAGE SUR LE SAC QUI LE PORTE. |
 | `libs.js` | 1342 | 3 | 4 | BPScript Library Loader |
 | `actorResolver.js` | 585 | 1 | 1 | BPScript Actor Resolver |
 | `libs-bundle.js` | 554 | 2 | 0 | BPScript Libs Bundle Generator |
 | `tokenizer.js` | 450 | 0 | 2 | BPScript Tokenizer |
 | `orderTokens.js` | 123 | 0 | 0 | — |
 | `controlValidation.js` | 113 | 0 | 1 | Collecte récursivement toutes les paires de SettingBag de l'AST. |
+| `resolution.js` | 99 | 0 | 1 | L'ÉTAGE QUI RÉSOUT — le troisième des quatre, et le seul qui n'avait pas de domicile. |
 | `segmentation.js` | 81 | 0 | 1 | LA SEGMENTATION D'UN NOM COLLÉ — plus long préfixe, glouton, sans retour arrière. |
 | `syntaxe-data.js` *(généré)* | 79 | 0 | 2 | — |
 | `libs-champs.js` | 78 | 0 | 2 | LES CHAMPS DE FICHIER D'UNE LIBRAIRIE — déclarés UNE FOIS, pour tous mes lecteurs. |
@@ -52,6 +53,7 @@ flowchart LR
   libs_js["libs.js"]
   orderTokens_js["orderTokens.js"]
   parser_js["parser.js"]
+  resolution_js["resolution.js"]
   segmentation_js["segmentation.js"]
   syntaxe_bundle_mjs["syntaxe-bundle.mjs"]
   syntaxe_data_js["syntaxe-data.js"]
@@ -59,6 +61,7 @@ flowchart LR
   actorResolver_js --> libs_js
   bpxAst_js --> tokenizer_js
   bpxAst_js --> parser_js
+  bpxAst_js --> resolution_js
   bpxAst_js --> libs_js
   bpxAst_js --> libs_data_js
   bpxAst_js --> segmentation_js

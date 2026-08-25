@@ -20,6 +20,7 @@
 
 import { tokenize, LexError } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
+import { resoudre, noterLePassage } from './resolution.js';
 import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary, universeControlNames, nomsDeTerminaux, groupeDUnicite} from './libs.js';
 import { LIBS } from './libs-data.js';
 import { segmenter } from './segmentation.js';
@@ -3002,6 +3003,16 @@ export function resoudreSource(source, environnement) {
       // La SOURCE accompagne les jetons : une entrée de catalogue de gabarits se transporte
       // VERBATIM (AST_SPEC §1.9), et aucun jeton ne peut rendre les espaces d'origine.
       source });
+    // ⛔ L'ÉTAGE QUI RÉSOUT, EN TÊTE DE CE QUI SUIT — décision de Romain, 2026-08-24. Ce qui vient
+    // après lui dans cette fonction résout aussi, aujourd'hui : c'est justement le défaut que son
+    // domicile existe pour absorber, passe par passe. Il est ici pour que ce qui descend d'un étage
+    // ait où descendre, et il est TRAVERSÉ avant de porter la moindre décision — le branchement se
+    // prouve avant l'effet.
+    {
+      const passe = resoudre(ast, environnement);
+      result.errors.push(...passe.diagnostics);
+      noterLePassage(passe.examines);
+    }
     // Résolution d'acteur (décision 2026-07-03 note-nue, option A) : attribution
     // implicite mono-propriétaire + erreur d'ambiguïté « Use dot notation », MÊME
     // sémantique que la voie héritée, compileBPS (supprimée le 2026-07-19, commit

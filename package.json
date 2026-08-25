@@ -69,6 +69,7 @@
     "src/transpiler/libs.js",
     "src/transpiler/orderTokens.js",
     "src/transpiler/parser.js",
+    "src/transpiler/resolution.js",
     "src/transpiler/segmentation.js",
     "src/transpiler/syntaxe-data.js",
     "src/transpiler/tokenizer.js"
