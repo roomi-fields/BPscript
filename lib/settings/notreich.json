@@ -1,6 +1,5 @@
 {
   "documented": false,
-  "header": "// Bol Processor BP3\n// Settings file saved as '-se.NotReich'. Date: 2025-03-15 10:04:12",
   "Quantization": {
     "name": "Quantization",
     "value": "50",

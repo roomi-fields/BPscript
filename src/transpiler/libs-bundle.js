@@ -340,10 +340,23 @@ async function collectBps(dir, prefix, compileToBPxAST) {
         void par;
       }
     }
+    // ⛔ LA PARENTHÈSE ABSENTE VAUT PARENTHÈSE VIDE, ET CE FILTRE DISAIT LE CONTRAIRE. Il exigeait
+    // `v.settings` pour retenir un exemplaire ; un prototype écrit sans corps — `object gamut` —
+    // était donc écarté et son entrée SORTAIT du paquet, au lieu d'y porter un objet vide.
+    //
+    // ⚠️ TROUVÉ EN RETIRANT LES CINQ CORPS (Romain, 2026-08-25 : « on ne fait pas de prédéfinition
+    // d'objet vide »). Les cinq lignes restaient dans la source et les cinq entrées disparaissaient
+    // du paquet — l'inverse exact de l'arbitrage, dont le point est que la LIGNE reste pour donner
+    // un parent nommé à `interval maqam_sikah (…)`.
+    //
+    // ⛔ ET MA COMPARAISON DE FEUILLES NE POUVAIT PAS LE VOIR : elle rendait `types.gamut.description
+    // → absent`, ce qui se lit comme le retrait voulu. **Une liste de feuilles ne dit rien de la
+    // disparition du NŒUD qui les portait** — les deux ont la même empreinte.
+    const sacVide = { type: 'SettingBag', pairs: [] };
     const declarations = [
       ...(r.ast.defs || []),
-      ...(r.ast.vars || []).filter((v) => v.varType?.kind === 'type' && v.settings)
-        .map((v) => ({ type: 'DefDirective', name: v.names[0], settings: v.settings,
+      ...(r.ast.vars || []).filter((v) => v.varType?.kind === 'type')
+        .map((v) => ({ type: 'DefDirective', name: v.names[0], settings: v.settings || sacVide,
                        derivedeDe: v.varType.type, line: v.line })),
     ];
     for (const d of declarations) {

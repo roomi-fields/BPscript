@@ -14,11 +14,22 @@
 // degrés dans un tempérament, ou par assemblage. Trois manières de définir une échelle.
 // `directional` dérive de `degree` : une échelle dont la montée diffère de la descente EST une
 // échelle à degrés, avec une propriété en plus.
+//
+// ⛔ UN PROTOTYPE NE DÉCLARE PAS CE QUE SES DESCENDANTS PORTERONT — Romain, 2026-08-25 : « comme il
+// n'y a pas de classes, on ne fait pas de prédéfinition d'objet vide : l'objet est défini quand on
+// l'utilise ». Il EXISTE, et ce qu'un exemplaire porte, il le porte. La nature d'un champ se lit
+// dans l'écriture de l'exemplaire : une parenthèse de membres nus est une suite, un deux-points est
+// une valeur. Un nom nu vaut un objet vide, et le type voyage.
+//
+// ⚠️ LA LIGNE RESTE, POUR UNE RAISON MUSICALE : `interval`, `degree` et `composite` sont trois
+// FAÇONS DE DIRE une gamme, pas des gammes. Les retirer obligerait à élire une gamme arbitraire
+// comme ancêtre de toutes les autres. Ce qui reste est le seul rôle prototypal réel — donner un
+// parent nommé à `interval maqam_sikah (…)`.
 
 def types (documented:true, resolves:types)
 
-object gamut (description)
-gamut interval (ratios)
-gamut degree (degrees, temperament)
-degree directional (ascending, descending)
-gamut composite (compose, junction)
+object gamut
+gamut interval
+gamut degree
+degree directional
+gamut composite
