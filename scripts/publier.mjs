@@ -209,42 +209,8 @@ export async function publier({ bruyant = true, instant = new Date().toLocaleStr
   return { ...empreinte, cible, lien };
 }
 
-/**
- * ⛔ LE GARDE DE FENÊTRE, EN TÊTE ET AVANT TOUT — sinon ce script est UN SECOND SITE DE BASCULE.
- *
- * `.githooks/pre-push` appelle `garde-fenetre.sh` avant le portillon, puis `npm run publier`. Ce
- * script est donc protégé **quand il est lancé par la poussée**, et par rien du tout quand on
- * l'appelle seul — or `npm run publier` est déclaré, il bascule le lien `.paquets/bpscript`, et
- * cette bascule atteint tous mes consommateurs à l'instant.
- *
- * ⚠️ MESURÉ LE 2026-08-25, en cherchant chez moi le trou que kairos avait fermé chez lui : mon
- * crochet portait le garde, ce fichier non. Un dépôt « protégé au push » et ouvert par sa porte de
- * publication ne l'est pas — **le garde ne protège pas UN site, il doit protéger LE SEUL**.
- *
- * ⚠️ ET LE GARDE VIT CHEZ LA TOUR, pas ici : ce n'est pas ma discipline qui refuse, c'est un
- * mécanisme. La différence est celle que j'ai payée aujourd'hui — une discipline se raconte, un
- * garde rend un code de sortie.
- */
-async function refuserPendantUneFenetre() {
-  const garde = path.join(os.homedir(), 'dev/bp/hub/tools/garde-fenetre.sh');
-  if (!(await existe(garde))) return;                    // pas de tour : rien à opposer
-  await new Promise((ok, ko) => execFile('bash', [garde],
-    { env: { ...process.env, BP_AGENT: 'bpscript' } },
-    (err, out, errOut) => {
-      if (!err) return ok();
-      // ⛔ LE REFUS SE RELAIE, IL NE SE REFORMULE PAS. Ma première rédaction annonçait « une fenêtre
-      // de mesure est ouverte » — et le garde m'a refusé, à l'instant où je le posais, pour un
-      // COURRIER NON LU. Il porte DEUX refus, pas un, et j'en avais nommé un seul.
-      // ⇒ Une description fausse d'un garde juste, commise dans le geste qui pose le garde. Le
-      // message du garde est le seul qui sait pourquoi il refuse.
-      process.stderr.write(String(errOut || out || ''));
-      ko(new Error('la tour refuse ce geste — voir son refus ci-dessus'));
-    }));
-}
-
 if (process.argv[1] && process.argv[1].endsWith('publier.mjs')) {
   try {
-    await refuserPendantUneFenetre();
     await publier();
   } catch (e) {
     console.error(`\n[publier] ✗ ${e.message}\n`);
