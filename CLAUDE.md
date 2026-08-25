@@ -411,8 +411,11 @@ qui écrit. Le préavis nomme ce qui change, ce qu'il **périme chez lui**, et u
 falsifiable. Un voisin qui lit ma **source** est prévenu à la frappe ; celui qui exécute mon **paquet
 publié**, à la publication.
 
-**Le courrier se relit au moment de PUBLIER, pas au réveil** : un préavis reçu entre-temps porte
-peut-être sur ce que je m'apprête à écraser.
+**Le courrier se relit au moment d'ÉCRIRE, pas au réveil** : un préavis reçu entre-temps porte
+peut-être sur ce que je m'apprête à écraser, et une fenêtre s'ouvre pendant que je mesure. Le
+déclencheur est le même que celui de l'annonce, ci-dessous — l'enregistrement d'un fichier, publié
+ou non. Une règle qui nomme la publication laisse passer tout ce qui s'enregistre sans publier :
+un fichier témoin, une injection de faute, un bundle régénéré.
 
 **Ce qui déclenche l'annonce est l'ENREGISTREMENT d'un fichier, jamais la nature du geste.** Qui me
 lit vivant est atteint à la frappe : régénérer un bundle, écrire une ligne de code, ou **injecter une
