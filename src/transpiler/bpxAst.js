@@ -1723,6 +1723,54 @@ function chargerPorteesPermises() {
  * de direction du socle) : aucun nom n'est écrit ici, et le jour où une direction s'ajoute, ce
  * refus la suit sans une ligne.
  */
+/**
+ * UN GABARIT ESCLAVE REJOUE UN MAÎTRE, ET UN NOM QUE PERSONNE NE CAPTURE N'EN A AUCUN.
+ *
+ * `LANGUAGE.md` § « Capturer et rejouer » : « `$` capture un motif de groupe (maître), `&` le
+ * rejoue (esclave). LE NOM PORTE L'APPARIEMENT ENTRE LES DEUX. » Un `&nom` sans `$nom` n'apparie
+ * rien : il se lit comme un rejeu et ne rejoue aucun choix.
+ *
+ * ⛔ CE REFUS NE TRANCHE PAS LA PORTÉE DE L'APPARIEMENT, ET C'EST DÉLIBÉRÉ. Mesuré le 2026-08-29 :
+ * un maître dans une règle et son esclave dans une AUTRE passent aujourd'hui, et la bible ne dit
+ * pas si l'appariement vaut dans la règle ou dans la scène. Décider ici reviendrait à définir un
+ * élément de langage. Les maîtres se collectent donc sur TOUTE la scène — la lecture la plus large,
+ * donc le refus le plus prudent : ce qu'il rejette est faux dans les deux lectures.
+ *
+ * ⚠️ ET UNE SCÈNE QUI PORTE UNE ANCRE EST HORS DE PORTÉE. `$` seul en tête de membre gauche « marque
+ * la règle entière comme gabarit maître » et « l'ancre reste ouverte jusqu'à sa fermeture » : elle
+ * ouvre un maître SANS NOM, et rien n'écrit par quel nom un esclave le rejoue. Refuser là-dessus
+ * serait supposer une réponse. 10 scènes du corpus en portent une.
+ *
+ * MESURE AVANT ÉCRITURE — 756 scènes compilables, 55 portent un gabarit : ZÉRO esclave orphelin.
+ */
+function refuserEsclaveSansMaitre(ast) {
+  const maitres = new Set();
+  const esclaves = [];
+  let ancre = false;
+  (function marcher(n) {
+    if (!n || typeof n !== 'object') return;
+    if (Array.isArray(n)) { for (const e of n) marcher(e); return; }
+    if (n.type === 'TemplateMaster' && n.name) maitres.add(n.name);
+    if (n.type === 'TemplateAnchor') ancre = true;
+    if (n.type === 'TemplateSlave' && n.name) esclaves.push(n);
+    for (const k in n) marcher(n[k]);
+  })(ast);
+  if (ancre) return [];
+  const vus = new Set();
+  const erreurs = [];
+  for (const e of esclaves) {
+    if (maitres.has(e.name) || vus.has(e.name)) continue;
+    vus.add(e.name);
+    erreurs.push({
+      message: `'&${e.name}' rejoue un gabarit que rien ne capture — aucun '$${e.name}' dans cette `
+        + `scène. Le nom porte l'appariement entre le maître et l'esclave : sans maître, le rejeu `
+        + `n'a pas de choix à répéter. Écrire '$${e.name}' là où le motif se capture.`,
+      line: e.line,
+    });
+  }
+  return erreurs;
+}
+
 function refuserAttenteNonDeclaree(ast) {
   const connus = new Set();
   for (const i of (ast.inputs || [])) for (const n of (i.names || (i.name ? [i.name] : []))) connus.add(n);
@@ -3166,6 +3214,7 @@ export function resoudreSource(source, environnement) {
     poserLaVoixDesTerminaux(ast);
     result.errors.push(...validateControls(ast, libCtx.controls, libCtx.controlsQualified || {}));
     result.errors.push(...refuserAttenteNonDeclaree(ast));  // un point d'attente nomme ce qu'il attend
+    result.errors.push(...refuserEsclaveSansMaitre(ast));   // un rejeu de gabarit a un maître à rejouer
 
     // ⛔ LE DÉDOUBLONNAGE DES DIAGNOSTICS EST ÉLAGUÉ — il n'avait plus de producteur vivant.
     //
