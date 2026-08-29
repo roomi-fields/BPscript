@@ -98,14 +98,32 @@ function captureDigitalBodies(dir) {
 //     je l'ai citée comme source pendant une journée. Aucune décision du 13 ne parle de prose.
 //   · un nombre écrit devient un nombre.
 //
-// ⚠️ LES CLÉS-LISTES SONT NOMMÉES, ET C'EST UNE PROPRIÉTÉ DE LA DONNÉE, PAS UNE DEVINETTE. `args`,
-// `values`, `scope` et `range` sont des listes PAR NATURE — un contrôle a zéro, un ou plusieurs
-// arguments ; une portée est un ensemble de places ; une plage a deux bornes. Une valeur à une
-// seule partie y reste donc une liste d'un élément, sans quoi `args:type` rendrait une chaîne là où
-// tout le reste de la donnée porte un tableau, et chaque lecteur devrait gérer les deux.
-const CLES_LISTES = new Set(['args', 'values', 'scope', 'range', 'registers']);
+// ⚠️ LA NATURE D'UNE VALEUR SE LIT DANS SON ÉCRITURE — voir `estUneSuite`, juste dessous. Cette
+// ligne portait la règle inverse : « les clés-listes sont nommées, et c'est une propriété de la
+// donnée » — cinq noms qui décidaient seuls, et qui décrivaient un mécanisme retiré le 2026-08-29.
 // ⛔ LA LISTE DES CHAMPS DE FICHIER VIT EN UN SEUL ENDROIT — `libs-champs.js`, importé en tête. Ce
 // fichier en portait une copie, et il y en avait CINQ dans l'écosystème, déjà divergentes.
+
+/**
+ * UNE PARENTHÈSE DONT AUCUN MEMBRE NE PORTE DE VALEUR EST UNE SUITE — LA FORME LE DIT.
+ *
+ * ⛔ CE QUE CE PRÉDICAT REMPLACE : cinq noms écrits en dur — `args`, `values`, `scope`, `range`,
+ * `registers` — qui décidaient seuls qu'une clé portait une collection. Une valeur écrite en dur est
+ * invisible : personne ne peut la lire ni la surcharger, et cette liste-là ne pouvait pas connaître
+ * `degrees`, `ratios`, `compose` ni `junction` — 62 clés de la donnée publiée étaient dans ce cas.
+ *
+ * ⚠️ ET UN PROTOTYPE NE PEUT PAS LE DÉCLARER NON PLUS : il dit qu'un champ EXISTE, jamais qu'il porte
+ * une liste. Ajouter ses champs nus à un ensemble de clés-listes faisait de `temperament`,
+ * `description` et `culture` des listes — 483 valeurs publiées cassaient. **C'est l'écriture de
+ * l'EXEMPLAIRE qui dit la nature** : une parenthèse de membres nus est une suite, un deux-points est
+ * une valeur.
+ *
+ * ⚠️ IL VIVAIT DÉJÀ, à un seul des deux endroits qui en avaient besoin. Le retirer là où il manquait
+ * transformait 68 listes publiées en objets — mesuré avant la frappe, et c'est ce qui prouve que le
+ * défaut était le DOUBLE mécanisme, jamais la liste seule.
+ */
+const estUneSuite = (sac) => Boolean(sac && sac.type === 'SettingBag'
+  && (sac.pairs || []).length && (sac.pairs).every((m) => m.value === true));
 
 /**
  * RANGE UNE ENTRÉE ÉCRITE DANS UNE PLACE — et descend tant que la place a des étages.
@@ -114,7 +132,7 @@ const CLES_LISTES = new Set(['args', 'values', 'scope', 'range', 'registers']);
  * s'arrête quand ce qu'elle trouve n'est plus une place mais une ENTRÉE : un objet dont les
  * membres portent des valeurs, ou une suite de noms nus.
  */
-function rangerConteneur(ou, nom, val, entry, place, clesListesDuFichier = CLES_LISTES) {
+function rangerConteneur(ou, nom, val, entry, place) {
   // Une valeur simple posée dans une place : `version:"1.0"` sous un conteneur.
   if (!val || val.type !== 'SettingBag') { ou[nom] = valeurDeCle({ kind: 'value', value: val }); return; }
   const pairs = val.pairs || [];
@@ -128,7 +146,7 @@ function rangerConteneur(ou, nom, val, entry, place, clesListesDuFichier = CLES_
   // Une PLACE ne porte que des sacs ; une ENTRÉE porte au moins une valeur.
   if (pairs.length && pairs.every((p) => p.value && p.value.type === 'SettingBag')) {
     const sous = (ou[nom] = ou[nom] || {});
-    for (const p of pairs) rangerConteneur(sous, p.key, p.value, entry, `${place}.${nom}`, clesListesDuFichier);
+    for (const p of pairs) rangerConteneur(sous, p.key, p.value, entry, `${place}.${nom}`);
     return;
   }
   const entree = (ou[nom] = {});
@@ -137,12 +155,10 @@ function rangerConteneur(ou, nom, val, entry, place, clesListesDuFichier = CLES_
       // ⚠️ UNE CLÉ-LISTE PASSE PAR `suite`, jamais par l'aplatissement : lui rendrait `args(seed)`
       // en `{seed:true}` au lieu de `['seed']`, ET perdrait l'ordre — un objet JavaScript réordonne
       // ses clés entières. Mesuré : 228 valeurs publiées changeaient sans cette distinction.
-      entree[p.key] = clesListesDuFichier.has(p.key) ? suite(p.value, entry, nom, p.key) : sacEnObjet(p.value, entry, nom);
+      entree[p.key] = estUneSuite(p.value) ? suite(p.value, entry, nom, p.key) : sacEnObjet(p.value, entry, nom);
       continue;
     }
-    let x = valeurDeCle({ kind: 'value', value: p.value, ...(p.texte ? { texte: true } : {}) });
-    if (clesListesDuFichier.has(p.key) && !Array.isArray(x)) x = [x];
-    entree[p.key] = x;
+    entree[p.key] = valeurDeCle({ kind: 'value', value: p.value, ...(p.texte ? { texte: true } : {}) });
   }
 }
 
@@ -322,9 +338,7 @@ async function collectBps(dir, prefix, compileToBPxAST) {
         // Une valeur qui est elle-même un sac descend d'un niveau — la récursivité par la
         // parenthèse, lue depuis le 2026-08-19.
         out[p.key] = (p.value && p.value.type === 'SettingBag')
-          ? ((clesListesDuFichier.has(p.key)
-              // Une parenthese dont AUCUN membre ne porte de valeur EST une suite — la forme le dit.
-              || (p.value.pairs || []).length && (p.value.pairs).every((m) => m.value === true))
+          ? (estUneSuite(p.value)
               // ⛔ UNE SUITE EST DÉJÀ TYPÉE MEMBRE PAR MEMBRE : la repasser à la coercition
               // générique retypera le texte « 0 » en nombre, et le geste de `suite` sera défait
               // au maillon suivant. Elle passe donc par un `kind` à elle, et sort verbatim.
@@ -348,24 +362,6 @@ async function collectBps(dir, prefix, compileToBPxAST) {
     //
     // Une déclaration par le type porte son NOM dans `names` et son type dans `varType.type` — un
     // exemplaire garde donc la trace de ce dont il dérive, et le générateur n'a pas à la deviner.
-    // ⛔ ET LES CLES-LISTES VIENNENT DU PROTOTYPE, PLUS D UNE LISTE EN DUR.
-    // Un prototype declare ses champs par des noms nus — object scale (description), puis
-    // scale degree (degrees, temperament). Ces noms DISENT ce que ses exemplaires portent, et
-    // ceux qui arrivent en parenthese portent une COLLECTION. La donnee le declare desormais ;
-    // mon ensemble de cinq cles ecrit en dur ne pouvait pas connaitre degrees, ratios, compose
-    // ni junction — 62 cles de la donnee publiee sont dans ce cas.
-    const clesListesDuFichier = new Set(CLES_LISTES);
-    for (const v of (r.ast.vars || [])) {
-      if (v.varType?.kind !== 'type' || !v.settings) continue;
-      for (const par of (v.settings.pairs || [])) {
-        // ⛔ RIEN ICI : un prototype dit qu un champ EXISTE, jamais qu il porte une liste.
-        // Ma premiere ecriture ajoutait tous ses champs nus a l ensemble des cles-listes — et
-        // temperament, description, culture devenaient des listes. 483 valeurs publiees cassaient.
-        // C EST L ECRITURE DE L EXEMPLAIRE QUI DIT LA NATURE : une parenthese de membres nus est
-        // une suite, un deux-points est une valeur. La forme le dit, aucune liste n a a le declarer.
-        void par;
-      }
-    }
     // ⛔ LA PARENTHÈSE ABSENTE VAUT PARENTHÈSE VIDE, ET CE FILTRE DISAIT LE CONTRAIRE. Il exigeait
     // `v.settings` pour retenir un exemplaire ; un prototype écrit sans corps — `object gamut` —
     // était donc écarté et son entrée SORTAIT du paquet, au lieu d'y porter un objet vide.
@@ -420,8 +416,7 @@ async function collectBps(dir, prefix, compileToBPxAST) {
         // Sur le fichier elle dit le rangement par defaut de ses entrees ; on la retient a
         // part pour que la donnee publiee reste celle de la source, octet pour octet.
         if (cle === 'section') { if (cible === lib) sectionDuFichier = valeurDeCle(v); continue; }
-        let val = valeurDeCle(v);
-        if (clesListesDuFichier.has(cle) && !Array.isArray(val)) val = [val];
+        const val = valeurDeCle(v);
         // ⛔ ET UNE CLÉ QUI PORTE UN OBJET EST UN CONTENEUR — LA SECTION DEVIENT LA PLACE.
         //
         // La récursivité par la parenthèse est ratifiée depuis le 2026-08-19 : « un champ dont la
@@ -442,7 +437,7 @@ async function collectBps(dir, prefix, compileToBPxAST) {
           if (sac && sac.type === 'SettingBag') {
             const ou = (lib[cle] = lib[cle] || {});
             noterPlace(nom, cle);
-            for (const p2 of (sac.pairs || [])) rangerConteneur(ou, p2.key, p2.value, entry, cle, clesListesDuFichier);
+            for (const p2 of (sac.pairs || [])) rangerConteneur(ou, p2.key, p2.value, entry, cle);
             continue;
           }
           console.error(`[bundle] ⛔ lib/${entry} : '${cle}' n'est pas un champ de FICHIER `

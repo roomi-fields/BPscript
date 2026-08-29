@@ -5,7 +5,7 @@
 > vit dans le document d'architecture, chez Atlas, qui cite celui-ci.
 ## Ce qui est mesuré
 
-- **20 modules** dans `src/transpiler/`, **14899 lignes**.
+- **20 modules** dans `src/transpiler/`, **14894 lignes**.
 - Le **rôle** est lu dans l'en-tête de chaque fichier, verbatim — jamais interprété.
 - Les **arêtes** sont les imports d'un module vers un voisin du même dossier.
 
@@ -17,7 +17,7 @@
 | `bpxAst.js` | 3138 | 8 | 1 | POSE LE DESTINATAIRE DE CHAQUE RÉGLAGE SUR LE SAC QUI LE PORTE. |
 | `libs.js` | 1342 | 3 | 4 | BPScript Library Loader |
 | `actorResolver.js` | 585 | 1 | 1 | BPScript Actor Resolver |
-| `libs-bundle.js` | 561 | 2 | 0 | BPScript Libs Bundle Generator |
+| `libs-bundle.js` | 556 | 2 | 0 | BPScript Libs Bundle Generator |
 | `tokenizer.js` | 450 | 0 | 2 | BPScript Tokenizer |
 | `resolution.js` | 187 | 0 | 1 | L'ÉTAGE QUI RÉSOUT — le troisième des quatre, et le seul qui n'avait pas de domicile. |
 | `orderTokens.js` | 123 | 0 | 0 | — |
