@@ -142,7 +142,10 @@ for (const [quoi, src] of [
      `6. l'arbre doit porter UN point d'attente nommé 'depart' — vu ${JSON.stringify(attentes.map((w) => w.name))}`);
   ok(attentes[0] && attentes[0].address === 60,
      `6. et son ADRESSE, distincte de sa racine — vue ${JSON.stringify(attentes[0] && attentes[0].address)}`);
-  const roles = (r.ast.inputs || []).flatMap((i) => i.names || (i.name ? [i.name] : []));
+  // ⛔ UN GARDE QUI PLANTE N'EST PAS UN GARDE QUI ROUGIT. Sans ce défaut, le jour où cette scène
+  // cesse de compiler, ce volet lève sur `null` et le portillon rend une TRACE DE PILE au lieu de
+  // la phrase qui dit ce qui a changé. Trouvé le 2026-08-29 en injectant un refus trop large.
+  const roles = ((r.ast || {}).inputs || []).flatMap((i) => i.names || (i.name ? [i.name] : []));
   ok(roles.includes('depart'),
      `6. le rôle déclaré doit vivre dans l'arbre — vus ${JSON.stringify(roles)}`);
 }

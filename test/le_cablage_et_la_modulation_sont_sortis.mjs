@@ -143,7 +143,11 @@ const CE_QUI_RESTE = [
   ['l\'accord collé',                       `${T}-----\nS -> C4!E4 D4\n`],
   ['l\'accord espacé',                      `${T}-----\nS -> C4 !E4 D4\n`],
   ['l\'accord à deux secondaires',          `${T}-----\nS -> C4!E4!G4 D4\n`],
-  ['l\'objet hors-temps',                   `${T}-----\nS -> !f D4\n`],
+  // ⛔ ET UNE TROISIÈME FOIS, LE 2026-08-29, PAR LA MÊME CAUSE : ce témoin posait `!f` sans déclarer
+  // `f`. Il passait parce que l'objet hors-temps ne vérifiait pas son nom — la seule place du flux
+  // qui ne le faisait pas. En la fermant, le témoin est tombé, et il avait tort : ce qu'il mesure
+  // est LA PLACE, jamais le nom qui l'occupe, et un nom que rien ne déclare n'occupe rien.
+  ['l\'objet hors-temps',                   `${T}def f (vel:120)\n-----\nS -> !f D4\n`],
   ['le changement de vitesse dans le flux', `${T}-----\nS -> C4 ! (/2) D4\n`],
   ['la voix polymétrique',                  `${T}-----\nS -> {C4 D4, E4}\n`],
 ];

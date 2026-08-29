@@ -1135,7 +1135,21 @@ function validateTerminals(ast) {
       }
       return;
     }
-    if (el.type === 'Symbol' && el.name
+    // ⛔ L'OBJET HORS-TEMPS EST UN SECONDAIRE POSÉ SEUL, ET IL SE VALIDE COMME UN SECONDAIRE.
+    // `LANGUAGE.md` § « la simultanéité » : « après `!` : les secondaires », et « `!nom` pose seul :
+    // objet hors-temps — il tient sa place dans l'ordre joué pour une durée nulle ». Le nom qu'il
+    // porte est donc du même vocabulaire que tout autre terme du flux.
+    //
+    // ⚠️ MESURÉ LE 2026-08-29, ET C'EST LA POSITION QUI CHOISISSAIT LE MÉCANISME : `C4!vide` était
+    // REFUSÉ — le secondaire descend par `secondaries`, donc cette boucle le voyait — tandis que
+    // `!vide` posé seul PASSAIT, parce que le parseur en fait un nœud `OutTimeObject` et que la
+    // condition ci-dessous ne nommait que `Symbol`. Un même nom, un même rôle, deux sorts selon
+    // qu'un primaire le précède : c'est un cas, pas une règle.
+    //
+    // ⚠️ ET IL ARRIVAIT DANS L'ARBRE avec `payload.nature:'sounding'` — l'aval recevait l'ordre de
+    // faire sonner un terminal que rien ne déclare. Le refus porte donc le MÊME TEXTE que celui du
+    // secondaire : une seule question posée au même objet ne rend qu'une seule phrase.
+    if ((el.type === 'Symbol' || el.type === 'OutTimeObject') && el.name
         && el.role !== 'homomorphism'            // marqueur d'invocation d'homo, pas un terminal
         && !(el.payload && codeVoice.has(el.payload.actor))   // voix-code : terminal arbitraire
         && !known.has(el.name) && !declared.has(el.name) && !seen.has(el.name)) {
@@ -1171,6 +1185,42 @@ function validateTerminals(ast) {
     for (const k of COMPOSITES) if (el[k]) verifier(el[k]);
   };
   for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) verifier(r.rhs || []);
+
+  // ⛔ LE SUJET D'UNE PAIRE DÉSIGNE DES TERMINAUX, ET IL SE VALIDE COMME UN TERMINAL.
+  // `EBNF.md` § « Réglages » : « le sujet vaut par paire : sans sujet, la portée elle-même comme
+  // unité ; `*` désigne chaque terminal de la portée ; UN NOM DÉSIGNE LES TERMINAUX DE CE NOM ».
+  // Un nom qu'aucun alphabet ni aucune déclaration ne porte ne désigne rien du tout — le réglage
+  // n'a pas de destinataire, et il partait quand même dans l'arbre.
+  //
+  // ⛔ LE BALAYAGE EST RÉCURSIF, ET C'EST LA MESURE QUI L'IMPOSE : les paires vivent sous QUATRE
+  // porteurs différents, à des profondeurs quelconques — `suffixQualifiers[].pairs` (sac collé au
+  // symbole), `settings.pairs` sur un nœud (portée groupe) ET sur la règle (portée règle),
+  // `qualifier.pairs` (sac posé dans le flux par `!()`). Un sac sous une voix de polymétrie descend
+  // encore d'un cran. Énumérer des chemins fermerait les places qui se sont montrées et laisserait
+  // les autres ; on reconnaît une paire à sa FORME — un objet qui porte un sujet.
+  //
+  // ⚠️ `*` EST LE SUJET UNIVERSEL, il ne se cherche dans aucun vocabulaire. Et le sujet POINTÉ
+  // (`perc.dha:…`) est refusé ailleurs, avant d'arriver ici.
+  const sujetsVus = new Set();
+  const verifierLesSujets = (n) => {
+    if (!n || typeof n !== 'object') return;
+    if (Array.isArray(n)) { n.forEach(verifierLesSujets); return; }
+    const s = n.subject;
+    if (typeof s === 'string' && s && s !== '*'
+        && !codeVoice.has(s)
+        && !known.has(s) && !declared.has(s) && !sujetsVus.has(s)) {
+      sujetsVus.add(s);
+      errors.push({
+        message: `sujet de réglage '${s}:…' : '${s}' ne désigne aucun terminal — absent des `
+               + `alphabets en portée et des noms déclarés. Un sujet vise les terminaux de son nom ; `
+               + `'*' vise chaque terminal de la portée, et l'absence de sujet vise la portée entière`,
+        line: n.line,
+      });
+    }
+    for (const v of Object.values(n)) if (v && typeof v === 'object') verifierLesSujets(v);
+  };
+  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) verifierLesSujets(r);
+
   return errors;
 }
 
@@ -1717,6 +1767,15 @@ function refuserAttenteNonDeclaree(ast) {
         line: n.line,
       });
     }
+    // ⚠️ L'ADRESSE NE SE VALIDE PAS ICI, ET C'EST UN ÉCART DE SPÉCIFICATION, PAS UN OUBLI.
+    // `EBNF.md` § « Le point d'attente » écrit : « un identifiant est l'étiquette produite par la
+    // table de correspondance ». Un refus posé sur cette phrase — l'adresse nommée exige une table —
+    // a été écrit, mesuré, et RETIRÉ le 2026-08-29 : trois gardes de ce dépôt et une scène du corpus
+    // prescrivent l'inverse. `test/declaration_d_entree.mjs:178` asserte que `<!pedale.suivant`
+    // COMPILE sur une entrée sans table, et `wait-for-key.bps` écrit `<!touches.Space` — le nom
+    // d'une touche, que le clavier produit sans qu'aucune table soit déclarée.
+    // ⇒ La phrase de la spécification et ce que le langage admet ne coïncident pas. L'écart est
+    // remonté à Romain ; il ne se tranche pas ici.
     for (const k in n) marcher(n[k]);
   })(ast);
   return erreurs;
