@@ -96,7 +96,7 @@ def_directive = ( "def" | "terminal" ) , NOM_DECLARE , [ param_list ] , [ CONVEN
 
 param_list = "(" , IDENT , { "," , IDENT } , ")" ;      (* collé au nom *)
 
-def_body = terminal_block            (* def cloche  degree:0  voice.dayan_ring *)
+def_body = terminal_block            (* def cloche  degree:0  voice.wobble *)
          | setting_bag               (* def kick (vel:120) *)
          | backtick_inline           (* def fondu phase `js: (t, dur) => 1 - t / dur` *)
          | rhs ;                     (* def cadence sa re ga pa   def accent(x) x(vel:120) *)

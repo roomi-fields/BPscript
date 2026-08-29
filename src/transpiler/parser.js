@@ -2696,6 +2696,33 @@ function parse(tokens, opts = {}) {
           if (!at(T.IDENT)) throw new ParseError(`'def ${defName}' : nom attendu après '${cle}.'`, current());
           let val = String(advance().value);
           while ((at(T.IDENT) || at(T.INT)) && !current().spaceBefore) val += String(advance().value);
+          // ⛔ UN CATALOGUE S'ADRESSE PAR UN SEUL NIVEAU, ET LE REFUS DOIT LE DIRE.
+          // `EBNF.md` § « Déclarer un terminal » : `terminal_key = TERMINAL_REF , "." , IDENT` — un
+          // point, pas deux. La structure interne d'un catalogue ne s'écrit pas : les voix vivent
+          // sous `voices.objects.*` et s'invoquent `voice.<nom>`.
+          //
+          // ⚠️ SANS LUI, LE MESSAGE ENVOYAIT AU MAUVAIS ENDROIT — trouvé par kanopi puis remesuré par
+          // BPx le 2026-08-30. Le second point n'était pas consommé et l'erreur tombait en aval, sur
+          // autre chose. Mesure des QUATRE graphies, et c'est le dénominateur qui compte :
+          //     terminal ka voice.objects.wobble      « Expected IDENT, got PERIOD »
+          //     def ka voice.objects.wobble           « Expected IDENT, got PERIOD »
+          //     def ka / bloc indenté                 « Expected IDENT, got PERIOD »
+          //     terminal ka (voice.objects.wobble)    « le corps ouvert par '(' n'est pas refermé »
+          // ⇒ Trois sur quatre parlaient d'un jeton, la quatrième d'une PONCTUATION : un auteur qui
+          // écrit le niveau interne cherchait sa faute sur une parenthèse. Aucune ne nommait le
+          // chemin fautif.
+          //
+          // MESURÉ AVANT ÉCRITURE : aucune clé du paquet publié ne porte un point dans son nom, donc
+          // ce refus ne peut invalider aucune forme qui désignait quelque chose.
+          if (at(T.PERIOD) && !current().spaceBefore) {
+            const suite = peek(1);
+            const interne = suite && suite.value != null ? String(suite.value) : null;
+            throw new ParseError(
+              `'${cle}.${val}${interne ? `.${interne}` : ''}…' adresse un catalogue par DEUX niveaux — `
+              + `un seul s'écrit. Le point appelle une ENTRÉE, jamais la structure qui la range : `
+              + `écrire '${cle}.${interne ?? '<entrée>'}' si '${interne ?? '…'}' est l'entrée voulue, `
+              + `ou '${cle}.${val}' si c'est '${val}'.`, kTok);
+          }
           cles[cle] = { kind: 'ref', value: val };
           lu++;
           return;

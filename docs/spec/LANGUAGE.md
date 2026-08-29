@@ -380,7 +380,7 @@ def cloche
   octaves.western
   register:5
   degree:0
-  voice.dayan_ring
+  voice.wobble
 
 def ka  voice.bayan_muted
 def sirene  hz:440

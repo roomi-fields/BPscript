@@ -111,13 +111,72 @@ ok(compiler('def cadence sa re ga pa').def?.kind === 'structure',
      `E. une parenthèse non refermée est refusée EN NOMMANT ce qui manque. Reçu : ${r.err}`);
 }
 
+// ── UN CATALOGUE S'ADRESSE PAR UN SEUL NIVEAU, DANS LES QUATRE GRAPHIES ──────────────────────
+// ⛔ CE QU'IL FERME EST UN MESSAGE, PAS UN COMPORTEMENT. `voice.objects.wobble` était déjà refusé
+// partout — le niveau interne d'un catalogue ne s'écrit pas. Mais AUCUNE des quatre graphies ne
+// nommait le chemin fautif, et la parenthésée parlait d'une PONCTUATION :
+//     terminal ka (voice.objects.wobble)  ⇒ « le corps ouvert par '(' n'est pas refermé »
+// Un auteur qui écrit le niveau interne cherchait sa faute sur une parenthèse.
+//
+// ⚠️ TROUVÉ PAR KANOPI, PUIS LE DÉNOMINATEUR CORRIGÉ PAR BPx : j'avais annoncé « deux graphies sur
+// trois », il y en a QUATRE et une seule différait. Le compte venait de mon propre préavis, qui en
+// annonçait quatre — je l'avais rétréci en le rectifiant.
+//
+// ⛔ ET LE GARDE EXIGE LE MÊME TEXTE AUX QUATRE : un seul mécanisme ne rend qu'une seule phrase.
+// C'est cette assertion qui empêche de réparer la graphie qui s'était montrée en laissant les trois.
+{
+  const GRAPHIES_CHEMIN = [
+    ['parenthésée',      'terminal ka (voice.objects.wobble)'],
+    ['sans parenthèse',  'terminal ka voice.objects.wobble'],
+    ['par def',          'def ka voice.objects.wobble'],
+    ['en bloc indenté',  'def ka\n  voice.objects.wobble'],
+  ];
+  const textes = new Set();
+  let examinees = 0;
+  for (const [quoi, forme] of GRAPHIES_CHEMIN) {
+    examinees += 1;
+    const r = compiler(forme);
+    ok(!r.ok, `A-chemin. la graphie ${quoi} du niveau interne est REFUSÉE`);
+    ok(/DEUX niveaux/.test(r.err),
+       `A-chemin. et le refus nomme le CHEMIN, pas la ponctuation (${quoi}) — reçu : ${r.err.slice(0, 90)}`);
+    ok(/objects/.test(r.err), `A-chemin. et il cite le niveau fautif (${quoi})`);
+    textes.add(r.err.replace(/ at line \d+:\d+$/, ''));
+  }
+  ok(examinees === 4, `A-chemin. les 4 graphies ont été examinées (${examinees})`);
+  ok(textes.size === 1,
+     `A-chemin. les QUATRE rendent le MÊME texte — un seul mécanisme, une seule phrase (vu ${textes.size})`);
+
+  // ⛔ ET LE POINT ESPACÉ N'EST PAS CE CAS — le témoin qui borne la condition.
+  // Ma condition exige un point COLLÉ (`!spaceBefore`). Sans ce volet, la retirer ne faisait rougir
+  // aucune assertion : le point espacé était déjà refusé pour une autre raison, donc l'injection
+  // restait muette et je n'avais aucune preuve que ma condition ne coupe pas trop large.
+  // ⚠️ Une injection qui ne mord pas se suspecte elle-même — ici elle accusait le garde, pas le code.
+  for (const [quoi, forme] of [
+    ['espacé des deux côtés', 'def ka voice.wobble . autre'],
+    ['espacé avant seulement', 'def ka voice.wobble .autre'],
+  ]) {
+    const r = compiler(forme);
+    ok(!r.ok, `A-chemin. le point ${quoi} reste REFUSÉ — il l'était déjà`);
+    ok(!/DEUX niveaux/.test(r.err),
+       `A-chemin. et il NE porte PAS le refus du chemin (${quoi}) : ma condition exige un point `
+       + `COLLÉ, et ce volet est ce qui le prouve — reçu : ${r.err.slice(0, 70)}`);
+  }
+  // LE CONTRÔLE NÉGATIF — couper trop large est l'autre façon d'échouer.
+  for (const forme of ['terminal ka (voice.bayan_muted)', 'def ka voice.wobble',
+                       'terminal ka (tuning.western_just, octaves.western)', 'def ka  hz:440']) {
+    ok(compiler(forme).ok, `A-chemin. « ${forme} » passe toujours`);
+  }
+}
+
 // ── F. LE TÉMOIN NON NUL ───────────────────────────────────────────────────────────────────
 {
   const r = compiler('zorglubinvente ka(voice.bayan_muted)');
   ok(!r.ok, 'F. TÉMOIN — un mot qui n\'ouvre aucune déclaration reste refusé sous la même forme');
 }
 
-const ATTENDU = 1 + 6 + 2 + 4 + 4 + 2 + 1 + 1;
+// Le volet « un seul niveau » ajoute 18 vérifications : 4 graphies × 3, plus le compte des
+// graphies examinées, l'unicité du texte, et 4 contrôles négatifs.
+const ATTENDU = 1 + 6 + 2 + 4 + 4 + 2 + 1 + 1 + 18 + 4;
 ok(passe + echecs.length === ATTENDU,
    `bilan : ${ATTENDU} vérifications attendues, ${passe + echecs.length} exécutées`);
 

@@ -183,7 +183,7 @@ DefDirective {
 // c'est le TYPE qui était en retard sur le code, et un dérivé se fait correspondre. La table
 // ci-dessous reste comme lecture des CINQ SORTES et de ce que chacune porte.
 DefBody =
-    { kind: "terminal", proto: TerminalProto }         // def cloche  degree:0  voice.dayan_ring
+    { kind: "terminal", proto: TerminalProto }         // def cloche  degree:0  voice.wobble
   | { kind: "setting",  bag: SettingBag }              // def kick (vel:120)
   | { kind: "code",     backtick: BacktickInline }     // def fondu phase `js: …`
   | { kind: "elements", body: RhsElement[] }           // def cadence sa re ga pa
