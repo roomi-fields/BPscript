@@ -30,11 +30,17 @@
  * source de librairie **par construction**, puisque les deux passent ici. Une règle qui vaudrait à
  * l'entrée et pas au fond d'un sac ne serait pas une règle, ce serait un cas.
  *
- * ⚠️ CE QU'IL NE FAIT PAS ENCORE, ET C'EST VOULU. Il est POSÉ ET TRAVERSÉ avant de porter la moindre
- * décision. Un étage branché qui ne décide rien se prouve ; un étage qui décide sans qu'on ait
- * prouvé qu'il est atteint laisse croire à un effet que personne n'a mesuré — c'est « un banc qui
- * appelle ma propre porte prouve la porte, jamais le branchement ». Le branchement se prouve
- * d'abord, l'effet ensuite.
+ * ⚠️ LE BRANCHEMENT S'EST PROUVÉ D'ABORD, L'EFFET ENSUITE. L'étage a d'abord été posé et TRAVERSÉ
+ * sans porter la moindre décision — un étage qui décide sans qu'on ait prouvé qu'il est atteint
+ * laisse croire à un effet que personne n'a mesuré. Son compte de passage le prouve depuis.
+ *
+ * ⛔ CE QU'IL PORTE MAINTENANT : LA DÉRIVATION. Un exemplaire hérite des membres de son prototype
+ * qu'il n'écrit pas ; ce qu'il écrit gagne. Le lien parent est déjà dans l'arbre — `varType.type` —
+ * et il n'y a rien à inventer.
+ *
+ * ⇒ **Et il vaut des deux côtés par construction** : une scène et une source de librairie entrent
+ * toutes deux par la voie unique, donc toutes deux passent ici. C'est ce qui distingue ce domicile
+ * d'un chemin de service — une règle qui vaudrait à l'entrée et pas au fond d'un sac serait un cas.
  *
  * ⛔ CE QU'IL NE FERA JAMAIS : refuser à la DÉCLARATION. Décision de Romain, 2026-08-23,
  * `le-refus-se-pose-a-l-usage-et-il-est-positionnel` — *« rien ne se refuse à la déclaration ;
@@ -64,25 +70,107 @@ function* noeuds(n, vus = new Set()) {
 }
 
 /**
+ * LES DÉCLARATIONS PAR LE TYPE, relevées dans l'arbre — les DEUX formes que le parseur produit, et
+ * il en produit bien deux.
+ *
+ *     def X (…)        → `DefDirective` dans `ast.defs`  — aucun parent écrit
+ *     <type> X (…)     → `VarDirective` dans `ast.vars`  — le parent est `varType.type`
+ *
+ * ⛔ LIRE UNE SEULE DES DEUX PLACES REND ZÉRO PARTOUT, et un zéro se lit comme « rien à résoudre ».
+ * C'est le défaut exact que ce dépôt a mesuré au générateur du bundle, où la boucle ne lisait que
+ * les `defs` : les 185 entrées de `scales` disparaissaient sans un mot.
+ *
+ * ⚠️ LE SAC D'ORIGINE EST RELEVÉ AVANT TOUTE GREFFE. Sans cette copie, un prototype qui est
+ * lui-même un exemplaire transmettrait à ses enfants ce qu'il vient de recevoir, et le résultat
+ * dépendrait de l'ORDRE dans lequel la table est parcourue — deux passes, deux arbres.
+ */
+function declarationsDe(ast) {
+  const table = new Map();
+  const poser = (nom, parent, noeud) => {
+    if (!nom || table.has(nom)) return;
+    table.set(nom, { parent, noeud, origine: [...((noeud.settings && noeud.settings.pairs) || [])] });
+  };
+  for (const d of (ast && ast.defs) || []) if (d) poser(d.name, null, d);
+  for (const v of (ast && ast.vars) || []) {
+    if (!v || !v.varType || v.varType.kind !== 'type') continue;
+    for (const n of v.names || []) poser(n, v.varType.type, v);
+  }
+  return table;
+}
+
+/**
+ * LA DÉRIVATION SE RÉSOUT — un exemplaire reçoit les membres de sa chaîne de prototypes qu'il
+ * n'écrit pas, et rend le compte de ce qui a été greffé.
+ *
+ * ⛔ LE PLUS PROCHE GAGNE, ET CE QUI EST ÉCRIT GAGNE SUR TOUT. La remontée va du parent immédiat
+ * vers la racine ; un membre déjà porté n'est jamais réécrit. C'est ce qui fait de la dérivation un
+ * héritage et non une fusion.
+ *
+ * ⛔ ELLE EST TRANSITIVE. Mesuré sur le corpus des librairies : 387 exemplaires remontent d'un cran,
+ * 179 de deux, 7 de trois. Un mécanisme qui s'arrête au premier parent serait juste sur 387 cas et
+ * faux sur 186, **sans que rien ne rougisse**.
+ *
+ * ⚠️ UN PARENT ABSENT DE L'ARBRE ARRÊTE LA REMONTÉE, SANS REFUS. Deux cas la portent : `object`, la
+ * racine du prototypal, qui ne se déclare jamais ; et un prototype qui vit dans une AUTRE source,
+ * invoquée. Ce second cas est celui de 414 exemplaires sur 574, et il ne se résoudra qu'une fois le
+ * prototype publié — la trace de dérivation entre dans le paquet à la phase suivante. Refuser ici
+ * refuserait à la DÉCLARATION, ce que cet étage ne fera jamais.
+ *
+ * ⚠️ ET LA GREFFE SE MARQUE. Un membre hérité est marqué `herite`, parce que deux lecteurs de cet
+ * arbre ne veulent pas la même chose : l'aval reçoit une valeur GRAVÉE — jamais un choix — et le
+ * générateur du bundle republie ce que la SOURCE écrit. Décision de Romain, 2026-08-29 : *« dans les
+ * librairies, porter sinon ça n'a aucun sens »*. Sans la marque, le paquet recopierait l'héritage
+ * sur chacun de ses exemplaires, ce qui est exactement le régime qu'il a écarté.
+ */
+function heriterDesPrototypes(ast) {
+  const table = declarationsDe(ast);
+  let greffes = 0;
+  for (const [nom, decl] of table) {
+    if (!decl.parent) continue;
+    const portees = new Set(decl.origine.map((p) => p.key));
+    const vus = new Set([nom]);
+    let parent = decl.parent;
+    while (parent && !vus.has(parent) && table.has(parent)) {
+      vus.add(parent);
+      const proto = table.get(parent);
+      for (const par of proto.origine) {
+        if (portees.has(par.key)) continue;
+        portees.add(par.key);
+        // ⛔ LA PARENTHÈSE ABSENTE VAUT PARENTHÈSE VIDE : un exemplaire écrit sans corps —
+        // `alphabet plain` — hérite comme les autres, et son sac s'ouvre pour le recevoir.
+        if (!decl.noeud.settings) decl.noeud.settings = { type: 'SettingBag', pairs: [] };
+        decl.noeud.settings.pairs.push({ ...par, herite: true });
+        greffes++;
+      }
+      parent = proto.parent;
+    }
+  }
+  return greffes;
+}
+
+/**
  * RÉSOUT un arbre contre son environnement, et rend ce que l'étage suivant attend.
  *
- * Rend `{ ast, diagnostics, examines }` :
+ * Rend `{ ast, diagnostics, examines, greffes }` :
  *   · `ast`         l'arbre, univoque — le même objet, muté en place comme les autres passes
- *   · `diagnostics` le canal UNIQUE de refus. Vide tant que l'étage ne décide rien.
+ *   · `diagnostics` le canal UNIQUE de refus. Vide tant que l'étage ne refuse rien.
  *   · `examines`    le nombre de nœuds traversés. **Un étage qui a examiné zéro n'a pas tourné**,
  *                   et c'est indiscernable d'un étage qui n'a rien trouvé : le compte est ce qui
  *                   sépare les deux.
+ *   · `greffes`     le nombre de membres hérités posés. Même raison : un corpus sans dérivation et
+ *                   une résolution morte ont la même empreinte, et seul ce compte les sépare.
  *
  * ⚠️ `environnement` EST REÇU ET PAS ENCORE LU. Il est dans la signature parce que c'est ce que cet
- * étage SAIT, par définition — le socle et les librairies invoquées. Le poser plus tard obligerait à
- * changer tous les appelants au moment où l'on a le moins envie d'y toucher.
+ * étage SAIT, par définition — le socle et les librairies invoquées. Il devient lisible quand un
+ * prototype d'une autre source est atteignable, et pas avant.
  */
 export function resoudre(ast, environnement) {
   const diagnostics = [];
   let examines = 0;
   for (const _ of noeuds(ast)) examines++;
+  const greffes = heriterDesPrototypes(ast);
   void environnement;
-  return { ast, diagnostics, examines };
+  return { ast, diagnostics, examines, greffes };
 }
 
 /**

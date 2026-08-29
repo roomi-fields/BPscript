@@ -312,6 +312,13 @@ async function collectBps(dir, prefix, compileToBPxAST) {
       if (!d.settings || !Array.isArray(d.settings.pairs)) return null;
       const out = {};
       for (const p of d.settings.pairs) {
+        // ⛔ CE QUI EST HÉRITÉ NE SE REPUBLIE PAS — décision de Romain, 2026-08-29 : *« dans les
+        // librairies, porter sinon ça n'a aucun sens »*. L'étage qui résout grave la dérivation
+        // dans l'arbre, parce que l'aval doit recevoir une valeur et jamais un choix ; le paquet,
+        // lui, PORTE la structure et ne la recopie pas. Un lecteur qui republierait la greffe
+        // écrirait le régime que Romain a écarté, sans qu'aucune mesure ne le dise : la donnée
+        // serait juste, seulement plus grosse de ce que chaque exemplaire aurait recopié.
+        if (p.herite) continue;
         // Une valeur qui est elle-même un sac descend d'un niveau — la récursivité par la
         // parenthèse, lue depuis le 2026-08-19.
         out[p.key] = (p.value && p.value.type === 'SettingBag')
