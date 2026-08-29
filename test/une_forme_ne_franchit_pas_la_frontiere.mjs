@@ -93,7 +93,7 @@ ok(empreinte(deplie.ast.subgrammars) === empreinte(direct.ast.subgrammars),
 // ─── 5. CE QUI N'EST PAS DU SUCRE SURVIT ─────────────────────────────────────────────────────
 // Un terminal déclaré CRÉE un nom : le déplier l'effacerait. Le tri se lit sur la sorte.
 {
-  const t = arbreDe('core\nalphabet.western:midi\ndef ka voice.sec\n-----\nS -> ka\n');
+  const t = arbreDe('core\nalphabet.western:midi\ndef ka voice.bayan_muted\n-----\nS -> ka\n');
   if (t.erreurs.length) {
     ok(false, `5. la déclaration de terminal doit compiler (${t.erreurs[0]?.message})`);
   } else {

@@ -50,10 +50,10 @@ const voix = (r) => (r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [])
 // ── A. LA CASCADE, DU PLUS LOCAL AU PLUS GÉNÉRAL ─────────────────────────────────────────────
 const CAS = [
   ['le TERMINAL la nomme lui-même : je la PORTE',
-   'core\nalphabet.western\ndef ka  voice.sec\n-----\nS -> ka\n', [['ka', 'sec']]],
+   'core\nalphabet.western\ndef ka  voice.bayan_muted\n-----\nS -> ka\n', [['ka', 'bayan_muted']]],
   ['deux terminaux nommés',
-   'core\nalphabet.western\ndef ka  voice.sec\ndef ko  voice.grave\n-----\nS -> ka ko\n',
-   [['ka', 'sec'], ['ko', 'grave']]],
+   'core\nalphabet.western\ndef ka  voice.bayan_muted\ndef ko  voice.bayan_open\n-----\nS -> ka ko\n',
+   [['ka', 'bayan_muted'], ['ko', 'bayan_open']]],
   ['personne ne la nomme : elle reste ABSENTE',
    'core\nalphabet.western\n-----\nS -> C4\n',              [['C4', null]]],
   // ⛔ LA TABLE DE L'ALPHABET N'EST PAS RÉSOLUE ICI — Romain, 2026-08-08 : « c'est Kairos, ça

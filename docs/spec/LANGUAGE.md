@@ -380,9 +380,9 @@ def cloche
   octaves.western
   register:5
   degree:0
-  voice.sombre
+  voice.dayan_ring
 
-def ka  voice.sec
+def ka  voice.bayan_muted
 def sirene  hz:440
 def muet  sounding:false
 ```

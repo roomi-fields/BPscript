@@ -5,10 +5,12 @@
  * LA SOURCE EST LA BIBLE, pas une décision : `LANGUAGE.md:348-374` (« Déclarer un terminal », avec
  * ses trois formes) et `:863-900` (« Ce que porte un terminal » — les deux axes, hauteur et
  * réalisation, et le prototype complet). La forme cible est le TYPE EN TÊTE
- * (`FORME-OBJET.md:107-118`), donc `terminal cloche(voice.sec)`.
+ * (`hub/projets/2026-08-02-refonte-langage/FORME-OBJET.md`, § « le mot `terminal` »), donc
+ * `terminal cloche(voice.bayan_muted)`. La section est nommée, jamais sa ligne : un numéro de ligne
+ * ne traverse pas les dépôts.
  *
- * ⛔ AUCUNE VOIE PARALLÈLE, ET C'EST LE POINT. Le nœud existait déjà : `def ka voice.sec` rend
- * `DefDirective{kind:'terminal'}`, le `kind` DÉDUIT du corps. `terminal ka(voice.sec)` rend LE MÊME
+ * ⛔ AUCUNE VOIE PARALLÈLE, ET C'EST LE POINT. Le nœud existait déjà : `def ka voice.bayan_muted` rend
+ * `DefDirective{kind:'terminal'}`, le `kind` DÉDUIT du corps. `terminal ka(voice.bayan_muted)` rend LE MÊME
  * nœud avec le `kind` ÉCRIT. Le mot n'ajoute aucun concept — s'il produisait un second nœud, deux
  * formes du langage décriraient la même chose dans deux structures, et l'aval devrait lire les deux.
  *
@@ -44,18 +46,18 @@ const compiler = (decl) => {
 
 // ── A. LES TROIS FORMES DE LA BIBLE, ÉCRITES AVEC LE TYPE EN TÊTE ───────────────────────────
 for (const [quoi, decl, cle, valeur, sorte] of [
-  ['une référence      `voice.sec`',   'terminal ka(voice.sec)',        'voice',    'sec',   'ref'],
+  ['une référence      `voice.bayan_muted`',   'terminal ka(voice.bayan_muted)',        'voice',    'bayan_muted',   'ref'],
   ['une valeur         `hz:440`',      'terminal sirene(hz:440)',       'hz',       '440',   'value'],
   ['un booléen         `sounding:false`', 'terminal muet(sounding:false)', 'sounding', 'false', 'value'],
 ]) {
   const r = compiler(decl);
-  ok(r.ok, `A. ${quoi} doit compiler — la bible l'écrit à LANGUAGE.md:361-363. Reçu : ${r.err}`);
+  ok(r.ok, `A. ${quoi} doit compiler — la bible l'écrit § « Déclarer un terminal ». Reçu : ${r.err}`);
   ok(r.def && r.def.keys?.[cle]?.value === valeur && r.def.keys?.[cle]?.kind === sorte,
      `A. et sa clé arrive dans l'arbre — ${cle} = ${sorte}:${valeur}. Vue : `
      + `${JSON.stringify(r.def && r.def.keys?.[cle])}`);
 }
 {
-  const r = compiler('terminal cloche(register:5, degree:0, voice.sombre)');
+  const r = compiler('terminal cloche(register:5, degree:0, voice.dayan_ring)');
   ok(r.ok, `A. plusieurs clés, séparées par la virgule — « dans la partie DÉCLARATIVE, seule la `
     + `virgule sépare » (Romain, 2026-08-19). Reçu : ${r.err}`);
   ok(r.def && Object.keys(r.def.keys || {}).length === 3,
@@ -65,8 +67,8 @@ for (const [quoi, decl, cle, valeur, sorte] of [
 
 // ── B. ⛔ LE MÊME NŒUD QUE `def`, ET LE `kind` EST ÉCRIT AU LIEU D'ÊTRE DÉDUIT ──────────────
 {
-  const parLeType = compiler('terminal ka(voice.sec)');
-  const parDef = compiler('def ka  voice.sec');
+  const parLeType = compiler('terminal ka(voice.bayan_muted)');
+  const parDef = compiler('def ka  voice.bayan_muted');
   ok(parDef.ok && parLeType.ok, 'B. SOCLE : les deux écritures doivent compiler');
   ok(parLeType.def?.type === 'DefDirective' && parDef.def?.type === 'DefDirective',
      `B. les deux rendent un DefDirective — un second nœud ferait deux structures pour une notion. `
@@ -81,8 +83,8 @@ for (const [quoi, decl, cle, valeur, sorte] of [
 
 // ── C. ⛔ LES FORMES DE `def` NE BOUGENT PAS — le témoin qui distingue AJOUTER de REMPLACER ──
 for (const [quoi, decl] of [
-  ['clés sur la même ligne', 'def ka  voice.sec'],
-  ['clés en bloc indenté',   'def cloche\n  register:5\n  voice.sombre'],
+  ['clés sur la même ligne', 'def ka  voice.bayan_muted'],
+  ['clés en bloc indenté',   'def cloche\n  register:5\n  voice.dayan_ring'],
   ['une structure',          'def cadence sa re ga pa'],
 ]) {
   const r = compiler(decl);
@@ -104,14 +106,14 @@ ok(compiler('def cadence sa re ga pa').def?.kind === 'structure',
 
 // ── E. UNE PARENTHÈSE OUVERTE SE REFERME ───────────────────────────────────────────────────
 {
-  const r = compiler('terminal ka(voice.sec');
+  const r = compiler('terminal ka(voice.bayan_muted');
   ok(!r.ok && /n'est pas refermé/.test(r.err),
      `E. une parenthèse non refermée est refusée EN NOMMANT ce qui manque. Reçu : ${r.err}`);
 }
 
 // ── F. LE TÉMOIN NON NUL ───────────────────────────────────────────────────────────────────
 {
-  const r = compiler('zorglubinvente ka(voice.sec)');
+  const r = compiler('zorglubinvente ka(voice.bayan_muted)');
   ok(!r.ok, 'F. TÉMOIN — un mot qui n\'ouvre aucune déclaration reste refusé sous la même forme');
 }
 

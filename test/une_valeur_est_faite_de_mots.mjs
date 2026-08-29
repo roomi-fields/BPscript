@@ -90,7 +90,7 @@ const lire = (ligne) => {
     ['un rapport',             'def x r:3/2'],
     ['un dièse',               'def x n:C#4'],
     ['un texte',               'def x s:"un mot"'],
-    ['un composant pointé',    'def ka voice.sec'],              // LANGUAGE.md:366
+    ['un composant pointé',    'def ka voice.bayan_muted'],              // LANGUAGE.md § « Déclarer un terminal »
     ['un booléen',             'def muet sounding:false'],       // LANGUAGE.md:368
     // ⚠️ L'ENVELOPPE EST NOMMÉE : `range:0 127` vit dans un corps NU et refuse dans un corps
     // PARENTHÉSÉ — bp3-frontend l'a éprouvé dans cinq enveloppes dont aucune n'était celle-ci, et

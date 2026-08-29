@@ -45,7 +45,13 @@ const graphies = (cle, val) => [
 
 // ── 1. LA PLACE REFUSE, DANS TOUTES SES GRAPHIES ──────────────────────────────────────────────
 let graphiesExaminees = 0;
-for (const cle of ['tuning', 'octaves', 'out']) {
+// ⛔ `voice` EST ENTRÉE LE 2026-08-29, PAR LA DONNÉE ET PAR ELLE SEULE. Romain a tranché l'issue B
+// le même jour — « la bible cite des noms qui existent » — et la fermeture n'a coûté AUCUNE ligne
+// de code : `voice` rejoint `schema.catalogAxes` en librairie, et le point 5 la prend aussitôt.
+// ⚠️ SANS CE VOLET, LA FERMETURE N'AVAIT PAS DE TÉMOIN : retirer `voice` des axes déclarés ne
+// faisait rougir que l'empreinte du paquet — un ordre de clés — et aucun garde de comportement.
+// Un mécanisme dont l'injection ne mord que sur une empreinte est une hypothèse.
+for (const cle of ['tuning', 'octaves', 'out', 'voice']) {
   for (const g of graphies(cle, 'zzzz')) {
     graphiesExaminees += 1;
     const errs = compile(`${T}${g}\n-----\nS -> C4\n`).errs;
@@ -56,7 +62,7 @@ for (const cle of ['tuning', 'octaves', 'out']) {
 }
 // ⛔ UN GARDE COMPTE CE QU'IL A EXAMINÉ ET REFUSE D'AVOIR EXAMINÉ ZÉRO — sans quoi une liste vide
 // rendrait ce fichier vert sans avoir rien éprouvé.
-verifier(graphiesExaminees === 12, `les 12 graphies × clés ont été examinées (${graphiesExaminees})`);
+verifier(graphiesExaminees === 16, `les 16 graphies × clés ont été examinées (${graphiesExaminees})`);
 
 // ── 2. LE REFUS DIT LAQUELLE DES TROIS CAUSES DE CANAL ────────────────────────────────────────
 // Un canal peut être fautif de trois façons ; un message unique enverrait chercher la mauvaise.
@@ -75,6 +81,8 @@ for (const forme of [
   'terminal cloche (octaves.western)',
   'terminal cloche (out.midi)',
   'terminal cloche (voice.wobble)',
+  'terminal cloche (voice.bayan_muted)',
+  'terminal cloche (voice.dayan_ring)',
   'terminal cloche (tuning.western_just, octaves.western, out.midi)',
   'terminal cloche (degree:0)',
   'terminal cloche (hz:440)',
@@ -94,7 +102,7 @@ const NATURES = [
   ['définition', 'def n5 (vel:120)\n', 'n5'],
   ['variable de travail', 'signal n6\n', 'n6'],
 ];
-for (const cle of ['tuning', 'octaves', 'out']) {
+for (const cle of ['tuning', 'octaves', 'out', 'voice']) {
   for (const [quoi, decl, nom] of NATURES) {
     verifier(compile(`${T}${decl}terminal cloche (${cle}.${nom})\n-----\nS -> C4\n`).errs.length > 0,
       `${cle} : un ${quoi} déclaré y est refusé — le refus porte sur la NATURE, pas sur l'absence`);

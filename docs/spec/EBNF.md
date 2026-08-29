@@ -96,12 +96,12 @@ def_directive = ( "def" | "terminal" ) , NOM_DECLARE , [ param_list ] , [ CONVEN
 
 param_list = "(" , IDENT , { "," , IDENT } , ")" ;      (* collé au nom *)
 
-def_body = terminal_block            (* def cloche  degree:0  voice.sombre *)
+def_body = terminal_block            (* def cloche  degree:0  voice.dayan_ring *)
          | setting_bag               (* def kick (vel:120) *)
          | backtick_inline           (* def fondu phase `js: (t, dur) => 1 - t / dur` *)
          | rhs ;                     (* def cadence sa re ga pa   def accent(x) x(vel:120) *)
 
-terminal_block = "(" , terminal_key , { [ "," ] , terminal_key } , ")"   (* terminal cloche(voice.sec) *)
+terminal_block = "(" , terminal_key , { [ "," ] , terminal_key } , ")"   (* terminal cloche(voice.bayan_muted) *)
                | terminal_key+ ;    (* une clé par ligne, ou sur la même ligne *)
 
 terminal_key = TERMINAL_REF , "." , ( IDENT | backtick_inline )   (* le point appelle un composant *)

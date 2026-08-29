@@ -39,9 +39,9 @@ const defDe = (r) => (r.ast?.defs || []).find((d) => d.type === 'DefDirective');
 // ── A. LES FORMES QUE LA RÉFÉRENCE ÉCRIT ─────────────────────────────────────────────────────
 // Les deux premières sont ses exemples LITTÉRAUX ; les suivantes couvrent la même construction.
 const FORMES = [
-  ['une clé qui APPELLE un composant',  'def ka  voice.sec',                    { voice: 'sec' }],
+  ['une clé qui APPELLE un composant',  'def ka  voice.bayan_muted',                    { voice: 'bayan_muted' }],
   ['une clé qui AFFECTE une valeur',    'def muet  sounding:false',             { sounding: 'false' }],
-  ['deux clés sur la même ligne',       'def sirene  hz:440  voice.sec',        { hz: '440', voice: 'sec' }],
+  ['deux clés sur la même ligne',       'def sirene  hz:440  voice.bayan_muted',        { hz: '440', voice: 'bayan_muted' }],
   ['un bloc indenté, une clé par ligne','def cloche\n  register:5\n  degree:0', { register: '5', degree: '0' }],
 ];
 for (const [quoi, corps, attendu] of FORMES) {
@@ -154,9 +154,9 @@ for (const [quoi, corps] of [
   // ⚠️ LE DÉPARTAGE SE FAIT SUR LA PONCTUATION COLLÉE, JAMAIS SUR LE NOM. Une clé porte `.` ou
   // `:` collé ; une structure est faite de termes nus. Ce témoin garde les deux sens — et le
   // second cas est le piège : un terminal peut porter le nom d'une clé.
-  const CLE = compiler('def ka  voice.sec');
+  const CLE = compiler('def ka  voice.bayan_muted');
   ok(defDe(CLE)?.kind === 'terminal',
-     `E-départage. 'def ka voice.sec' porte une CLÉ (point collé) : nature 'terminal' attendue, `
+     `E-départage. 'def ka voice.bayan_muted' porte une CLÉ (point collé) : nature 'terminal' attendue, `
      + `reçu ${JSON.stringify(defDe(CLE)?.kind)}.`);
   const NU = compiler('def suite voice sec');
   ok(defDe(NU)?.kind === 'structure',
