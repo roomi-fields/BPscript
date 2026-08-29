@@ -2437,6 +2437,39 @@ function validateReferences(ast, libCtx = {}) {
     for (const axis of catalogAxes) if (props[axis]) checkComponent(axis, props[axis], actor.line);
   }
 
+  // 5. Références d'entité des TERMINAUX que la scène déclare — LA MÊME QUESTION QU'AU 4.
+  //
+  // ⛔ DEUX MÉCANISMES POUR UN SEUL FAIT, ET LA PROFONDEUR CHOISISSAIT LEQUEL. Mesuré le
+  // 2026-08-29 : `tuning.zzzz` est REFUSÉ chez un acteur et ÉTAIT ACCEPTÉ chez un terminal, sur
+  // les trois clés à la fois (tuning, octaves, out) — et le mot inconnu arrivait jusqu'à l'arbre
+  // que l'aval reçoit, vérifié par contrôle négatif : la même clé remplie correctement n'en porte
+  // aucune trace. Une règle qui vaut à un étage et pas à l'autre n'est pas une règle, c'est un cas.
+  //
+  // ⚠️ UN SEUL POINT LES COUVRE TOUTES, et c'est mesuré avant d'écrire : les quatre graphies de
+  // déclaration — `terminal x (k.v)`, `terminal x k.v`, `def x k.v`, et le bloc indenté —
+  // convergent sur le MÊME nœud, `DefDirective{kind:'terminal', keys}`. Fermer sur la graphie qui
+  // s'est montrée en aurait laissé trois ouvertes.
+  //
+  // ⛔ AUCUN NOM DE CLÉ N'EST ÉCRIT ICI. Un axe à catalogue se valide par la porte du 4 ; la clé
+  // de SORTIE se reconnaît à ce qu'elle est déclarée clé d'acteur (`schema.actorKeys`) et qu'elle
+  // nomme une direction que les canaux portent (`schema.channels`) — deux listes de la donnée qui
+  // se croisent. Ajouter une clé au langage se fait donc en librairie, sans une ligne de code.
+  const canaux = LIBS.core?.schema?.channels || {};
+  const directionsDeCanal = new Set(Object.values(canaux)
+    .flatMap((c) => Object.entries(c || {}).filter(([, v]) => typeof v === 'boolean').map(([k]) => k)));
+  const clesDeSortie = new Set((LIBS.core?.schema?.actorKeys || [])
+    .filter((k) => directionsDeCanal.has(k) && !catalogAxes.includes(k)));
+  for (const def of ast.defs || []) {
+    if (!def || def.kind !== 'terminal' || !def.keys) continue;
+    for (const [axe, ref] of Object.entries(def.keys)) {
+      if (!ref || ref.kind !== 'ref' || !ref.value) continue;
+      if (catalogAxes.includes(axe)) { checkComponent(axe, ref.value, def.line); continue; }
+      if (!clesDeSortie.has(axe)) continue;
+      const cause = canalFautif(ref.value);
+      if (cause) errors.push({ message: `terminal '${def.name}' : ${cause}`, line: def.line });
+    }
+  }
+
   return errors;
 }
 
