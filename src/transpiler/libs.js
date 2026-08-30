@@ -1093,15 +1093,19 @@ function loadLibsFromDirectives(directives) {
             const terminal = octaveDef.position === 'suffix'
               ? noteAlt + octaveDef.separator + reg
               : reg + octaveDef.separator + noteAlt;
-            ctx.symbols[terminal] = { type: 'gate' };
             ctx.alphabetTerminals.push(terminal);
           }
         }
       }
     } else {
       // No octaves — terminals are just the raw notes (e.g. tabla, abc)
+      // ⛔ CES DEUX BOUCLES ONT ÉCRIT `ctx.symbols[x] = { type: 'gate' }` JUSQU'AU 2026-08-30. Le type
+      // temporel est sorti du langage le même jour (décision Romain), et il vivait encore ICI — à une
+      // profondeur où personne ne regardait : la table était écrite quatre fois et LUE ZÉRO FOIS.
+      // Contre-témoin qui prouve que la mesure voit : `alphabetTerminals`, poussé à la ligne voisine,
+      // est lu trois fois dans `bpxAst.js` et gardé par un banc. Deux mécanismes pour un seul fait, et
+      // la profondeur choisissait lequel.
       for (const note of nomsDeTerminaux(lib)) {
-        ctx.symbols[note] = { type: 'gate' };
         ctx.alphabetTerminals.push(note);
       }
     }
