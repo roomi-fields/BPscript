@@ -146,17 +146,31 @@ for (const nom of noms) {
   if (v.pitchee) pitchees++;
 }
 
-// ── 2. LA FORME RETIRÉE NE REVIENT PAS PAR UN CORPS QUI COMPILE ────────────────────────────────
-// `>>` et un argument nommé à unité (`decay:350ms`) sont les deux graphies du patching. La
-// première COMPILE en JavaScript, elle ne peut donc pas être attrapée par « ça compile ».
+// ── 2. CE QUI SE REFUSE EST UNE SPÉCIFICITÉ BPSCRIPT, JAMAIS UN OPÉRATEUR JAVASCRIPT ──────────
+//
+// ⛔ CE GARDE A PORTÉ UN REFUS DE `>>` PAR LA GRAPHIE, ET IL ÉTAIT FAUX PAR CONSTRUCTION.
+//    Décision de Romain, 2026-08-30 : « si c'est du js pur que ça n'utilise rien d'autre que
+//    l'interpréteur js de notre archi pas de soucis » — rendue sur `||`, et le raisonnement est le
+//    même pour `>>`. ⇒ Mesuré : `(t) => (t*220 >> 0) / 220` compile, rend 0.5, ne porte AUCUNE
+//    spécificité BPScript — et l'ancien motif le refusait. **Un décalage binaire est du JavaScript.**
+//
+// ⇒ CE QUI RESTE, ET POURQUOI CHACUN TIENT :
+//   · l'argument nommé à UNITÉ — `decay:350ms` — n'est PAS du JavaScript : c'est une graphie de
+//     BPScript, et c'est exactement ce que la décision écarte. Le motif exige l'unité collée,
+//     donc il ne peut refuser que de l'invalide.
+//   · `Math.random` se refuse pour son EFFET, pas pour sa graphie : deux rendus de la même note
+//     diffèrent. La comparaison de deux rendus le prouve déjà dans `verdict`, mais un corps qui ne
+//     tire au sort qu'une fois sur mille la passerait — le motif ferme cette porte-là.
+//
+// ⚠️ LA FORME D'AVANT N'A DONC PLUS DE GARDE DE GRAPHIE, ET ELLE N'EN A PAS BESOIN :
+//    `saw(pitch) >> lpf(cutoff) >> adsr(gate)` est refusée DÈS LA COMPILATION — mesuré — parce que
+//    `saw` n'existe pas. Le § 1 la couvre entièrement.
 for (const nom of noms) {
   const brut = String(voix[nom]?.audio ?? '');
-  ok(!brut.includes('>>'), `E.${nom} ne compose aucune couche (\`>>\`)`);
   ok(!/\b[a-z_][a-z0-9_]*\s*:\s*[\d.]+(ms|s|hz)\b/i.test(brut),
-    `F.${nom} n'a pas d'argument nommé à unité (\`decay:350ms\`)`);
-  // ⛔ LE TIRAGE SE REFUSE AUSSI PAR LA GRAPHIE, et pas seulement par la mesure : un corps qui
-  // n'appelle `Math.random()` qu'une fois sur mille rendus passerait la comparaison ci-dessus.
-  ok(!/Math\s*\.\s*random/.test(brut), `G.${nom} n'appelle pas \`Math.random\` — le bruit est une `
+    `E.${nom} n'a pas d'argument nommé à unité (\`decay:350ms\`) — c'est une graphie BPScript, `
+    + `pas du JavaScript`);
+  ok(!/Math\s*\.\s*random/.test(brut), `F.${nom} n'appelle pas \`Math.random\` — le bruit est une `
     + `fonction du temps, sinon deux rendus de la même note diffèrent`);
 }
 
@@ -191,11 +205,26 @@ ok(verdict('`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`').motif ==
 ok(verdict('`js: (t, dur, env) => Math.sin(2*Math.PI*env.pitch*t)`').motif === null,
   'N. le garde laisse passer une voix PITCHÉE juste — silencieuse sans hauteur');
 // Les motifs du § 2, injectés dans le juge lui-même.
-ok('`js: (a) => a >> 1`'.includes('>>'), 'O. le motif `>>` mord sur un corps qui en porte');
 ok(/\b[a-z_][a-z0-9_]*\s*:\s*[\d.]+(ms|s|hz)\b/i.test('`js: adsr(decay:350ms)`'),
-  'P. le motif de l\'argument à unité mord sur `decay:350ms`');
+  'O. le motif de l\'argument à unité mord sur `decay:350ms`');
 ok(/Math\s*\.\s*random/.test('`js: (t) => Math.random()`'),
-  'Q. le motif du tirage mord sur `Math.random()`');
+  'P. le motif du tirage mord sur `Math.random()`');
+
+// ⛔ ET LE TÉMOIN QUI TIENT LA DÉCISION DE ROMAIN : un OPÉRATEUR JavaScript ne se refuse pas.
+// Sans lui, rien n'empêche de remettre un jour un motif de graphie sur `>>` ou `||` — et la
+// première écriture de ce garde en portait un.
+ok(verdict('`js: (t) => (t*220 >> 0) / 220`').motif === null,
+  'Q. un corps de JS PUR portant `>>` PASSE — un décalage binaire est du JavaScript, pas du patching');
+// ⛔ ET LE TÉMOIN SYMÉTRIQUE, QUI DIT SUR QUOI PORTE LE REFUS. `??` est un opérateur JavaScript
+// légal, comme `>>` : ce corps est refusé quand même — et son motif nomme l'EFFET, jamais le signe.
+// (Ma première écriture de ce témoin l'attendait PASSANT : le garde m'a repris, et il avait raison.)
+{
+  const v = verdict('`js: (t, dur, env) => Math.sin(2*Math.PI*(env.pitch ?? 220)*t)`');
+  ok(v.motif !== null && /INVENTE une hauteur/.test(v.motif),
+    `R. un repli écrit avec un opérateur JS légal est refusé pour son EFFET — motif rendu : ${v.motif}`);
+}
+ok(!/\b[a-z_][a-z0-9_]*\s*:\s*[\d.]+(ms|s|hz)\b/i.test('`js: (t) => t >> 1 || 0`'),
+  'S. le motif de l\'unité ne mord PAS sur des opérateurs JavaScript');
 
 // ── verdict ────────────────────────────────────────────────────────────────────────────────────
 console.log(`— ${noms.length} voix examinées · ${pitchees} pitchée(s) · ${noms.length - pitchees} percussive(s) —`);
