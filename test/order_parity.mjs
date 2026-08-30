@@ -195,7 +195,16 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
   // connaisse : le code de convention lui-même n'alimentait que la conversion BP2, retirée. Le
   // binaire, lui, reçoit la convention par son propre drapeau, juste en dessous.
 
-  const tmpGr = path.join(TD, `_ord_tmp_${name}.gr`);
+  // ⛔ LE DÉRIVÉ VIT DANS `/tmp`, PAS DANS L'ARBRE DE BP3-ENGINE. Jusqu'au 2026-08-30 il naissait
+  // dans `TD` — son dossier de données — et mon portillon y déposait 27 fichiers à chaque passage.
+  // ⚠️ MA RAISON DE LE POSER LÀ ÉTAIT FAUSSE, et c'est bp3-engine qui l'a mesurée : le moteur SAUTE
+  // les en-têtes de la grammaire (`source/BP3/CompileGrammar.c:251`, « Skip headers ») et n'ouvre
+  // AUCUN auxiliaire relatif au dossier du `-gr`. Son témoin qui tranche : la même grammaire posée
+  // DANS son dossier de données, sans drapeau, rend ZÉRO octet — le dossier ne joue aucun rôle,
+  // c'est le drapeau qui joue tout. Et je passe déjà `-al` et `-se` explicitement, depuis sa table.
+  // ⇒ L'identifiant de processus ferme au passage la collision de deux exécutions simultanées, qui
+  // écrivaient le même chemin.
+  const tmpGr = path.join('/tmp', `_ord_tmp_${process.pid}_${name}.gr`);
   fs.writeFileSync(tmpGr, gr);
   derives.set(tmpGr, { source: grFile, transformations: ['fins de ligne normalisées en LF'] });
   const args = ['produce', '-e', '-gr', tmpGr, '--seed', '1'];
@@ -264,9 +273,16 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
     const f = path.join(TD, couple.alphabet);
     if (fs.existsSync(f)) args.push('-al', f);
   }
-  // NB : le `-ho.X` (homomorphisme) référencé dans le corps est AUTO-RÉSOLU par bp3 depuis le
-  // dossier du -gr (TD) — le passer EN PLUS via `-ho` casse les grammaires qui l'auto-chargent
-  // déjà (MyMelody, koto3 : double-chargement → « no output »). On ne le passe donc PAS.
+  // NB : le `-ho.X` (homomorphisme) référencé dans le corps ne se passe PAS via `-ho` — le faire
+  // casse koto3 en double-chargement, « no output ». Ce fait tient, il est mesuré.
+  //
+  // ⛔ CE QUI NE TIENT PAS, ET QUE JE RETIRE : j'écrivais ici que ce `-ho.X` était « AUTO-RÉSOLU par
+  // bp3 depuis le dossier du -gr ». C'est FAUX, et c'est ce qui justifiait de poser le dérivé chez
+  // le voisin. Le moteur saute les en-têtes et n'ouvre aucun auxiliaire relatif ; `-ho.` et `-al.`
+  // partagent d'ailleurs le même emplacement, `adjust_prefix` ne faisant que réécrire la chaîne.
+  // ⇒ Mesuré chez moi le 2026-08-30, le dérivé sorti dans `/tmp` : 27 grammaires sur 27 identiques,
+  // koto3 comprise, et l'arbre de bp3-engine PROPRE à l'arrivée. Une raison fausse tenait un geste
+  // qui gênait un voisin.
 
   args.push('-o', prodFile);
   return args;
