@@ -90,7 +90,12 @@ const MOTS_RETIRES = [
   ['factory', '2026-08-20', null],
   ['wire', '2026-08-15', null],
   ['cv', '2026-08-08', 'type de module — `mod.type = cv` ; refusé en scène'],
+  // ⛔ `trig` MANQUAIT, ET LA DÉCISION QUI LE RETIRE LE NOMME EN PREMIER — `gate` et `trigger`
+  // étaient là depuis le retrait du type de port, la troisième graphie jamais inscrite. Un garde qui
+  // juge des mots ne voit pas celui qu'on a oublié de lui donner : sa matrice est complète sur ce
+  // qu'elle porte, et muette sur le reste.
   ['gate', '2026-08-15', null],
+  ['trig', '2026-08-30', null],
   ['trigger', '2026-08-15', null],
   ['sub', '2026-08-04', 'VALEUR de mode — `mode:sub` COMPILE'],
   ['tempx', '2026-08-06', null],
