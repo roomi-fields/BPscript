@@ -15,7 +15,14 @@ test/mail_*
 abletonstory.md
 build-web.sh
 .mcp.json
-.claude/
+# ⛔ `.claude/skills/` EST SUIVI — la fiche de competence ENSEIGNE mon langage, et elle vit en seize
+# copies dans la tour. Tout `.claude/` etait ignore ici, et QUINZE depots sur seize la suivaient
+# deja : le seul aveugle a la page qui decrit mes champs etait le depot dont elle parle. Mesure le
+# 2026-08-30 — mon preavis a declare « tous mes fichiers suivis, sans exception » en ecartant 97
+# fichiers, dont cette page ; `git ls-files` ne rend jamais son complement. Le reste de `.claude/`
+# est local (reglages de poste, bacs a sable, arbres de travail) et reste dehors.
+.claude/*
+!.claude/skills/
 .codegraph/
 test/grammars/trySrand/snapshots/
 
