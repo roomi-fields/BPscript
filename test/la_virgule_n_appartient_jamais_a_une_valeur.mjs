@@ -37,12 +37,30 @@ const PROSE = new Set(['description', 'unit', 'body', '_note', '_source', '_comm
   '_anchor_note', '_source_ancre', '_note_doc', 'version']);
 const estProse = (cle) => PROSE.has(cle) || cle.startsWith('_');
 
+// ⛔ LE CODE EXTERNE SE RECONNAÎT À SON SIGNE, PAS AU NOM DU CHAMP QUI LE PORTE.
+//
+// L'exclusion « un corps de fonction est du code » existait depuis l'origine, mais elle était écrite
+// sur un LIEU — le champ `body`, seul endroit où du code vivait alors. Le 2026-08-30, les quinze
+// corps de voix sont devenus des fonctions JavaScript (décision de Romain : « des fonctions js
+// simples qui produisent du son »), et une fonction à trois paramètres ne s'écrit pas sans virgule :
+// `(t, dur, env) => …`. La règle du séparateur n'a pas bougé — elle porte sur les valeurs DU
+// LANGAGE, et un backtick est du code que le langage TRANSPORTE, opaque par construction.
+//
+// ⇒ Le discriminant est donc le backtick, que le langage écrit pour dire « ceci n'est pas à moi ».
+// MESURÉ sur la donnée entière au moment de la frappe : 7314 feuilles, 15 valeurs entièrement
+// délimitées par des backticks — les quinze corps de voix, et RIEN d'autre. Le champ `body` n'en
+// porte aucune : les deux exclusions gardent des choses différentes, aucune n'absorbe l'autre.
+//
+// ⚠️ LA DÉLIMITATION EST EXIGÉE AUX DEUX BOUTS. Un backtick au MILIEU d'une valeur ne la rend pas
+// opaque — sans quoi une seule apostrophe inversée suffirait à faire passer n'importe quelle liste.
+const estCodeExterne = (v) => /^`[\s\S]*`$/.test(v.trim());
+
 let feuilles = 0;
 const fautives = [];
 const descendre = (o, chemin, cleCourante) => {
   if (typeof o === 'string') {
     feuilles++;
-    if (o.includes(',') && !estProse(cleCourante)) fautives.push([chemin, o]);
+    if (o.includes(',') && !estProse(cleCourante) && !estCodeExterne(o)) fautives.push([chemin, o]);
     return;
   }
   if (!o || typeof o !== 'object') { feuilles++; return; }
@@ -68,6 +86,30 @@ ok(feuilles >= 5000, `A. le balayage doit voir la donnée entière — ${feuille
   ok(fautives.length === avant + 1,
     `A-témoin. le balayage doit VOIR une virgule injectée dans un 'default' — il n'en a vu que `
     + `${fautives.length - avant}. Une exclusion trop large rendrait le volet A décoratif.`);
+  fautives.length = avant;
+}
+
+// ⛔ TÉMOIN DE L'EXCLUSION PAR BACKTICK — elle doit être une frontière, jamais un passe-droit.
+// Les trois cas se distinguent : ce qui est DÉLIMITÉ par des backticks est du code et sort du
+// jugement ; ce qui en porte un au milieu, ou d'un seul côté, reste une valeur et se juge.
+{
+  const avant = fautives.length;
+  descendre({ x: '`js: (t, dur) => t`' }, 'témoin-code', 'x');
+  ok(fautives.length === avant,
+    `A-témoin. une valeur entièrement entre backticks est du CODE — la virgule y appartient au `
+    + `langage invité, pas au mien. Le balayage n'aurait pas dû l'accuser.`);
+
+  for (const [quoi, valeur] of [
+    ['un backtick au MILIEU', 'a,b `js: x` c'],
+    ['un backtick à GAUCHE seulement', '`js: a,b'],
+    ['un backtick à DROITE seulement', 'a,b`'],
+  ]) {
+    const n = fautives.length;
+    descendre({ x: valeur }, 'témoin-partiel', 'x');
+    ok(fautives.length === n + 1,
+      `A-témoin. ${quoi} ne rend PAS une valeur opaque — elle doit rester jugée, sans quoi une `
+      + `seule apostrophe inversée ferait passer n'importe quelle liste.`);
+  }
   fautives.length = avant;
 }
 

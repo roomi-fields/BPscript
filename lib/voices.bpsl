@@ -1,25 +1,30 @@
 // LA LIBRAIRIE « voices » — écrite dans le langage qu'elle sert.
-// Convertie depuis le JSON : le bundle en rend la MÊME donnée, champ par champ. Les
-// consommateurs ne voient aucun changement — c'est l'AUTHORING qui change, pas la donnée.
+//
+// UN CORPS DE VOIX EST UNE FONCTION JAVASCRIPT SIMPLE, `(t, dur, env) => échantillon`.
+// `t` est le temps local en secondes (0..dur), `dur` la durée de la note, et `env.pitch` porte
+// la hauteur gravée en Hz. Une voix PERCUSSIVE ne lit jamais `env.pitch` : elle sonne sans
+// hauteur. Le corps décrit son son directement — il ne compose aucune couche.
+//
+// ⚠️ LA CONSTANTE DE TEMPS D'UNE DÉCROISSANCE EST ÉCRITE EN SECONDES, dans le corps même.
+//    Un argument nommé à unité (`decay:350ms`) n'est pas du JavaScript ; l'exponentielle l'est.
 //
 // ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
 //    voyage pas jusqu'aux consommateurs, une clé si.
 
 def voices (documented:true, resolvedBy:Kairos, name:voices, objects(
-  wobble(audio:"`js: saw(pitch) >> lpf(cutoff) >> adsr(gate)`"),
-  fatbass(audio:"`js: (saw(pitch) | saw(pitch*1.01)) >> lpf(cutoff) >> adsr(gate)`",
+  wobble(audio:"`js: (t, dur, env) => (2*((t*(env.pitch||110))%1)-1) * (0.55+0.45*Math.sin(2*Math.PI*5.5*t)) * Math.max(0,1-t/dur)`"),
+  fatbass(audio:"`js: (t, dur, env) => ((2*((t*(env.pitch||55))%1)-1) + (2*((t*(env.pitch||55)*1.01)%1)-1)) * 0.4 * Math.max(0,1-t/dur)`",
           for(sub37(device(preset:bass-init, glide:0.2, osc1-wave:saw)))),
-  bayan_open(audio:"`js: (noise() >> bpf(80) | sin(80)) >> adsr(decay:350ms)`"),
-  bayan_muted(audio:"`js: noise() >> bpf(120) >> adsr(decay:80ms)`"),
-  dayan_ring(audio:"`js: (sin(320) | sin(480)) >> adsr(decay:400ms)`"),
-  dayan_tap(audio:"`js: noise() >> hpf(1200) >> adsr(decay:60ms)`"),
-  dayan_dry(audio:"`js: (sin(494) | sin(587)) >> adsr(decay:60ms)`"),
-  dayan_open(audio:"`js: (sin(392) | sin(494) | sin(523) | sin(587)) >> adsr(decay:220ms)`"),
-  dummy_csound_a(audio:"`js: sin(220) >> adsr(decay:200ms)`"),
-  dummy_csound_b(audio:"`js: sin(220) >> adsr(decay:200ms)`"),
-  dummy_csound_c(audio:"`js: sin(220) >> adsr(decay:200ms)`"),
-  dummy_csound_d(audio:"`js: sin(220) >> adsr(decay:200ms)`"),
-  dummy_csound_e(audio:"`js: sin(220) >> adsr(decay:200ms)`"),
-  dummy_csound_f(audio:"`js: sin(220) >> adsr(decay:200ms)`"),
-  dummy_csound_midiobject(audio:"`js: sin(220) >> adsr(decay:200ms)`")), resolves:voice)
-
+  bayan_open(audio:"`js: (t) => (Math.sin(2*Math.PI*80*t)*0.8 + (Math.random()*2-1)*0.2) * Math.exp(-t/0.35)`"),
+  bayan_muted(audio:"`js: (t) => (Math.sin(2*Math.PI*120*t)*0.5 + (Math.random()*2-1)*0.5) * Math.exp(-t/0.08)`"),
+  dayan_ring(audio:"`js: (t) => (Math.sin(2*Math.PI*320*t) + Math.sin(2*Math.PI*480*t)) * 0.5 * Math.exp(-t/0.4)`"),
+  dayan_tap(audio:"`js: (t) => (Math.random()*2-1) * Math.exp(-t/0.06)`"),
+  dayan_dry(audio:"`js: (t) => (Math.sin(2*Math.PI*494*t) + Math.sin(2*Math.PI*587*t)) * 0.5 * Math.exp(-t/0.06)`"),
+  dayan_open(audio:"`js: (t) => (Math.sin(2*Math.PI*392*t) + Math.sin(2*Math.PI*494*t) + Math.sin(2*Math.PI*523*t) + Math.sin(2*Math.PI*587*t)) * 0.25 * Math.exp(-t/0.22)`"),
+  dummy_csound_a(audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`"),
+  dummy_csound_b(audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`"),
+  dummy_csound_c(audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`"),
+  dummy_csound_d(audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`"),
+  dummy_csound_e(audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`"),
+  dummy_csound_f(audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`"),
+  dummy_csound_midiobject(audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`")), resolves:voice)
