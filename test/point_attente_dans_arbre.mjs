@@ -207,8 +207,13 @@ const ADRESSES_MALFORMEES = [
   ['une chaîne', 'S -> C4 <!sync1."x" D4'],
   ['un exposant collé après l\'entier', 'S -> C4 <!sync1.1e999 D4'],
   ['un identifiant collé après l\'entier', 'S -> C4 <!sync1.60bis D4'],
-  ['un point collé puis une espace', 'S -> C4 <!sync1. 60 D4'],
 ];
+// ⛔ « UN POINT COLLÉ PUIS UNE ESPACE » A QUITTÉ CETTE MATRICE le 2026-08-30, et c'est un
+// DÉMÉNAGEMENT, pas un retrait. Ce n'est plus une adresse mal formée : c'est une faute de COLLAGE,
+// et Romain l'a étendue à tout le langage — le lexeur la refuse avant que le point d'attente soit
+// lu. Son témoin vit dans `un_point_se_colle_des_deux_cotes_ou_d_aucun.mjs`.
+// ⚠️ LES CINQ AUTRES RESTENT ICI, ET L'EXIGENCE NE BAISSE PAS : leur point est collé des DEUX
+// côtés, elles passent donc le lexeur et leur refus doit toujours parler d'ADRESSE.
 for (const [quoi, regle] of ADRESSES_MALFORMEES) {
   const { err } = rhs(regle);
   const msg = (err || []).map((e) => e.message || e).join(' | ');

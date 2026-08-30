@@ -7373,16 +7373,11 @@ function parse(tokens, opts = {}) {
           + `un entier ('<!${name}.60'). Séparer par une espace ce qui doit être un terme distinct.`,
           current());
       }
-    } else if (colle && (peek(1).type === T.IDENT || peek(1).type === T.INT)) {
-      // ⚠️ LE CAS MIXTE — point collé au nom, mais valeur détachée. Il n'est ni l'un ni l'autre, et
-      // je REFUSE de choisir à la place de l'auteur : le lire en silence comme un découpage
-      // trahirait une intention d'adresse manifeste, le lire comme une adresse contredirait la
-      // règle. Signalé à l'architecte avant l'arbitrage, non tranché depuis — donc on ne devine pas.
-      throw new ParseError(
-        `'<!${name}.' suivi d'une espace : forme ambiguë. COLLÉ des deux côtés c'est une ADRESSE `
-        + `('<!${name}.${peek(1).value}'), ESPACÉ des deux côtés c'est un DÉCOUPAGE suivi d'un `
-        + `terminal ('<!${name} . ${peek(1).value}'). Écrire l'une des deux.`, current());
     } else if (colle) {
+      // ⚠️ LE CAS MIXTE VIVAIT ICI — point collé au nom, valeur détachée — et il portait la règle
+      // du collage POUR CETTE PLACE SEULE, depuis le 2026-07-27. Romain l'a étendue à tout le
+      // langage le 2026-08-30 : elle vit maintenant au lexeur, `refuserUnPointACheval`, et cette
+      // branche n'était plus atteignable. Le mécanisme est parti là où la forme apparaît.
       // ⚠️ LE TROU QUE BPx A MESURÉ le 2026-07-27, et c'était le pire mode d'échec possible : point
       // COLLÉ au nom, mais suivi de quelque chose qui n'est ni un identifiant ni un entier — un
       // signe moins, un nombre décimal, une chaîne. AUCUNE des deux branches ci-dessus ne tirait,

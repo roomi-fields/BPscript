@@ -443,7 +443,68 @@ function tokenize(source, opts = {}) {
   }
 
   emit(T.EOF, null);
+  refuserUnPointACheval(tokens);
   return tokens;
+}
+
+/**
+ * ⛔ UN POINT SE COLLE DES DEUX CÔTÉS, OU D'AUCUN. Décision de Romain, 2026-08-30,
+ * `hub/decisions/2026-08-30-un-signe-qualifiant-separe-par-un-espace-est-refuse.md`.
+ *
+ * LE SIGNE PORTE DEUX RÔLES, ET C'EST LE COLLAGE QUI LES SÉPARE — `docs/spec/LANGUAGE.md:1893`,
+ * dans la table qui oppose déjà `(x)` collé à `(x)` séparé et `C4!(…)` à `C4 !(…)` :
+ *
+ *     `alphabet.western`      COLLÉ des deux côtés   il QUALIFIE — un élément dans un espace de noms
+ *     `C4 D4 . E4 F4 G4`      DÉTACHÉ des deux côtés il SÉPARE — frontière entre fragments de durée
+ *                                                    égale, un élément du langage à part entière
+ *     `A4. D5`                À CHEVAL               ni l'un ni l'autre ⇒ REFUSÉ
+ *
+ * ⛔ POURQUOI ICI ET NULLE PART AILLEURS : la règle vaut PARTOUT où le signe apparaît, à toutes les
+ * profondeurs. Écrite dans le parseur, elle aurait fallu la répéter aux quinze places qui lisent un
+ * point — et une place oubliée aurait fait vivre la forme au fond d'un sac pendant qu'elle mourait
+ * en tête de scène. Mesuré avant de choisir : sur trente cases de matrice, dix refusaient déjà, dont
+ * huit avec un message étranger à la règle (« terminal 'sitar' non déclaré »). Deux mécanismes pour
+ * un seul fait, et la profondeur choisissait lequel.
+ *
+ * ⚠️ ET LE LEXEUR NE VOIT QUE LE POINT DU LANGAGE — fabriqué, jamais supposé : un décimal `0.5` sort
+ * en FLOAT, `...` en repos indéterminé, et le contenu d'un accent grave, d'une chaîne ou d'un
+ * commentaire ne produit AUCUN jeton point, même sur plusieurs lignes. Six cas éprouvés à zéro.
+ *
+ * ⚠️ LA FIN DE LIGNE COMPTE COMME UNE SÉPARATION : `M10 -> J - .` est un point détaché des deux
+ * côtés, et sept scènes du corpus l'écrivent.
+ *
+ * CE QUE ÇA COÛTE, mesuré sur 1305 points de 838 fichiers dans 23 dépôts :
+ *     1192 collés des deux côtés · 102 détachés des deux côtés · 7 en fin de ligne
+ *     0 détachés à gauche seulement · 4 collés à gauche seulement ⇒ les SEULS refusés
+ */
+function refuserUnPointACheval(tokens) {
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i].type !== T.PERIOD) continue;
+    const suivant = tokens[i + 1];
+    const finDeLigne = !suivant || suivant.type === T.NEWLINE || suivant.type === T.EOF;
+    const separeAvant = !!tokens[i].spaceBefore;
+    const separeApres = finDeLigne ? true : !!suivant.spaceBefore;
+    if (separeAvant === separeApres) continue;
+
+    const gauche = i > 0 && tokens[i - 1].value != null ? String(tokens[i - 1].value) : '';
+    const droite = finDeLigne ? '' : String(suivant.value ?? '');
+    const { line, col } = tokens[i];
+    // ⚠️ RIEN DERRIÈRE N'EST PAS « DÉTACHÉ » : proposer '`gauche`.' comme réécriture serait proposer
+    // une forme qui ne qualifie rien. Le refus dit ce qui manque, il ne recopie pas la faute.
+    if (!droite) {
+      throw new LexError(
+        `'${gauche}.' : nom attendu après le point — il est collé à '${gauche}' et RIEN ne le suit, `
+        + `il n'a donc rien à qualifier. Écrire le nom ('${gauche}.<nom>'), ou le détacher pour en faire `
+        + `une frontière ('${gauche} .'). Ligne ${line}, colonne ${col}.`, line, col);
+    }
+    throw new LexError(
+      `'${gauche}${separeAvant ? ' ' : ''}.${separeApres ? ' ' : ''}${droite}' : le point est `
+      + `${separeAvant ? 'DÉTACHÉ à gauche et COLLÉ à droite' : 'COLLÉ à gauche et DÉTACHÉ à droite'}, `
+      + `et il ne dit alors ni l'un ni l'autre de ses deux rôles. COLLÉ des deux côtés il QUALIFIE `
+      + `le terme de gauche par celui de droite ('${gauche}.${droite}') ; DÉTACHÉ des deux côtés il `
+      + `SÉPARE — frontière entre fragments de durée égale ('${gauche} . ${droite}'). Écrire l'une `
+      + `des deux. Ligne ${line}, colonne ${col}.`, line, col);
+  }
 }
 
 export { tokenize, T, LexError };

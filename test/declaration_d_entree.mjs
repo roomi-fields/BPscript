@@ -251,9 +251,12 @@ for (const [regle, quoi, attendu] of [
 }
 
 // ─── 7. L'ESPACE DÉCOUPE — et ce n'est PAS une adresse ───────────────────────────────────────
+// ⛔ « POINT DÉTACHÉ DU NOM » (`<!brut .60`) EST SORTI DE CETTE LISTE le 2026-08-30. Il y était
+// donné pour lisible ; la règle du collage le refuse — détaché à gauche, collé à droite, il ne dit
+// ni l'un ni l'autre des deux rôles du point. Son témoin vit dans
+// `un_point_se_colle_des_deux_cotes_ou_d_aucun.mjs`, avec les treize autres places.
 for (const [regle, quoi] of [
   ['-----\nS -> C4 <!brut . 60 D4', 'espacé des deux côtés'],
-  ['-----\nS -> C4 <!brut .60 D4', 'point détaché du nom'],
 ]) {
   const r = compile(AVEC_ENTREES + regle);
   ok((r.errors || []).length === 0, `7. ${quoi} doit rester lisible — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
@@ -270,16 +273,19 @@ for (const [regle, quoi] of [
      "7. sans point, AUCUNE adresse ne doit apparaître");
 }
 
-// ─── 8. LE CAS MIXTE REFUSE — je ne choisis pas à la place de l'auteur ───────────────────────
-// Point collé au nom, valeur détachée : ni l'une ni l'autre des deux formes. Le lire en silence
-// comme un découpage trahirait une intention d'adresse manifeste ; le lire comme une adresse
-// contredirait la règle. Signalé à l'architecte avant l'arbitrage, non tranché depuis — donc on
-// REFUSE au lieu de deviner, en donnant les DEUX réécritures.
+// ─── 8. LE CAS MIXTE REFUSE — et la règle qui le refuse a CHANGÉ DE PLACE ───────────────────
+// Point collé au nom, valeur détachée : ni l'une ni l'autre des deux formes. Ce garde le tenait
+// SEUL depuis le 2026-07-27, pour le point d'attente seul. Romain a étendu la règle à tout le
+// langage le 2026-08-30 : elle vit au lexeur, et sa matrice complète — quatorze places, quatre
+// régimes — vit dans `un_point_se_colle_des_deux_cotes_ou_d_aucun.mjs`.
+// ⚠️ CE QUI RESTE ICI est ce qui concerne CETTE place : la forme mixte doit refuser, et le refus
+// doit donner les DEUX réécritures. L'exigence ne baisse pas ; c'est le vocabulaire du refus qui
+// suit la règle, puisqu'elle ne parle plus d'adresse mais du collage.
 {
   const r = compile(AVEC_ENTREES + '-----\nS -> C4 <!brut. 60 D4');
   const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
   ok((r.errors || []).length > 0, '8. la forme mixte doit être REFUSÉE, pas devinée');
-  ok(msg.includes('ADRESSE') && msg.includes('DÉCOUPAGE'),
+  ok(/brut\.60/.test(msg) && /brut \. 60/.test(msg),
      `8. et le refus doit donner LES DEUX réécritures — reçu : ${msg.slice(0, 150)}`);
 }
 
