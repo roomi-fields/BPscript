@@ -49,7 +49,7 @@
  */
 import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import path from 'node:path';
-import { importerBPx } from './bpx_dist.mjs';
+import { importerArtefact } from './artefact_voisin.mjs';
 import { pathToFileURL } from 'node:url';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 // ⛔ L'OUTIL S'ARRÊTE À L'ÉTAGE DE RÉSOLUTION, PAS À LA PORTE. Son entrée est PAR DÉFINITION une
@@ -74,10 +74,10 @@ const GRAINE = 12345;   // fixe : deux dérivations ne sont comparables qu'à ti
 let Session = null;
 export let echecDuMoteur = null;
 export async function chargerMoteur(chemin) {
-  // ⛔ PAR LA PORTE UNIQUE (`bpx_dist.mjs`), jamais par un chemin à soi. Ce site en gardait un, et
+  // ⛔ PAR LA PORTE UNIQUE (`artefact_voisin.mjs`), jamais par un chemin à soi. Ce site en gardait un, et
   // c'est ainsi qu'un artefact absent chez le voisin ressemblait à une panne d'ici.
   try {
-    ({ Session } = chemin ? await import(pathToFileURL(path.resolve(chemin)).href) : await importerBPx());
+    ({ Session } = chemin ? await import(pathToFileURL(path.resolve(chemin)).href) : await importerArtefact('BPx'));
     return typeof Session === 'function';
   } catch (e) {
     // ⛔ NE PAS AVALER CE QUE LA PORTE DIT. Ce `catch` rendait `false` en silence, et l'appelant

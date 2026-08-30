@@ -27,13 +27,19 @@
  */
 import { readdirSync, statSync, existsSync } from 'node:fs';
 import path from 'node:path';
+import { cheminArtefact, VOISINS_A_ARTEFACT } from './artefact_voisin.mjs';
 
-/** Les trois moteurs que ma chaîne importe, dans l'ordre où elle les traverse. */
-export const MOTEURS = {
-  BPx: '/home/romi/dev/bp/BPx/dist',
-  kairos: '/home/romi/dev/bp/kairos/dist',
-  kronos: '/home/romi/dev/bp/kronos/dist',
-};
+/**
+ * Les trois moteurs que ma chaîne importe, dans l'ordre où elle les traverse.
+ *
+ * ⛔ LES CHEMINS SE DÉRIVENT DE LA PORTE, ILS NE S'ÉCRIVENT PLUS. Ils étaient absolus ici jusqu'au
+ * 2026-08-30 — donc invisibles, et faux sur toute machine qui n'est pas celle où ils ont été écrits.
+ * La liste des voisins vient de la porte elle-même : un voisin qui s'y ajoute apparaît ici sans
+ * qu'une ligne bouge, et un voisin retiré ne laisse pas d'empreinte fantôme.
+ */
+export const MOTEURS = Object.fromEntries(
+  VOISINS_A_ARTEFACT.map((v) => [v, path.dirname(cheminArtefact(v))]),
+);
 
 /**
  * Empreinte d'un arbre construit : nombre de fichiers, octets cumulés, date de modification la

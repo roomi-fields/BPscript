@@ -50,6 +50,7 @@
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { importerArtefact } from './artefact_voisin.mjs';
 
 const require = createRequire(import.meta.url);
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -117,7 +118,7 @@ export function unirCatalogues(base, apport = {}) {
  *          secondes ; la conversion vit ici, pas chez le comparateur.
  */
 export async function resoudreViaKairos(session, opts = {}) {
-  const { projeter } = await import('/home/romi/dev/bp/kairos/dist/index.js');
+  const { projeter } = await importerArtefact('kairos');
   const pitchLib = unirCatalogues(catalaguesDeBase(), opts.apport);
   // Le BUNDLE, pas le JSON du disque : lui seul porte les corps (cf. en-tête).
   const { LIBS } = require('../src/transpiler/libs-data.js');
@@ -179,7 +180,7 @@ export async function resoudreViaKairos(session, opts = {}) {
   // t_scène ↔ t_audio (forme d'appel donnée par kronos, note [301], `resolveSchedule`).
   // Déterministe : horloge virtuelle, aucun temps réel, deux appels rendent le même flux.
   // `derivedTempo` est le tempo FROID de la dérivation, pas un tempo de session.
-  const { resolveSchedule } = await import('/home/romi/dev/bp/kronos/dist/index.js');
+  const { resolveSchedule } = await importerArtefact('kronos');
   // Forme de retour `{ events, totalDurationSec }` (kronos [302], 5ceaeec — la note [301]
   // rendait un tableau nu). La durée totale vient de Kronos : c'est LUI qui résout le temps,
   // la `duration` de la Timeline Kairos est encore en secondes de SCÈNE.

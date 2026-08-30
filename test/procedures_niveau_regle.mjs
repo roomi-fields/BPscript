@@ -19,7 +19,7 @@
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { universeRuleScopeControls } from '../src/transpiler/libs.js';
-import { importerBPx } from './bpx_dist.mjs';
+import { importerArtefact } from './artefact_voisin.mjs';
 
 let passe = 0;
 const echecs = [];
@@ -76,7 +76,7 @@ for (const [nom, valeur] of [['repeat', '3'], ['goto', '2 1'], ['failed', '2 1']
   ok((r.errors || []).length === 0, `3. le témoin doit compiler — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
   let session = null;
   try {
-    ({ createSession: session } = await importerBPx());
+    ({ createSession: session } = await importerArtefact('BPx'));
   } catch { /* BPx absent de ce poste */ }
   if (!session || !r.ast) {
     console.log('   ⓘ BPx introuvable — le témoin par l\'effet n\'a pas tourné (les points 1 et 2 restent vérifiés).');

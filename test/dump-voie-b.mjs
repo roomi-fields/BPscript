@@ -37,12 +37,12 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { bpsPath } from './corpus.mjs';
-import { importerBPx } from './bpx_dist.mjs';
+import { importerArtefact } from './artefact_voisin.mjs';
 
 const require = createRequire(import.meta.url);
 const { compileToBPxAST } = require('../src/transpiler/index.js');
-const { createSession, renderChain } = await importerBPx();
-const { Kairos, rendreChaineFinale } = await import('/home/romi/dev/bp/kairos/dist/index.js');
+const { createSession, renderChain } = await importerArtefact('BPx');
+const { Kairos, rendreChaineFinale } = await importerArtefact('kairos');
 
 /** Journal STDERR — jamais STDOUT (réservé au JSON, contrat [903]). */
 const journal = (msg) => process.stderr.write(`${msg}\n`);

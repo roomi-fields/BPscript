@@ -18,6 +18,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { VOISINS_A_ARTEFACT } from './artefact_voisin.mjs';
 
 let passe = 0;
 const echecs = [];
@@ -25,18 +26,23 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-// LES ARTEFACTS CONSTRUITS DE MES VOISINS, chacun avec SA porte unique. Une ligne s'ajoute ici le
-// jour où je consomme le produit de construction d'un dépôt de plus.
-const PORTES = [
-  { voisin: 'BPx', motif: /BPx[/'"`\\ ,]+[^\n]{0,40}\bdist\b/, porte: 'test/bpx_dist.mjs' },
-];
+// ⛔ LA LISTE DES VOISINS NE S'ÉCRIT PLUS ICI : elle est LUE de la porte. Elle a été en dur jusqu'au
+// 2026-08-30, avec UNE ligne — `BPx` — pendant que quatre sites nommaient `kairos/dist` et
+// `kronos/dist` en absolu. Le garde était vert, et il l'était honnêtement : il ne pouvait refuser
+// que ce qu'on lui avait donné. ⇒ Un garde écrit pour l'endroit où le défaut s'est montré ne couvre
+// pas l'espace où il peut vivre ; celui-ci couvre maintenant tout ce que la porte déclare, et un
+// voisin qui s'y ajoute est gardé sans qu'une ligne bouge ici.
+const PORTE = 'test/artefact_voisin.mjs';
+const PORTES = VOISINS_A_ARTEFACT.map((voisin) => ({
+  voisin,
+  motif: new RegExp(`${voisin}[/'"\`\\\\ ,]+[^\\n]{0,40}\\bdist\\b`),
+  porte: PORTE,
+}));
 
-// ⛔ LES EXEMPTIONS SONT NOMMÉES ET MOTIVÉES, jamais un motif large. `empreinte_voisins` MESURE ces
-// artefacts : nommer le chemin est sa raison d'être, et l'exempter par un motif aurait exempté du
-// même coup tout fichier au nom voisin.
-const EXEMPTES = new Set([
-  'test/empreinte_voisins.mjs',   // il prend l'empreinte des artefacts : il DOIT les nommer
-]);
+// ⛔ PLUS AUCUNE EXEMPTION, ET C'EST UNE MESURE. `empreinte_voisins` en avait une parce qu'il
+// nommait les trois chemins : il les DÉRIVE maintenant de la porte, donc il n'a plus rien à
+// exempter. Une exemption qui survit à sa cause est un trou qui ne rougit jamais.
+const EXEMPTES = new Set([]);
 
 const fichiers = [];
 const marcher = (d, rel = '') => {
@@ -73,7 +79,7 @@ for (const { voisin, motif, porte } of PORTES) {
 // bien sur un dépôt qui ne consomme plus rien du voisin.
 {
   const usagers = fichiers.filter(([rel, abs]) =>
-    rel !== 'test/bpx_dist.mjs' && /importerBPx|BPX_DIST/.test(readFileSync(abs, 'utf8')));
+    rel !== PORTE && /importerArtefact|cheminArtefact|VOISINS_A_ARTEFACT/.test(readFileSync(abs, 'utf8')));
   // ⛔ CE SEUIL ÉTAIT À 8 POUR UN COMPTE DE 10 — deux bancs pouvaient cesser de passer par la porte
   // sans un mot, sous un message qui dit « ne prouve plus rien ». Le propos, écrit deux lignes plus
   // haut, est la NON-NULLITÉ : « il serait vert sur un dépôt qui a cessé de lire le voisin ».
@@ -82,7 +88,8 @@ for (const { voisin, motif, porte } of PORTES) {
   ok(usagers.length > 0,
     `AUCUN banc ne passe par la porte — le compte de sites hors de la porte ne prouve plus rien : il `
     + `serait vert sur un dépôt qui a cessé de lire le voisin.`);
-  console.log(`[porte voisin] ${fichiers.length} fichiers balayés · ${usagers.length} banc(s) passent par la porte`);
+  console.log(`[porte voisin] ${fichiers.length} fichiers balayés · ${PORTES.length} voisin(s) gardé(s) : `
+    + `${VOISINS_A_ARTEFACT.join(', ')} · ${usagers.length} banc(s) passent par la porte`);
 }
 
 if (echecs.length) {
