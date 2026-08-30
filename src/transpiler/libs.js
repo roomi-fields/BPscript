@@ -571,7 +571,6 @@ function loadLibsFromDirectives(directives) {
     symbols: {},        // name → { type, ... }
     alphabetTerminals: [],  // terminaux issus des SEULS alphabets (sans core etc.) —
                             // porte du découpeur mono-char (bpxAst.js, flip Palier 4 étape A)
-    cvObjects: {},      // "lib.type" → def (e.g. "mod.adsr" → { parameters, ... })
     _libs: {},          // directive name → raw lib data (for generator access)
     _alphabets: [],     // loaded alphabet libs (deferred terminal generation)
     _octaveConvention: null,  // resolved octave convention name
@@ -1072,14 +1071,6 @@ function loadLibsFromDirectives(directives) {
     // scènes de l'écosystème écrivaient le mot mort, ZÉRO écrivait le bon.
     if (dir.name === 'homomorphism' && dir.subkey && (lib?.mappings || lib?.sections)) {
       ctx.transcriptions[dir.subkey] = lib;
-    }
-
-    // Merge CV objects (lib.type === "cv")
-    if (lib.type === 'cv' && lib.objects) {
-      const libName = lib.name || dir.name;
-      for (const [objName, def] of Object.entries(lib.objects)) {
-        ctx.cvObjects[`${libName}.${objName}`] = def;
-      }
     }
   }
 

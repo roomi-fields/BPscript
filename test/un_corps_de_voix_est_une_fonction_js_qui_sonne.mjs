@@ -21,10 +21,20 @@
  *    graphie : `>>` reste un opérateur JavaScript valide, et un corps qui en porterait un DANS une
  *    fonction — `(t) => t >> 1` — compilerait et sonnerait. C'est ce cas-là que la graphie tient.
  *
+ * ⛔⛔ ET CE GARDE A LUI-MÊME CAUSÉ UN DÉFAUT DE LA DONNÉE — c'est pour cela que le § 3 existe.
+ *    Sa première écriture exigeait que les quinze sonnent AVEC et SANS hauteur gravée. Les deux
+ *    voix pitchées ne peuvent pas sonner sans hauteur — j'y ai répondu par un repli DANS LA DONNÉE,
+ *    `env.pitch||110`, au lieu de corriger l'exigence. **La voix inventait alors une hauteur que
+ *    personne n'avait demandée** : mesuré chez runtime-audio, `wobble` rendait 7.52e-2 sans hauteur
+ *    gravée là où la forme d'avant se taisait, et là où sa page des voix publie « pas de hauteur
+ *    inventée ». C'est la forme la plus discrète du repli : ajuster la donnée à ce que l'instrument
+ *    accepte. ⇒ L'exigence est maintenant CONDITIONNELLE au fait que la voix lise la hauteur.
+ *
  * ⚠️ CE GARDE NE TOUCHE PAS AU DÉPÔT DU VOISIN. La porte qui accueille ces corps vit chez
  *    runtime-audio ; l'appeler d'ici prouverait SA porte, jamais MA donnée. On reproduit donc la
- *    convention d'accueil — `(t, dur, env) => échantillon`, `env.pitch` en Hz — et on garde ce qui
- *    est à moi : que chacune des quinze valeurs publiées soit une fonction qui produit du son.
+ *    convention d'accueil — `(t, dur, env) => échantillon`, `env.pitch` en Hz, non fini ramené à
+ *    zéro — et on garde ce qui est à moi : que chacune des quinze valeurs publiées soit une
+ *    fonction qui produit le son attendu.
  */
 import { LIBS } from '../src/transpiler/libs-data.js';
 
@@ -47,22 +57,21 @@ function compiler(brut) {
   catch (e) { return { type, fn: null, erreur: e.message }; }
 }
 
-/** EXERCE le corps : énergie, pic, et toute exception levée À L'APPEL. */
-function exercer(fn, env) {
-  let somme = 0, pic = 0, nonFinis = 0;
-  const n = Math.floor(SR * DUR);
-  try {
-    for (let i = 0; i < n; i++) {
-      const s = fn(i / SR, DUR, env);
-      if (typeof s !== 'number' || !Number.isFinite(s)) { nonFinis++; continue; }
-      somme += s * s;
-      if (Math.abs(s) > pic) pic = Math.abs(s);
-    }
-  } catch (e) { return { leve: e.message, rms: 0, pic: 0, nonFinis }; }
-  return { leve: null, rms: Math.sqrt(somme / n), pic, nonFinis };
+/** REND le corps sur toute sa durée, comme la porte : tout non-fini devient zéro. */
+function rendre(fn, env) {
+  const out = new Float64Array(Math.floor(SR * DUR));
+  let leve = null;
+  for (let i = 0; i < out.length; i++) {
+    let s;
+    try { s = fn(i / SR, DUR, env); } catch (e) { leve = leve || e.message; s = NaN; }
+    out[i] = Number.isFinite(s) ? s : 0;
+  }
+  return { buffer: out, leve };
 }
+const rms = (b) => { let s = 0; for (const v of b) s += v * v; return Math.sqrt(s / b.length); };
+const pic = (b) => { let p = 0; for (const v of b) if (Math.abs(v) > p) p = Math.abs(v); return p; };
 
-/** Le corps lit-il la hauteur ? `Math.random` est figé — sans quoi le bruit se lit comme un pitch. */
+/** Le corps lit-il la hauteur ? `Math.random` est figé — sans quoi un bruit se lit comme un pitch. */
 function litLaHauteur(fn) {
   const vrai = Math.random;
   Math.random = () => 0.5;
@@ -81,13 +90,33 @@ function verdict(brut) {
   const { type, fn } = compiler(brut);
   if (type !== 'js') return { motif: `réalisation non-js (${type}:)` };
   if (typeof fn !== 'function') return { motif: 'ne compile pas en fonction' };
-  const avec = exercer(fn, { pitch: 220 });
-  const sans = exercer(fn, {});
-  if (avec.leve || sans.leve) return { motif: `lève à l'appel : ${avec.leve || sans.leve}` };
-  if (avec.nonFinis || sans.nonFinis) return { motif: `${avec.nonFinis + sans.nonFinis} échantillon(s) non finis` };
-  if (avec.rms <= RMS_MIN || sans.rms <= RMS_MIN) return { motif: `MUET — rms ${avec.rms.toFixed(5)}` };
-  if (avec.pic > 1.5) return { motif: `écrête — pic ${avec.pic.toFixed(2)}` };
-  return { motif: null, rms: avec.rms, pic: avec.pic, pitchee: litLaHauteur(fn) };
+
+  const avec = rendre(fn, { pitch: 220 });
+  const sans = rendre(fn, {});
+  if (avec.leve) return { motif: `lève à l'appel : ${avec.leve}` };
+  const rA = rms(avec.buffer), rS = rms(sans.buffer);
+  if (rA <= RMS_MIN) return { motif: `MUET avec hauteur gravée — rms ${rA.toFixed(5)}` };
+  if (pic(avec.buffer) > 1.5) return { motif: `écrête — pic ${pic(avec.buffer).toFixed(2)}` };
+
+  const pitchee = litLaHauteur(fn);
+  // ⛔ AUCUNE VOIX N'INVENTE DE HAUTEUR — une pitchée sans hauteur gravée se TAIT.
+  if (pitchee && rS > RMS_MIN) {
+    return { motif: `INVENTE une hauteur — sonne à rms ${rS.toFixed(5)} sans hauteur gravée` };
+  }
+  // Une percussion ignore la hauteur : elle doit sonner dans les deux cas.
+  if (!pitchee && rS <= RMS_MIN) {
+    return { motif: `percussive et MUETTE sans hauteur — rms ${rS.toFixed(5)}` };
+  }
+
+  // ⛔ DÉTERMINISME — `Math.random()` rend deux ondes différentes pour la même note. Inoffensif
+  // à l'oreille, fatal à qui compare deux rendus échantillon par échantillon. Relevé par
+  // runtime-audio sur trois corps le 2026-08-30 ; le bruit s'écrit en fonction du temps.
+  const bis = rendre(fn, { pitch: 220 }).buffer;
+  let ecarts = 0;
+  for (let i = 0; i < avec.buffer.length; i++) if (avec.buffer[i] !== bis[i]) ecarts++;
+  if (ecarts) return { motif: `TIRE AU SORT — ${ecarts} échantillon(s) diffèrent entre deux rendus` };
+
+  return { motif: null, rms: rA, pitchee };
 }
 
 // ── 1. LA MATRICE : toutes les voix publiées, aucune exception ─────────────────────────────────
@@ -117,15 +146,19 @@ for (const nom of noms) {
   ok(!brut.includes('>>'), `E.${nom} ne compose aucune couche (\`>>\`)`);
   ok(!/\b[a-z_][a-z0-9_]*\s*:\s*[\d.]+(ms|s|hz)\b/i.test(brut),
     `F.${nom} n'a pas d'argument nommé à unité (\`decay:350ms\`)`);
+  // ⛔ LE TIRAGE SE REFUSE AUSSI PAR LA GRAPHIE, et pas seulement par la mesure : un corps qui
+  // n'appelle `Math.random()` qu'une fois sur mille rendus passerait la comparaison ci-dessus.
+  ok(!/Math\s*\.\s*random/.test(brut), `G.${nom} n'appelle pas \`Math.random\` — le bruit est une `
+    + `fonction du temps, sinon deux rendus de la même note diffèrent`);
 }
 
-// ── 3. LES DEUX VOIX PITCHÉES LISENT LA HAUTEUR, LES AUTRES SONNENT SANS ───────────────────────
+// ── 3. LA HAUTEUR : DEUX VOIX LA LISENT, TREIZE L'IGNORENT, AUCUNE NE L'INVENTE ────────────────
 // Ce compte est ce qui distingue une voix mélodique d'une percussion : le perdre rendrait les
 // quinze interchangeables sans qu'aucune assertion ne bouge.
-ok(pitchees === 2, `G. exactement 2 voix lisent la hauteur — mesuré ${pitchees}`);
-ok(verdict(voix.wobble?.audio ?? '').pitchee === true, 'H. `wobble` lit la hauteur');
-ok(verdict(voix.fatbass?.audio ?? '').pitchee === true, 'I. `fatbass` lit la hauteur');
-ok(verdict(voix.dayan_open?.audio ?? '').pitchee === false, 'J. `dayan_open` est percussive');
+ok(pitchees === 2, `H. exactement 2 voix lisent la hauteur — mesuré ${pitchees}`);
+ok(verdict(voix.wobble?.audio ?? '').pitchee === true, 'I. `wobble` lit la hauteur');
+ok(verdict(voix.fatbass?.audio ?? '').pitchee === true, 'J. `fatbass` lit la hauteur');
+ok(verdict(voix.dayan_open?.audio ?? '').pitchee === false, 'K. `dayan_open` est percussive');
 
 // ── 4. LE GARDE MORD — prouvé sur la graphie que le code écrit, jamais sur celle qu'on croit ───
 // Chaque faute est fabriquée puis passée au MÊME juge que la donnée réelle.
@@ -137,17 +170,24 @@ const injections = [
   ['un corps qui n\'est pas une fonction', '`js: 0.5`'],
   ['une réalisation non-js', '`faust: process = os.osc(440);`'],
   ['un corps qui n\'ouvre pas', '`js: (t => (((`'],
+  ['une voix qui INVENTE une hauteur', '`js: (t, dur, env) => Math.sin(2*Math.PI*(env.pitch||110)*t)`'],
+  ['une PERCUSSION muette sans hauteur', '`js: (t, dur, env) => (env.pitch ? 1 : 0) * Math.sin(t)`'],
+  ['un corps qui TIRE AU SORT', '`js: (t) => Math.random()*2-1`'],
 ];
 for (const [quoi, corps] of injections) {
-  ok(verdict(corps).motif !== null, `K. le garde refuse ${quoi}`);
+  ok(verdict(corps).motif !== null, `L. le garde refuse ${quoi}`);
 }
-// Et le juge doit LAISSER PASSER une forme juste — sans quoi il refuserait tout, y compris le vrai.
+// Et le juge doit LAISSER PASSER les deux formes justes — sans quoi il refuserait tout.
 ok(verdict('`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`').motif === null,
-  'L. le garde laisse passer une forme juste');
-// Le motif du patching, injecté dans le juge du § 2 lui-même.
-ok('`js: (a) => a >> 1`'.includes('>>'), 'M. le motif `>>` mord sur un corps qui en porte');
+  'M. le garde laisse passer une PERCUSSION juste');
+ok(verdict('`js: (t, dur, env) => Math.sin(2*Math.PI*env.pitch*t)`').motif === null,
+  'N. le garde laisse passer une voix PITCHÉE juste — silencieuse sans hauteur');
+// Les motifs du § 2, injectés dans le juge lui-même.
+ok('`js: (a) => a >> 1`'.includes('>>'), 'O. le motif `>>` mord sur un corps qui en porte');
 ok(/\b[a-z_][a-z0-9_]*\s*:\s*[\d.]+(ms|s|hz)\b/i.test('`js: adsr(decay:350ms)`'),
-  'N. le motif de l\'argument à unité mord sur `decay:350ms`');
+  'P. le motif de l\'argument à unité mord sur `decay:350ms`');
+ok(/Math\s*\.\s*random/.test('`js: (t) => Math.random()`'),
+  'Q. le motif du tirage mord sur `Math.random()`');
 
 // ── verdict ────────────────────────────────────────────────────────────────────────────────────
 console.log(`— ${noms.length} voix examinées · ${pitchees} pitchée(s) · ${noms.length - pitchees} percussive(s) —`);

@@ -1975,9 +1975,23 @@ function parse(tokens, opts = {}) {
     if (porteesDeclarees(nom) !== null || directiveDeclareeParLaLibrairie('core', nom)) return null;
     advance(); advance(); advance();               // nom : canal
     // ⛔ `temporalType` SURVIT AU MOT `gate`, ET C'EST UNE FRONTIÈRE, PAS UNE GRAPHIE. Le champ est
-    // DÉCLARÉ REQUIS par le contrat de BPx (`types/ast.ts` : `temporalType: 'gate' | 'trigger'`) et
-    // il y est LU : `loadGrammar.ts:1613` ne collecte un nom parmi les TERMINAUX D'ALPHABET que si
-    // `decl.temporalType === 'gate'`.
+    // DÉCLARÉ REQUIS par le contrat de BPx — `src/types/ast.ts`, à son commit publié `e51890d` :
+    // `temporalType: 'gate' | 'trigger'` — et il y est LU à DEUX étages : `loadGrammar.ts` ne
+    // collecte un nom parmi les TERMINAUX D'ALPHABET que si `decl.temporalType === 'gate'`, et son
+    // validateur de scène énumère un refus strict sur `['gate','trigger']`. (Mesuré par BPx chez
+    // lui, 2026-08-30 ; un NUMÉRO de ligne ne traverse pas les dépôts et n'est plus cité.)
+    //
+    // ⛔ ET J'AVAIS ÉCRIT `types/ast.ts`, UN CHEMIN QUI N'EXISTE PAS CHEZ LUI. Atlas l'a suivi, a
+    // rendu ZÉRO, et a failli conclure que le champ n'existait pas — donc que cet avertissement
+    // était sans objet. **Un zéro de CHEMIN est indiscernable d'un zéro de CONTENU** : c'est le
+    // casse-muet que ce commentaire existe pour empêcher, retourné sur la citation qui le porte.
+    //
+    // ⚠️ ET LE FAIT EST PLUS FORT QUE « un cas parmi d'autres ». Le contrat de BPx porte, en
+    // commentaire de la déclaration : « 'gate' EST LA SEULE VALEUR QU'UN FRONTAL PRODUISE » et
+    // « BPx consomme uniquement temporalType + name pour la classification du terminal ».
+    // ⇒ Retirer `gate` d'ici ne dégrade pas un cas : ça VIDE la classification des terminaux.
+    // ⇒ Et `'trigger'`, l'autre valeur, n'a AUCUN consommateur chez lui : un terminal qui la
+    //    porterait traverserait son validateur et sortirait de sa classification sans un mot.
     //
     // ⚠️ CE QUE SON ABSENCE A COÛTÉ, mesuré : ma première écriture l'omettait, et l'arbre dérivé de
     // `koto3` a maigri de 26 % — SANS UNE ERREUR. Ses terminaux déclarés cessaient d'être des

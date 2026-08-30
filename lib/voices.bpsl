@@ -8,17 +8,26 @@
 // ⚠️ LA CONSTANTE DE TEMPS D'UNE DÉCROISSANCE EST ÉCRITE EN SECONDES, dans le corps même.
 //    Un argument nommé à unité (`decay:350ms`) n'est pas du JavaScript ; l'exponentielle l'est.
 //
+// ⛔ AUCUNE VOIX N'INVENTE DE HAUTEUR. Une voix pitchée sans hauteur gravée est SILENCIEUSE —
+//    c'est ce que faisait la forme d'avant, et c'est ce que la page des voix du runtime publie.
+//    Un repli `env.pitch||110` fait sonner à 110 Hz ce qui devait se taire : mesuré chez
+//    runtime-audio, `wobble` rendait 7.52e-2 sans hauteur là où il devait rendre zéro.
+//
+// ⛔ LE BRUIT EST UNE FONCTION DU TEMPS, JAMAIS UN TIRAGE. `Math.random()` rend deux ondes
+//    différentes pour la même note : inoffensif à l'oreille, fatal à qui compare deux rendus
+//    échantillon par échantillon. Le hash ci-dessous est déterministe et se rejoue à l'identique.
+//
 // ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
 //    voyage pas jusqu'aux consommateurs, une clé si.
 
 def voices (documented:true, resolvedBy:Kairos, name:voices, objects(
-  wobble(audio:"`js: (t, dur, env) => (2*((t*(env.pitch||110))%1)-1) * (0.55+0.45*Math.sin(2*Math.PI*5.5*t)) * Math.max(0,1-t/dur)`"),
-  fatbass(audio:"`js: (t, dur, env) => ((2*((t*(env.pitch||55))%1)-1) + (2*((t*(env.pitch||55)*1.01)%1)-1)) * 0.4 * Math.max(0,1-t/dur)`",
+  wobble(audio:"`js: (t, dur, env) => (2*((t*env.pitch)%1)-1) * (0.55+0.45*Math.sin(2*Math.PI*5.5*t)) * Math.max(0,1-t/dur)`"),
+  fatbass(audio:"`js: (t, dur, env) => ((2*((t*env.pitch)%1)-1) + (2*((t*env.pitch*1.01)%1)-1)) * 0.4 * Math.max(0,1-t/dur)`",
           for(sub37(device(preset:bass-init, glide:0.2, osc1-wave:saw)))),
-  bayan_open(audio:"`js: (t) => (Math.sin(2*Math.PI*80*t)*0.8 + (Math.random()*2-1)*0.2) * Math.exp(-t/0.35)`"),
-  bayan_muted(audio:"`js: (t) => (Math.sin(2*Math.PI*120*t)*0.5 + (Math.random()*2-1)*0.5) * Math.exp(-t/0.08)`"),
+  bayan_open(audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; const b = 2*(h-Math.floor(h))-1; return (Math.sin(2*Math.PI*80*t)*0.8 + b*0.2) * Math.exp(-t/0.35); }`"),
+  bayan_muted(audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; const b = 2*(h-Math.floor(h))-1; return (Math.sin(2*Math.PI*120*t)*0.5 + b*0.5) * Math.exp(-t/0.08); }`"),
   dayan_ring(audio:"`js: (t) => (Math.sin(2*Math.PI*320*t) + Math.sin(2*Math.PI*480*t)) * 0.5 * Math.exp(-t/0.4)`"),
-  dayan_tap(audio:"`js: (t) => (Math.random()*2-1) * Math.exp(-t/0.06)`"),
+  dayan_tap(audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; return (2*(h-Math.floor(h))-1) * Math.exp(-t/0.06); }`"),
   dayan_dry(audio:"`js: (t) => (Math.sin(2*Math.PI*494*t) + Math.sin(2*Math.PI*587*t)) * 0.5 * Math.exp(-t/0.06)`"),
   dayan_open(audio:"`js: (t) => (Math.sin(2*Math.PI*392*t) + Math.sin(2*Math.PI*494*t) + Math.sin(2*Math.PI*523*t) + Math.sin(2*Math.PI*587*t)) * 0.25 * Math.exp(-t/0.22)`"),
   dummy_csound_a(audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`"),
