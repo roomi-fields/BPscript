@@ -38,9 +38,17 @@
  */
 import { LIBS } from '../src/transpiler/libs-data.js';
 
+// ⛔ LA CONVENTION DE MESURE SE NOMME, SANS QUOI LE NIVEAU NE VEUT RIEN DIRE. Un rms ne se compare
+//    qu'à convention égale : la même voix rend 0.2164 sur une fenêtre de 0,24 s et 0.1108 sur une
+//    fenêtre de 1,00 s — la queue de silence divise l'énergie. **Le niveau n'est pas une propriété
+//    du son, c'est une propriété de la fenêtre.** Relevé par runtime-audio le 2026-08-30, quand mes
+//    chiffres et les siens différaient d'un facteur deux et ressemblaient à une perte chez lui.
+//    ⇒ CONVENTION DE CE GARDE : fenêtre de 1,00 s, 8000 échantillons par seconde, rms sur la
+//      fenêtre ENTIÈRE — queue de silence comprise. Toute comparaison à un chiffre venu d'ailleurs
+//      exige que l'autre convention soit dite.
 const SR = 8000;        // suffisant pour l'énergie ; le garde doit rester rapide
-const DUR = 1.0;
-const RMS_MIN = 0.01;   // sous ce seuil, la voix est inaudible
+const DUR = 1.0;        // la FENÊTRE, pas la durée du son — une percussion s'éteint bien avant
+const RMS_MIN = 0.01;   // sous ce seuil, la voix est inaudible SUR CETTE FENÊTRE
 
 let passees = 0;
 const echecs = [];
@@ -191,6 +199,8 @@ ok(/Math\s*\.\s*random/.test('`js: (t) => Math.random()`'),
 
 // ── verdict ────────────────────────────────────────────────────────────────────────────────────
 console.log(`— ${noms.length} voix examinées · ${pitchees} pitchée(s) · ${noms.length - pitchees} percussive(s) —`);
+console.log(`  [convention] rms sur une fenêtre de ${DUR.toFixed(2)} s à ${SR} Hz, queue de silence `
+  + `comprise · seuil d'audibilité ${RMS_MIN} — un rms d'ailleurs ne se compare qu'à convention dite`);
 for (const e of echecs) console.log(`  ⛔ ${e}`);
 console.log(`${passees} vérification(s) passée(s), ${echecs.length} échec(s)`);
 process.exit(echecs.length ? 1 : 0);
