@@ -1101,10 +1101,19 @@ function loadLibsFromDirectives(directives) {
       // No octaves — terminals are just the raw notes (e.g. tabla, abc)
       // ⛔ CES DEUX BOUCLES ONT ÉCRIT `ctx.symbols[x] = { type: 'gate' }` JUSQU'AU 2026-08-30. Le type
       // temporel est sorti du langage le même jour (décision Romain), et il vivait encore ICI — à une
-      // profondeur où personne ne regardait : la table était écrite quatre fois et LUE ZÉRO FOIS.
-      // Contre-témoin qui prouve que la mesure voit : `alphabetTerminals`, poussé à la ligne voisine,
-      // est lu trois fois dans `bpxAst.js` et gardé par un banc. Deux mécanismes pour un seul fait, et
-      // la profondeur choisissait lequel.
+      // profondeur où personne ne regardait. Contre-témoin qui prouve que la mesure voit :
+      // `alphabetTerminals`, poussé à la ligne voisine, est lu trois fois dans `bpxAst.js` et gardé
+      // par un banc. Deux mécanismes pour un seul fait, et la profondeur choisissait lequel.
+      //
+      // ⚠️ ET LA TABLE N'EST PAS MORTE POUR AUTANT — deux affirmations de mon annonce aux quatorze
+      // étaient fausses, mesurées par kairos le soir même :
+      //   · elle est encore ÉCRITE deux fois — `libs.js:1054` depuis `lib.symbols`, et
+      //     `parser.js:947` qui y pose les NOMS DE SCÈNE ;
+      //   · elle SORT : `return ctx` rend l'objet entier, et l'en-tête de `loadLibsFromDirectives`
+      //     documente `symbols` dans son contrat de retour — la phrase juste vivait dans ce fichier,
+      //     à 738 lignes de la ligne que j'élaguais.
+      // ⇒ Le CHAMP n'est lu nulle part (mesuré, et confirmé par quatre voisins) ; l'OBJET, lui,
+      // traverse la frontière, et ce qui traverse peut être lu demain sans que rien ne change ici.
       for (const note of nomsDeTerminaux(lib)) {
         ctx.alphabetTerminals.push(note);
       }
