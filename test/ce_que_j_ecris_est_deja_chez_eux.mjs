@@ -449,7 +449,15 @@ ok(nouveaux.length === 0,
   );
   const pointDEntree = pkg.main || (pkg.exports && JSON.stringify(pkg.exports)) || '';
   const versSource = /^(\.\/)?src\//.test(String(pointDEntree));
-  console.log(`[surface partagée] point d'entrée déclaré : ${pointDEntree || '(aucun)'} → régime `
+  // ⛔ LE PRÉFIXE `[régime]` EST UN CANAL, PAS UNE DÉCORATION. Le lanceur du portillon CAPTURE la
+  // sortie d'un garde vert et ne la réimprime jamais — mesuré le 2026-08-30 : cette ligne sortait
+  // quand le garde était lancé SEUL, et ZÉRO fois dans la sortie du portillon, sur trois passages.
+  // ⇒ La décision du 2026-08-19 — un verdict porte le RÉGIME sous lequel il est pris — était
+  // branchée chez moi et MUETTE là où le verdict compte. C'est « un garde hors du portillon est
+  // invisible » pris par l'autre bout : il est DEDANS, et c'est sa SORTIE qui est jetée.
+  // ⚠️ Trouvé par bp3-frontend chez lui, sur 419 verdicts sur 424, et relayé par l'architecte.
+  // ⇒ `run_guards` réimprime les lignes portant ce préfixe, et REFUSE d'en voir zéro.
+  console.log(`[régime] point d'entrée déclaré : ${pointDEntree || '(aucun)'} → régime `
     + `${versSource ? 'SOURCE (préavis à ma FRAPPE)' : 'PAQUET CONSTRUIT (préavis à ma PUBLICATION)'}`);
 
   // Combien lisent un artefact CONSTRUIT de moi ? Aujourd'hui : personne — `dist/` est le build

@@ -64,10 +64,31 @@ const compterAssertions = (sortie) => {
   return n > 0 ? n : null;
 };
 
+// ⛔ CE QU'UN GARDE VERT DIT DE SON RÉGIME DOIT SORTIR DU PORTILLON. La sortie d'un garde qui passe
+// n'est JAMAIS réimprimée ici — seuls les échecs voient leur détail. Une déclaration de régime y
+// mourait donc en silence : mesuré le 2026-08-30, la mention sortait quand le garde était lancé
+// SEUL et ZÉRO fois dans la sortie du portillon, sur trois passages.
+//
+// ⇒ C'est « un garde hors du portillon est invisible » PRIS PAR L'AUTRE BOUT : il est DEDANS, et
+// c'est sa SORTIE qui est jetée. Décision du 2026-08-19 — un verdict porte le régime sous lequel il
+// est pris — branchée et muette. Trouvé par bp3-frontend chez lui (419 verdicts sur 424), relayé
+// par l'architecte, et vérifié ici plutôt que supposé.
+//
+// ⚠️ LE CANAL EST UN PRÉFIXE DÉCLARÉ, jamais un motif sur un mot : un garde qui veut faire remonter
+// son régime préfixe sa ligne de `[régime]`. Chercher le mot « régime » dans la sortie ramasserait
+// des phrases de commentaire et manquerait une ligne qui le dirait autrement.
+const PREFIXE_REGIME = '[régime]';
+let mentionsDeRegime = 0;
+
 for (const f of fichiers) {
   const r = spawnSync('node', [path.join(ICI, f)], { encoding: 'utf-8', timeout: 300000 });
   const n = compterAssertions((r.stdout || '') + (r.stderr || ''));
   if (n === null) sansCompte++; else assertions += n;
+  for (const ligne of ((r.stdout || '') + (r.stderr || '')).split('\n')) {
+    if (!ligne.startsWith(PREFIXE_REGIME)) continue;
+    mentionsDeRegime++;
+    console.log(`  ${ligne.trim()}`);
+  }
   if (r.status === 0) {
     passes++;
     if (verbeux) console.log(`  ok   ${f}${n === null ? '' : `  (${n} assertions)`}`);
@@ -110,6 +131,12 @@ for (const s of SEUILS) {
     // reviendra le jour où un outil à seuil existera de nouveau.
     // plancher 8 depuis le 2026-07-19 (lane moteur videe, cf. gate_classification.mjs)
     { quoi: 'exclusions motivées', vu: LANE_MOTEUR.size + MODULES.size + HORS_PORTILLON.size, minimum: 8 },
+    // ⛔ ET LE PORTILLON DOIT DIRE SOUS QUEL RÉGIME IL JUGE. Réimprimer les lignes `[régime]` ne
+    // suffit pas : un jour où plus aucun garde n'en émet, la sortie redeviendrait muette et rien
+    // ne rougirait — j'aurais remplacé un silence par une promesse. Ce témoin refuse ce zéro.
+    // ⚠️ Il est posé APRÈS la boucle qui compte, donc il mesure ce qui est RÉELLEMENT SORTI, pas
+    // ce qu'un garde prétend émettre.
+    { quoi: 'mentions de régime remontées', vu: mentionsDeRegime, minimum: 1 },
   ];
   const creux = temoins.filter((t) => t.vu < t.minimum);
   if (creux.length > 0) {
