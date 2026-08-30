@@ -122,9 +122,12 @@ const KEYWORDS = {
   // terminal `gate`, `cv` ou `trigger`, et le refus rendu était « Expected IDENT, got GATE » — une
   // faute de lexeur pour un nom parfaitement ordinaire.
   //
-  // ⚠️ ET LA VALEUR RESTE : `gate` et `trigger` sont les deux valeurs de `temporalType` sur une
-  // déclaration de terminal, et BPx les LIT. Le MOT que l'auteur écrit sort ; la VALEUR que l'arbre
-  // porte ne bouge pas. Ce n'est pas l'auteur qui l'écrit, c'est le compilateur qui l'émet.
+  // ⚠️ ET LA VALEUR EST SORTIE À SON TOUR, le 2026-08-30. `gate` et `trigger` ont survécu au mot
+  // comme les deux valeurs de `temporalType` sur une déclaration de terminal, émises par le
+  // compilateur et lues par BPx. Décision de Romain : ils sortent COMME MOTS DU LANGAGE, et ce
+  // champ était l'un de leurs deux référents de langage. ⇒ Le statut de terminal vient désormais de
+  // la PRÉSENCE de l'entrée. ⇒ Ici, rien ne change : ces noms restent des identifiants ordinaires,
+  // et un auteur peut nommer un terminal `gate` comme il le nommerait `zorglub` — mesuré.
 };
 
 function tokenize(source, opts = {}) {

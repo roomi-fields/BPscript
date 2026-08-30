@@ -1974,35 +1974,26 @@ function parse(tokens, opts = {}) {
     // question se pose dans les deux sens, donc les deux lecteurs sont interrogés.
     if (porteesDeclarees(nom) !== null || directiveDeclareeParLaLibrairie('core', nom)) return null;
     advance(); advance(); advance();               // nom : canal
-    // ⛔ `temporalType` SURVIT AU MOT `gate`, ET C'EST UNE FRONTIÈRE, PAS UNE GRAPHIE. Le champ est
-    // DÉCLARÉ REQUIS par le contrat de BPx — `src/types/ast.ts`, à son commit publié `e51890d` :
-    // `temporalType: 'gate' | 'trigger'` — et il y est LU à DEUX étages : `loadGrammar.ts` ne
-    // collecte un nom parmi les TERMINAUX D'ALPHABET que si `decl.temporalType === 'gate'`, et son
-    // validateur de scène énumère un refus strict sur `['gate','trigger']`. (Mesuré par BPx chez
-    // lui, 2026-08-30 ; un NUMÉRO de ligne ne traverse pas les dépôts et n'est plus cité.)
+    // ⛔ C'EST LA PRÉSENCE DE CETTE ENTRÉE QUI CONFÈRE LE STATUT DE TERMINAL D'ALPHABET, et son
+    // absence est MUETTE. Mesuré le 2026-08-18 : une écriture qui ne la posait pas faisait maigrir
+    // l'arbre dérivé de `koto3` de 26 % — 2919 octets — SANS UNE SEULE ERREUR. Ses terminaux
+    // cessaient d'être des terminaux d'alphabet, ce qui se voit sur l'objet hors-temps (`Y -> !f`)
+    // et nulle part ailleurs : douze scènes sur treize rendaient un arbre identique à l'octet.
+    // ⇒ Une perte SILENCIEUSE de production, exactement le mode d'échec qu'un refus n'attrape jamais.
     //
-    // ⛔ ET J'AVAIS ÉCRIT `types/ast.ts`, UN CHEMIN QUI N'EXISTE PAS CHEZ LUI. Atlas l'a suivi, a
-    // rendu ZÉRO, et a failli conclure que le champ n'existait pas — donc que cet avertissement
-    // était sans objet. **Un zéro de CHEMIN est indiscernable d'un zéro de CONTENU** : c'est le
-    // casse-muet que ce commentaire existe pour empêcher, retourné sur la citation qui le porte.
+    // ⚠️ CE NŒUD A PORTÉ UN CHAMP `temporalType: 'gate'` JUSQU'AU 2026-08-30, et il est sorti avec
+    // le mot. Décision de Romain : `gate` et `trig` sortent COMME MOTS DU LANGAGE, et le type
+    // temporel du contrat de BPx était l'un de leurs deux référents de langage. BPx a publié à
+    // `8f36a0f` : `DeclarationAST` porte `type`, `name`, `runtime`, `line`, et **la présence d'une
+    // entrée nommée confère le statut**. Son validateur ne l'exige plus ; une entrée qui le
+    // porterait encore traverserait sans être lue.
     //
-    // ⚠️ ET LE FAIT EST PLUS FORT QUE « un cas parmi d'autres ». Le contrat de BPx porte, en
-    // commentaire de la déclaration : « 'gate' EST LA SEULE VALEUR QU'UN FRONTAL PRODUISE » et
-    // « BPx consomme uniquement temporalType + name pour la classification du terminal ».
-    // ⇒ Retirer `gate` d'ici ne dégrade pas un cas : ça VIDE la classification des terminaux.
-    // ⇒ Et `'trigger'`, l'autre valeur, n'a AUCUN consommateur chez lui : un terminal qui la
-    //    porterait traverserait son validateur et sortirait de sa classification sans un mot.
-    //
-    // ⚠️ CE QUE SON ABSENCE A COÛTÉ, mesuré : ma première écriture l'omettait, et l'arbre dérivé de
-    // `koto3` a maigri de 26 % — SANS UNE ERREUR. Ses terminaux déclarés cessaient d'être des
-    // terminaux d'alphabet chez BPx, ce qui se voit sur l'objet hors-temps (`Y -> !f`) et nulle part
-    // ailleurs : douze scènes sur treize rendaient un arbre identique. Une perte SILENCIEUSE de
-    // production, exactement le mode d'échec qu'un refus n'attrape jamais.
-    //
-    // ⚠️ ET LE MOT `trigger` N'A PLUS DE GRAPHIE : `<nom>:<canal>` ne distingue pas les deux types
-    // temporels. On émet donc `gate`, le seul que BPx collecte, et l'écart est SIGNALÉ — inventer
-    // une graphie pour le second serait définir du langage.
-    return { type: 'Declaration', temporalType: 'gate', name: nom, runtime: canal, line: tok.line };
+    // ⛔ ET LA PROPRIÉTÉ N'EST PAS PARTIE AVEC LE CHAMP — elle est tenue par la BIJECTION, mesurée
+    // des deux côtés avant la frappe : le test sur le type rendait 113 noms ici, 106 chez BPx, et
+    // ZÉRO par l'autre valeur. Il ne discriminait rien ; il séparait un ensemble de l'ensemble vide.
+    // `test/une_declaration_de_terminal_existe_pour_chaque_nom_canal.mjs` garde les deux sens —
+    // toute ligne `nom:canal` pose une entrée, toute entrée vient d'une telle ligne.
+    return { type: 'Declaration', name: nom, runtime: canal, line: tok.line };
   }
 
   function lireDeclarationParLeType() {

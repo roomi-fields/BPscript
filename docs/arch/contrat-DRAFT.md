@@ -121,7 +121,7 @@ Le transpileur a **quatre frontières** :
 | `scene.soundPrototypes?` | parser | sortant | `SoundPrototypeAST[]` | déclare un son |
 | `scene.soundAssignments?` | parser | sortant | `SoundAssignmentAST[]` | sujet→son, cascade |
 | `scene.template? / templates?` | parser | sortant | `TemplateEntryAST[]\|null` (alias : MÊME tableau, pas de copie) | v0.8 singulier, v0.7 pluriel en repli |
-| `scene.declarations?` | parser | sortant | `DeclarationAST[]` | `<nom>:<canal>` ; BPx ne lit que `temporalType`+`name` |
+| `scene.declarations?` | parser | sortant | `DeclarationAST[]` | `<nom>:<canal>` ; la PRÉSENCE de l'entrée confère le statut de terminal d'alphabet |
 | `scene.cvInstances?` | parser | sortant | `CVInstanceAST[]` | BPx ne lit que `name` ; reste **opaque** (R2) |
 | `scene.homomorphisms?` | parser/encoder | sortant | `HomomorphismDeclAST[]` `[{type:'Homomorphism',name,pairs:[[src,dst]…],line}]` | chaînes **dépliées** en paires 1-pas, identité **conservée** ; noms canon. `*`/`+`/`;` |
 | `scene.backticks?` | parser (`parseBacktickOrphan`) | sortant | `BacktickOrphanAST[]` (section de scène) | voix de code STANDALONE de tête ; HORS union RHS ; opaque |
@@ -354,7 +354,7 @@ interface SoundPrototypeAST  { type:'SoundPrototype'; symbol?:string|null; name?
 interface SoundAssignmentAST { type:'SoundAssignment'; scope:'scene'|'alphabet'|'actor'|'inline';
   alphabet?:string|null; actor?:string|null; subject:string;
   target: {kind:'named-ref';name:string} | {kind:'inline-props';props:Record<string,unknown>}; line?:number; }
-interface DeclarationAST { type:'Declaration'; temporalType:'gate'|'trigger'|'cv'; name:string; runtime:string; line?:number; }
+interface DeclarationAST { type:'Declaration'; name:string; runtime:string; line?:number; }
 interface CVInstanceAST  { type:'CVInstance'; name:string; target?:string; transport?:string;  // target/transport LEGACY, jamais émis par la forme descriptive
   lib?:string|null; objectType?:string; args?:unknown[]; namedArgs?:Record<string,unknown>; code?:string; line?:number; }
 interface HomomorphismDeclAST { type:'Homomorphism'; name:string; pairs: Array<[string,string]>; line?:number; }
