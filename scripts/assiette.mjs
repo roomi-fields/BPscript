@@ -16,9 +16,21 @@
  * intitulés du lexeur, une carte du réel fausse depuis deux mois. **Une assiette écrite à la main
  * serait la huitième.**
  *
- * ⚠️ ET LE PAQUET EST AUTOPORTANT, MESURÉ : aucun des fichiers de l'assiette ne lit un fichier au
- * chargement. **Si l'un s'y met, sa lecture n'entrera pas dans l'assiette et le paquet publiera un
- * chemin mort** — ce que le volet C refuse.
+ * ⚠️ ET LE PAQUET EST AUTOPORTANT : aucun fichier de l'assiette ne compose un chemin qui SORT de la
+ * racine. **Si l'un s'y met, sa cible n'entrera pas dans l'assiette et le paquet publiera un chemin
+ * mort** — ce que le volet C refuse.
+ *
+ * ⛔ ET LE VOLET C A MORDU SUR LE MAUVAIS MOTIF, mesuré le 2026-08-31. Il s'annonçait « lit au
+ * CHARGEMENT » et comptait des `readFileSync` **n'importe où dans le fichier**, corps de fonction
+ * compris. Sur `test/compare_modal.cjs` il a rendu « 4 fichier(s) LISENT au chargement » là où il y
+ * avait **un** fichier, **quatre** occurrences, et **zéro** lecture au chargement : le module se
+ * charge à code 0 depuis un lieu où sa cible n'existe pas. J'ai relayé ce verdict comme un fait à
+ * deux destinataires — un garde juste dans sa conclusion, faux dans ce qu'il affirmait mesurer.
+ *
+ * ⇒ **Le moment de la lecture n'est pas le fait qui compte, et il n'est pas décidable ici.** Ce qui
+ * rend un chemin mort chez le consommateur est que sa CIBLE SOIT HORS DE L'ASSIETTE — à l'import
+ * comme au premier appel. Le critère porte donc sur la cible, à tout étage : une composition qui
+ * remonte plus haut que la profondeur du fichier sort de la racine du dépôt.
  */
 import { readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
@@ -48,15 +60,37 @@ export function assietteDerivee() {
   return { portes: portes.length, fichiers: dedans.sort() };
 }
 
-/** Les fichiers de l'assiette qui LISENT un fichier au chargement — leur cible doit y entrer aussi. */
-export function lecturesAuChargement(fichiers) {
+/**
+ * La plus haute remontée qu'un texte compose, en nombre de segments `..`.
+ *
+ * Deux graphies portent le même geste et se comptent pareil — la liste d'arguments
+ * (`resolve(__dirname, '..', '..', 'x')`) et la chaîne (`new URL('../../x', …)`).
+ */
+export function remonteeMaximale(texte) {
+  let max = 0;
+  for (const m of texte.matchAll(/(?:['"]\.\.['"]\s*,\s*)*['"]\.\.['"]/g)) {
+    max = Math.max(max, (m[0].match(/\.\./g) || []).length);
+  }
+  for (const m of texte.matchAll(/['"]((?:\.\.\/)+)/g)) {
+    max = Math.max(max, (m[1].match(/\.\./g) || []).length);
+  }
+  return max;
+}
+
+/**
+ * Les fichiers de l'assiette dont un chemin SORT de la racine — leur cible ne peut pas y entrer.
+ *
+ * La profondeur du fichier borne ce qu'il peut remonter sans sortir : `src/transpiler/x.js` remonte
+ * deux crans et reste chez lui, `test/x.cjs` un seul. Au-delà, la cible appartient à un autre dépôt.
+ */
+export function ciblesHorsAssiette(fichiers) {
   const out = [];
   for (const f of fichiers) {
     const t = readFileSync(join(RACINE, f), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
-    for (const m of t.matchAll(/readFileSync\s*\(([^)]{0,90})/g)) {
-      out.push(`${f} → ${m[1].replace(/\s+/g, ' ').slice(0, 70)}`);
-    }
+    const profondeur = f.split('/').length - 1;
+    const remontee = remonteeMaximale(t);
+    if (remontee > profondeur) out.push(`${f} → remonte ${remontee} cran(s) pour une profondeur de ${profondeur}`);
   }
   return out;
 }
@@ -78,10 +112,23 @@ if (process.argv[1] && process.argv[1].endsWith('assiette.mjs')) {
       console.error('        Régénérer par `npm run assiette`.');
       process.exit(1);
     }
-    const lect = lecturesAuChargement(fichiers);
-    if (lect.length) {
-      console.error(`[assiette] ⛔ ${lect.length} fichier(s) de l'assiette LISENT au chargement : ${lect.join(' · ')}`);
-      console.error('        Leur cible doit entrer dans l\'assiette, sinon le paquet publie un chemin mort.');
+    if (!fichiers.length) { console.error('[assiette] ⛔ ZÉRO fichier examiné — le volet C n\'a rien mesuré.'); process.exit(1); }
+
+    // ⛔ LE TÉMOIN — le détecteur voit-il une cible hors racine quand il y en a une ? Sans lui, un
+    // détecteur mort et une assiette propre rendent la MÊME sortie. Et son complément : la remontée
+    // qui reste chez elle ne doit rien lever, sinon le garde refuserait tout le dépôt.
+    if (remonteeMaximale("resolve(__dirname, '..', '..', 'voisin')") !== 2
+        || remonteeMaximale("new URL('../../voisin', import.meta.url)") !== 2
+        || remonteeMaximale("new URL('..', import.meta.url)") !== 1) {
+      console.error('[assiette] ⛔ TÉMOIN — le détecteur de remontée ne voit plus ce qu\'il doit voir.');
+      process.exit(1);
+    }
+
+    const hors = ciblesHorsAssiette(fichiers);
+    if (hors.length) {
+      console.error(`[assiette] ⛔ ${hors.length} fichier(s) de l'assiette composent un chemin HORS de la racine :`);
+      for (const x of hors) console.error(`        ${x}`);
+      console.error('        Leur cible ne peut pas entrer dans l\'assiette : le paquet publierait un chemin mort.');
       process.exit(1);
     }
     console.log(`[assiette] ✓ ${fichiers.length} fichier(s) depuis ${portes} porte(s) · paquet autoportant`);
