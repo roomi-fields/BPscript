@@ -1,0 +1,17 @@
+{
+  "_role": "Ce que chaque porte publiée est construite DEPUIS. Lu par scripts/construire.mjs et par son garde ; le manifeste ne porte que les cibles, jamais les sources. Tout import nu reste externe.",
+  "portes": {
+    "dist/index.js": "src/transpiler/index.js",
+    "dist/libs-data.js": "src/transpiler/libs-data.js",
+    "dist/libs-champs.js": "src/transpiler/libs-champs.js",
+    "dist/syntaxe-data.js": "src/transpiler/syntaxe-data.js",
+    "dist/gabarits-data.js": "src/transpiler/gabarits-data.js",
+    "dist/editor-lang.js": "public/editor/bpscript-lang.js",
+    "dist/orderTokens.js": "src/transpiler/orderTokens.js"
+  },
+  "copies": {
+    "dist/libs-data.d.ts": "src/transpiler/libs-data.d.ts",
+    "dist/empreinte.js": "src/empreinte.js"
+  },
+  "_empreinte": "dist/empreinte.js est COPIÉ, jamais regroupé : le publieur y grave le commit en remplaçant une ligne exacte, et un bundler la réécrit (var + export séparé). Faire passer une gravure par un regroupeur, c est faire dépendre la publication de la forme de sortie d un outil."
+}

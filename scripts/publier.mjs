@@ -34,6 +34,7 @@
  * déjà publié et un lien mort. Ce script mesure, leur passe ce qu'il a mesuré, et agit.
  */
 import { readFile, writeFile, mkdir, rm, cp, symlink, rename, readdir, stat } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { execFile } from 'node:child_process';
 import path from 'node:path';
 import os from 'node:os';
@@ -47,8 +48,20 @@ export const PAQUETS = path.join(os.homedir(), 'dev/bp/.paquets');
 /** La ligne exacte que la gravure remplace. Le module la porte une seule fois, hors commentaires. */
 export const LIGNE_SOURCE = "export const EMPREINTE = { regime: 'source-vive' };";
 
-/** Le module gravé, relatif à la racine du paquet. */
-export const MODULE_EMPREINTE = 'src/empreinte.js';
+/**
+ * Le module gravé, relatif à la racine du paquet — DÉRIVÉ de la porte, jamais écrit ici.
+ *
+ * ⛔ IL A ÉTÉ ÉCRIT EN DUR JUSQU'AU 2026-08-31, et la bascule vers un artefact construit l'a montré :
+ * il valait `src/empreinte.js`, un chemin qui n'entre plus dans le paquet, et la construction levait
+ * en ENOENT. Le manifeste dit où vit la porte ; le lire coûte trois lignes et ne périme jamais.
+ */
+export const MODULE_EMPREINTE = (() => {
+  const pkg = JSON.parse(readFileSync(path.join(RACINE, 'package.json'), 'utf8'));
+  const cible = pkg.exports?.['./empreinte'];
+  const chemin = typeof cible === 'string' ? cible : cible?.default;
+  if (!chemin) throw new Error("La porte './empreinte' n'est pas déclarée : la gravure n'a pas de cible.");
+  return chemin.replace(/^\.\//, '');
+})();
 
 const git = (...args) => new Promise((ok, ko) =>
   execFile('git', args, { cwd: RACINE }, (err, out) => (err ? ko(err) : ok(out.trim()))));

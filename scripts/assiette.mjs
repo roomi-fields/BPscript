@@ -40,9 +40,17 @@ const RACINE = new URL('..', import.meta.url).pathname;
 /** La fermeture transitive : chaque porte, puis tout ce que ses modules importent. */
 export function assietteDerivee() {
   const paquet = JSON.parse(readFileSync(join(RACINE, 'package.json'), 'utf8'));
-  const portes = Object.values(paquet.exports || {})
-    .map((v) => (typeof v === 'string' ? v : v && v.default))
-    .filter((v) => v && /\.(js|mjs|cjs|ts)$/.test(v));
+  // ⛔ TOUTES LES CIBLES D'UNE ENTRÉE CONDITIONNELLE, JAMAIS LA SEULE `default`. Mesuré le
+  // 2026-08-31 : `./libs-data` publie `types` ET `default` ; ne lire que `default` laissait le
+  // `.d.ts` HORS de l'assiette alors qu'il est publié — un chemin mort, et précisément celui que ce
+  // script existe pour refuser. Il ne s'était pas vu tant qu'une seconde clé le déclarait à part.
+  const cibles = [];
+  const prendre = (v) => {
+    if (typeof v === 'string') { cibles.push(v); return; }
+    if (v && typeof v === 'object') for (const x of Object.values(v)) prendre(x);
+  };
+  for (const v of Object.values(paquet.exports || {})) prendre(v);
+  const portes = [...new Set(cibles.filter((v) => v && /\.(js|mjs|cjs|ts)$/.test(v)))];
   const vus = new Set();
   const dedans = [];
   const marcher = (rel) => {

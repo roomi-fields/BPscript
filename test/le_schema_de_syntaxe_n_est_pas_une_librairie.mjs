@@ -68,11 +68,19 @@ ok(suivis.length > 100, `SOCLE : le dépôt doit porter des fichiers suivis — 
 {
   const paquet = JSON.parse(readFileSync(`${RACINE}package.json`, 'utf8'));
   const exports = paquet.exports || {};
-  const chemin = './src/transpiler/syntaxe-data.js';
-  ok(Object.prototype.hasOwnProperty.call(exports, chemin),
-    `B. ⛔ la porte '${chemin}' n'est pas déclarée dans le champ d'exports. Ce qui n'y est pas est un `
-    + `INTERNE qu'un voisin n'a pas le droit de lire — exigence 1 d'Atlas, et sans elle il lirait un `
-    + `chemin que je peux déplacer sans le prévenir.`);
+  // ⛔ LA PORTE SE CHERCHE PAR SA CIBLE, JAMAIS PAR SON NOM — corrigé le 2026-08-31, jour où le nom
+  // a changé. Ce volet exigeait la clé littérale `./src/transpiler/syntaxe-data.js` ; la bascule vers
+  // un artefact construit l'a renommée `./syntaxe-data`, et le garde a rougi en annonçant une porte
+  // ABSENTE alors qu'elle était là sous un autre nom. Un garde qui épingle le nom d'une porte se
+  // trompe de sujet : ce qui compte est qu'UNE porte serve cette donnée.
+  const sert = (v) => (typeof v === 'string' ? [v] : Object.values(v || {}))
+    .some((x) => typeof x === 'string' && /syntaxe-data\.js$/.test(x));
+  const porte = Object.entries(exports).find(([, v]) => sert(v));
+  ok(porte !== undefined,
+    'B. ⛔ aucune porte du champ d\'exports ne sert `syntaxe-data.js`. Ce qui n\'y est pas est un '
+    + 'INTERNE qu\'un voisin n\'a pas le droit de lire — exigence 1 d\'Atlas, et sans elle il lirait un '
+    + 'chemin que je peux déplacer sans le prévenir.');
+  if (porte) console.log(`[schéma] porte servant le schéma de syntaxe : '${porte[0]}' → ${JSON.stringify(porte[1])}`);
   ok(suivis.includes('src/transpiler/syntaxe-data.js'),
     "B. ⛔ l'artefact doit être VERSIONNÉ — exigence 4 : Atlas lit `git show <branche>:<chemin>`, "
     + 'donc un fichier généré à la construction et non commité ne lui rend RIEN.');

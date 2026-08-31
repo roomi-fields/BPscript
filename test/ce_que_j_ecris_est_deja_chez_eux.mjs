@@ -460,33 +460,56 @@ ok(nouveaux.length === 0,
   console.log(`[régime] point d'entrée déclaré : ${pointDEntree || '(aucun)'} → régime `
     + `${versSource ? 'SOURCE (préavis à ma FRAPPE)' : 'PAQUET CONSTRUIT (préavis à ma PUBLICATION)'}`);
 
-  // Combien lisent un artefact CONSTRUIT de moi ? Aujourd'hui : personne — `dist/` est le build
-  // WASM du 19/07, vestige de l'émission BP3 supprimée le même jour.
-  let lecteursDeDist = 0;
-  for (const d of presents) {
-    if (d === path.basename(MOI)) continue;
-    try {
-      const n = execFileSync('bash', ['-c',
-        `find ${JSON.stringify(path.join(ATELIER, d))} \\( -name '*.ts' -o -name '*.js' -o -name '*.mjs' -o -name '*.json' \\) `
-        + "-not -path '*/node_modules/*' -not -path '*/.claude/worktrees/*' -not -path '*/dist/*' 2>/dev/null "
-        + '| xargs grep -l "BPscript/dist\\|bpscript/dist" 2>/dev/null | wc -l',
-      ], { encoding: 'utf-8' });
-      lecteursDeDist += parseInt(n.trim(), 10) || 0;
-    } catch { /* rien */ }
-  }
-  console.log(`[surface partagée] fichiers de l'atelier qui lisent un artefact CONSTRUIT de moi : ${lecteursDeDist}`);
+  /** Fichiers de l'atelier qui atteignent une graphie donnée de moi. */
+  const compteAtelier = (motif) => {
+    let n = 0;
+    for (const d of presents) {
+      if (d === path.basename(MOI)) continue;
+      try {
+        const s = execFileSync('bash', ['-c',
+          `find ${JSON.stringify(path.join(ATELIER, d))} \\( -name '*.ts' -o -name '*.js' -o -name '*.mjs' -o -name '*.json' \\) `
+          + "-not -path '*/node_modules/*' -not -path '*/.claude/worktrees/*' -not -path '*/dist/*' 2>/dev/null "
+          + `| xargs grep -l ${JSON.stringify(motif)} 2>/dev/null | wc -l`,
+        ], { encoding: 'utf-8' });
+        n += parseInt(s.trim(), 10) || 0;
+      } catch { /* rien */ }
+    }
+    return n;
+  };
 
-  ok(versSource || lecteursDeDist > 0,
-    'RÉGIME — mon point d\'entrée ne pointe plus vers ma source ET personne ne lit d\'artefact '
-    + 'construit : l\'un des deux est faux, et ce garde ne sait plus quand prévenir');
-  // ⚠️ LE CLIQUET. Le jour où quelqu'un exécute un artefact construit de moi, un SECOND régime
-  // s'ajoute — préavis à la PUBLICATION, qui ne dépend PAS de ce que je change : le voisin l'attend
-  // pour REPOSER SON POINT DE COMPARAISON, et un changement inoffensif est précisément celui qui
-  // produit le faux négatif « rien n'a bougé » vs « je n'ai pas regardé ». Ce témoin le dira au
-  // lieu de me laisser continuer à ne prévenir qu'à la frappe.
-  ok(lecteursDeDist === 0,
-    `${lecteursDeDist} fichier(s) lisent désormais un artefact CONSTRUIT de moi — le régime a CHANGÉ : `
-    + 'il faut AUSSI prévenir à la PUBLICATION, même quand rien ne bouge. Inscrire le second régime ici.');
+  // ⛔ LE RÉGIME NE SE LIT PAS SUR UN SEUL COMPTE, ET C'EST CE QUI A MORDU LE 2026-08-31. Ce volet
+  // demandait `versSource || lecteursDeDist > 0` — deux états, alors qu'une BASCULE en produit un
+  // troisième : je publie un artefact construit et **aucun voisin n'a encore changé de porte**. Il
+  // a rougi en disant « l'un des deux est faux » ; les deux étaient vrais, et c'est l'état normal
+  // du jour où l'on bascule.
+  //
+  // ⇒ **Mon régime est ce que JE publie ; leur exposition est ce qu'ILS lisent.** Deux faits, deux
+  // comptes, et la transition est exactement l'intervalle où les deux sont non nuls. Un dépôt qui
+  // n'aurait qu'un seul compte se croirait dans un régime pur alors qu'il doit prévenir des deux
+  // côtés — c'est le faux négatif que ce garde existe pour refuser.
+  const lecteursDeDist = compteAtelier('BPscript/dist\\|bpscript/dist');
+  const lecteursDeSource = compteAtelier('BPscript/src\\|bpscript/src\\|BPscript/public\\|bpscript/public');
+  console.log(`[régime] lisent un artefact CONSTRUIT : ${lecteursDeDist} · lisent encore ma SOURCE : ${lecteursDeSource}`);
+
+  // ⛔ PERSONNE NE ME LIT DU TOUT = MES MOTIFS SONT MORTS, jamais « je n'ai plus de voisins ».
+  ok(lecteursDeDist + lecteursDeSource > 0,
+    'RÉGIME — aucun fichier de l\'atelier n\'atteint ni ma source ni mon artefact. Un dépôt aussi '
+    + 'consommé que celui-ci ne perd pas tous ses lecteurs d\'un coup : suspecter les MOTIFS avant '
+    + 'de conclure à l\'absence — c\'est arrivé le 2026-08-13 avec kairos.');
+
+  if (!versSource && lecteursDeSource > 0) {
+    console.log(`[régime] ⚠️ TRANSITION — je publie un artefact construit, ${lecteursDeSource} fichier(s) `
+      + 'lisent encore ma source par chemin de disque. Les DEUX préavis sont dus : à ma FRAPPE pour '
+      + 'eux, à ma PUBLICATION pour qui entre par la porte.');
+  }
+
+  // ⚠️ LE SECOND RÉGIME EST INSCRIT DEPUIS LE 2026-08-31 — préavis à la PUBLICATION, qui ne dépend
+  // PAS de ce que je change : le voisin l'attend pour REPOSER SON POINT DE COMPARAISON, et un
+  // changement inoffensif est précisément celui qui produit le faux négatif « rien n'a bougé » vs
+  // « je n'ai pas regardé ». Ce qui reste à mesurer est la FIN de la transition, pas son début.
+  ok(!versSource,
+    'RÉGIME — le point d\'entrée est retombé sur ma source. La décision du 2026-08-31 exige qu\'aucune '
+    + 'cible publiée ne pointe vers `src/` : ce qui est publié cesse d\'être ce qui s\'édite.');
 }
 
 // ── TÉMOIN ANTI-RÉTRÉCISSEMENT ───────────────────────────────────────────────

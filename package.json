@@ -2,14 +2,14 @@
   "name": "bpscript",
   "version": "0.8.0",
   "type": "module",
-  "main": "src/transpiler/index.js",
+  "main": "dist/index.js",
   "private": true,
   "scripts": {
     "arch": "depcruise \"src/transpiler/**/*.js\" --config .dependency-cruiser.cjs && node src/transpiler/libs-bundle-check.js",
     "typecheck": "npm run typecheck:digital && npm run typecheck:homomorphism",
     "typecheck:digital": "tsc -p tsconfig.digital.json",
     "typecheck:homomorphism": "tsc -p tsconfig.homomorphism.json",
-    "verify": "npm run arch --silent && npm run typecheck --silent && npm run bundle:check --silent && node test/ast_conformance.mjs && node test/run_guards.mjs && npm run garde:documentaires --silent && npm run garde:source-voisine --silent && npm run garde:carte --silent && npm run garde:assiette --silent",
+    "verify": "npm run arch --silent && npm run typecheck --silent && npm run bundle:check --silent && node test/ast_conformance.mjs && node test/run_guards.mjs && npm run garde:documentaires --silent && npm run garde:source-voisine --silent && npm run garde:carte --silent && npm run garde:construire --silent && npm run garde:assiette --silent",
     "bundle:libs": "node src/transpiler/libs-bundle.js > src/transpiler/libs-data.js.tmp && node scripts/basculer-le-paquet.mjs src/transpiler/libs-data.js.tmp && mv src/transpiler/libs-data.js.tmp src/transpiler/libs-data.js && npm run bundle:types --silent && npm run bundle:syntaxe --silent && npm run bundle:gabarits --silent",
     "bundle:check": "node src/transpiler/libs-bundle-check.js",
     "prepare": "npm run bundle:libs && (npm run gate:install || true)",
@@ -25,53 +25,43 @@
     "garde:assiette": "node scripts/assiette.mjs --verifier",
     "bundle:syntaxe": "node src/transpiler/syntaxe-bundle.mjs > src/transpiler/syntaxe-data.js.tmp && mv src/transpiler/syntaxe-data.js.tmp src/transpiler/syntaxe-data.js",
     "bundle:gabarits": "node src/transpiler/gabarits-bundle.mjs > src/transpiler/gabarits-data.js.tmp && mv src/transpiler/gabarits-data.js.tmp src/transpiler/gabarits-data.js",
-    "publier": "node scripts/publier.mjs"
+    "publier": "node scripts/publier.mjs",
+    "construire": "node scripts/construire.mjs",
+    "garde:construire": "node scripts/construire.mjs --verifier"
   },
   "devDependencies": {
     "@lezer/generator": "^1.8.0",
     "@lezer/highlight": "^1.2.3",
     "@lezer/lr": "^1.4.8",
     "dependency-cruiser": "^16.0.0",
+    "esbuild": "^0.28.2",
     "langium": "^4.3.1",
     "langium-cli": "^4.3.0",
     "typescript": "^6.0.3"
   },
   "exports": {
-    ".": "./src/transpiler/index.js",
-    "./src/transpiler/index.js": "./src/transpiler/index.js",
-    "./src/transpiler/orderTokens.js": "./src/transpiler/orderTokens.js",
-    "./public/editor/bpscript-lang.js": "./public/editor/bpscript-lang.js",
-    "./package.json": "./package.json",
-    "./src/transpiler/libs-data.d.ts": "./src/transpiler/libs-data.d.ts",
-    "./src/transpiler/libs-data.js": {
-      "types": "./src/transpiler/libs-data.d.ts",
-      "default": "./src/transpiler/libs-data.js"
+    ".": "./dist/index.js",
+    "./orderTokens": "./dist/orderTokens.js",
+    "./libs-data": {
+      "types": "./dist/libs-data.d.ts",
+      "default": "./dist/libs-data.js"
     },
-    "./src/transpiler/libs-champs.js": "./src/transpiler/libs-champs.js",
-    "./src/transpiler/syntaxe-data.js": "./src/transpiler/syntaxe-data.js",
-    "./src/transpiler/gabarits-data.js": "./src/transpiler/gabarits-data.js",
-    "./empreinte": "./src/empreinte.js"
+    "./libs-champs": "./dist/libs-champs.js",
+    "./syntaxe-data": "./dist/syntaxe-data.js",
+    "./gabarits-data": "./dist/gabarits-data.js",
+    "./editor-lang": "./dist/editor-lang.js",
+    "./empreinte": "./dist/empreinte.js",
+    "./package.json": "./package.json"
   },
   "files": [
-    "public/editor/bp3-parser.js",
-    "public/editor/bpscript-lang.js",
-    "public/editor/bpscript-parser.js",
-    "src/empreinte.js",
-    "src/transpiler/actorResolver.js",
-    "src/transpiler/bpxAst.js",
-    "src/transpiler/constants.js",
-    "src/transpiler/controlValidation.js",
-    "src/transpiler/gabarits-data.js",
-    "src/transpiler/index.js",
-    "src/transpiler/libs-champs.js",
-    "src/transpiler/libs-data.d.ts",
-    "src/transpiler/libs-data.js",
-    "src/transpiler/libs.js",
-    "src/transpiler/orderTokens.js",
-    "src/transpiler/parser.js",
-    "src/transpiler/resolution.js",
-    "src/transpiler/segmentation.js",
-    "src/transpiler/syntaxe-data.js",
-    "src/transpiler/tokenizer.js"
+    "dist/editor-lang.js",
+    "dist/empreinte.js",
+    "dist/gabarits-data.js",
+    "dist/index.js",
+    "dist/libs-champs.js",
+    "dist/libs-data.d.ts",
+    "dist/libs-data.js",
+    "dist/orderTokens.js",
+    "dist/syntaxe-data.js"
   ]
 }
