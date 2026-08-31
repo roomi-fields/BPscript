@@ -400,6 +400,7 @@ async function collectBps(dir, prefix, compileToBPxAST) {
       const chemin = d.keys && d.keys.section ? valeurDeCle(d.keys.section)
         : sectionDuFichier;
       let cible;
+      let aEcrireEnQueue = null;
       if (d.name === entry.replace('.bpsl', '')) {
         cible = lib;
       } else {
@@ -410,6 +411,30 @@ async function collectBps(dir, prefix, compileToBPxAST) {
           noterPlace(nom, segs[0]);
         }
         cible = (ou[d.name] = {});
+        // ⛔ LA TRACE DE DÉRIVATION SE PUBLIE — câblage 4 de la phase 3, 2026-08-31.
+        //
+        // Elle était LUE et jamais ÉCRITE : `derivedeDe` sert au rangement, puis disparaît. ⇒ **La
+        // dérivation existait à la COMPILATION et s'évaporait à la PUBLICATION**, et c'est pourquoi
+        // rien ne distinguait `alphabet` de `western` à l'arrivée.
+        //
+        // Décision de Romain : *le type d'une entrée est le prototype dont elle dérive, écrit en
+        // tête* — `alphabet western (…)`, exactement comme un membre porte son type. Le publier est
+        // donc la seule façon pour un consommateur de lire ce que la source dit déjà.
+        //
+        // ⚠️ ET L'ORDRE EST CONTRAINT, il ne se choisit pas : cette trace entre AVANT que `resolves`
+        // sorte du catalogue. Inversé, un catalogue perd son mot d'invocation avant que son
+        // remplaçant existe — kairos a chiffré le coût avant la frappe : ses scènes meurent MUETTES,
+        // 98 invocations sur `alphabet`, 51 sur `scale`.
+        //
+        // ⚠️ UN PROTOTYPE NE PORTE PAS LA TRACE. `object gamut` dérive du mot qui INTRODUIT un
+        // prototype, pas d'un parent : lui coller `_derive:"object"` publierait une dérivation qui
+        // n'existe pas.
+        //
+        // ⛔ ET ELLE S'ÉCRIT EN DERNIER, PAS EN PREMIER — mesuré. Posée à la création de l'objet,
+        // elle décalait le rang de TOUTES les clés des 189 entrées, et mon témoin d'ordre l'a dit :
+        // « 189 ORDRES DE CLÉS ONT BOUGÉ ». Un ajout en queue laisse chaque clé existante à son rang.
+        // ⇒ *Un champ neuf n'a aucune raison de déplacer ceux qui étaient là.*
+        aEcrireEnQueue = d.derivedeDe && d.derivedeDe !== 'object' ? d.derivedeDe : null;
       }
       for (const [cle, v] of Object.entries(d.keys)) {
         // `section` ROUTE, elle ne se publie JAMAIS — ni sur une entree, ni sur le fichier.
@@ -448,6 +473,8 @@ async function collectBps(dir, prefix, compileToBPxAST) {
         }
         cible[cle] = val;
       }
+      // La trace de dérivation ferme l'entrée — cf. le bloc qui la calcule, plus haut.
+      if (aEcrireEnQueue) cible._derive = aEcrireEnQueue;
     }
     // ⚠️ UNE LISTE VIDE N'A PAS DE GRAPHIE, et l'absence de `args` n'en a jamais eu d'autre sens.
     // Mesure du 2026-08-13 : sur les 64 contrôles du bundle, ZÉRO n'omet `args` et 31 le portent
