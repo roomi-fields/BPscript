@@ -28,7 +28,7 @@
 
 def types (documented:true, resolves:types)
 
-object gamut
+object gamut (scope(scene, subgrammar))
 gamut interval
 gamut degree
 degree directional
