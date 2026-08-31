@@ -116,8 +116,16 @@ se relit à la main à chaque décision de langage. **Quand cette section et les
 divergent, ce sont elles qui font foi.**
 
 **Trois mots restent** : `object`, `def`, `init`. Tout le reste est un **type déclaré** — `actor`,
-`terminal`, et les catalogues qui fonctionnent déjà ainsi : `alphabet`, `tuning`, `octaves`,
-`homomorphism`.
+`terminal`.
+
+⛔ **DEUX CATALOGUES DÉCLARENT LEURS ENTRÉES PAR LEUR TYPE, ET EUX SEULS** — `scales` et `types`.
+Mesuré le 2026-08-31 au paquet publié `01da677`, sur la trace de dérivation que porte chaque entrée
+dérivée : `scales` **185**, `types` **4**, **189 au total**. `alphabets`, `tunings`, `octaves` et
+`homomorphism` en portent **zéro**.
+
+⚠️ **La liste des mots réservés du socle ne tranche pas cette question**, et le croire mène au faux :
+`actor` y figure — vingt mots, mesurés au même paquet — et il se déclare pourtant en tête de ligne.
+**Ce qui tranche est la trace de dérivation**, jamais l'appartenance à cette liste.
 
 **Le type vient en tête**, et la **position** qualifie la ligne, de part et d'autre du délimiteur
 `-----`. L'arobase de tête est sortie le 2026-08-16.
@@ -192,6 +200,13 @@ mémoire, ils datent d'avant leur retrait.
 | aucun — les profils d'environnement sont retirés | `routing` |
 | FaustX, chantier à venir | la modulation, le câblage `>>`, et `map` que ce câblage avait remplacé |
 
+⛔ **`câblage` PORTE DEUX SENS, ET AUCUN MOTIF NE LES DISTINGUE** — mesuré le 2026-08-31. Le sens du
+**langage** est mort avec la graphie `>>` et le patching ; le **branchement des composants** vit, et
+Romain le laisse vivre : *« oui on garde le sens y'a pas de soucis avec ça »*. Un balayage par graphie
+a levé **25 sites, dont 24 étaient justes** — il classait par ligne, quand ce qui décide est ce que la
+phrase désigne. **On ne pose donc aucune règle de lint sur ce mot.** Autorité : la carte du langage
+d'atlas, rang « LE CÂBLAGE SORT EN ENTIER, LE POINT D'ATTENTE RESTE ».
+
 **Cinq mots sortent sans emporter leur notion**, et les confondre casse la page qui décrit la notion :
 
 | le mot sort | la notion reste |
@@ -202,16 +217,30 @@ mémoire, ils datent d'avant leur retrait.
 | `template` | le **mot de section** — `template` ouvre le catalogue des formes en fin de scène ; ce qui sort est la **directive de tête**, et elle seule |
 | `flag` | les drapeaux, leurs gardes `[section==intro]` et leurs mutations `[section=drop]` |
 
-**`gate` et `trig` sortent COMME MOTS DU LANGAGE, et rien d'autre** — `trigger` compris. Trois
-référents de langage partent avec eux : le type de port, le type temporel du contrat de BPx
-(`temporalType`), et le mot de tête. Ce que le point d'attente attend n'a **pas de nom arrêté**.
+⛔ **CE QUI SORT EST UN TYPE DE DONNÉE, JAMAIS UN MOT NI UN CONCEPT** — tranché par Romain le
+2026-08-30 : *« un point d'attente est un point d'attente et le type trigger n'existe plus quel est le
+souci ? c'est pas ne mot ni le concept c'est le type de donnée qui n'existe plus »*
+(`hub/decisions/2026-08-30-ce-qui-sort-est-un-type-de-donnee-jamais-un-mot-ni-un-concept.md`).
+
+| ce qui sort | ce qui reste |
+|---|---|
+| la **valeur** du champ `temporalType: 'gate' \| 'trigger'` du contrat de BPx | le **mot** `trigger`, que la bible emploie **cinq fois** — § *« `<!` — le point d'attente »* : « `<!` attend un **trigger** avant de continuer » |
+| les trois graphies **en tête de déclaration**, refusées par la porte | la **notion** : un point d'attente attend une occurrence entrante nommée |
+| le **type de port** du câblage — sorti à part, avec le patching | le bus d'événements de l'hôte, le nom du portillon, le verbe anglais, la tension de contrôle |
+
+⇒ **Aucun nom de remplacement n'est requis, et il n'y a rien à renommer.** Un terminal d'alphabet se
+reconnaît à la **présence** de sa déclaration — `name` + `runtime` — et la bible le publie déjà ainsi,
+§ *« Ce que porte un terminal »*. ⚠️ **La formule « `gate` et `trig` sortent comme MOTS du langage » a
+vécu ici une journée** : elle enseignait l'inverse de la décision qu'elle citait, et la bible publiée
+la contredisait au même instant. *Une graphie n'est pas un type.*
 
 ⛔ **LE CRITÈRE VAUT POUR TOUT RETRAIT, ET IL SE POSE AVANT LE RELEVÉ.** La question n'est pas *« cette
 graphie est-elle sortie ? »* mais **« que désigne cette graphie ICI — le langage, ou autre chose ? »**.
 Une décision de retrait porte sur un mot du **langage** ; elle n'atteint jamais un homonyme qui nomme
-autre chose. Pour `gate` et `trig`, **sept référents ont été nommés et deux seulement sont du
-langage** : le bus d'événements de l'hôte, le nom du portillon, le verbe anglais, la tension de
-contrôle de la modulation **restent**.
+autre chose. Pour `gate` et `trig`, **sept référents ont été nommés et un seul est le type de donnée
+qui sort** : le point d'attente, le bus d'événements de l'hôte, le nom du portillon dans treize
+dépôts, le verbe anglais, la tension de contrôle de la modulation et les noms de contrat de kairos
+**restent** — relevé par les quatorze dépôts de la tour, chacun sur le sien.
 
 ⛔ **Hors du langage, `gate` nomme le portillon lui-même** — `[gate] vert`, `install-gate.sh`,
 `gate-registry`, et les tâches d'un portillon, `gate:`. Il vit ainsi dans la majorité des dépôts, et
