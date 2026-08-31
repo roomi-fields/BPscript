@@ -7,11 +7,16 @@
     "dist/syntaxe-data.js": "src/transpiler/syntaxe-data.js",
     "dist/gabarits-data.js": "src/transpiler/gabarits-data.js",
     "dist/editor-lang.js": "public/editor/bpscript-lang.js",
-    "dist/orderTokens.js": "src/transpiler/orderTokens.js"
+    "dist/orderTokens.js": "src/transpiler/orderTokens.js",
+    "dist/bpxAst.js": "src/transpiler/bpxAst.js",
+    "dist/tokenizer.js": "src/transpiler/tokenizer.js",
+    "dist/parser.js": "src/transpiler/parser.js"
   },
   "copies": {
     "dist/libs-data.d.ts": "src/transpiler/libs-data.d.ts",
     "dist/empreinte.js": "src/empreinte.js"
   },
-  "_empreinte": "dist/empreinte.js est COPIÉ, jamais regroupé : le publieur y grave le commit en remplaçant une ligne exacte, et un bundler la réécrit (var + export séparé). Faire passer une gravure par un regroupeur, c est faire dépendre la publication de la forme de sortie d un outil."
+  "_empreinte": "dist/empreinte.js est COPIÉ, jamais regroupé : le publieur y grave le commit en remplaçant une ligne exacte, et un bundler la réécrit (var + export séparé). Faire passer une gravure par un regroupeur, c est faire dépendre la publication de la forme de sortie d un outil.",
+  "_portes_manquantes": "bpxAst, tokenizer et parser sont des portes parce que kairos les IMPORTE — 66 de ses 85 lignes, mesuré par lui le 2026-08-31 à ma demande. Sa porte transitive « bpscript » est à zéro site chez lui : aucune de mes portes ne lui donnait le geste central, compiler une scène, par le chemin qu'il emprunte. Une porte qui manque ne rougit nulle part — c'est sa formule, et c'est pourquoi elles se demandent au consommateur.",
+  "_splitting": "Un SEUL graphe, morceaux partagés : dix portes qui embarqueraient chacune leur copie feraient dix instances d'un même module, donc dix états. Mesuré : 515 ko en un graphe contre 729 ko pour huit portes séparées."
 }

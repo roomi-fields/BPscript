@@ -51,9 +51,19 @@
     "./gabarits-data": "./dist/gabarits-data.js",
     "./editor-lang": "./dist/editor-lang.js",
     "./empreinte": "./dist/empreinte.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./bpxAst": "./dist/bpxAst.js",
+    "./tokenizer": "./dist/tokenizer.js",
+    "./parser": "./dist/parser.js"
   },
   "files": [
+    "dist/bpxAst.js",
+    "dist/chunk-3Y64WDZ4.js",
+    "dist/chunk-RRIQHOUH.js",
+    "dist/chunk-U5RZGEWL.js",
+    "dist/chunk-VJMC4STT.js",
+    "dist/chunk-YT6XIK2B.js",
+    "dist/chunk-ZPFWXS4V.js",
     "dist/editor-lang.js",
     "dist/empreinte.js",
     "dist/gabarits-data.js",
@@ -62,6 +72,8 @@
     "dist/libs-data.d.ts",
     "dist/libs-data.js",
     "dist/orderTokens.js",
-    "dist/syntaxe-data.js"
+    "dist/parser.js",
+    "dist/syntaxe-data.js",
+    "dist/tokenizer.js"
   ]
 }

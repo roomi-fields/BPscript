@@ -29,7 +29,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { execFileSync } from 'node:child_process';
+import esbuild from 'esbuild';
 
 const RACINE = new URL('..', import.meta.url).pathname;
 const TABLE = JSON.parse(readFileSync(join(RACINE, 'build.portes.json'), 'utf8'));
@@ -47,13 +47,24 @@ export function ciblesPubliees() {
   return [...out].sort();
 }
 
-/** Construit une porte. Rend la taille écrite. */
-function construire(cible, source) {
-  const abs = join(RACINE, cible);
-  mkdirSync(dirname(abs), { recursive: true });
-  execFileSync('npx', ['esbuild', source, '--bundle', '--format=esm', '--platform=neutral',
-    '--packages=external', '--outfile=' + abs], { cwd: RACINE, stdio: 'pipe' });
-  return readFileSync(abs, 'utf8').length;
+/**
+ * Construit TOUTES les portes en UN SEUL graphe, morceaux partagés.
+ *
+ * ⛔ DIX PORTES SÉPARÉES FERAIENT DIX INSTANCES D'UN MÊME MODULE. Un consommateur qui importe
+ * `bpscript` et `bpscript/bpxAst` obtiendrait deux copies du même code, donc deux états — un défaut
+ * qui ne se voit qu'à l'exécution et seulement quand un module porte un état. Le graphe unique le
+ * rend impossible par construction. Mesuré : 515 ko en un graphe contre 729 ko pour huit portes
+ * séparées, et le partage grandit avec le nombre de portes.
+ */
+async function construireTout(portes) {
+  const entryPoints = Object.fromEntries(
+    portes.map(([cible, source]) => [cible.replace(/^dist\//, '').replace(/\.js$/, ''), source]),
+  );
+  const r = await esbuild.build({
+    entryPoints, bundle: true, format: 'esm', platform: 'neutral', splitting: true,
+    packages: 'external', outdir: join(RACINE, 'dist'), metafile: true,
+  });
+  return Object.values(r.metafile.outputs).reduce((t, o) => t + o.bytes, 0);
 }
 
 if (process.argv[1] && process.argv[1].endsWith('construire.mjs')) {
@@ -77,33 +88,43 @@ if (process.argv[1] && process.argv[1].endsWith('construire.mjs')) {
     process.exit(1);
   }
 
-  const avant = verifier
-    ? Object.fromEntries(construites.filter((c) => existsSync(join(RACINE, c)))
-        .map((c) => [c, readFileSync(join(RACINE, c), 'utf8')]))
-    : null;
+  // ⛔ L'EMPREINTE PORTE SUR TOUT `dist/`, PAS SUR LES SEULES CIBLES DÉCLARÉES. Les morceaux
+  // partagés ne sont ni des portes ni des copies : les exclure reviendrait à choisir ce qu'on ne
+  // verra pas, et c'est là que vit la majorité du code publié.
+  const empreinteDist = () => {
+    const dir = join(RACINE, 'dist');
+    if (!existsSync(dir)) return {};
+    return Object.fromEntries(readdirSync(dir).sort()
+      .map((f) => [`dist/${f}`, readFileSync(join(dir, f), 'utf8')]));
+  };
+  const avant = verifier ? empreinteDist() : null;
 
-  if (!verifier && existsSync(join(RACINE, 'dist'))) rmSync(join(RACINE, 'dist'), { recursive: true });
-  let total = 0;
-  for (const [cible, source] of portes) total += construire(cible, source);
+  if (existsSync(join(RACINE, 'dist'))) rmSync(join(RACINE, 'dist'), { recursive: true });
+  const total = await construireTout(portes);
   for (const [cible, source] of copies) {
     mkdirSync(dirname(join(RACINE, cible)), { recursive: true });
     writeFileSync(join(RACINE, cible), readFileSync(join(RACINE, source), 'utf8'));
   }
+  const apres = empreinteDist();
 
   if (verifier) {
-    const derives = construites.filter((c) => avant[c] !== readFileSync(join(RACINE, c), 'utf8'));
-    const absents = construites.filter((c) => avant[c] === undefined);
-    if (absents.length || derives.length) {
+    const noms = [...new Set([...Object.keys(avant), ...Object.keys(apres)])].sort();
+    const absents = noms.filter((c) => avant[c] === undefined);
+    const enTrop = noms.filter((c) => apres[c] === undefined);
+    const derives = noms.filter((c) => avant[c] !== undefined && apres[c] !== undefined && avant[c] !== apres[c]);
+    if (absents.length || enTrop.length || derives.length) {
       console.error(`[construire] ⛔ L'ARTEFACT ENREGISTRÉ N'EST PAS CELUI QUE LA SOURCE PRODUIT.`);
       if (absents.length) console.error(`        ABSENT(S) du dépôt : ${absents.join(', ')}`);
+      if (enTrop.length) console.error(`        ENREGISTRÉ(S) sans que la source les produise : ${enTrop.join(', ')}`);
       if (derives.length) console.error(`        A DÉRIVÉ de sa source : ${derives.join(', ')}`);
       console.error('        Régénérer par `npm run construire`, et le commiter avec la source.');
       process.exit(1);
     }
-    console.log(`[construire] ✓ ${construites.length} artefact(s) conformes à leur source · ${Math.round(total / 1024)} ko`);
+    console.log(`[construire] ✓ ${noms.length} fichier(s) de dist/ conformes à leur source, `
+      + `dont ${construites.length} porte(s) · ${Math.round(total / 1024)} ko`);
     process.exit(0);
   }
 
-  const nb = readdirSync(join(RACINE, 'dist')).length;
-  console.log(`[construire] ${construites.length} porte(s) construite(s) — ${nb} fichier(s), ${Math.round(total / 1024)} ko`);
+  console.log(`[construire] ${construites.length} porte(s) — ${Object.keys(apres).length} fichier(s) `
+    + `dans dist/, ${Math.round(total / 1024)} ko`);
 }
