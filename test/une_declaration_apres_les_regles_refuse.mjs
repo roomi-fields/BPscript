@@ -88,12 +88,16 @@ const LEGITIME_APRES = new Set(['mode']);
 // passé au vert. Une couverture qui se calcule depuis ce qu'elle couvre photographie l'état ; elle
 // ne l'exige pas.
 const DECLARATIONS_DE_TETE = new Set([
-  'actor', 'all_items', 'allitems', 'alphabet', 'chromashift', 'core', 'def', 'diapason', 'eval',
+  'actor', 'all_items', 'allitems', 'chromashift', 'core', 'def', 'diapason', 'eval',
   'homomorphism', 'improvize', 'init', 'ins', 'items', 'maxitems', 'meter', 'modulation',
   'octaves', 'on_fail', 'out', 'qclock', 'quantization', 'randomize', 'rndtime', 'scale', 'scan',
   // ⛔ `sounds` ET `test_alphabets` SORTIS LE 2026-08-22 : c'étaient des noms de FICHIER, et une
-  // librairie s'invoque par le mot qu'elle DÉCLARE. Les mots qu'ils servaient — `sound` et
-  // `alphabet` — sont déjà dans cette famille, chacun une seule fois.
+  // librairie s'invoque par le mot qu'elle DÉCLARE. Le mot qu'ils servaient — `sound` — est déjà
+  // dans cette famille, une seule fois.
+  // ⛔ `alphabet` SORTI LE 2026-09-01, décision de Romain : la table des types est le SOCLE, étendu
+  // par les librairies invoquées. Un type fourni par une librairie n'appartient pas au socle, donc
+  // le mot quitte `core.schema.reservedDirectives` — et l'exemption qui le nommait ici sort avec
+  // lui. Une exemption qui ne désigne plus rien de vivant est un trou au nom de quelqu'un.
   'seed', 'settings', 'sound', 'timepatterns', 'transpose', 'tuning',
 ]);
 
@@ -237,7 +241,14 @@ ok(RESERVEES >= 40, `4. le vocabulaire de directives doit être chargé — ${RE
 // `test_alphabets` étaient des noms de FICHIER, et une librairie s'invoque par le mot qu'elle
 // DÉCLARE. Le diff de la donnée porte exactement deux retraits et aucun autre — c'est cette
 // soustraction-là qui est comptée, pas un extracteur devenu aveugle.
-ok(UNION.length >= 47,
+// ⛔ 47 → 46 LE 2026-09-01, ET LA RAISON N'EST PAS CELLE QUE LA PHRASE CI-DESSUS NOMMAIT. `alphabet`
+// ne SORT PAS du langage — `alphabet.western` compile toujours, et le mot reste dans `catalogAxes`,
+// qui est ce qui route l'invocation. Il sort du SOCLE : décision de Romain, la table des types est
+// le socle, étendu par les librairies invoquées, et un type fourni par une librairie n'y appartient
+// pas. ⇒ LE CRITÈRE RÉEL DERRIÈRE CETTE CLAUSE est donc plus large que sa lettre : la soustraction
+// est-elle une DÉCISION sur la donnée, ou une CÉCITÉ de l'instrument ? Ici le diff porte exactement
+// un retrait, décidé, et l'union passe de 47 à 46.
+ok(UNION.length >= 46,
   `4. le vocabulaire réservé ne s'est pas vidé — ${UNION.length} mot(s) à l'union des librairies`);
 ok(DECLARATIONS_DE_TETE.size + CONTROLES_DE_PORTEE.size + LEGITIME_APRES.size === UNION.length,
   `4. les trois familles doivent PARTITIONNER l'union — ${DECLARATIONS.length} + `
