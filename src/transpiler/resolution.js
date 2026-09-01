@@ -50,6 +50,9 @@
  * donne porte ce que la place exige.
  */
 
+import { sortieHeritee, alphabetHerite, octavesHerite, tuningHerite, evalHerite }
+  from './actorResolver.js';
+
 /**
  * Les nœuds de l'arbre, à toute profondeur — le parcours que l'étage emprunte pour compter ce qu'il
  * a vu, et qu'il empruntera pour résoudre.
@@ -172,6 +175,274 @@ export function resoudre(ast, environnement) {
   void environnement;
   return { ast, diagnostics, examines, greffes };
 }
+
+export function emitSceneMeter(ast) {
+  // `meter` s'écrit en PARENTHÈSES depuis la décision Romain 2026-08-02 (LANGUAGE.md:773-800) :
+  // l'injection du défaut de scène rejoint donc `r.settings.pairs` (le crochet REFUSE désormais
+  // `[meter:…]`, cf. checkQualifierKey, parser.js). `r.qualifiers` (sac bracket, procédures de
+  // niveau règle) n'est PAS concerné — meter n'y a jamais vécu.
+  const dir = (ast.directives || []).find((d) => d && d.name === 'meter' && d.value != null);
+  if (!dir) return;
+  const valeur = String(dir.value);
+  for (const sg of ast.subgrammars || []) {
+    for (const r of sg.rules || []) {
+      const porteDeja = (r.settings?.pairs || []).some((p) => p && p.key === 'meter');
+      if (porteDeja) continue;   // la règle recouvre le défaut de scène, pour elle seule
+      r.settings = r.settings || { type: 'SettingBag', pairs: [] };
+      r.settings.pairs.push({ key: 'meter', value: valeur, decrement: null });
+    }
+  }
+}
+
+
+/**
+ * UN GABARIT ESCLAVE REJOUE UN MAÎTRE, ET UN NOM QUE PERSONNE NE CAPTURE N'EN A AUCUN.
+ *
+ * `LANGUAGE.md` § « Capturer et rejouer » : « `$` capture un motif de groupe (maître), `&` le
+ * rejoue (esclave). LE NOM PORTE L'APPARIEMENT ENTRE LES DEUX. » Un `&nom` sans `$nom` n'apparie
+ * rien : il se lit comme un rejeu et ne rejoue aucun choix.
+ *
+ * ⛔ CE REFUS NE TRANCHE PAS LA PORTÉE DE L'APPARIEMENT, ET C'EST DÉLIBÉRÉ. Mesuré le 2026-08-29 :
+ * un maître dans une règle et son esclave dans une AUTRE passent aujourd'hui, et la bible ne dit
+ * pas si l'appariement vaut dans la règle ou dans la scène. Décider ici reviendrait à définir un
+ * élément de langage. Les maîtres se collectent donc sur TOUTE la scène — la lecture la plus large,
+ * donc le refus le plus prudent : ce qu'il rejette est faux dans les deux lectures.
+ *
+ * ⚠️ ET UNE SCÈNE QUI PORTE UNE ANCRE EST HORS DE PORTÉE. `$` seul en tête de membre gauche « marque
+ * la règle entière comme gabarit maître » et « l'ancre reste ouverte jusqu'à sa fermeture » : elle
+ * ouvre un maître SANS NOM, et rien n'écrit par quel nom un esclave le rejoue. Refuser là-dessus
+ * serait supposer une réponse. 10 scènes du corpus en portent une.
+ *
+ * MESURE AVANT ÉCRITURE — 756 scènes compilables, 55 portent un gabarit : ZÉRO esclave orphelin.
+ */
+export function refuserEsclaveSansMaitre(ast) {
+  const maitres = new Set();
+  const esclaves = [];
+  let ancre = false;
+  (function marcher(n) {
+    if (!n || typeof n !== 'object') return;
+    if (Array.isArray(n)) { for (const e of n) marcher(e); return; }
+    if (n.type === 'TemplateMaster' && n.name) maitres.add(n.name);
+    if (n.type === 'TemplateAnchor') ancre = true;
+    if (n.type === 'TemplateSlave' && n.name) esclaves.push(n);
+    for (const k in n) marcher(n[k]);
+  })(ast);
+  if (ancre) return [];
+  const vus = new Set();
+  const erreurs = [];
+  for (const e of esclaves) {
+    if (maitres.has(e.name) || vus.has(e.name)) continue;
+    vus.add(e.name);
+    erreurs.push({
+      message: `'&${e.name}' rejoue un gabarit que rien ne capture — aucun '$${e.name}' dans cette `
+        + `scène. Le nom porte l'appariement entre le maître et l'esclave : sans maître, le rejeu `
+        + `n'a pas de choix à répéter. Écrire '$${e.name}' là où le motif se capture.`,
+      line: e.line,
+    });
+  }
+  return erreurs;
+}
+
+
+/**
+ * LA VOIX D'UN TERMINAL ARRIVE JUSQU'À L'ARBRE — cascade terminal, puis alphabet.
+ *
+ * ⛔ ACTE DE ROMAIN, 2026-08-08 : « tout est dans les PROPRIÉTÉS DU TERMINAL — ou pas, et c'est
+ * alors résolu par les principes d'override. Et `def`/`voice` doit AUSSI être correctement
+ * implémenté dans TOUS LES ALPHABETS. »
+ * C'est la suite directe de la décision du 2026-08-01 : « un alphabet est une collection
+ * structurée de terminaux », et `voice` n'est PAS une clé d'acteur — c'est le terminal qui la
+ * porte, et l'alphabet qui les organise.
+ *
+ * ⚠️ CE QUE ÇA DÉBLOQUE, ET C'EST UN AGENT ENTIER ARRÊTÉ DEPUIS QUATRE HEURES. Kairos assurait le
+ * DISPATCH DU SON — quelle voix joue quel symbole — en lisant la table des macros ; `macro` sort
+ * du langage, la table n'existe plus, et il n'a rien à la place. La réponse était déjà dans la
+ * spécification ; c'est l'implémentation qui manquait.
+ *
+ * ⚠️ DEUX ALPHABETS DÉCLARENT DÉJÀ LEURS VOIX EN DONNÉE — `tabla` associe `dha` à `bayan_open`,
+ * `tryCsoundObjects` ses sept objets — et RIEN NE LES LISAIT ICI : la seule occurrence de
+ * `.voices` dans ce dépôt désigne les voix d'un groupe polymétrique, sans rapport.
+ *
+ * ⛔ J'AI ÉCRIT « CETTE TABLE N'EST LUE PAR PERSONNE », ET C'ÉTAIT FAUX. Kairos l'a mesuré et me
+ * l'a rendu : il la lit depuis JUIN — `resoudre-voix.ts:121`, sa voie (b), avec un témoin
+ * bout-en-bout à lui. La donnée n'était pas morte : elle alimentait sa résolution de voix.
+ * J'avais mesuré MON dépôt et conclu pour LE SIEN — la faute exacte que je remonte aux autres,
+ * et la seconde fois de la journée. Ce qui était vrai : rien ne la lisait CHEZ MOI.
+ *
+ * ⚠️ ET ÇA OUVRE UNE QUESTION QUE JE NE TRANCHE PAS, la sienne : NOUS SOMMES DEUX À RÉSOUDRE LE
+ * MÊME BINDING, depuis la même table, avec des précédences DIFFÉRENTES — la sienne va de l'acteur
+ * à l'alphabet, la mienne du terminal à l'alphabet. Un acteur qui nomme une voix et un alphabet
+ * qui en nomme une autre ne donnent pas le même résultat selon le chemin. Aujourd'hui l'écart ne
+ * se voit pas (il ne lit pas encore ce champ) ; le jour où il le lira, il se verra.
+ * Question portée à Romain : QUI résout le binding d'alphabet. Les deux réponses se défendent ;
+ * ce qui ne se défend pas, c'est les deux à la fois.
+ *
+ * L'ORDRE DE RÉSOLUTION, du plus local au plus général :
+ *   1. le terminal le nomme lui-même   (`def ka  voice.sec`)
+ *   2. son alphabet le nomme pour lui  (`alphabets.json`, table `voices`)
+ * Un terminal qui n'est nommé nulle part ne reçoit RIEN — l'absence reste une absence, et l'aval
+ * la lit comme telle. On n'invente pas une voix par défaut : ce serait le défaut invisible que la
+ * cascade des valeurs de scène a coûté le 2026-07-04.
+ */
+export function poserLaVoixDesTerminaux(ast) {
+  if (!ast) return;
+  // (1) ce que les `def` de la scène déclarent
+  const parDef = new Map();
+  for (const d of ast.defs || []) {
+    if (d && d.type === 'DefDirective' && d.keys && d.keys.voice) parDef.set(d.name, d.keys.voice.value);
+  }
+  // ⛔ JE NE RÉSOUS PAS LE BINDING D'ALPHABET — Romain, 2026-08-08 : « c'est Kairos, ça n'est pas
+  // ton rôle, tu n'en as pas besoin, c'est son rôle. »
+  //
+  // ⚠️ JE L'AVAIS ÉCRIT, ET C'ÉTAIT PORTER PLUS LOIN QUE MON RÔLE. Ma passe lisait la table
+  // `voices` de l'alphabet et posait le résultat sur le terminal. Kairos fait exactement cela
+  // depuis JUIN, depuis la même table (`resoudre-voix.ts:121`) — nous étions DEUX à résoudre le
+  // même fait, avec des précédences différentes : la sienne va de l'acteur à l'alphabet, la
+  // mienne allait du terminal à l'alphabet. Un acteur qui nomme une voix et un alphabet qui en
+  // nomme une autre ne donnent pas le même résultat selon le chemin. L'écart ne se voyait pas
+  // encore — il ne lit pas ce champ — et se serait vu le jour où il l'aurait lu.
+  // C'est lui qui l'a mesuré et remonté ; la décision est de Romain.
+  //
+  // CE QUI RESTE ICI EST DU PORTAGE, PAS DE LA RÉSOLUTION : une voix ÉCRITE dans la scène par
+  // `def <nom>  voice.<voix>` est une déclaration de l'auteur, je la transporte telle quelle.
+  // Ce que l'alphabet organise, c'est l'aval qui le résout — « porter ≠ résoudre », et c'est la
+  // règle que je passe mes journées à opposer aux autres.
+  if (!parDef.size) return;
+
+  const w = (n, vus = new WeakSet()) => {
+    if (!n || typeof n !== 'object' || vus.has(n)) return;
+    vus.add(n);
+    if (Array.isArray(n)) { n.forEach((x) => w(x, vus)); return; }
+    if (n.payload && n.payload.nature === 'sounding') {
+      const nom = typeof n.symbol === 'string' ? n.symbol : n.name;
+      const voix = parDef.get(nom);
+      if (voix !== undefined && n.payload.voice === undefined) n.payload.voice = voix;
+    }
+    Object.values(n).forEach((v) => w(v, vus));
+  };
+  w(ast.subgrammars);
+}
+
+
+/**
+ * Retire l'ardoise `alphabet` des SEULS acteurs qui portent une adresse — en TOUT DERNIER.
+ *
+ * POURQUOI SI TARD. `properties.alphabet` a deux lecteurs qu'il ne faut pas confondre : le
+ * pipeline INTERNE de BPScript (résolution d'acteur, validation des terminaux), qui tourne
+ * jusqu'au bout de `compileToBPxAST`, et l'AVAL. Retirer le champ à l'émission de l'adresse
+ * couperait le premier ; le retirer ici ne touche que le second.
+ *
+ * POURQUOI LE CHAMP ET PAS SEULEMENT LA RÉFÉRENCE. Mesuré chez BPx : `pickActorAlphabet`
+ * (`loadGrammar.ts:3694`) lit `properties.alphabet` D'ABORD et ne regarde `references[]` qu'à
+ * défaut. Filtrer la seule référence ne changeait donc RIEN — Kairos criait la même collision,
+ * au mot près. C'est cette voie v0.7 encore préférée qui portait l'ardoise jusqu'à lui.
+ *
+ * PORTÉE, mesurée et non supposée : les acteurs qui émettent une adresse, et EUX SEULS — un
+ * sur tout le corpus des 95 aujourd'hui (`tryKeyMap`, acteur `bols`). Toutes les autres scènes
+ * sortent octet pour octet identiques, ce qui est vérifié plus bas par le bilan inchangé.
+ */
+export function retirerArdoiseAlphabet(ast) {
+  for (const actor of ast.actors || []) {
+    if (!actor.libRefs || !actor.libRefs.length) continue;
+    if (actor.properties) delete actor.properties.alphabet;
+    if (Array.isArray(actor.references)) {
+      actor.references = actor.references.filter((r) => r && r.category !== 'alphabet');
+    }
+  }
+}
+
+
+export function applyDefaultActor(ast) {
+  if (!ast) return [];
+  const errors = [];
+  // Le binding de sortie de l'alphabet de scène (`alphabet.X:midi` → runtime:'midi') est la
+  // clé de connexion transport (+eval) de l'UNIQUE acteur implicite (AST.md:94). Décision Romain
+  // 2026-07-05 (acteur unique implicite) : sans actor, ce binding renseigne le transport de
+  // l'acteur synthétique ; AVEC un actor, c'est un CHEVAUCHEMENT interdit (implicite XOR explicite).
+  const alphaBinding = (ast.directives || []).find((d) => d.name === 'alphabet' && d.runtime);
+  if ((ast.actors || []).length > 0) {
+    if (alphaBinding) {
+      errors.push({
+        message: `chevauchement d'acteurs : un binding de sortie sur l'alphabet (alphabet.${alphaBinding.subkey}:${alphaBinding.runtime}) désigne un acteur implicite, incompatible avec un 'actor' explicite — choisis l'un OU l'autre`,
+        line: alphaBinding.line || 0,
+      });
+    }
+    return errors; // au moins un actor déclaré → pas d'acteur implicite (pas de chevauchement)
+  }
+  // LA SORTIE DE L'ACTEUR IMPLICITE — cascade complète (`sortieHeritee`), plus une lecture partielle.
+  // ⚠️ CE QUI ÉTAIT ÉCRIT ICI IGNORAIT LA SCÈNE : la clé venait du raccord d'alphabet ou du socle,
+  // jamais de `out.midi`. La directive était refusée au parse, donc rien ne pouvait le révéler —
+  // et le jour où elle a été acceptée, l'acteur a continué à sortir `audio` sans un mot. Une valeur
+  // par défaut et une valeur IGNORÉE ont exactement la même tête ; c'est pourquoi la cascade est
+  // définie une seule fois, à côté des trois autres axes, et pas reconstituée à chaque appelant.
+  const sortie = sortieHeritee(ast);
+  if (sortie.conflit) {
+    errors.push({
+      message: `deux sorties pour la même scène : 'out.${sortie.conflit.ecrite}' et le raccord `
+             + `'alphabet.${sortie.conflit.alphabet}:${sortie.conflit.raccord}' désignent des `
+             + `canaux différents — les deux écritures disent la MÊME chose, il faut n'en garder `
+             + `qu'une`,
+      line: sortie.conflit.line,
+    });
+  }
+  const transportKey = sortie.key;
+  const transport = { type: 'TransportRef', key: transportKey, params: sortie.params };
+  // ⚠️ ET SON ALPHABET — il naissait SANS, et c'était le trou (Romain 2026-07-29, « ça ne devrait
+  // JAMAIS ARRIVER »). L'ancien commentaire ici disait « pas d'alphabet : pitch via le résolveur de
+  // scène » : il n'existait aucun résolveur de scène en aval pour le remplir, donc l'AST partait
+  // muet et le consommateur devait deviner. La cascade est la MÊME que pour un acteur déclaré
+  // (`alphabetHerite`, définie une seule fois) : scène → socle core, ABSENT si la hauteur est
+  // opaque. Une voix-code pure n'est pas concernée : elle n'a pas d'alphabet DÉCLARÉ ici, et
+  // l'acteur implicite n'existe que faute de tout actor — il n'y a donc aucun eval à hériter.
+  const alphabetKey = alphabetHerite(ast);
+  const properties = { transport };
+  const references = [{ type: 'ActorReference', category: 'transport', name: transportKey, line: 0 }];
+  if (alphabetKey) {
+    properties.alphabet = alphabetKey;
+    references.push({ type: 'ActorReference', category: 'alphabet', name: alphabetKey, line: 0 });
+    const oct = octavesHerite(ast, alphabetKey);   // les registres suivent l'alphabet, même cascade
+    if (oct) {
+      properties.octaves = oct;
+      references.push({ type: 'ActorReference', category: 'octaves', name: oct, line: 0 });
+    }
+    // L'ACCORDAGE vient de l'ALPHABET, jamais du socle core (Romain 2026-07-29).
+    const tun = tuningHerite(ast, alphabetKey);
+    if (tun) {
+      properties.tuning = tun;
+      references.push({ type: 'ActorReference', category: 'tuning', name: tun, line: 0 });
+    }
+  }
+  // L'INTERPRÈTE PAR DÉFAUT — cinquième et dernière des clés d'acteur à descendre (Romain,
+  // 2026-08-07 : « toutes ces directives doivent descendre dans l'acteur implicite »). Il ne
+  // descendait pas DU TOUT : `eval.strudel` en tête de scène était lu par le validateur et par
+  // personne d'autre. Et il ne dépend PAS de l'alphabet — une scène qui ne joue aucune note
+  // déclare quand même par quoi ses backtiques sont lus — donc il vit hors du bloc ci-dessus.
+  const interprete = evalHerite(ast);
+  if (interprete) {
+    properties.eval = interprete;
+    references.push({ type: 'ActorReference', category: 'eval', name: interprete, line: 0 });
+  }
+  // ⚠️ IL S'APPELAIT `default` JUSQU'AU 2026-07-30 (décision Romain, en direct :
+  // `hub/decisions/2026-07-30-l-acteur-implicite-s-appelle-scene.md`). Son motif n'est pas
+  // esthétique : il refusait que ce qui s'appelle normalement en notation pointée remonte en `@`.
+  // Nommer l'acteur implicite `scene` donne à l'auteur de quoi DÉSIGNER ce qui n'appartient à
+  // personne — quand rien n'est déclaré, le contenu appartient bien à la scène.
+  // LE MOT N'ÉTAIT PAS LIBRE : trois scènes de la bibliothèque l'employaient comme nom de drapeau.
+  // Elles sont refusées par la règle d'unicité et migrées par leur propriétaire — c'est le mode qui
+  // CRIE, pas celui qui se tait, et c'est pour ça qu'on peut le prendre.
+  ast.actors = [{
+    type: 'ActorDirective',
+    name: 'scene',
+    properties,
+    references,
+    // Frontière AST (Palier 3) : pas de `soundAssignments:null` — champ non canonique.
+    // Canonique = `assignments?` OPTIONNEL (absent ici : l'acteur implicite n'affecte aucun son).
+    synthetic: true, // acteur implicite (aucun actor déclaré) — panneau Acteurs vide
+    line: 0,
+  }];
+  return errors;
+}
+
 
 /**
  * LE DERNIER COMPTE, pour le garde qui prouve que l'étage est BRANCHÉ et pas seulement présent.

@@ -18,89 +18,6 @@ import {
   LIBS
 } from "./chunk-VEPRGLSC.js";
 
-// src/transpiler/resolution.js
-function* noeuds(n, vus = /* @__PURE__ */ new Set()) {
-  if (!n || typeof n !== "object" || vus.has(n)) return;
-  vus.add(n);
-  if (Array.isArray(n)) {
-    for (const e of n) yield* noeuds(e, vus);
-    return;
-  }
-  yield n;
-  for (const k of Object.keys(n)) yield* noeuds(n[k], vus);
-}
-function declarationsDe(ast) {
-  const table = /* @__PURE__ */ new Map();
-  const poser = (nom, parent, noeud) => {
-    if (!nom || table.has(nom)) return;
-    table.set(nom, { parent, noeud, origine: [...noeud.settings && noeud.settings.pairs || []] });
-  };
-  for (const d of ast && ast.defs || []) if (d) poser(d.name, null, d);
-  for (const v of ast && ast.vars || []) {
-    if (!v || !v.varType || v.varType.kind !== "type") continue;
-    for (const n of v.names || []) poser(n, v.varType.type, v);
-  }
-  return table;
-}
-function heriterDesPrototypes(ast) {
-  const table = declarationsDe(ast);
-  let greffes = 0;
-  for (const [nom, decl] of table) {
-    if (!decl.parent) continue;
-    const portees = new Set(decl.origine.map((p) => p.key));
-    const vus = /* @__PURE__ */ new Set([nom]);
-    let parent = decl.parent;
-    while (parent && !vus.has(parent) && table.has(parent)) {
-      vus.add(parent);
-      const proto = table.get(parent);
-      for (const par of proto.origine) {
-        if (portees.has(par.key)) continue;
-        portees.add(par.key);
-        if (!decl.noeud.settings) decl.noeud.settings = { type: "SettingBag", pairs: [] };
-        decl.noeud.settings.pairs.push({ ...par, herite: true });
-        greffes++;
-      }
-      parent = proto.parent;
-    }
-  }
-  return greffes;
-}
-function resoudre(ast, environnement) {
-  const diagnostics = [];
-  let examines = 0;
-  for (const _ of noeuds(ast)) examines++;
-  const greffes = heriterDesPrototypes(ast);
-  void environnement;
-  return { ast, diagnostics, examines, greffes };
-}
-var dernierCompte = null;
-function noterLePassage(compte) {
-  dernierCompte = compte;
-}
-
-// src/transpiler/segmentation.js
-function segmenter(nom, terminaux) {
-  if (!nom || terminaux.has(nom)) return null;
-  const longueurs = [...new Set([...terminaux].map((t) => t.length))].sort((a, b) => b - a);
-  const parts = [];
-  let i = 0;
-  while (i < nom.length) {
-    let pris = null;
-    for (const L of longueurs) {
-      if (L > nom.length - i) continue;
-      const bout = nom.slice(i, i + L);
-      if (terminaux.has(bout)) {
-        pris = bout;
-        break;
-      }
-    }
-    if (!pris) return { parts: null, reste: nom.slice(i) };
-    parts.push(pris);
-    i += pris.length;
-  }
-  return parts.length > 1 ? { parts, reste: null } : null;
-}
-
 // src/transpiler/actorResolver.js
 function expandAlphabetTerminals(alphabetLib, octavesOverride) {
   const terminals = /* @__PURE__ */ new Set();
@@ -347,6 +264,219 @@ function resolveSymbolsInRhs(elements, symbolActorMap, actorTable, terminalActor
       if (el.secondaries) resolveSymbolsInRhs(el.secondaries, symbolActorMap, actorTable, terminalActorMap, errors);
     }
   }
+}
+
+// src/transpiler/resolution.js
+function* noeuds(n, vus = /* @__PURE__ */ new Set()) {
+  if (!n || typeof n !== "object" || vus.has(n)) return;
+  vus.add(n);
+  if (Array.isArray(n)) {
+    for (const e of n) yield* noeuds(e, vus);
+    return;
+  }
+  yield n;
+  for (const k of Object.keys(n)) yield* noeuds(n[k], vus);
+}
+function declarationsDe(ast) {
+  const table = /* @__PURE__ */ new Map();
+  const poser = (nom, parent, noeud) => {
+    if (!nom || table.has(nom)) return;
+    table.set(nom, { parent, noeud, origine: [...noeud.settings && noeud.settings.pairs || []] });
+  };
+  for (const d of ast && ast.defs || []) if (d) poser(d.name, null, d);
+  for (const v of ast && ast.vars || []) {
+    if (!v || !v.varType || v.varType.kind !== "type") continue;
+    for (const n of v.names || []) poser(n, v.varType.type, v);
+  }
+  return table;
+}
+function heriterDesPrototypes(ast) {
+  const table = declarationsDe(ast);
+  let greffes = 0;
+  for (const [nom, decl] of table) {
+    if (!decl.parent) continue;
+    const portees = new Set(decl.origine.map((p) => p.key));
+    const vus = /* @__PURE__ */ new Set([nom]);
+    let parent = decl.parent;
+    while (parent && !vus.has(parent) && table.has(parent)) {
+      vus.add(parent);
+      const proto = table.get(parent);
+      for (const par of proto.origine) {
+        if (portees.has(par.key)) continue;
+        portees.add(par.key);
+        if (!decl.noeud.settings) decl.noeud.settings = { type: "SettingBag", pairs: [] };
+        decl.noeud.settings.pairs.push({ ...par, herite: true });
+        greffes++;
+      }
+      parent = proto.parent;
+    }
+  }
+  return greffes;
+}
+function resoudre(ast, environnement) {
+  const diagnostics = [];
+  let examines = 0;
+  for (const _ of noeuds(ast)) examines++;
+  const greffes = heriterDesPrototypes(ast);
+  void environnement;
+  return { ast, diagnostics, examines, greffes };
+}
+function emitSceneMeter(ast) {
+  const dir = (ast.directives || []).find((d) => d && d.name === "meter" && d.value != null);
+  if (!dir) return;
+  const valeur = String(dir.value);
+  for (const sg of ast.subgrammars || []) {
+    for (const r of sg.rules || []) {
+      const porteDeja = (r.settings?.pairs || []).some((p) => p && p.key === "meter");
+      if (porteDeja) continue;
+      r.settings = r.settings || { type: "SettingBag", pairs: [] };
+      r.settings.pairs.push({ key: "meter", value: valeur, decrement: null });
+    }
+  }
+}
+function refuserEsclaveSansMaitre(ast) {
+  const maitres = /* @__PURE__ */ new Set();
+  const esclaves = [];
+  let ancre = false;
+  (function marcher(n) {
+    if (!n || typeof n !== "object") return;
+    if (Array.isArray(n)) {
+      for (const e of n) marcher(e);
+      return;
+    }
+    if (n.type === "TemplateMaster" && n.name) maitres.add(n.name);
+    if (n.type === "TemplateAnchor") ancre = true;
+    if (n.type === "TemplateSlave" && n.name) esclaves.push(n);
+    for (const k in n) marcher(n[k]);
+  })(ast);
+  if (ancre) return [];
+  const vus = /* @__PURE__ */ new Set();
+  const erreurs = [];
+  for (const e of esclaves) {
+    if (maitres.has(e.name) || vus.has(e.name)) continue;
+    vus.add(e.name);
+    erreurs.push({
+      message: `'&${e.name}' rejoue un gabarit que rien ne capture \u2014 aucun '$${e.name}' dans cette sc\xE8ne. Le nom porte l'appariement entre le ma\xEEtre et l'esclave : sans ma\xEEtre, le rejeu n'a pas de choix \xE0 r\xE9p\xE9ter. \xC9crire '$${e.name}' l\xE0 o\xF9 le motif se capture.`,
+      line: e.line
+    });
+  }
+  return erreurs;
+}
+function poserLaVoixDesTerminaux(ast) {
+  if (!ast) return;
+  const parDef = /* @__PURE__ */ new Map();
+  for (const d of ast.defs || []) {
+    if (d && d.type === "DefDirective" && d.keys && d.keys.voice) parDef.set(d.name, d.keys.voice.value);
+  }
+  if (!parDef.size) return;
+  const w = (n, vus = /* @__PURE__ */ new WeakSet()) => {
+    if (!n || typeof n !== "object" || vus.has(n)) return;
+    vus.add(n);
+    if (Array.isArray(n)) {
+      n.forEach((x) => w(x, vus));
+      return;
+    }
+    if (n.payload && n.payload.nature === "sounding") {
+      const nom = typeof n.symbol === "string" ? n.symbol : n.name;
+      const voix = parDef.get(nom);
+      if (voix !== void 0 && n.payload.voice === void 0) n.payload.voice = voix;
+    }
+    Object.values(n).forEach((v) => w(v, vus));
+  };
+  w(ast.subgrammars);
+}
+function retirerArdoiseAlphabet(ast) {
+  for (const actor of ast.actors || []) {
+    if (!actor.libRefs || !actor.libRefs.length) continue;
+    if (actor.properties) delete actor.properties.alphabet;
+    if (Array.isArray(actor.references)) {
+      actor.references = actor.references.filter((r) => r && r.category !== "alphabet");
+    }
+  }
+}
+function applyDefaultActor(ast) {
+  if (!ast) return [];
+  const errors = [];
+  const alphaBinding = (ast.directives || []).find((d) => d.name === "alphabet" && d.runtime);
+  if ((ast.actors || []).length > 0) {
+    if (alphaBinding) {
+      errors.push({
+        message: `chevauchement d'acteurs : un binding de sortie sur l'alphabet (alphabet.${alphaBinding.subkey}:${alphaBinding.runtime}) d\xE9signe un acteur implicite, incompatible avec un 'actor' explicite \u2014 choisis l'un OU l'autre`,
+        line: alphaBinding.line || 0
+      });
+    }
+    return errors;
+  }
+  const sortie = sortieHeritee(ast);
+  if (sortie.conflit) {
+    errors.push({
+      message: `deux sorties pour la m\xEAme sc\xE8ne : 'out.${sortie.conflit.ecrite}' et le raccord 'alphabet.${sortie.conflit.alphabet}:${sortie.conflit.raccord}' d\xE9signent des canaux diff\xE9rents \u2014 les deux \xE9critures disent la M\xCAME chose, il faut n'en garder qu'une`,
+      line: sortie.conflit.line
+    });
+  }
+  const transportKey = sortie.key;
+  const transport = { type: "TransportRef", key: transportKey, params: sortie.params };
+  const alphabetKey = alphabetHerite(ast);
+  const properties = { transport };
+  const references = [{ type: "ActorReference", category: "transport", name: transportKey, line: 0 }];
+  if (alphabetKey) {
+    properties.alphabet = alphabetKey;
+    references.push({ type: "ActorReference", category: "alphabet", name: alphabetKey, line: 0 });
+    const oct = octavesHerite(ast, alphabetKey);
+    if (oct) {
+      properties.octaves = oct;
+      references.push({ type: "ActorReference", category: "octaves", name: oct, line: 0 });
+    }
+    const tun = tuningHerite(ast, alphabetKey);
+    if (tun) {
+      properties.tuning = tun;
+      references.push({ type: "ActorReference", category: "tuning", name: tun, line: 0 });
+    }
+  }
+  const interprete = evalHerite(ast);
+  if (interprete) {
+    properties.eval = interprete;
+    references.push({ type: "ActorReference", category: "eval", name: interprete, line: 0 });
+  }
+  ast.actors = [{
+    type: "ActorDirective",
+    name: "scene",
+    properties,
+    references,
+    // Frontière AST (Palier 3) : pas de `soundAssignments:null` — champ non canonique.
+    // Canonique = `assignments?` OPTIONNEL (absent ici : l'acteur implicite n'affecte aucun son).
+    synthetic: true,
+    // acteur implicite (aucun actor déclaré) — panneau Acteurs vide
+    line: 0
+  }];
+  return errors;
+}
+var dernierCompte = null;
+function noterLePassage(compte) {
+  dernierCompte = compte;
+}
+
+// src/transpiler/segmentation.js
+function segmenter(nom, terminaux) {
+  if (!nom || terminaux.has(nom)) return null;
+  const longueurs = [...new Set([...terminaux].map((t) => t.length))].sort((a, b) => b - a);
+  const parts = [];
+  let i = 0;
+  while (i < nom.length) {
+    let pris = null;
+    for (const L of longueurs) {
+      if (L > nom.length - i) continue;
+      const bout = nom.slice(i, i + L);
+      if (terminaux.has(bout)) {
+        pris = bout;
+        break;
+      }
+    }
+    if (!pris) return { parts: null, reste: nom.slice(i) };
+    parts.push(pris);
+    i += pris.length;
+  }
+  return parts.length > 1 ? { parts, reste: null } : null;
 }
 
 // src/transpiler/controlValidation.js
@@ -826,29 +956,6 @@ function terminauxEnPortee(ast) {
   }
   return { terminaux, aUnAlphabet, paquets };
 }
-function poserLaVoixDesTerminaux(ast) {
-  if (!ast) return;
-  const parDef = /* @__PURE__ */ new Map();
-  for (const d of ast.defs || []) {
-    if (d && d.type === "DefDirective" && d.keys && d.keys.voice) parDef.set(d.name, d.keys.voice.value);
-  }
-  if (!parDef.size) return;
-  const w = (n, vus = /* @__PURE__ */ new WeakSet()) => {
-    if (!n || typeof n !== "object" || vus.has(n)) return;
-    vus.add(n);
-    if (Array.isArray(n)) {
-      n.forEach((x) => w(x, vus));
-      return;
-    }
-    if (n.payload && n.payload.nature === "sounding") {
-      const nom = typeof n.symbol === "string" ? n.symbol : n.name;
-      const voix = parDef.get(nom);
-      if (voix !== void 0 && n.payload.voice === void 0) n.payload.voice = voix;
-    }
-    Object.values(n).forEach((v) => w(v, vus));
-  };
-  w(ast.subgrammars);
-}
 function nomsDeclares(ast) {
   const declared = /* @__PURE__ */ new Set();
   for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) (r.lhs || []).forEach((s) => s && declared.add(s.name));
@@ -1001,63 +1108,6 @@ function validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet) {
     }
   };
   for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) visiter(r.rhs);
-  return errors;
-}
-function applyDefaultActor(ast) {
-  if (!ast) return [];
-  const errors = [];
-  const alphaBinding = (ast.directives || []).find((d) => d.name === "alphabet" && d.runtime);
-  if ((ast.actors || []).length > 0) {
-    if (alphaBinding) {
-      errors.push({
-        message: `chevauchement d'acteurs : un binding de sortie sur l'alphabet (alphabet.${alphaBinding.subkey}:${alphaBinding.runtime}) d\xE9signe un acteur implicite, incompatible avec un 'actor' explicite \u2014 choisis l'un OU l'autre`,
-        line: alphaBinding.line || 0
-      });
-    }
-    return errors;
-  }
-  const sortie = sortieHeritee(ast);
-  if (sortie.conflit) {
-    errors.push({
-      message: `deux sorties pour la m\xEAme sc\xE8ne : 'out.${sortie.conflit.ecrite}' et le raccord 'alphabet.${sortie.conflit.alphabet}:${sortie.conflit.raccord}' d\xE9signent des canaux diff\xE9rents \u2014 les deux \xE9critures disent la M\xCAME chose, il faut n'en garder qu'une`,
-      line: sortie.conflit.line
-    });
-  }
-  const transportKey = sortie.key;
-  const transport = { type: "TransportRef", key: transportKey, params: sortie.params };
-  const alphabetKey = alphabetHerite(ast);
-  const properties = { transport };
-  const references = [{ type: "ActorReference", category: "transport", name: transportKey, line: 0 }];
-  if (alphabetKey) {
-    properties.alphabet = alphabetKey;
-    references.push({ type: "ActorReference", category: "alphabet", name: alphabetKey, line: 0 });
-    const oct = octavesHerite(ast, alphabetKey);
-    if (oct) {
-      properties.octaves = oct;
-      references.push({ type: "ActorReference", category: "octaves", name: oct, line: 0 });
-    }
-    const tun = tuningHerite(ast, alphabetKey);
-    if (tun) {
-      properties.tuning = tun;
-      references.push({ type: "ActorReference", category: "tuning", name: tun, line: 0 });
-    }
-  }
-  const interprete = evalHerite(ast);
-  if (interprete) {
-    properties.eval = interprete;
-    references.push({ type: "ActorReference", category: "eval", name: interprete, line: 0 });
-  }
-  ast.actors = [{
-    type: "ActorDirective",
-    name: "scene",
-    properties,
-    references,
-    // Frontière AST (Palier 3) : pas de `soundAssignments:null` — champ non canonique.
-    // Canonique = `assignments?` OPTIONNEL (absent ici : l'acteur implicite n'affecte aucun son).
-    synthetic: true,
-    // acteur implicite (aucun actor déclaré) — panneau Acteurs vide
-    line: 0
-  }];
   return errors;
 }
 function applySceneValues(ast, libCtx) {
@@ -1225,34 +1275,6 @@ function chargerPorteesPermises() {
   }
   _porteesPermises = { get: (cle) => m.get(cle), has: (cle) => m.has(cle) };
   return _porteesPermises;
-}
-function refuserEsclaveSansMaitre(ast) {
-  const maitres = /* @__PURE__ */ new Set();
-  const esclaves = [];
-  let ancre = false;
-  (function marcher(n) {
-    if (!n || typeof n !== "object") return;
-    if (Array.isArray(n)) {
-      for (const e of n) marcher(e);
-      return;
-    }
-    if (n.type === "TemplateMaster" && n.name) maitres.add(n.name);
-    if (n.type === "TemplateAnchor") ancre = true;
-    if (n.type === "TemplateSlave" && n.name) esclaves.push(n);
-    for (const k in n) marcher(n[k]);
-  })(ast);
-  if (ancre) return [];
-  const vus = /* @__PURE__ */ new Set();
-  const erreurs = [];
-  for (const e of esclaves) {
-    if (maitres.has(e.name) || vus.has(e.name)) continue;
-    vus.add(e.name);
-    erreurs.push({
-      message: `'&${e.name}' rejoue un gabarit que rien ne capture \u2014 aucun '$${e.name}' dans cette sc\xE8ne. Le nom porte l'appariement entre le ma\xEEtre et l'esclave : sans ma\xEEtre, le rejeu n'a pas de choix \xE0 r\xE9p\xE9ter. \xC9crire '$${e.name}' l\xE0 o\xF9 le motif se capture.`,
-      line: e.line
-    });
-  }
-  return erreurs;
 }
 function refuserAttenteNonDeclaree(ast) {
   const connus = /* @__PURE__ */ new Set();
@@ -1761,19 +1783,6 @@ function emitNoteTerminals(ast) {
   ast.noteTerminals = dansLaScene(notes);
   ast.alphabetTerminals = dansLaScene(sansHauteur);
 }
-function emitSceneMeter(ast) {
-  const dir = (ast.directives || []).find((d) => d && d.name === "meter" && d.value != null);
-  if (!dir) return;
-  const valeur = String(dir.value);
-  for (const sg of ast.subgrammars || []) {
-    for (const r of sg.rules || []) {
-      const porteDeja = (r.settings?.pairs || []).some((p) => p && p.key === "meter");
-      if (porteDeja) continue;
-      r.settings = r.settings || { type: "SettingBag", pairs: [] };
-      r.settings.pairs.push({ key: "meter", value: valeur, decrement: null });
-    }
-  }
-}
 function emitSceneLibRefs(ast) {
   const axesHauteur = /* @__PURE__ */ new Set(["alphabet", "tuning", "octaves", "scale"]);
   const refs = [];
@@ -1791,15 +1800,6 @@ function emitSceneLibRefs(ast) {
   }
   if (refs.length === 0) return;
   ast.libRefs = [...ast.libRefs || [], ...refs.filter((r) => !(ast.libRefs || []).includes(r))];
-}
-function retirerArdoiseAlphabet(ast) {
-  for (const actor of ast.actors || []) {
-    if (!actor.libRefs || !actor.libRefs.length) continue;
-    if (actor.properties) delete actor.properties.alphabet;
-    if (Array.isArray(actor.references)) {
-      actor.references = actor.references.filter((r) => r && r.category !== "alphabet");
-    }
-  }
 }
 function resoudreSource(source, environnement) {
   const result = { ast: null, errors: [], warnings: [] };

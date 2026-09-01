@@ -5,7 +5,7 @@
 > vit dans le document d'architecture, chez Atlas, qui cite celui-ci.
 ## Ce qui est mesuré
 
-- **20 modules** dans `src/transpiler/`, **15171 lignes**.
+- **20 modules** dans `src/transpiler/`, **15179 lignes**.
 - Le **rôle** est lu dans l'en-tête de chaque fichier, verbatim — jamais interprété.
 - Les **arêtes** sont les imports d'un module vers un voisin du même dossier.
 
@@ -14,12 +14,12 @@
 | Module | Lignes | Importe | Importé par | Rôle (lu dans l'en-tête) |
 | --- | ---: | ---: | ---: | --- |
 | `parser.js` | 7797 | 4 | 1 | BPScript Parser |
-| `bpxAst.js` | 3279 | 8 | 1 | POSE LE DESTINATAIRE DE CHAQUE RÉGLAGE SUR LE SAC QUI LE PORTE. |
+| `bpxAst.js` | 3016 | 8 | 1 | POSE LE DESTINATAIRE DE CHAQUE RÉGLAGE SUR LE SAC QUI LE PORTE. |
 | `libs.js` | 1346 | 3 | 4 | BPScript Library Loader |
-| `actorResolver.js` | 585 | 1 | 1 | BPScript Actor Resolver |
+| `actorResolver.js` | 585 | 1 | 2 | BPScript Actor Resolver |
 | `libs-bundle.js` | 583 | 2 | 0 | BPScript Libs Bundle Generator |
 | `tokenizer.js` | 514 | 0 | 2 | BPScript Tokenizer |
-| `resolution.js` | 187 | 0 | 1 | L'ÉTAGE QUI RÉSOUT — le troisième des quatre, et le seul qui n'avait pas de domicile. |
+| `resolution.js` | 458 | 1 | 1 | L'ÉTAGE QUI RÉSOUT — le troisième des quatre, et le seul qui n'avait pas de domicile. |
 | `orderTokens.js` | 123 | 0 | 0 | — |
 | `controlValidation.js` | 113 | 0 | 1 | Collecte récursivement toutes les paires de SettingBag de l'AST. |
 | `libs-champs.js` | 92 | 0 | 2 | LES CHAMPS DE FICHIER D'UNE LIBRAIRIE — déclarés UNE FOIS, pour tous mes lecteurs. |
@@ -79,6 +79,7 @@ flowchart LR
   parser_js --> libs_js
   parser_js --> constants_js
   parser_js --> syntaxe_data_js
+  resolution_js --> actorResolver_js
 ```
 
 ## Ce que la mesure trouve

@@ -27,7 +27,7 @@
  * Une prescription que la table de gabarits ne sait pas instancier est DITE, jamais sautée : un
  * garde qui s'exempte en silence certifie ce qu'il n'a pas regardé.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compileToBPxAST } from '../src/transpiler/index.js';
@@ -198,7 +198,14 @@ for (const [quoi, src] of REFUS) {
 //
 // ⚠️ ET IL SE DÉRIVE DU SOURCE, jamais d'une énumération : ajouter un refus au parser l'inscrit ici
 // sans que personne ait à y penser au bon moment.
-const SOURCES = ['parser.js', 'bpxAst.js', 'tokenizer.js']
+// ⛔ LA LISTE SE DÉRIVE DU DOSSIER, ELLE NE S'ÉNUMÈRE PLUS. Le commentaire ci-dessus promettait
+// déjà « jamais d'une énumération » et trois noms étaient écrits juste en dessous. Le 2026-09-01,
+// cinq passes ont déménagé de `bpxAst.js` vers `resolution.js` : un message de refus est sorti du
+// balayage avec sa fonction, et ce garde est resté VERT en couvrant un refus de moins.
+// ⚠️ Les fichiers GÉNÉRÉS sont écartés — ils ne portent aucun refus et pèsent des mégaoctets.
+const SOURCES = readdirSync(RACINE_SRC)
+  .filter((f) => f.endsWith('.js') && !f.endsWith('-data.js'))
+  .sort()
   .map((f) => join(RACINE_SRC, f));
 
 /** Les messages littéraux d'un fichier : le contenu de chaque `new ParseError(...)` / `LexError`,
