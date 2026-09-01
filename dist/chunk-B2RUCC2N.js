@@ -451,6 +451,309 @@ function applyDefaultActor(ast) {
   }];
   return errors;
 }
+function hasTempoDirective(ast) {
+  return (ast.directives || []).some(
+    (d) => d && d.type === "Directive" && d.name === "tempo"
+  );
+}
+function applyEnvironmentDefaults(ast, env) {
+  if (!ast || !env || typeof env !== "object") return;
+  if (env.tempo != null && !hasTempoDirective(ast)) {
+    (ast.directives = ast.directives || []).push({
+      type: "Directive",
+      name: "tempo",
+      subkey: null,
+      runtime: null,
+      value: env.tempo,
+      modifiers: null,
+      fromEnvironment: true,
+      // provenance : défaut d'environnement, pas déclaré dans la source
+      line: 0
+    });
+  }
+}
+function canonicalizeLhsContext(ctx, line, asRuleContext) {
+  const symbols = ctx.symbols || [];
+  const single = symbols.length === 1;
+  const allLiteral = symbols.every((s) => !isCtxWildcardName(s));
+  const negated = ctx.positive === false;
+  if (single && allLiteral && negated) {
+    return { inline: { type: "Symbol", name: symbols[0], negated: true, line } };
+  }
+  if (single && !allLiteral) {
+    if (symbols[0] === "?") return { inline: { type: "Wildcard", negated, line } };
+    return { inline: { type: "Variable", index: parseInt(symbols[0].slice(1), 10), negated, line } };
+  }
+  const elements = symbols.map((s) => ctxSymbolToElement(s, line));
+  if (asRuleContext) {
+    return { remote: {
+      type: "Context",
+      side: "left",
+      positive: !negated,
+      kind: "remote",
+      elements,
+      symbols: [...symbols],
+      line
+    } };
+  }
+  return { remote: { type: "Context", negated, elements, line } };
+}
+function canonicalizeLhsElement(el) {
+  if (!el || typeof el !== "object" || el.type !== "Context") return el;
+  if (Array.isArray(el.elements)) return el;
+  const conv = canonicalizeLhsContext(el, el.line ?? 0, false);
+  return conv.inline || conv.remote;
+}
+function canonicalizeRhsElement(el) {
+  if (!el || typeof el !== "object") return el;
+  if (el.type === "Context") {
+    const symbols = el.symbols || [];
+    if (symbols.length === 1 && el.positive === false) {
+      return { type: "Wildcard", negated: true };
+    }
+    return el;
+  }
+  if (el.type === "Polymetric" && Array.isArray(el.voices)) {
+    return { ...el, voices: el.voices.map((v) => v.map((c) => canonicalizeRhsElement(c))) };
+  }
+  return el;
+}
+function canonicalizeContexts(ast) {
+  for (const sub of ast.subgrammars || []) {
+    for (const rule of sub.rules || []) {
+      if (Array.isArray(rule.contexts) && rule.contexts.length > 0) {
+        rule.contexts = rule.contexts.map((ctx) => enrichRemoteHeadContext(ctx, rule.line ?? 0));
+      }
+      if (INLINE_FLIP_PALIER4) {
+        const seq = [];
+        const remoteMarks = [];
+        for (const ctx of rule.contexts || []) {
+          if (ctx && Array.isArray(ctx.elements)) {
+            const mark = { __remote: ctx };
+            seq.push(mark);
+            remoteMarks.push(mark);
+            continue;
+          }
+          const conv = canonicalizeLhsContext(ctx, rule.line ?? 0, true);
+          if (conv.inline) {
+            seq.push(conv.inline);
+          } else {
+            const mark = { __remote: conv.remote };
+            seq.push(mark);
+            remoteMarks.push(mark);
+          }
+        }
+        const assembled = [...seq, ...rule.lhs];
+        const declared = [];
+        for (const mark of remoteMarks) {
+          const i = assembled.indexOf(mark);
+          const rc = mark.__remote;
+          if (i === 0) declared.push({ ...rc, side: "left" });
+          else if (i === assembled.length - 1) declared.push({ ...rc, side: "right" });
+          else {
+            throw new ParseError(
+              `contexte distant en milieu de motif (autoris\xE9 : d\xE9but ou fin de LHS)`,
+              { line: rule.line ?? 0, col: 0 }
+            );
+          }
+        }
+        rule.lhs = assembled.filter((x) => !x || !x.__remote);
+        rule.contexts = declared;
+        rule.lhs = rule.lhs.map(canonicalizeLhsElement);
+        rule.rhs = rule.rhs.map(canonicalizeRhsElement);
+      }
+    }
+  }
+}
+function ctxSymbolToElement(sym, line) {
+  if (sym === "?") return { type: "Wildcard", line };
+  if (CTX_METAVAR_RE.test(sym)) return { type: "Variable", index: parseInt(sym.slice(1), 10), line };
+  return { type: "Symbol", name: sym, line };
+}
+function enrichRemoteHeadContext(ctx, line) {
+  if (!ctx || typeof ctx !== "object" || Array.isArray(ctx.elements)) return ctx;
+  const symbols = ctx.symbols || [];
+  const single = symbols.length === 1;
+  const allLiteral = symbols.every((s) => !isCtxWildcardName(s));
+  const inlineCategory = single && (!allLiteral || ctx.positive === false);
+  if (inlineCategory) return ctx;
+  return {
+    type: "Context",
+    positive: ctx.positive !== false,
+    kind: "remote",
+    elements: symbols.map((s) => ctxSymbolToElement(s, line)),
+    symbols: ctx.symbols,
+    line
+  };
+}
+var INLINE_FLIP_PALIER4 = true;
+var CTX_METAVAR_RE = /^\?\d+$/;
+var isCtxWildcardName = (s) => s === "?" || CTX_METAVAR_RE.test(s);
+function canalFautif(canal) {
+  const cat = LIBS.core?.schema?.channels || {};
+  const c = cat[canal];
+  if (!c) return `le canal '${canal}' n'existe pas \u2014 les canaux sont ${Object.keys(cat).join(", ")}. La liste est FERM\xC9E.`;
+  if (!c.out) return `'${canal}' n'est pas une sortie \u2014 un terminal sonne, il ne se lit pas. Les canaux de sortie sont ${Object.keys(cat).filter((k) => cat[k].out).join(", ")}.`;
+  if (!c.writable) return `'${canal}' est une DESTINATION de l'architecture, rout\xE9e comme les autres sorties, mais son \xC9CRITURE dans une sc\xE8ne attend encore son appareil d\xE9di\xE9.`;
+  return null;
+}
+function nomsDeclares(ast) {
+  const declared = /* @__PURE__ */ new Set();
+  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) (r.lhs || []).forEach((s) => s && declared.add(s.name));
+  for (const d of ast.declarations || []) if (d && d.name) declared.add(d.name);
+  for (const d of ast.defs || []) {
+    if (d && d.type === "DefDirective" && d.name) declared.add(d.name);
+  }
+  for (const s of ast.scenes || []) if (s && s.name) declared.add(s.name);
+  for (const d of ast.directives || []) if (d.name === "homomorphism" && d.subkey) declared.add(d.subkey);
+  for (const h of ast.homomorphisms || []) if (h && h.name) declared.add(h.name);
+  for (const d of ast.directives || []) if (d.name === "timepatterns" && Array.isArray(d.timePatterns)) {
+    for (const tp of d.timePatterns) if (tp && tp.name) declared.add(tp.name);
+  }
+  for (const v of ast.vars || []) for (const n of v?.names || []) declared.add(n);
+  return declared;
+}
+function validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet) {
+  const errors = [];
+  const seen = /* @__PURE__ */ new Set();
+  const citer = (el) => {
+    const parts = (el.args || []).map((a) => {
+      const v = a && a.value ? a.value : a;
+      const texte = v && Object.prototype.hasOwnProperty.call(v, "value") ? v.value : v;
+      return (a && a.key ? `${a.key}:` : "") + texte;
+    });
+    return `${el.name}(${parts.join(" ")})`;
+  };
+  const visiter = (n) => {
+    if (!n || typeof n !== "object") return;
+    if (Array.isArray(n)) {
+      n.forEach(visiter);
+      return;
+    }
+    if (n.type === "SymbolCall" && n.name && !(n.payload && codeVoice.has(n.payload.actor)) && !known.has(n.name) && !declared.has(n.name) && !seen.has(n.name)) {
+      const positionnel = (n.args || []).some((a) => a && a.key == null);
+      if (anyAlphabet || positionnel) {
+        seen.add(n.name);
+        const auRegistre = universeControlNames().has(n.name);
+        errors.push({
+          message: auRegistre ? `appel '${citer(n)}' : '${n.name}' est un contr\xF4le du registre, mais cette sc\xE8ne ne l'a pas import\xE9 \u2014 il a donc \xE9t\xE9 reclass\xE9 en TERMINAL SONNANT, c'est-\xE0-dire en note. D\xE9clarer le socle en t\xEAte de sc\xE8ne ('core')` : `appel '${citer(n)}' : '${n.name}' n'existe pas \u2014 ni contr\xF4le du registre, ni terminal des alphabets en port\xE9e, ni symbole d\xE9clar\xE9. Une fonction g\xE9n\xE9rique n'est pas du langage : chaque intention porte son nom ('[]' pour le moteur, '()' pour le runtime, en 'cl\xE9:valeur')`,
+          line: n.line
+        });
+      }
+    }
+    for (const k in n) {
+      const v = n[k];
+      if (v && typeof v === "object") visiter(v);
+    }
+  };
+  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) visiter(r.rhs);
+  return errors;
+}
+function terminauxEnPortee(ast) {
+  const terminaux = /* @__PURE__ */ new Set();
+  const paquets = [];
+  const ajouter = (name, octaves) => {
+    const lib = resolveActorAlphabet(name, ast.directives);
+    if (!lib || !nomsDeTerminaux(lib)) return false;
+    const paquet = /* @__PURE__ */ new Set();
+    for (const t of expandAlphabetTerminals(lib, octaves)) {
+      terminaux.add(t);
+      paquet.add(t);
+    }
+    const alts = lib.alterations && typeof lib.alterations === "object" && !Array.isArray(lib.alterations) ? Object.keys(lib.alterations) : [""];
+    for (const note of nomsDeTerminaux(lib)) for (const alt of alts) {
+      terminaux.add(note + alt);
+      paquet.add(note + alt);
+    }
+    paquets.push(paquet);
+    return true;
+  };
+  let aUnAlphabet = false;
+  const sceneAlpha = (ast.directives || []).find((d) => d.name === "alphabet" && d.subkey);
+  const sceneOct = (ast.directives || []).find((d) => d.name === "octaves" && (d.subkey || d.runtime));
+  if (sceneAlpha) {
+    aUnAlphabet = ajouter(sceneAlpha.subkey, sceneOct ? sceneOct.subkey || sceneOct.runtime : null) || aUnAlphabet;
+  }
+  for (const a of ast.actors || []) {
+    const p = a.properties || {};
+    if (p.alphabet) aUnAlphabet = ajouter(p.alphabet, p.octaves || null) || aUnAlphabet;
+  }
+  for (const ref of ast.libRefs || []) {
+    const parts = String(ref).split(".");
+    const lib = loadLib(parts.slice(0, -1).join("."), parts[parts.length - 1]);
+    if (!lib || !nomsDeTerminaux(lib)) continue;
+    aUnAlphabet = ajouter(parts[parts.length - 1], sceneOct ? sceneOct.subkey || sceneOct.runtime : null) || aUnAlphabet;
+  }
+  for (const d of ast.defs || []) {
+    if (d && d.type === "DefDirective" && d.kind === "terminal" && d.name) {
+      terminaux.add(d.name);
+      for (const paquet of paquets) paquet.add(d.name);
+    }
+  }
+  return { terminaux, aUnAlphabet, paquets };
+}
+function validateTerminals(ast) {
+  if (!ast) return [];
+  const errors = [];
+  const codeVoice = new Set((ast.actors || []).filter((a) => (a.properties || {}).eval).map((a) => a.name));
+  const { terminaux: known, aUnAlphabet: anyAlphabet } = terminauxEnPortee(ast);
+  const declared = nomsDeclares(ast);
+  errors.push(...validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet));
+  if (!anyAlphabet) return errors;
+  const seen = /* @__PURE__ */ new Set();
+  const COMPOSITES = ["voices", "elements", "content", "symbol", "triggers", "primary", "secondaries"];
+  const verifier = (el) => {
+    if (!el || typeof el !== "object") return;
+    if (Array.isArray(el)) {
+      el.forEach(verifier);
+      return;
+    }
+    if (el.type === "Symbol" && Array.isArray(el.compose) && el.compose.length) {
+      for (const part of el.compose) {
+        if (/^[-_.]+$/.test(part) || /[{},]/.test(part)) continue;
+        if (known.has(part) || declared.has(part) || seen.has(part)) continue;
+        seen.add(part);
+        errors.push({
+          message: `dans l'objet sonore compos\xE9 '|[\u2026]' : '${part}' n'est d\xE9clar\xE9 nulle part \u2014 absent des alphabets en port\xE9e`,
+          line: el.line
+        });
+      }
+      return;
+    }
+    if ((el.type === "Symbol" || el.type === "OutTimeObject") && el.name && el.role !== "homomorphism" && !(el.payload && codeVoice.has(el.payload.actor)) && !known.has(el.name) && !declared.has(el.name) && !seen.has(el.name)) {
+      seen.add(el.name);
+      const reste = restesDeSegmentation.get(el);
+      const ligne = (ast.directives || []).find((d) => d && d.type === "Directive" && d.name === el.name && typeof d.runtime === "string");
+      const cause = ligne && canalFautif(ligne.runtime);
+      errors.push({
+        message: cause ? `'${el.name}:${ligne.runtime}' d\xE9clare un terminal, et ${cause} La d\xE9claration s'\xE9crit '<nom>:<canal>' \u2014 le terminal n'est pas en cause.` : reste && reste !== el.name ? `terminal '${el.name}' non d\xE9clar\xE9 \u2014 segmentation bloqu\xE9e sur '${reste}', absent des alphabets en port\xE9e` : `terminal '${el.name}' non d\xE9clar\xE9 \u2014 absent des alphabets en port\xE9e`,
+        line: el.line
+      });
+    }
+    for (const k of COMPOSITES) if (el[k]) verifier(el[k]);
+  };
+  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) verifier(r.rhs || []);
+  const sujetsVus = /* @__PURE__ */ new Set();
+  const verifierLesSujets = (n) => {
+    if (!n || typeof n !== "object") return;
+    if (Array.isArray(n)) {
+      n.forEach(verifierLesSujets);
+      return;
+    }
+    const s = n.subject;
+    if (typeof s === "string" && s && s !== "*" && !codeVoice.has(s) && !known.has(s) && !declared.has(s) && !sujetsVus.has(s)) {
+      sujetsVus.add(s);
+      errors.push({
+        message: `sujet de r\xE9glage '${s}:\u2026' : '${s}' ne d\xE9signe aucun terminal \u2014 absent des alphabets en port\xE9e et des noms d\xE9clar\xE9s. Un sujet vise les terminaux de son nom ; '*' vise chaque terminal de la port\xE9e, et l'absence de sujet vise la port\xE9e enti\xE8re`,
+        line: n.line
+      });
+    }
+    for (const v of Object.values(n)) if (v && typeof v === "object") verifierLesSujets(v);
+  };
+  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) verifierLesSujets(r);
+  return errors;
+}
+var restesDeSegmentation = /* @__PURE__ */ new WeakMap();
 var dernierCompte = null;
 function noterLePassage(compte) {
   dernierCompte = compte;
@@ -537,7 +840,6 @@ function validateControls(ast, controls, qualifies = {}) {
 }
 
 // src/transpiler/bpxAst.js
-var restesDeSegmentation = /* @__PURE__ */ new WeakMap();
 function poserLeDestinataireDesReglages(ast, libCtx) {
   const table = libCtx?.controlResolvedBy || {};
   const tableQualifiee = libCtx?.controlQualifiedResolvedBy || {};
@@ -628,28 +930,6 @@ function annotateBackticks(ast) {
   for (const sub of ast.subgrammars || []) for (const rule of sub.rules || []) scanOrphans(rule.rhs);
   return errors;
 }
-function applyEnvironmentDefaults(ast, env) {
-  if (!ast || !env || typeof env !== "object") return;
-  if (env.tempo != null && !hasTempoDirective(ast)) {
-    (ast.directives = ast.directives || []).push({
-      type: "Directive",
-      name: "tempo",
-      subkey: null,
-      runtime: null,
-      value: env.tempo,
-      modifiers: null,
-      fromEnvironment: true,
-      // provenance : défaut d'environnement, pas déclaré dans la source
-      line: 0
-    });
-  }
-}
-function hasTempoDirective(ast) {
-  return (ast.directives || []).some(
-    (d) => d && d.type === "Directive" && d.name === "tempo"
-  );
-}
-var INLINE_FLIP_PALIER4 = true;
 function singleCharAlphabetSet(libCtx) {
   const terms = libCtx && libCtx.alphabetTerminals || [];
   if (terms.length === 0) return null;
@@ -730,122 +1010,6 @@ function splitCompoundTerminals(ast, libCtx) {
     }
   }
 }
-var CTX_METAVAR_RE = /^\?\d+$/;
-var isCtxWildcardName = (s) => s === "?" || CTX_METAVAR_RE.test(s);
-function ctxSymbolToElement(sym, line) {
-  if (sym === "?") return { type: "Wildcard", line };
-  if (CTX_METAVAR_RE.test(sym)) return { type: "Variable", index: parseInt(sym.slice(1), 10), line };
-  return { type: "Symbol", name: sym, line };
-}
-function canonicalizeLhsContext(ctx, line, asRuleContext) {
-  const symbols = ctx.symbols || [];
-  const single = symbols.length === 1;
-  const allLiteral = symbols.every((s) => !isCtxWildcardName(s));
-  const negated = ctx.positive === false;
-  if (single && allLiteral && negated) {
-    return { inline: { type: "Symbol", name: symbols[0], negated: true, line } };
-  }
-  if (single && !allLiteral) {
-    if (symbols[0] === "?") return { inline: { type: "Wildcard", negated, line } };
-    return { inline: { type: "Variable", index: parseInt(symbols[0].slice(1), 10), negated, line } };
-  }
-  const elements = symbols.map((s) => ctxSymbolToElement(s, line));
-  if (asRuleContext) {
-    return { remote: {
-      type: "Context",
-      side: "left",
-      positive: !negated,
-      kind: "remote",
-      elements,
-      symbols: [...symbols],
-      line
-    } };
-  }
-  return { remote: { type: "Context", negated, elements, line } };
-}
-function canonicalizeLhsElement(el) {
-  if (!el || typeof el !== "object" || el.type !== "Context") return el;
-  if (Array.isArray(el.elements)) return el;
-  const conv = canonicalizeLhsContext(el, el.line ?? 0, false);
-  return conv.inline || conv.remote;
-}
-function canonicalizeRhsElement(el) {
-  if (!el || typeof el !== "object") return el;
-  if (el.type === "Context") {
-    const symbols = el.symbols || [];
-    if (symbols.length === 1 && el.positive === false) {
-      return { type: "Wildcard", negated: true };
-    }
-    return el;
-  }
-  if (el.type === "Polymetric" && Array.isArray(el.voices)) {
-    return { ...el, voices: el.voices.map((v) => v.map((c) => canonicalizeRhsElement(c))) };
-  }
-  return el;
-}
-function enrichRemoteHeadContext(ctx, line) {
-  if (!ctx || typeof ctx !== "object" || Array.isArray(ctx.elements)) return ctx;
-  const symbols = ctx.symbols || [];
-  const single = symbols.length === 1;
-  const allLiteral = symbols.every((s) => !isCtxWildcardName(s));
-  const inlineCategory = single && (!allLiteral || ctx.positive === false);
-  if (inlineCategory) return ctx;
-  return {
-    type: "Context",
-    positive: ctx.positive !== false,
-    kind: "remote",
-    elements: symbols.map((s) => ctxSymbolToElement(s, line)),
-    symbols: ctx.symbols,
-    line
-  };
-}
-function canonicalizeContexts(ast) {
-  for (const sub of ast.subgrammars || []) {
-    for (const rule of sub.rules || []) {
-      if (Array.isArray(rule.contexts) && rule.contexts.length > 0) {
-        rule.contexts = rule.contexts.map((ctx) => enrichRemoteHeadContext(ctx, rule.line ?? 0));
-      }
-      if (INLINE_FLIP_PALIER4) {
-        const seq = [];
-        const remoteMarks = [];
-        for (const ctx of rule.contexts || []) {
-          if (ctx && Array.isArray(ctx.elements)) {
-            const mark = { __remote: ctx };
-            seq.push(mark);
-            remoteMarks.push(mark);
-            continue;
-          }
-          const conv = canonicalizeLhsContext(ctx, rule.line ?? 0, true);
-          if (conv.inline) {
-            seq.push(conv.inline);
-          } else {
-            const mark = { __remote: conv.remote };
-            seq.push(mark);
-            remoteMarks.push(mark);
-          }
-        }
-        const assembled = [...seq, ...rule.lhs];
-        const declared = [];
-        for (const mark of remoteMarks) {
-          const i = assembled.indexOf(mark);
-          const rc = mark.__remote;
-          if (i === 0) declared.push({ ...rc, side: "left" });
-          else if (i === assembled.length - 1) declared.push({ ...rc, side: "right" });
-          else {
-            throw new ParseError(
-              `contexte distant en milieu de motif (autoris\xE9 : d\xE9but ou fin de LHS)`,
-              { line: rule.line ?? 0, col: 0 }
-            );
-          }
-        }
-        rule.lhs = assembled.filter((x) => !x || !x.__remote);
-        rule.contexts = declared;
-        rule.lhs = rule.lhs.map(canonicalizeLhsElement);
-        rule.rhs = rule.rhs.map(canonicalizeRhsElement);
-      }
-    }
-  }
-}
 function deriveAlphabetFromTuning(ast) {
   if (!ast) return;
   const tuningAlpha = (tname) => {
@@ -913,65 +1077,6 @@ function resolveHomomorphismMarkers(ast) {
   };
   for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) mark(r.rhs);
 }
-function terminauxEnPortee(ast) {
-  const terminaux = /* @__PURE__ */ new Set();
-  const paquets = [];
-  const ajouter = (name, octaves) => {
-    const lib = resolveActorAlphabet(name, ast.directives);
-    if (!lib || !nomsDeTerminaux(lib)) return false;
-    const paquet = /* @__PURE__ */ new Set();
-    for (const t of expandAlphabetTerminals(lib, octaves)) {
-      terminaux.add(t);
-      paquet.add(t);
-    }
-    const alts = lib.alterations && typeof lib.alterations === "object" && !Array.isArray(lib.alterations) ? Object.keys(lib.alterations) : [""];
-    for (const note of nomsDeTerminaux(lib)) for (const alt of alts) {
-      terminaux.add(note + alt);
-      paquet.add(note + alt);
-    }
-    paquets.push(paquet);
-    return true;
-  };
-  let aUnAlphabet = false;
-  const sceneAlpha = (ast.directives || []).find((d) => d.name === "alphabet" && d.subkey);
-  const sceneOct = (ast.directives || []).find((d) => d.name === "octaves" && (d.subkey || d.runtime));
-  if (sceneAlpha) {
-    aUnAlphabet = ajouter(sceneAlpha.subkey, sceneOct ? sceneOct.subkey || sceneOct.runtime : null) || aUnAlphabet;
-  }
-  for (const a of ast.actors || []) {
-    const p = a.properties || {};
-    if (p.alphabet) aUnAlphabet = ajouter(p.alphabet, p.octaves || null) || aUnAlphabet;
-  }
-  for (const ref of ast.libRefs || []) {
-    const parts = String(ref).split(".");
-    const lib = loadLib(parts.slice(0, -1).join("."), parts[parts.length - 1]);
-    if (!lib || !nomsDeTerminaux(lib)) continue;
-    aUnAlphabet = ajouter(parts[parts.length - 1], sceneOct ? sceneOct.subkey || sceneOct.runtime : null) || aUnAlphabet;
-  }
-  for (const d of ast.defs || []) {
-    if (d && d.type === "DefDirective" && d.kind === "terminal" && d.name) {
-      terminaux.add(d.name);
-      for (const paquet of paquets) paquet.add(d.name);
-    }
-  }
-  return { terminaux, aUnAlphabet, paquets };
-}
-function nomsDeclares(ast) {
-  const declared = /* @__PURE__ */ new Set();
-  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) (r.lhs || []).forEach((s) => s && declared.add(s.name));
-  for (const d of ast.declarations || []) if (d && d.name) declared.add(d.name);
-  for (const d of ast.defs || []) {
-    if (d && d.type === "DefDirective" && d.name) declared.add(d.name);
-  }
-  for (const s of ast.scenes || []) if (s && s.name) declared.add(s.name);
-  for (const d of ast.directives || []) if (d.name === "homomorphism" && d.subkey) declared.add(d.subkey);
-  for (const h of ast.homomorphisms || []) if (h && h.name) declared.add(h.name);
-  for (const d of ast.directives || []) if (d.name === "timepatterns" && Array.isArray(d.timePatterns)) {
-    for (const tp of d.timePatterns) if (tp && tp.name) declared.add(tp.name);
-  }
-  for (const v of ast.vars || []) for (const n of v?.names || []) declared.add(n);
-  return declared;
-}
 function segmenterLesTerminaux(ast, known, paquets) {
   const lire = (nom) => {
     let echec = null;
@@ -1012,103 +1117,6 @@ function segmenterLesTerminaux(ast, known, paquets) {
       if (Array.isArray(r.lhs)) r.lhs = dansUneListe(r.lhs);
     }
   }
-}
-function validateTerminals(ast) {
-  if (!ast) return [];
-  const errors = [];
-  const codeVoice = new Set((ast.actors || []).filter((a) => (a.properties || {}).eval).map((a) => a.name));
-  const { terminaux: known, aUnAlphabet: anyAlphabet } = terminauxEnPortee(ast);
-  const declared = nomsDeclares(ast);
-  errors.push(...validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet));
-  if (!anyAlphabet) return errors;
-  const seen = /* @__PURE__ */ new Set();
-  const COMPOSITES = ["voices", "elements", "content", "symbol", "triggers", "primary", "secondaries"];
-  const verifier = (el) => {
-    if (!el || typeof el !== "object") return;
-    if (Array.isArray(el)) {
-      el.forEach(verifier);
-      return;
-    }
-    if (el.type === "Symbol" && Array.isArray(el.compose) && el.compose.length) {
-      for (const part of el.compose) {
-        if (/^[-_.]+$/.test(part) || /[{},]/.test(part)) continue;
-        if (known.has(part) || declared.has(part) || seen.has(part)) continue;
-        seen.add(part);
-        errors.push({
-          message: `dans l'objet sonore compos\xE9 '|[\u2026]' : '${part}' n'est d\xE9clar\xE9 nulle part \u2014 absent des alphabets en port\xE9e`,
-          line: el.line
-        });
-      }
-      return;
-    }
-    if ((el.type === "Symbol" || el.type === "OutTimeObject") && el.name && el.role !== "homomorphism" && !(el.payload && codeVoice.has(el.payload.actor)) && !known.has(el.name) && !declared.has(el.name) && !seen.has(el.name)) {
-      seen.add(el.name);
-      const reste = restesDeSegmentation.get(el);
-      const ligne = (ast.directives || []).find((d) => d && d.type === "Directive" && d.name === el.name && typeof d.runtime === "string");
-      const cause = ligne && canalFautif(ligne.runtime);
-      errors.push({
-        message: cause ? `'${el.name}:${ligne.runtime}' d\xE9clare un terminal, et ${cause} La d\xE9claration s'\xE9crit '<nom>:<canal>' \u2014 le terminal n'est pas en cause.` : reste && reste !== el.name ? `terminal '${el.name}' non d\xE9clar\xE9 \u2014 segmentation bloqu\xE9e sur '${reste}', absent des alphabets en port\xE9e` : `terminal '${el.name}' non d\xE9clar\xE9 \u2014 absent des alphabets en port\xE9e`,
-        line: el.line
-      });
-    }
-    for (const k of COMPOSITES) if (el[k]) verifier(el[k]);
-  };
-  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) verifier(r.rhs || []);
-  const sujetsVus = /* @__PURE__ */ new Set();
-  const verifierLesSujets = (n) => {
-    if (!n || typeof n !== "object") return;
-    if (Array.isArray(n)) {
-      n.forEach(verifierLesSujets);
-      return;
-    }
-    const s = n.subject;
-    if (typeof s === "string" && s && s !== "*" && !codeVoice.has(s) && !known.has(s) && !declared.has(s) && !sujetsVus.has(s)) {
-      sujetsVus.add(s);
-      errors.push({
-        message: `sujet de r\xE9glage '${s}:\u2026' : '${s}' ne d\xE9signe aucun terminal \u2014 absent des alphabets en port\xE9e et des noms d\xE9clar\xE9s. Un sujet vise les terminaux de son nom ; '*' vise chaque terminal de la port\xE9e, et l'absence de sujet vise la port\xE9e enti\xE8re`,
-        line: n.line
-      });
-    }
-    for (const v of Object.values(n)) if (v && typeof v === "object") verifierLesSujets(v);
-  };
-  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) verifierLesSujets(r);
-  return errors;
-}
-function validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet) {
-  const errors = [];
-  const seen = /* @__PURE__ */ new Set();
-  const citer = (el) => {
-    const parts = (el.args || []).map((a) => {
-      const v = a && a.value ? a.value : a;
-      const texte = v && Object.prototype.hasOwnProperty.call(v, "value") ? v.value : v;
-      return (a && a.key ? `${a.key}:` : "") + texte;
-    });
-    return `${el.name}(${parts.join(" ")})`;
-  };
-  const visiter = (n) => {
-    if (!n || typeof n !== "object") return;
-    if (Array.isArray(n)) {
-      n.forEach(visiter);
-      return;
-    }
-    if (n.type === "SymbolCall" && n.name && !(n.payload && codeVoice.has(n.payload.actor)) && !known.has(n.name) && !declared.has(n.name) && !seen.has(n.name)) {
-      const positionnel = (n.args || []).some((a) => a && a.key == null);
-      if (anyAlphabet || positionnel) {
-        seen.add(n.name);
-        const auRegistre = universeControlNames().has(n.name);
-        errors.push({
-          message: auRegistre ? `appel '${citer(n)}' : '${n.name}' est un contr\xF4le du registre, mais cette sc\xE8ne ne l'a pas import\xE9 \u2014 il a donc \xE9t\xE9 reclass\xE9 en TERMINAL SONNANT, c'est-\xE0-dire en note. D\xE9clarer le socle en t\xEAte de sc\xE8ne ('core')` : `appel '${citer(n)}' : '${n.name}' n'existe pas \u2014 ni contr\xF4le du registre, ni terminal des alphabets en port\xE9e, ni symbole d\xE9clar\xE9. Une fonction g\xE9n\xE9rique n'est pas du langage : chaque intention porte son nom ('[]' pour le moteur, '()' pour le runtime, en 'cl\xE9:valeur')`,
-          line: n.line
-        });
-      }
-    }
-    for (const k in n) {
-      const v = n[k];
-      if (v && typeof v === "object") visiter(v);
-    }
-  };
-  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) visiter(r.rhs);
-  return errors;
 }
 function applySceneValues(ast, libCtx) {
   const registry = libCtx && libCtx.valueRegistry || {};
@@ -1307,14 +1315,6 @@ function refuserAttenteNonDeclaree(ast) {
     for (const k in n) marcher(n[k]);
   })(ast);
   return erreurs;
-}
-function canalFautif(canal) {
-  const cat = LIBS.core?.schema?.channels || {};
-  const c = cat[canal];
-  if (!c) return `le canal '${canal}' n'existe pas \u2014 les canaux sont ${Object.keys(cat).join(", ")}. La liste est FERM\xC9E.`;
-  if (!c.out) return `'${canal}' n'est pas une sortie \u2014 un terminal sonne, il ne se lit pas. Les canaux de sortie sont ${Object.keys(cat).filter((k) => cat[k].out).join(", ")}.`;
-  if (!c.writable) return `'${canal}' est une DESTINATION de l'architecture, rout\xE9e comme les autres sorties, mais son \xC9CRITURE dans une sc\xE8ne attend encore son appareil d\xE9di\xE9.`;
-  return null;
 }
 function validateReferences(ast, libCtx = {}) {
   const errors = [];
