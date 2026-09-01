@@ -27,6 +27,7 @@
  * porte aussi. **Une position qu'on ne sait pas construire n'est pas une absence.**
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
+import { readFileSync } from 'node:fs';
 import { LIBS } from '../src/transpiler/libs-data.js';
 
 let p = 0;
@@ -109,12 +110,26 @@ console.log(`[mots de grammaire] ${CAS.length} candidats · ${structurels.length
   ok(g.qualite === 'plancher',
     `C. la liste doit publier sa QUALITÉ — reçu ${JSON.stringify(g.qualite)}. Neuf candidats sur `
     + `dix-neuf n'ont donné aucune ligne légitime ; sans ce mot, la liste se lit comme exhaustive.`);
-  ok(typeof g.methode === 'string' && g.methode.length > 40,
-    `C. et sa MÉTHODE — comment la liste a été établie. Un relevé sur le code rend un mélange `
-    + `inutilisable ; qui veut la refaire doit savoir par quoi.`);
-  ok(typeof g.perimetre === 'string' && /19|dix-neuf/.test(g.perimetre),
-    `C. et son PÉRIMÈTRE — combien de candidats, tirés d'où. Une absence n'est une preuve que si le `
-    + `périmètre de recherche est établi. Reçu : ${JSON.stringify(g.perimetre)}`);
+  // ⛔ LA MÉTHODE ET LE PÉRIMÈTRE ONT CHANGÉ DE DOMICILE, ILS N'ONT PAS DISPARU — décision de
+  // Romain, 2026-09-01 : *« pourquoi tu notes des principes consignés dans une librairie ? d'autant
+  // que c'est incompréhensible pour un utilisateur »*. Ils pesaient 925 octets dans la donnée
+  // PUBLIÉE, que tout consommateur reçoit ; ils vivent désormais en COMMENTAIRE de `lib/core.bpsl`,
+  // où un mainteneur les lit et où aucun paquet ne les transporte.
+  // ⚠️ CE GARDE CHANGE DONC DE CIBLE, IL NE SE TAIT PAS : l'exigence reste entière — *« une absence
+  // n'est une preuve que si le périmètre de recherche est établi »* —, elle porte sur la SOURCE au
+  // lieu du bundle. Faire simplement tomber ces deux volets aurait été ajuster l'assertion à ce qui
+  // sort.
+  const source = readFileSync(new URL('../lib/core.bpsl', import.meta.url), 'utf8');
+  const entete = source.slice(0, source.indexOf('def schema'));
+  ok(/EPREUVE DE SUBSTITUTION A TROIS TEMOINS/i.test(entete),
+    `C. et sa MÉTHODE — comment la liste a été établie, en COMMENTAIRE de lib/core.bpsl. Un relevé `
+    + `sur le code rend un mélange inutilisable ; qui veut la refaire doit savoir par quoi.`);
+  ok(/19 candidats/i.test(entete),
+    `C. et son PÉRIMÈTRE — combien de candidats, tirés d'où, en COMMENTAIRE de lib/core.bpsl. Une `
+    + `absence n'est une preuve que si le périmètre de recherche est établi.`);
+  ok(g.methode === undefined && g.perimetre === undefined,
+    `C. et ils ne sont PLUS dans la donnée publiée — une librairie dit ce que le langage porte, `
+    + `jamais la méthode qui a servi à l'établir. Reçu : ${JSON.stringify(Object.keys(g))}`);
 }
 
 // ── D. LES MOTS DÉCIDÉS SORTIS SONT NOMMÉS, PAS TUS ──────────────────────────────────────────

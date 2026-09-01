@@ -10,6 +10,19 @@
 // SOCLE, qui ne bouge pas ; les LIBRAIRIES, ombrables et dont l ombrage s annonce. Cette liste
 // porte la premiere categorie. Elle est un PLANCHER : ce qui n a pas su etre construit ne
 // compte pas comme une absence.
+//
+// COMMENT LES DIX ONT ETE ETABLIS — 19 candidats eprouves le 2026-08-24, tires de trois sources :
+// les comparaisons du parseur, le schema de syntaxe publie, et les cinq mots que la decision du
+// 2026-08-21 nomme. Chaque candidat passe une EPREUVE DE SUBSTITUTION A TROIS TEMOINS, la meme
+// ligne ecrite quatre fois : un nom FABRIQUE teste l existence et ne prouve rien sur la structure ;
+// un nom de CATALOGUE teste l invocation et passe en tete sans porter de structure ; une ENTREE de
+// catalogue invoque teste la STRUCTURE et elle seule — le langage la declare legale a la place d un
+// type, donc si le mot passe la ou une entree echoue, c est le langage qui le porte.
+// ⚠️ Un temoin a UN SEUL nom fabrique ne suffit pas : mesure du 2026-08-31, il rendait `core`
+// porteur de structure alors qu il est un catalogue, et laissait `init` indecidable. Et un releve
+// sur le CODE ne l etablit pas — il melange natures de noeud et mots du langage.
+// ⛔ CETTE METHODE VIT EN COMMENTAIRE, PLUS DANS LA DONNEE — decision de Romain, 2026-09-01 : une
+// librairie dit ce que le langage porte, la methode n a pas de lien avec elle et la rend illisible.
 // schema · LES MOTS QUI OUVRENT UNE DECLARATION PAR LE TYPE et que rien d autre ne derive. Les
 // CONVENTIONS (varConventions) et les MODULES (les modules) en ouvrent une aussi, et se lisent
 // la ou ils sont deja declares ; ces deux-la n ont pas d autre domicile. `flag` porte ses etats
@@ -34,5 +47,5 @@ def values (diapason(range(16, 8000), unit:Hz, overriddenBy(tuning.diapason, alp
 
 def on_fail (section:settings, type:directive, values("skip", "retry", "fallback"), default:skip, description:"Gestion d'échec de dérivation")
 
-def schema (section:"", grammarWords(qualite:plancher, methode:"epreuve de substitution a TROIS temoins — la meme ligne ecrite quatre fois. Un nom FABRIQUE teste l existence : il echoue pour tout mot inconnu donc il ne prouve rien sur la structure. Un nom de CATALOGUE teste l invocation : il passe en tete de scene sans porter aucune structure. Une ENTREE de catalogue invoque teste la STRUCTURE et elle seule — le langage la declare legale a la place d un type donc si le mot passe la ou une entree echoue c est le langage qui le porte. Mesure du 2026-08-31 : le temoin a un seul nom fabrique rendait `core` porteur de structure alors qu il est un catalogue et laissait `init` indecidable. Un releve sur le code ne l etablit PAS : il rend un melange de natures de noeud et de mots du langage.", perimetre:"19 candidats eprouves le 2026-08-24 depuis trois sources : les comparaisons du parseur · le schema de syntaxe publie · les cinq mots que la decision du 2026-08-21 nomme.", mots(actor, core, def, in, init, mode, object, out, seed, terminal)), catalogAxes(alphabet, tuning, octaves, scale, sound, eval, voice), deprecatedTransports(browser, webaudio), channels(audio(out:true, writable:true, params(gain:1)), midi(in:true, out:true, writable:true, params(ch:1)), osc(in:true, out:true, writable:true, params(host:"127.0.0.1", port:57120, addr:/kanopi)), keyboard(in:true, writable:true), dmx(out:true, writable:true, params(universe:0)), text(out:true, writable:false)), qualifierKeys(scan, weight, on_fail, meter, rotate, legato, staccato), reservedDirectives(scale, tuning, octaves, sound, core, eval, def, init, actor, ins, transpose, scaleshift, chromashift, homomorphism, settings, filter, modulation, diapason, out), actorKeys(alphabet, tuning, octaves, out, eval), deprecatedActorKeys(sound, sounds, voice), declarationTypes(flag, symbol, control, addresskey, native, destination, enum, object), varConventions(signal, pitch, phase, logic))
+def schema (section:"", grammarWords(qualite:plancher, mots(actor, core, def, in, init, mode, object, out, seed, terminal)), catalogAxes(alphabet, tuning, octaves, scale, sound, eval, voice), deprecatedTransports(browser, webaudio), channels(audio(out:true, writable:true, params(gain:1)), midi(in:true, out:true, writable:true, params(ch:1)), osc(in:true, out:true, writable:true, params(host:"127.0.0.1", port:57120, addr:/kanopi)), keyboard(in:true, writable:true), dmx(out:true, writable:true, params(universe:0)), text(out:true, writable:false)), qualifierKeys(scan, weight, on_fail, meter, rotate, legato, staccato), reservedDirectives(scale, tuning, octaves, sound, core, eval, def, init, actor, ins, transpose, scaleshift, chromashift, homomorphism, settings, filter, modulation, diapason, out), actorKeys(alphabet, tuning, octaves, out, eval), deprecatedActorKeys(sound, sounds, voice), declarationTypes(flag, symbol, control, addresskey, native, destination, enum, object), varConventions(signal, pitch, phase, logic))
 
