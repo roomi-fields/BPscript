@@ -33,3 +33,6 @@ gamut interval
 gamut degree
 degree directional
 gamut composite
+
+// Un alphabet se déclare en tête de scène.
+object alphabet (scope(scene))
