@@ -70,8 +70,12 @@ for (const mot of porte) {
 
 // ── 3. AUCUN LECTEUR NE VISE UN DOMICILE PAR SON NOM ────────────────────────────────────────
 // ⛔ LE RETARD EST NOMMÉ, DATÉ, ET IL PORTE SA CAUSE — jamais une exemption muette.
+// ⚠️ CE RETARD A CHANGÉ D'ADRESSE LE 2026-09-01, PAS DE NATURE. Le lecteur fautif est parti de
+// `bpxAst.js` vers `resolution.js` avec la passe `validateReferences`, dans le déménagement de
+// l'étage de résolution. La dette est la même, à la ligne près ; c'est le garde qui a exigé que
+// le registre suive — il refuse une adresse périmée autant qu'une exemption muette.
 const RETARD = new Map([
-  ['src/transpiler/bpxAst.js',
+  ['src/transpiler/resolution.js',
    'le lecteur des axes d\'invocation vise `core` seul : il connaît 22 mots sur 67. Le brancher '
    + 'sur la porte le rend PIRE — `seed.x`, `meter.x` et `timepatterns.x` se mettent à COMPILER, '
    + 'parce que l\'exemption épargne le mot sans que personne ne juge la SOUS-CLÉ. Ce qui manque '

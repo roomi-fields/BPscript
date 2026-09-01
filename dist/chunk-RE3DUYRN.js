@@ -754,123 +754,135 @@ function validateTerminals(ast) {
   return errors;
 }
 var restesDeSegmentation = /* @__PURE__ */ new WeakMap();
-var dernierCompte = null;
-function noterLePassage(compte) {
-  dernierCompte = compte;
+function emitSceneLibRefs(ast) {
+  const axesHauteur = /* @__PURE__ */ new Set(["alphabet", "tuning", "octaves", "scale"]);
+  const refs = [];
+  for (const d of ast.directives || []) {
+    if (!d || !d.name || !d.subkey || axesHauteur.has(d.name)) continue;
+    const entree = loadLib(d.name, d.subkey);
+    if (!entree) continue;
+    const adresse = `${d.name}.${d.subkey}`;
+    if (!refs.includes(adresse)) refs.push(adresse);
+  }
+  for (const e of ast.inputs || []) {
+    if (!e || !e.mapping) continue;
+    const adresse = `mapping.${e.mapping}`;
+    if (!refs.includes(adresse)) refs.push(adresse);
+  }
+  if (refs.length === 0) return;
+  ast.libRefs = [...ast.libRefs || [], ...refs.filter((r) => !(ast.libRefs || []).includes(r))];
 }
-
-// src/transpiler/segmentation.js
-function segmenter(nom, terminaux) {
-  if (!nom || terminaux.has(nom)) return null;
-  const longueurs = [...new Set([...terminaux].map((t) => t.length))].sort((a, b) => b - a);
-  const parts = [];
-  let i = 0;
-  while (i < nom.length) {
-    let pris = null;
-    for (const L of longueurs) {
-      if (L > nom.length - i) continue;
-      const bout = nom.slice(i, i + L);
-      if (terminaux.has(bout)) {
-        pris = bout;
-        break;
-      }
-    }
-    if (!pris) return { parts: null, reste: nom.slice(i) };
-    parts.push(pris);
-    i += pris.length;
-  }
-  return parts.length > 1 ? { parts, reste: null } : null;
-}
-
-// src/transpiler/controlValidation.js
-function collectQualifierPairs(node, out) {
-  if (!node || typeof node !== "object") return;
-  if (Array.isArray(node)) {
-    for (const el of node) collectQualifierPairs(el, out);
-    return;
-  }
-  if (node.type === "SettingBag" && Array.isArray(node.pairs)) {
-    for (const p of node.pairs) out.push(p);
-  }
-  for (const k in node) {
-    if (k === "pairs") continue;
-    const v = node[k];
-    if (v && typeof v === "object") collectQualifierPairs(v, out);
-  }
-}
-function collectDirectiveValues(ast, out) {
-  for (const d of ast && ast.directives || []) {
-    if (!d || d.type !== "Directive" || typeof d.name !== "string") continue;
-    if (d.value === null || d.value === void 0) continue;
-    out.push({ key: d.name, value: d.value, line: d.line });
-  }
-}
-function validateControls(ast, controls, qualifies = {}) {
-  if (!controls) return [];
-  const pairs = [];
-  collectQualifierPairs(ast, pairs);
-  collectDirectiveValues(ast, pairs);
-  const errors = [];
-  for (const p of pairs) {
-    const def = p.lib && qualifies[`${p.lib}.${p.key}`] || controls[p.key];
-    if (!def) continue;
-    if (p.value === true) continue;
-    const where = { line: p.line, col: p.col };
-    if (Array.isArray(def.values)) {
-      const v = String(p.value);
-      if (!def.values.includes(v)) {
-        errors.push({
-          message: `valeur '${p.value}' interdite pour le contr\xF4le '${p.key}' (autoris\xE9es : ${def.values.join(", ")})`,
-          ...where
-        });
-      }
-      continue;
-    }
-    if (Array.isArray(def.range) && typeof p.value === "number") {
-      const [min, max] = def.range;
-      if (p.value < min || p.value > max) {
-        errors.push({
-          message: `valeur ${p.value} hors plage pour le contr\xF4le '${p.key}' (${min}..${max})`,
-          ...where
-        });
-      }
+function deriveAlphabetFromTuning(ast) {
+  if (!ast) return;
+  const tuningAlpha = (tname) => {
+    const t = loadLib("tuning", tname);
+    return t && t.alphabet || null;
+  };
+  for (const actor of ast.actors || []) {
+    const p = actor.properties || {};
+    if (p.tuning && !p.alphabet) {
+      const a = tuningAlpha(p.tuning);
+      if (a) p.alphabet = a;
     }
   }
-  return errors;
+  const dirs = ast.directives || [];
+  const tun = dirs.find((d) => d.name === "tuning" && d.subkey);
+  const alph = dirs.find((d) => d.name === "alphabet" && d.subkey);
+  if (tun && !alph) {
+    const a = tuningAlpha(tun.subkey);
+    if (a) dirs.push({
+      type: "Directive",
+      name: "alphabet",
+      subkey: a,
+      runtime: null,
+      value: null,
+      aliases: null,
+      modifiers: null,
+      line: tun.line
+    });
+  }
 }
-
-// src/transpiler/bpxAst.js
-function poserLeDestinataireDesReglages(ast, libCtx) {
-  const table = libCtx?.controlResolvedBy || {};
-  const tableQualifiee = libCtx?.controlQualifiedResolvedBy || {};
-  const vu = /* @__PURE__ */ new Set();
-  const walk = (n) => {
-    if (!n || typeof n !== "object" || vu.has(n)) return;
-    vu.add(n);
-    if (Array.isArray(n)) {
-      for (const x of n) walk(x);
+function emitActorLibRefs(ast) {
+  for (const actor of ast.actors || []) {
+    const alpha = (actor.properties || {}).alphabet;
+    if (!alpha) continue;
+    const src = resolveActorAlphabetSource(alpha, ast.directives);
+    if (!src || !src.lib) continue;
+    actor.libRefs = [`${src.lib}.${alpha}`];
+  }
+}
+function emitNoteTerminals(ast) {
+  const { terminaux, aUnAlphabet } = terminauxEnPortee(ast);
+  if (!aUnAlphabet) return;
+  const presents = /* @__PURE__ */ new Set();
+  const recolter = (n) => {
+    if (!n || typeof n !== "object") return;
+    if (Array.isArray(n)) return n.forEach(recolter);
+    if (typeof n.name === "string") presents.add(n.name);
+    for (const k in n) if (n[k] && typeof n[k] === "object") recolter(n[k]);
+  };
+  recolter(ast.subgrammars || []);
+  const aHauteur = (nomAlphabet) => {
+    const lib = resolveActorAlphabet(nomAlphabet, ast.directives);
+    return !!(lib && lib.resolvesPitch);
+  };
+  const notes = /* @__PURE__ */ new Set();
+  const sansHauteur = /* @__PURE__ */ new Set();
+  const verser = (nomAlphabet, octaves) => {
+    const lib = resolveActorAlphabet(nomAlphabet, ast.directives);
+    if (!lib || !nomsDeTerminaux(lib)) return;
+    const cible = aHauteur(nomAlphabet) ? notes : sansHauteur;
+    for (const t of expandAlphabetTerminals(lib, octaves)) cible.add(t);
+    const alts = lib.alterations && typeof lib.alterations === "object" && !Array.isArray(lib.alterations) ? Object.keys(lib.alterations) : [""];
+    for (const note of nomsDeTerminaux(lib)) for (const alt of alts) cible.add(note + alt);
+  };
+  const sceneAlpha = (ast.directives || []).find((d) => d.name === "alphabet" && d.subkey);
+  const sceneOct = (ast.directives || []).find((d) => d.name === "octaves" && (d.subkey || d.runtime));
+  if (sceneAlpha) verser(sceneAlpha.subkey, sceneOct ? sceneOct.subkey || sceneOct.runtime : null);
+  for (const a of ast.actors || []) {
+    const p = a.properties || {};
+    if (p.alphabet) verser(p.alphabet, p.octaves || null);
+  }
+  const dansLaScene = (ens) => [...presents].filter((n) => ens.has(n)).sort();
+  ast.noteTerminals = dansLaScene(notes);
+  ast.alphabetTerminals = dansLaScene(sansHauteur);
+}
+function resolveHomomorphismMarkers(ast) {
+  if (!ast || !Array.isArray(ast.homomorphisms) || ast.homomorphisms.length === 0) return;
+  const homoNames = new Set(ast.homomorphisms.map((h) => h && h.name).filter(Boolean));
+  if (homoNames.size === 0) return;
+  const nonterminals = /* @__PURE__ */ new Set();
+  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) (r.lhs || []).forEach((s) => s && s.name && nonterminals.add(s.name));
+  const terminals = /* @__PURE__ */ new Set();
+  const addAlphabet = (name, octaves) => {
+    const lib = resolveActorAlphabet(name, ast.directives);
+    if (!lib || !nomsDeTerminaux(lib)) return;
+    for (const t of expandAlphabetTerminals(lib, octaves)) terminals.add(t);
+    const alts = lib.alterations && typeof lib.alterations === "object" && !Array.isArray(lib.alterations) ? Object.keys(lib.alterations) : [""];
+    for (const note of nomsDeTerminaux(lib)) for (const alt of alts) terminals.add(note + alt);
+  };
+  const sa = (ast.directives || []).find((d) => d.name === "alphabet" && d.subkey);
+  const so = (ast.directives || []).find((d) => d.name === "octaves" && (d.subkey || d.runtime));
+  if (sa) addAlphabet(sa.subkey, so ? so.subkey || so.runtime : null);
+  for (const a of ast.actors || []) {
+    const p = a.properties || {};
+    if (p.alphabet) addAlphabet(p.alphabet, p.octaves || null);
+  }
+  const mark = (node) => {
+    if (!node || typeof node !== "object") return;
+    if (Array.isArray(node)) {
+      node.forEach(mark);
       return;
     }
-    const params = n.payload && n.payload.params;
-    if (params && typeof params === "object") {
-      const origine = /* @__PURE__ */ new Map();
-      const noter = (liste) => {
-        for (const pr of liste || []) if (pr && pr.lib) origine.set(pr.key, pr.lib);
-      };
-      noter(n.pairs);
-      for (const sq of n.suffixQualifiers || []) noter(sq && sq.pairs);
-      const dest = {};
-      for (const cle of Object.keys(params)) {
-        const lib = origine.get(cle);
-        const qualifie = lib ? tableQualifiee[`${lib}.${cle}`] : void 0;
-        if (qualifie) dest[cle] = qualifie;
-        else if (table[cle]) dest[cle] = table[cle];
-      }
-      if (Object.keys(dest).length) n.payload.resolvedBy = dest;
+    if (node.type === "Symbol" && node.name && homoNames.has(node.name) && !nonterminals.has(node.name) && !terminals.has(node.name)) {
+      node.role = "homomorphism";
     }
-    for (const v of Object.values(n)) walk(v);
+    for (const k in node) {
+      const v = node[k];
+      if (v && typeof v === "object") mark(v);
+    }
   };
-  walk(ast);
+  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) mark(r.rhs);
 }
 function annotateBackticks(ast) {
   let counter = 0;
@@ -930,193 +942,169 @@ function annotateBackticks(ast) {
   for (const sub of ast.subgrammars || []) for (const rule of sub.rules || []) scanOrphans(rule.rhs);
   return errors;
 }
-function singleCharAlphabetSet(libCtx) {
-  const terms = libCtx && libCtx.alphabetTerminals || [];
-  if (terms.length === 0) return null;
-  for (const t of terms) {
-    if (typeof t !== "string" || t.length !== 1) return null;
-  }
-  return new Set(terms);
-}
-function tokenizeCompoundName(name, terminals) {
-  if (name.length < 2) return null;
-  const toks = [];
-  let i = 0;
-  while (i < name.length) {
-    let best = null;
-    for (const t of terminals) {
-      if (name.startsWith(t, i) && (best === null || t.length > best.length)) best = t;
-    }
-    if (best !== null) {
-      toks.push({ kind: "terminal", text: best });
-      i += best.length;
-      continue;
-    }
-    const ch = name[i];
-    if (ch >= "A" && ch <= "Z") {
-      let j = i + 1;
-      while (j < name.length && /[A-Za-z0-9]/.test(name[j])) j++;
-      toks.push({ kind: "variable", text: name.slice(i, j) });
-      i = j;
-      continue;
-    }
-    if (ch >= "0" && ch <= "9") {
-      let j = i + 1;
-      while (j < name.length && name[j] >= "0" && name[j] <= "9") j++;
-      toks.push({ kind: "number", text: name.slice(i, j) });
-      i = j;
-      continue;
-    }
-    return null;
-  }
-  return toks.length < 2 ? null : toks;
-}
-function makeSplitAtom(original, ch, isFirst) {
-  const node = { type: "Symbol", name: ch };
-  if (original.line !== void 0) node.line = original.line;
-  if (original.actor !== void 0) node.actor = original.actor;
-  if (isFirst && original.negated === true) node.negated = true;
-  if (isFirst && original.payload !== void 0) node.payload = original.payload;
-  return node;
-}
-function splitLhsElement(el, terminals) {
-  if (!el || el.type !== "Symbol") return [el];
-  const toks = tokenizeCompoundName(el.name, terminals);
-  if (toks === null || toks.some((t) => t.kind === "number")) return [el];
-  return toks.map((t, i) => makeSplitAtom(el, t.text, i === 0));
-}
-function splitRhsElement(el, terminals) {
-  if (!el || typeof el !== "object") return [el];
-  if (el.type === "Symbol") {
-    const toks = tokenizeCompoundName(el.name, terminals);
-    if (toks === null) return [el];
-    return toks.map((t, i) => t.kind === "number" ? { type: "NumericDuration", numerator: Number(t.text), denominator: 1 } : makeSplitAtom(el, t.text, i === 0));
-  }
-  if (el.type === "Polymetric" && Array.isArray(el.voices)) {
-    return [{ ...el, voices: el.voices.map((v) => v.flatMap((c) => splitRhsElement(c, terminals))) }];
-  }
-  if ((el.type === "TemplateMasterGroup" || el.type === "TemplateSlaveGroup") && Array.isArray(el.elements)) {
-    return [{ ...el, elements: el.elements.flatMap((c) => splitRhsElement(c, terminals)) }];
-  }
-  return [el];
-}
-function splitCompoundTerminals(ast, libCtx) {
-  const terminals = singleCharAlphabetSet(libCtx);
-  if (!terminals) return;
-  for (const sub of ast.subgrammars || []) {
-    for (const rule of sub.rules || []) {
-      rule.lhs = rule.lhs.flatMap((el) => splitLhsElement(el, terminals));
-      rule.rhs = rule.rhs.flatMap((el) => splitRhsElement(el, terminals));
-    }
-  }
-}
-function deriveAlphabetFromTuning(ast) {
-  if (!ast) return;
-  const tuningAlpha = (tname) => {
-    const t = loadLib("tuning", tname);
-    return t && t.alphabet || null;
-  };
-  for (const actor of ast.actors || []) {
-    const p = actor.properties || {};
-    if (p.tuning && !p.alphabet) {
-      const a = tuningAlpha(p.tuning);
-      if (a) p.alphabet = a;
-    }
-  }
-  const dirs = ast.directives || [];
-  const tun = dirs.find((d) => d.name === "tuning" && d.subkey);
-  const alph = dirs.find((d) => d.name === "alphabet" && d.subkey);
-  if (tun && !alph) {
-    const a = tuningAlpha(tun.subkey);
-    if (a) dirs.push({
-      type: "Directive",
-      name: "alphabet",
-      subkey: a,
-      runtime: null,
-      value: null,
-      aliases: null,
-      modifiers: null,
-      line: tun.line
-    });
-  }
-}
-function resolveHomomorphismMarkers(ast) {
-  if (!ast || !Array.isArray(ast.homomorphisms) || ast.homomorphisms.length === 0) return;
-  const homoNames = new Set(ast.homomorphisms.map((h) => h && h.name).filter(Boolean));
-  if (homoNames.size === 0) return;
-  const nonterminals = /* @__PURE__ */ new Set();
-  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) (r.lhs || []).forEach((s) => s && s.name && nonterminals.add(s.name));
-  const terminals = /* @__PURE__ */ new Set();
-  const addAlphabet = (name, octaves) => {
-    const lib = resolveActorAlphabet(name, ast.directives);
-    if (!lib || !nomsDeTerminaux(lib)) return;
-    for (const t of expandAlphabetTerminals(lib, octaves)) terminals.add(t);
-    const alts = lib.alterations && typeof lib.alterations === "object" && !Array.isArray(lib.alterations) ? Object.keys(lib.alterations) : [""];
-    for (const note of nomsDeTerminaux(lib)) for (const alt of alts) terminals.add(note + alt);
-  };
-  const sa = (ast.directives || []).find((d) => d.name === "alphabet" && d.subkey);
-  const so = (ast.directives || []).find((d) => d.name === "octaves" && (d.subkey || d.runtime));
-  if (sa) addAlphabet(sa.subkey, so ? so.subkey || so.runtime : null);
-  for (const a of ast.actors || []) {
-    const p = a.properties || {};
-    if (p.alphabet) addAlphabet(p.alphabet, p.octaves || null);
-  }
-  const mark = (node) => {
-    if (!node || typeof node !== "object") return;
-    if (Array.isArray(node)) {
-      node.forEach(mark);
+function poserLeDestinataireDesReglages(ast, libCtx) {
+  const table = libCtx?.controlResolvedBy || {};
+  const tableQualifiee = libCtx?.controlQualifiedResolvedBy || {};
+  const vu = /* @__PURE__ */ new Set();
+  const walk = (n) => {
+    if (!n || typeof n !== "object" || vu.has(n)) return;
+    vu.add(n);
+    if (Array.isArray(n)) {
+      for (const x of n) walk(x);
       return;
     }
-    if (node.type === "Symbol" && node.name && homoNames.has(node.name) && !nonterminals.has(node.name) && !terminals.has(node.name)) {
-      node.role = "homomorphism";
-    }
-    for (const k in node) {
-      const v = node[k];
-      if (v && typeof v === "object") mark(v);
-    }
-  };
-  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) mark(r.rhs);
-}
-function segmenterLesTerminaux(ast, known, paquets) {
-  const lire = (nom) => {
-    let echec = null;
-    for (const paquet of paquets) {
-      const r = segmenter(nom, paquet);
-      if (r && r.parts) return r;
-      if (r && r.reste && !echec) echec = r;
-    }
-    return echec;
-  };
-  const intouchables = new Set([...nomsDeclares(ast)].filter((n) => !lire(n)?.parts));
-  const dansUneListe = (liste) => {
-    if (!Array.isArray(liste)) return liste;
-    const sortie = [];
-    for (const el of liste) {
-      if (el && el.type === "Symbol" && el.name && !known.has(el.name) && !intouchables.has(el.name) && el.role !== "homomorphism" && !(Array.isArray(el.compose) && el.compose.length)) {
-        const r = lire(el.name);
-        if (r && r.parts) {
-          for (const part of r.parts) sortie.push({ ...el, name: part });
-          continue;
-        }
-        if (r && r.reste) restesDeSegmentation.set(el, r.reste);
+    const params = n.payload && n.payload.params;
+    if (params && typeof params === "object") {
+      const origine = /* @__PURE__ */ new Map();
+      const noter = (liste) => {
+        for (const pr of liste || []) if (pr && pr.lib) origine.set(pr.key, pr.lib);
+      };
+      noter(n.pairs);
+      for (const sq of n.suffixQualifiers || []) noter(sq && sq.pairs);
+      const dest = {};
+      for (const cle of Object.keys(params)) {
+        const lib = origine.get(cle);
+        const qualifie = lib ? tableQualifiee[`${lib}.${cle}`] : void 0;
+        if (qualifie) dest[cle] = qualifie;
+        else if (table[cle]) dest[cle] = table[cle];
       }
-      sortie.push(descendre(el));
+      if (Object.keys(dest).length) n.payload.resolvedBy = dest;
     }
-    return sortie;
+    for (const v of Object.values(n)) walk(v);
   };
-  const CONTENANTS = ["voices", "elements", "content", "symbol", "triggers", "primary", "secondaries"];
-  const descendre = (el) => {
-    if (!el || typeof el !== "object") return el;
-    if (Array.isArray(el)) return dansUneListe(el);
-    for (const k of CONTENANTS) if (Array.isArray(el[k])) el[k] = dansUneListe(el[k]);
-    return el;
-  };
-  for (const sg of ast.subgrammars || []) {
-    for (const r of sg.rules || []) {
-      if (Array.isArray(r.rhs)) r.rhs = dansUneListe(r.rhs);
-      if (Array.isArray(r.lhs)) r.lhs = dansUneListe(r.lhs);
+  walk(ast);
+}
+function refuserAttenteNonDeclaree(ast) {
+  const connus = /* @__PURE__ */ new Set();
+  for (const i of ast.inputs || []) for (const n of i.names || (i.name ? [i.name] : [])) connus.add(n);
+  for (const v of ast.vars || []) for (const n of v.names || []) connus.add(n);
+  for (const d of ast.declarations || []) if (d && d.name) connus.add(d.name);
+  for (const a of ast.actors || []) if (a && a.name) connus.add(a.name);
+  const directions = /* @__PURE__ */ new Set();
+  for (const canal of Object.values(LIBS.core?.schema?.channels || {})) {
+    if (!canal || typeof canal !== "object") continue;
+    for (const [cle, valeur] of Object.entries(canal)) {
+      if (typeof valeur === "boolean" && valeur === true && cle !== "writable") directions.add(cle);
     }
   }
+  const erreurs = [];
+  const vus = /* @__PURE__ */ new Set();
+  (function marcher(n) {
+    if (!n || typeof n !== "object") return;
+    if (Array.isArray(n)) {
+      for (const e of n) marcher(e);
+      return;
+    }
+    if (n.type === "Wait" && typeof n.name === "string" && !connus.has(n.name) && !directions.has(n.name) && !vus.has(n.name)) {
+      vus.add(n.name);
+      erreurs.push({
+        message: `'<!${n.name}' attend un signal que rien ne d\xE9clare \u2014 aucune entr\xE9e, variable, porte ni acteur de cette sc\xE8ne ne porte le nom '${n.name}'. Le d\xE9clarer : 'in.<canal> ${n.name}'. Sans d\xE9claration, une coquille fabrique une SECONDE attente que rien ne viendra satisfaire, et la d\xE9rivation s'arr\xEAte pour toujours sans un mot.`,
+        line: n.line
+      });
+    }
+    for (const k in n) marcher(n[k]);
+  })(ast);
+  return erreurs;
+}
+function refuserNomsEnDouble(ast, libCtx) {
+  const erreurs = [];
+  const { terminaux } = terminauxEnPortee(ast);
+  const creesParDeclaration = /* @__PURE__ */ new Map();
+  const noter = (nom, sorte, line) => {
+    if (!nom || typeof nom !== "string") return;
+    if (creesParDeclaration.has(nom)) {
+      const p = creesParDeclaration.get(nom);
+      erreurs.push({
+        message: `le nom '${nom}' est d\xE9j\xE0 pris : ${p.sorte} l'a d\xE9clar\xE9${p.line ? ` ligne ${p.line}` : ""}, et ${sorte} le red\xE9clare. Un nom ne d\xE9signe qu'UNE chose dans une sc\xE8ne \u2014 sinon, en le lisant dans une r\xE8gle, on ne sait plus de quoi on parle. Choisir un autre nom.`,
+        line
+      });
+      return;
+    }
+    creesParDeclaration.set(nom, { sorte, line });
+    if (terminaux.has(nom)) {
+      erreurs.push({
+        message: `'${nom}' est un TERMINAL de l'alphabet actif, et ${sorte} en fait un nom \u2014 une r\xE8gle qui \xE9crirait '${nom}' ne dirait plus si elle joue la note ou l'autre chose. Choisir un autre nom. Le refus tombe \xE0 la D\xC9CLARATION : le nom n'a pas besoin d'\xEAtre employ\xE9 pour que l'ambigu\xEFt\xE9 existe.`,
+        line
+      });
+    }
+  };
+  for (const e of ast.inputs || []) noter(e?.name, "une entr\xE9e", e?.line);
+  for (const v of ast.vars || []) {
+    const sorte = v?.varType?.kind === "flag" ? "un drapeau" : "une variable de travail";
+    for (const n of v?.names || []) noter(n, sorte, v?.line);
+  }
+  for (const a of ast.actors || []) if (!a?.synthetic) noter(a?.name, "un acteur", a?.line);
+  for (const sc of ast.scenes || []) noter(sc?.name, "une sc\xE8ne", sc?.line);
+  for (const d of ast.defs || []) {
+    if (d && d.type === "DefDirective" && d.kind !== "terminal") {
+      noter(d.name, "une d\xE9finition", d.line);
+    }
+  }
+  const LEVEES = /* @__PURE__ */ new Set(["une variable de travail"]);
+  const tetesVues = /* @__PURE__ */ new Set();
+  for (const sg of ast.subgrammars || []) {
+    for (const r of sg.rules || []) {
+      const tetes = (r.lhs || []).filter((t) => t && !t.negated);
+      if (tetes.length !== 1) continue;
+      for (const t of tetes) {
+        const nom = t?.name;
+        if (!nom || tetesVues.has(nom)) continue;
+        tetesVues.add(nom);
+        const declare = creesParDeclaration.get(nom);
+        if (declare && !LEVEES.has(declare.sorte)) {
+          erreurs.push({
+            message: `la r\xE8gle '${nom}' porte un nom d\xE9j\xE0 pris par ${declare.sorte} \u2014 en lisant '${nom}' dans une s\xE9quence, on ne sait plus de quoi on parle. Choisir un autre nom pour l'un des deux.`,
+            line: r.line
+          });
+        }
+      }
+    }
+  }
+  const drapeaux = /* @__PURE__ */ new Set();
+  const collecterDrapeaux = (n) => {
+    if (!n || typeof n !== "object") return;
+    if (Array.isArray(n)) {
+      n.forEach(collecterDrapeaux);
+      return;
+    }
+    if ((n.type === "FlagExpr" || n.type === "Guard") && typeof n.flag === "string") drapeaux.add(n.flag);
+    for (const v of Object.values(n)) collecterDrapeaux(v);
+  };
+  collecterDrapeaux(ast.subgrammars);
+  const tetesDeRegle = /* @__PURE__ */ new Map();
+  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) {
+    for (const t of r.lhs || []) if (t?.name && !t.negated && !tetesDeRegle.has(t.name)) {
+      tetesDeRegle.set(t.name, r.line);
+    }
+  }
+  for (const nom of drapeaux) {
+    const declare = creesParDeclaration.get(nom);
+    if (declare && declare.sorte !== "un drapeau") {
+      erreurs.push({
+        message: `le drapeau '${nom}' porte un nom d\xE9j\xE0 pris par ${declare.sorte}${declare.line ? ` ligne ${declare.line}` : ""} \u2014 un nom ne d\xE9signe qu'UNE chose dans une sc\xE8ne. Choisir un autre nom pour le drapeau.`
+      });
+      continue;
+    }
+    if (tetesDeRegle.has(nom)) {
+      erreurs.push({
+        message: `le drapeau '${nom}' porte le nom d'une R\xC8GLE de la grammaire${tetesDeRegle.get(nom) ? ` ligne ${tetesDeRegle.get(nom)}` : ""} \u2014 un nom ne d\xE9signe qu'UNE chose dans une sc\xE8ne. Choisir un autre nom pour le drapeau.`
+      });
+      continue;
+    }
+    if (terminaux.has(nom)) {
+      erreurs.push({
+        message: `le drapeau '${nom}' porte le nom d'un TERMINAL de l'alphabet actif \u2014 un nom ne d\xE9signe qu'UNE chose dans une sc\xE8ne, et un drapeau ne porte qu'un nom de drapeau. Choisir un autre nom pour le drapeau.`
+      });
+      continue;
+    }
+    if (libCtx?.controlNames?.has(nom)) {
+      erreurs.push({
+        message: `le drapeau '${nom}' porte le nom d'un R\xC9GLAGE du vocabulaire \u2014 le sac de drapeaux en ferait un drapeau sans un mot, et le r\xE9glage deviendrait inatteignable sous ce nom. Choisir un autre nom pour le drapeau.`
+      });
+      continue;
+    }
+  }
+  return erreurs;
 }
 function applySceneValues(ast, libCtx) {
   const registry = libCtx && libCtx.valueRegistry || {};
@@ -1233,88 +1221,6 @@ function applySceneValues(ast, libCtx) {
   };
   walkParams(ast.subgrammars);
   return errors;
-}
-var REFUS_HORS_PORTEE_ACTIF = true;
-var PORTEE_DU_PORTEUR = {
-  Rule: "rule",
-  Polymetric: "group",
-  RawBrace: "group",
-  InstantControl: "flow",
-  Symbol: "symbol",
-  SymbolCall: "symbol",
-  Wildcard: "symbol",
-  Prolongation: "symbol",
-  Rest: "symbol",
-  TemplateMaster: "symbol",
-  TemplateSlave: "symbol"
-};
-var NOM_DE_PLACE = {
-  scene: "en t\xEAte de sc\xE8ne",
-  subgrammar: "en t\xEAte de sous-grammaire, dans la parenth\xE8se du mode (`mode:<mode>(<r\xE9glage>)`)",
-  rule: "sur une r\xE8gle",
-  group: "sur un groupe",
-  symbol: "sur un \xE9l\xE9ment",
-  flow: "dans le flux"
-};
-var _porteesPermises = null;
-function chargerPorteesPermises() {
-  if (_porteesPermises) return _porteesPermises;
-  const m = /* @__PURE__ */ new Map();
-  const w = (o) => {
-    for (const [k, v] of Object.entries(o || {})) {
-      if (!v || typeof v !== "object") continue;
-      if ("args" in v && "description" in v) {
-        if (Array.isArray(v.scope)) m.set(k, v.scope);
-      } else w(v);
-    }
-  };
-  w(LIBS.expression);
-  w(LIBS.midi);
-  w(LIBS.audio);
-  w(LIBS.transpo);
-  w(LIBS.engine);
-  for (const lib of Object.values(LIBS)) {
-    const cles = lib?.schema?.addressKeys;
-    if (!cles || Array.isArray(cles) || typeof cles !== "object") continue;
-    for (const [k, def] of Object.entries(cles)) {
-      if (k.startsWith("_") || !def || !Array.isArray(def.scope)) continue;
-      m.set(k, def.scope);
-    }
-  }
-  _porteesPermises = { get: (cle) => m.get(cle), has: (cle) => m.has(cle) };
-  return _porteesPermises;
-}
-function refuserAttenteNonDeclaree(ast) {
-  const connus = /* @__PURE__ */ new Set();
-  for (const i of ast.inputs || []) for (const n of i.names || (i.name ? [i.name] : [])) connus.add(n);
-  for (const v of ast.vars || []) for (const n of v.names || []) connus.add(n);
-  for (const d of ast.declarations || []) if (d && d.name) connus.add(d.name);
-  for (const a of ast.actors || []) if (a && a.name) connus.add(a.name);
-  const directions = /* @__PURE__ */ new Set();
-  for (const canal of Object.values(LIBS.core?.schema?.channels || {})) {
-    if (!canal || typeof canal !== "object") continue;
-    for (const [cle, valeur] of Object.entries(canal)) {
-      if (typeof valeur === "boolean" && valeur === true && cle !== "writable") directions.add(cle);
-    }
-  }
-  const erreurs = [];
-  const vus = /* @__PURE__ */ new Set();
-  (function marcher(n) {
-    if (!n || typeof n !== "object") return;
-    if (Array.isArray(n)) {
-      for (const e of n) marcher(e);
-      return;
-    }
-    if (n.type === "Wait" && typeof n.name === "string" && !connus.has(n.name) && !directions.has(n.name) && !vus.has(n.name)) {
-      vus.add(n.name);
-      erreurs.push({
-        message: `'<!${n.name}' attend un signal que rien ne d\xE9clare \u2014 aucune entr\xE9e, variable, porte ni acteur de cette sc\xE8ne ne porte le nom '${n.name}'. Le d\xE9clarer : 'in.<canal> ${n.name}'. Sans d\xE9claration, une coquille fabrique une SECONDE attente que rien ne viendra satisfaire, et la d\xE9rivation s'arr\xEAte pour toujours sans un mot.`,
-        line: n.line
-      });
-    }
-    for (const k in n) marcher(n[k]);
-  })(ast);
-  return erreurs;
 }
 function validateReferences(ast, libCtx = {}) {
   const errors = [];
@@ -1638,168 +1544,262 @@ function validateReferences(ast, libCtx = {}) {
   }
   return errors;
 }
-function emitActorLibRefs(ast) {
-  for (const actor of ast.actors || []) {
-    const alpha = (actor.properties || {}).alphabet;
-    if (!alpha) continue;
-    const src = resolveActorAlphabetSource(alpha, ast.directives);
-    if (!src || !src.lib) continue;
-    actor.libRefs = [`${src.lib}.${alpha}`];
+function splitCompoundTerminals(ast, libCtx) {
+  const terminals = singleCharAlphabetSet(libCtx);
+  if (!terminals) return;
+  for (const sub of ast.subgrammars || []) {
+    for (const rule of sub.rules || []) {
+      rule.lhs = rule.lhs.flatMap((el) => splitLhsElement(el, terminals));
+      rule.rhs = rule.rhs.flatMap((el) => splitRhsElement(el, terminals));
+    }
   }
 }
-function refuserNomsEnDouble(ast, libCtx) {
-  const erreurs = [];
-  const { terminaux } = terminauxEnPortee(ast);
-  const creesParDeclaration = /* @__PURE__ */ new Map();
-  const noter = (nom, sorte, line) => {
-    if (!nom || typeof nom !== "string") return;
-    if (creesParDeclaration.has(nom)) {
-      const p = creesParDeclaration.get(nom);
-      erreurs.push({
-        message: `le nom '${nom}' est d\xE9j\xE0 pris : ${p.sorte} l'a d\xE9clar\xE9${p.line ? ` ligne ${p.line}` : ""}, et ${sorte} le red\xE9clare. Un nom ne d\xE9signe qu'UNE chose dans une sc\xE8ne \u2014 sinon, en le lisant dans une r\xE8gle, on ne sait plus de quoi on parle. Choisir un autre nom.`,
-        line
-      });
-      return;
-    }
-    creesParDeclaration.set(nom, { sorte, line });
-    if (terminaux.has(nom)) {
-      erreurs.push({
-        message: `'${nom}' est un TERMINAL de l'alphabet actif, et ${sorte} en fait un nom \u2014 une r\xE8gle qui \xE9crirait '${nom}' ne dirait plus si elle joue la note ou l'autre chose. Choisir un autre nom. Le refus tombe \xE0 la D\xC9CLARATION : le nom n'a pas besoin d'\xEAtre employ\xE9 pour que l'ambigu\xEFt\xE9 existe.`,
-        line
-      });
+function chargerPorteesPermises() {
+  if (_porteesPermises) return _porteesPermises;
+  const m = /* @__PURE__ */ new Map();
+  const w = (o) => {
+    for (const [k, v] of Object.entries(o || {})) {
+      if (!v || typeof v !== "object") continue;
+      if ("args" in v && "description" in v) {
+        if (Array.isArray(v.scope)) m.set(k, v.scope);
+      } else w(v);
     }
   };
-  for (const e of ast.inputs || []) noter(e?.name, "une entr\xE9e", e?.line);
-  for (const v of ast.vars || []) {
-    const sorte = v?.varType?.kind === "flag" ? "un drapeau" : "une variable de travail";
-    for (const n of v?.names || []) noter(n, sorte, v?.line);
-  }
-  for (const a of ast.actors || []) if (!a?.synthetic) noter(a?.name, "un acteur", a?.line);
-  for (const sc of ast.scenes || []) noter(sc?.name, "une sc\xE8ne", sc?.line);
-  for (const d of ast.defs || []) {
-    if (d && d.type === "DefDirective" && d.kind !== "terminal") {
-      noter(d.name, "une d\xE9finition", d.line);
+  w(LIBS.expression);
+  w(LIBS.midi);
+  w(LIBS.audio);
+  w(LIBS.transpo);
+  w(LIBS.engine);
+  for (const lib of Object.values(LIBS)) {
+    const cles = lib?.schema?.addressKeys;
+    if (!cles || Array.isArray(cles) || typeof cles !== "object") continue;
+    for (const [k, def] of Object.entries(cles)) {
+      if (k.startsWith("_") || !def || !Array.isArray(def.scope)) continue;
+      m.set(k, def.scope);
     }
   }
-  const LEVEES = /* @__PURE__ */ new Set(["une variable de travail"]);
-  const tetesVues = /* @__PURE__ */ new Set();
-  for (const sg of ast.subgrammars || []) {
-    for (const r of sg.rules || []) {
-      const tetes = (r.lhs || []).filter((t) => t && !t.negated);
-      if (tetes.length !== 1) continue;
-      for (const t of tetes) {
-        const nom = t?.name;
-        if (!nom || tetesVues.has(nom)) continue;
-        tetesVues.add(nom);
-        const declare = creesParDeclaration.get(nom);
-        if (declare && !LEVEES.has(declare.sorte)) {
-          erreurs.push({
-            message: `la r\xE8gle '${nom}' porte un nom d\xE9j\xE0 pris par ${declare.sorte} \u2014 en lisant '${nom}' dans une s\xE9quence, on ne sait plus de quoi on parle. Choisir un autre nom pour l'un des deux.`,
-            line: r.line
-          });
-        }
+  _porteesPermises = { get: (cle) => m.get(cle), has: (cle) => m.has(cle) };
+  return _porteesPermises;
+}
+function singleCharAlphabetSet(libCtx) {
+  const terms = libCtx && libCtx.alphabetTerminals || [];
+  if (terms.length === 0) return null;
+  for (const t of terms) {
+    if (typeof t !== "string" || t.length !== 1) return null;
+  }
+  return new Set(terms);
+}
+function splitLhsElement(el, terminals) {
+  if (!el || el.type !== "Symbol") return [el];
+  const toks = tokenizeCompoundName(el.name, terminals);
+  if (toks === null || toks.some((t) => t.kind === "number")) return [el];
+  return toks.map((t, i) => makeSplitAtom(el, t.text, i === 0));
+}
+function splitRhsElement(el, terminals) {
+  if (!el || typeof el !== "object") return [el];
+  if (el.type === "Symbol") {
+    const toks = tokenizeCompoundName(el.name, terminals);
+    if (toks === null) return [el];
+    return toks.map((t, i) => t.kind === "number" ? { type: "NumericDuration", numerator: Number(t.text), denominator: 1 } : makeSplitAtom(el, t.text, i === 0));
+  }
+  if (el.type === "Polymetric" && Array.isArray(el.voices)) {
+    return [{ ...el, voices: el.voices.map((v) => v.flatMap((c) => splitRhsElement(c, terminals))) }];
+  }
+  if ((el.type === "TemplateMasterGroup" || el.type === "TemplateSlaveGroup") && Array.isArray(el.elements)) {
+    return [{ ...el, elements: el.elements.flatMap((c) => splitRhsElement(c, terminals)) }];
+  }
+  return [el];
+}
+function tokenizeCompoundName(name, terminals) {
+  if (name.length < 2) return null;
+  const toks = [];
+  let i = 0;
+  while (i < name.length) {
+    let best = null;
+    for (const t of terminals) {
+      if (name.startsWith(t, i) && (best === null || t.length > best.length)) best = t;
+    }
+    if (best !== null) {
+      toks.push({ kind: "terminal", text: best });
+      i += best.length;
+      continue;
+    }
+    const ch = name[i];
+    if (ch >= "A" && ch <= "Z") {
+      let j = i + 1;
+      while (j < name.length && /[A-Za-z0-9]/.test(name[j])) j++;
+      toks.push({ kind: "variable", text: name.slice(i, j) });
+      i = j;
+      continue;
+    }
+    if (ch >= "0" && ch <= "9") {
+      let j = i + 1;
+      while (j < name.length && name[j] >= "0" && name[j] <= "9") j++;
+      toks.push({ kind: "number", text: name.slice(i, j) });
+      i = j;
+      continue;
+    }
+    return null;
+  }
+  return toks.length < 2 ? null : toks;
+}
+function makeSplitAtom(original, ch, isFirst) {
+  const node = { type: "Symbol", name: ch };
+  if (original.line !== void 0) node.line = original.line;
+  if (original.actor !== void 0) node.actor = original.actor;
+  if (isFirst && original.negated === true) node.negated = true;
+  if (isFirst && original.payload !== void 0) node.payload = original.payload;
+  return node;
+}
+var REFUS_HORS_PORTEE_ACTIF = true;
+var PORTEE_DU_PORTEUR = {
+  Rule: "rule",
+  Polymetric: "group",
+  RawBrace: "group",
+  InstantControl: "flow",
+  Symbol: "symbol",
+  SymbolCall: "symbol",
+  Wildcard: "symbol",
+  Prolongation: "symbol",
+  Rest: "symbol",
+  TemplateMaster: "symbol",
+  TemplateSlave: "symbol"
+};
+var NOM_DE_PLACE = {
+  scene: "en t\xEAte de sc\xE8ne",
+  subgrammar: "en t\xEAte de sous-grammaire, dans la parenth\xE8se du mode (`mode:<mode>(<r\xE9glage>)`)",
+  rule: "sur une r\xE8gle",
+  group: "sur un groupe",
+  symbol: "sur un \xE9l\xE9ment",
+  flow: "dans le flux"
+};
+var _porteesPermises = null;
+var dernierCompte = null;
+function noterLePassage(compte) {
+  dernierCompte = compte;
+}
+
+// src/transpiler/segmentation.js
+function segmenter(nom, terminaux) {
+  if (!nom || terminaux.has(nom)) return null;
+  const longueurs = [...new Set([...terminaux].map((t) => t.length))].sort((a, b) => b - a);
+  const parts = [];
+  let i = 0;
+  while (i < nom.length) {
+    let pris = null;
+    for (const L of longueurs) {
+      if (L > nom.length - i) continue;
+      const bout = nom.slice(i, i + L);
+      if (terminaux.has(bout)) {
+        pris = bout;
+        break;
+      }
+    }
+    if (!pris) return { parts: null, reste: nom.slice(i) };
+    parts.push(pris);
+    i += pris.length;
+  }
+  return parts.length > 1 ? { parts, reste: null } : null;
+}
+
+// src/transpiler/controlValidation.js
+function collectQualifierPairs(node, out) {
+  if (!node || typeof node !== "object") return;
+  if (Array.isArray(node)) {
+    for (const el of node) collectQualifierPairs(el, out);
+    return;
+  }
+  if (node.type === "SettingBag" && Array.isArray(node.pairs)) {
+    for (const p of node.pairs) out.push(p);
+  }
+  for (const k in node) {
+    if (k === "pairs") continue;
+    const v = node[k];
+    if (v && typeof v === "object") collectQualifierPairs(v, out);
+  }
+}
+function collectDirectiveValues(ast, out) {
+  for (const d of ast && ast.directives || []) {
+    if (!d || d.type !== "Directive" || typeof d.name !== "string") continue;
+    if (d.value === null || d.value === void 0) continue;
+    out.push({ key: d.name, value: d.value, line: d.line });
+  }
+}
+function validateControls(ast, controls, qualifies = {}) {
+  if (!controls) return [];
+  const pairs = [];
+  collectQualifierPairs(ast, pairs);
+  collectDirectiveValues(ast, pairs);
+  const errors = [];
+  for (const p of pairs) {
+    const def = p.lib && qualifies[`${p.lib}.${p.key}`] || controls[p.key];
+    if (!def) continue;
+    if (p.value === true) continue;
+    const where = { line: p.line, col: p.col };
+    if (Array.isArray(def.values)) {
+      const v = String(p.value);
+      if (!def.values.includes(v)) {
+        errors.push({
+          message: `valeur '${p.value}' interdite pour le contr\xF4le '${p.key}' (autoris\xE9es : ${def.values.join(", ")})`,
+          ...where
+        });
+      }
+      continue;
+    }
+    if (Array.isArray(def.range) && typeof p.value === "number") {
+      const [min, max] = def.range;
+      if (p.value < min || p.value > max) {
+        errors.push({
+          message: `valeur ${p.value} hors plage pour le contr\xF4le '${p.key}' (${min}..${max})`,
+          ...where
+        });
       }
     }
   }
-  const drapeaux = /* @__PURE__ */ new Set();
-  const collecterDrapeaux = (n) => {
-    if (!n || typeof n !== "object") return;
-    if (Array.isArray(n)) {
-      n.forEach(collecterDrapeaux);
-      return;
-    }
-    if ((n.type === "FlagExpr" || n.type === "Guard") && typeof n.flag === "string") drapeaux.add(n.flag);
-    for (const v of Object.values(n)) collecterDrapeaux(v);
-  };
-  collecterDrapeaux(ast.subgrammars);
-  const tetesDeRegle = /* @__PURE__ */ new Map();
-  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) {
-    for (const t of r.lhs || []) if (t?.name && !t.negated && !tetesDeRegle.has(t.name)) {
-      tetesDeRegle.set(t.name, r.line);
-    }
-  }
-  for (const nom of drapeaux) {
-    const declare = creesParDeclaration.get(nom);
-    if (declare && declare.sorte !== "un drapeau") {
-      erreurs.push({
-        message: `le drapeau '${nom}' porte un nom d\xE9j\xE0 pris par ${declare.sorte}${declare.line ? ` ligne ${declare.line}` : ""} \u2014 un nom ne d\xE9signe qu'UNE chose dans une sc\xE8ne. Choisir un autre nom pour le drapeau.`
-      });
-      continue;
-    }
-    if (tetesDeRegle.has(nom)) {
-      erreurs.push({
-        message: `le drapeau '${nom}' porte le nom d'une R\xC8GLE de la grammaire${tetesDeRegle.get(nom) ? ` ligne ${tetesDeRegle.get(nom)}` : ""} \u2014 un nom ne d\xE9signe qu'UNE chose dans une sc\xE8ne. Choisir un autre nom pour le drapeau.`
-      });
-      continue;
-    }
-    if (terminaux.has(nom)) {
-      erreurs.push({
-        message: `le drapeau '${nom}' porte le nom d'un TERMINAL de l'alphabet actif \u2014 un nom ne d\xE9signe qu'UNE chose dans une sc\xE8ne, et un drapeau ne porte qu'un nom de drapeau. Choisir un autre nom pour le drapeau.`
-      });
-      continue;
-    }
-    if (libCtx?.controlNames?.has(nom)) {
-      erreurs.push({
-        message: `le drapeau '${nom}' porte le nom d'un R\xC9GLAGE du vocabulaire \u2014 le sac de drapeaux en ferait un drapeau sans un mot, et le r\xE9glage deviendrait inatteignable sous ce nom. Choisir un autre nom pour le drapeau.`
-      });
-      continue;
-    }
-  }
-  return erreurs;
+  return errors;
 }
-function emitNoteTerminals(ast) {
-  const { terminaux, aUnAlphabet } = terminauxEnPortee(ast);
-  if (!aUnAlphabet) return;
-  const presents = /* @__PURE__ */ new Set();
-  const recolter = (n) => {
-    if (!n || typeof n !== "object") return;
-    if (Array.isArray(n)) return n.forEach(recolter);
-    if (typeof n.name === "string") presents.add(n.name);
-    for (const k in n) if (n[k] && typeof n[k] === "object") recolter(n[k]);
+
+// src/transpiler/bpxAst.js
+function segmenterLesTerminaux(ast, known, paquets) {
+  const lire = (nom) => {
+    let echec = null;
+    for (const paquet of paquets) {
+      const r = segmenter(nom, paquet);
+      if (r && r.parts) return r;
+      if (r && r.reste && !echec) echec = r;
+    }
+    return echec;
   };
-  recolter(ast.subgrammars || []);
-  const aHauteur = (nomAlphabet) => {
-    const lib = resolveActorAlphabet(nomAlphabet, ast.directives);
-    return !!(lib && lib.resolvesPitch);
+  const intouchables = new Set([...nomsDeclares(ast)].filter((n) => !lire(n)?.parts));
+  const dansUneListe = (liste) => {
+    if (!Array.isArray(liste)) return liste;
+    const sortie = [];
+    for (const el of liste) {
+      if (el && el.type === "Symbol" && el.name && !known.has(el.name) && !intouchables.has(el.name) && el.role !== "homomorphism" && !(Array.isArray(el.compose) && el.compose.length)) {
+        const r = lire(el.name);
+        if (r && r.parts) {
+          for (const part of r.parts) sortie.push({ ...el, name: part });
+          continue;
+        }
+        if (r && r.reste) restesDeSegmentation.set(el, r.reste);
+      }
+      sortie.push(descendre(el));
+    }
+    return sortie;
   };
-  const notes = /* @__PURE__ */ new Set();
-  const sansHauteur = /* @__PURE__ */ new Set();
-  const verser = (nomAlphabet, octaves) => {
-    const lib = resolveActorAlphabet(nomAlphabet, ast.directives);
-    if (!lib || !nomsDeTerminaux(lib)) return;
-    const cible = aHauteur(nomAlphabet) ? notes : sansHauteur;
-    for (const t of expandAlphabetTerminals(lib, octaves)) cible.add(t);
-    const alts = lib.alterations && typeof lib.alterations === "object" && !Array.isArray(lib.alterations) ? Object.keys(lib.alterations) : [""];
-    for (const note of nomsDeTerminaux(lib)) for (const alt of alts) cible.add(note + alt);
+  const CONTENANTS = ["voices", "elements", "content", "symbol", "triggers", "primary", "secondaries"];
+  const descendre = (el) => {
+    if (!el || typeof el !== "object") return el;
+    if (Array.isArray(el)) return dansUneListe(el);
+    for (const k of CONTENANTS) if (Array.isArray(el[k])) el[k] = dansUneListe(el[k]);
+    return el;
   };
-  const sceneAlpha = (ast.directives || []).find((d) => d.name === "alphabet" && d.subkey);
-  const sceneOct = (ast.directives || []).find((d) => d.name === "octaves" && (d.subkey || d.runtime));
-  if (sceneAlpha) verser(sceneAlpha.subkey, sceneOct ? sceneOct.subkey || sceneOct.runtime : null);
-  for (const a of ast.actors || []) {
-    const p = a.properties || {};
-    if (p.alphabet) verser(p.alphabet, p.octaves || null);
+  for (const sg of ast.subgrammars || []) {
+    for (const r of sg.rules || []) {
+      if (Array.isArray(r.rhs)) r.rhs = dansUneListe(r.rhs);
+      if (Array.isArray(r.lhs)) r.lhs = dansUneListe(r.lhs);
+    }
   }
-  const dansLaScene = (ens) => [...presents].filter((n) => ens.has(n)).sort();
-  ast.noteTerminals = dansLaScene(notes);
-  ast.alphabetTerminals = dansLaScene(sansHauteur);
-}
-function emitSceneLibRefs(ast) {
-  const axesHauteur = /* @__PURE__ */ new Set(["alphabet", "tuning", "octaves", "scale"]);
-  const refs = [];
-  for (const d of ast.directives || []) {
-    if (!d || !d.name || !d.subkey || axesHauteur.has(d.name)) continue;
-    const entree = loadLib(d.name, d.subkey);
-    if (!entree) continue;
-    const adresse = `${d.name}.${d.subkey}`;
-    if (!refs.includes(adresse)) refs.push(adresse);
-  }
-  for (const e of ast.inputs || []) {
-    if (!e || !e.mapping) continue;
-    const adresse = `mapping.${e.mapping}`;
-    if (!refs.includes(adresse)) refs.push(adresse);
-  }
-  if (refs.length === 0) return;
-  ast.libRefs = [...ast.libRefs || [], ...refs.filter((r) => !(ast.libRefs || []).includes(r))];
 }
 function resoudreSource(source, environnement) {
   const result = { ast: null, errors: [], warnings: [] };
