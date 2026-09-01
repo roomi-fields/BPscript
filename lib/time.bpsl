@@ -30,5 +30,5 @@ def time (documented:true, resolvedBy:Kronos, resolves:time, name:time, descript
 
 def tempo (bp3:_mm, args("bpm"), unit:bpm, description:"Metronome absolu de la scene ou de la sous-grammaire, en BPM.", scope("subgrammar", "scene"), unicite:metronome)
 
-def syncdelay (section:controls, bp3:MIDIsyncDelay, args("duration"), unit:ms, description:"Retard de rattrapage de l'horloge à la reprise après un point d'attente, en MILLISECONDES. Image de MIDIsyncDelay au moteur natif.", scope("scene"))
+control syncdelay (section:controls, bp3:MIDIsyncDelay, args("duration"), unit:ms, description:"Retard de rattrapage de l'horloge à la reprise après un point d'attente, en MILLISECONDES. Image de MIDIsyncDelay au moteur natif.", scope("scene"))
 
