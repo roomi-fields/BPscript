@@ -90,16 +90,22 @@ const LEGITIME_APRES = new Set(['mode']);
 const DECLARATIONS_DE_TETE = new Set([
   'actor', 'all_items', 'allitems', 'chromashift', 'core', 'def', 'diapason', 'eval',
   'homomorphism', 'improvize', 'init', 'ins', 'items', 'maxitems', 'meter', 'modulation',
-  'octaves', 'on_fail', 'out', 'qclock', 'quantization', 'randomize', 'rndtime', 'scale', 'scan',
+  'on_fail', 'out', 'qclock', 'quantization', 'randomize', 'rndtime', 'scale', 'scan',
   // ⛔ `sounds` ET `test_alphabets` SORTIS LE 2026-08-22 : c'étaient des noms de FICHIER, et une
   // librairie s'invoque par le mot qu'elle DÉCLARE. Le mot qu'ils servaient — `sound` — est déjà
   // dans cette famille, une seule fois.
+  // ⛔ `tuning`, `octaves` ET `sound` SORTIS LE 2026-09-01, MÊME MOUVEMENT ET MÊME CAUSE que
+  // `alphabet` : décision de Romain — « les mots du socle doivent être définis avec leur portée dans
+  // le fichier dédié, et tout ce qui vient des librairies doit être spécifié dans scope ». Ces trois
+  // mots sont les TYPES de catalogues (`tunings`, `octaves`, `sounds`) : ils viennent des
+  // librairies, donc ils quittent le socle.
+  // ⚠️ ILS S'ÉCRIVENT TOUJOURS — mesuré : `tuning.western_12TET` et `octaves.western` compilent
+  // après le retrait. `catalogAxes` les porte, et c'est lui qui route l'invocation.
   // ⛔ `alphabet` SORTI LE 2026-09-01, décision de Romain : la table des types est le SOCLE, étendu
   // par les librairies invoquées. Un type fourni par une librairie n'appartient pas au socle, donc
   // le mot quitte `core.schema.reservedDirectives` — et l'exemption qui le nommait ici sort avec
   // lui. Une exemption qui ne désigne plus rien de vivant est un trou au nom de quelqu'un.
-  'seed', 'settings', 'sound', 'timepatterns', 'transpose', 'tuning',
-]);
+  'seed', 'settings', 'timepatterns', 'transpose', ]);
 
 const nomsReserves0 = (rd) => (Array.isArray(rd) ? rd : Object.keys(rd || {}));
 const UNION = [...new Set(Object.values(LIBS).flatMap((f) => nomsReserves0(f?.schema?.reservedDirectives)))].sort();
@@ -248,7 +254,9 @@ ok(RESERVEES >= 40, `4. le vocabulaire de directives doit être chargé — ${RE
 // pas. ⇒ LE CRITÈRE RÉEL DERRIÈRE CETTE CLAUSE est donc plus large que sa lettre : la soustraction
 // est-elle une DÉCISION sur la donnée, ou une CÉCITÉ de l'instrument ? Ici le diff porte exactement
 // un retrait, décidé, et l'union passe de 47 à 46.
-ok(UNION.length >= 46,
+// ⛔ 46 → 43 LE MÊME JOUR : `tuning`, `octaves`, `sound` suivent `alphabet`, pour la raison écrite
+// plus bas. Trois retraits décidés, diff à l'appui, et les trois mots compilent toujours.
+ok(UNION.length >= 43,
   `4. le vocabulaire réservé ne s'est pas vidé — ${UNION.length} mot(s) à l'union des librairies`);
 ok(DECLARATIONS_DE_TETE.size + CONTROLES_DE_PORTEE.size + LEGITIME_APRES.size === UNION.length,
   `4. les trois familles doivent PARTITIONNER l'union — ${DECLARATIONS.length} + `

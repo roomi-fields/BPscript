@@ -287,7 +287,7 @@
  "core.schema.channels.dmx.params": "327a7380d2cc7cf0",
  "core.schema.channels.text": "e3d2149bd5dc6d8f",
  "core.schema.qualifierKeys": "cc551fd2b2b624f6",
- "core.schema.reservedDirectives": "7f773796d4440ec5",
+ "core.schema.reservedDirectives": "621d55f161c791d3",
  "core.schema.actorKeys": "24c63a857c2508a7",
  "core.schema.deprecatedActorKeys": "cf70dcee5aed5e34",
  "core.schema.declarationTypes": "1c2f7ff85d238f81",
