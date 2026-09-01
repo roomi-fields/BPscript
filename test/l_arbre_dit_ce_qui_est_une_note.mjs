@@ -63,6 +63,21 @@ import { LIBS } from '../src/transpiler/libs-data.js';
 // ZÉRO occurrence dans la donnée publiée.
 import { CHAMPS_DE_FICHIER as META_FICHIER } from '../src/transpiler/libs-champs.js';
 
+// ⛔ UNE ENTRÉE SE RECONNAÎT À SA NATURE, PAS SEULEMENT À SON NOM. `CHAMPS_DE_FICHIER` énumère les
+// noms déclarés comme métadonnée ; il ne peut rien dire d'un nom qu'il ne connaît pas. Le 2026-09-01,
+// `apporte` est entré dans les catalogues et ce garde l'a compté comme un alphabet sans
+// `resolvesPitch`. ⛔ ET « UNE ENTRÉE EST UN OBJET » NE SUFFIT PAS : en JavaScript un TABLEAU est un
+// objet, et `apporte` en est un. La clause de tableau doit être ÉCRITE.
+// ⚠️ Les DEUX critères restent, parce qu'ils portent sur deux faits distincts : ce nom est-il déclaré
+// comme champ de fichier, et cette valeur a-t-elle la nature d'une entrée. Mesuré ce jour sur
+// `alphabets`, `sounds` et `tunings` : aucun champ de fichier n'est un objet non-tableau.
+const estUneEntree = (obj, cle) => {
+  if (META_FICHIER.has(cle) || cle.startsWith('_')) return false;
+  const v = obj[cle];
+  return !!v && typeof v === 'object' && !Array.isArray(v);
+};
+
+
 let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
@@ -263,7 +278,7 @@ for (const fichier of ['alphabets', 'test_alphabets']) {
   // ⚠️ 'resolvedBy' EXCLU AU MÊME TITRE QUE 'domain' depuis le 2026-08-10 (mise en conformité des
   // librairies, remplace 'domain') — sinon la chaîne 'Kairos' est lue comme une entrée d'alphabet
   // sans resolvesPitch, et le garde crie sur un champ de MÉTADONNÉE, pas sur une vraie entrée.
-  const entrees = Object.keys(j).filter((k) => !META_FICHIER.has(k) && !k.startsWith('_'));
+  const entrees = Object.keys(j).filter((k) => estUneEntree(j, k));
   ok(entrees.length > 0, `3bis. ${fichier} doit contenir des entrées (socle : un catalogue vide ne prouve rien)`);
   const sansChamp = entrees.filter((n) => typeof j[n].resolvesPitch !== 'boolean');
   ok(sansChamp.length === 0,
@@ -274,7 +289,7 @@ for (const fichier of ['alphabets', 'test_alphabets']) {
   // ⚠️ 'resolvedBy' EXCLU AU MÊME TITRE QUE 'domain' depuis le 2026-08-10 (mise en conformité des
   // librairies, remplace 'domain') — sinon la chaîne 'Kairos' est lue comme une entrée d'alphabet
   // sans resolvesPitch, et le garde crie sur un champ de MÉTADONNÉE, pas sur une vraie entrée.
-  const entrees = Object.keys(j).filter((k) => !META_FICHIER.has(k) && !k.startsWith('_'));
+  const entrees = Object.keys(j).filter((k) => estUneEntree(j, k));
   // ⚠️ MÊME CONVERSION QU'EN 2bis, et pour la même raison : ce témoin exigeait la divergence, elle a
   // été comblée le 2026-07-30 par l'ancre de shakuhachi. Ce qu'on garde ici est l'INVARIANT qui
   // survit à la coïncidence : tout alphabet qui déclare résoudre une hauteur doit porter une ANCRE
@@ -302,7 +317,7 @@ for (const fichier of ['alphabets', 'test_alphabets']) {
   // ⚠️ LA DONNEE SE PREND DANS LE BUNDLE, jamais a un chemin de fichier : un catalogue qui passe
   // en `.bpsl` fait casser net un lecteur qui construit `lib/<axe>.json`.
   const registres = LIBS.octaves;
-  const tables = Object.keys(registres).filter((k) => !META_FICHIER.has(k) && !k.startsWith('_'));
+  const tables = Object.keys(registres).filter((k) => estUneEntree(registres, k));
   const nonBranches = resolvent.filter((n) => tables.includes(n) && !j[n].octaves);
   ok(nonBranches.length === 0,
     "3bis. une table de registres HOMONYME existe et n'est pas branchée — le nommer dans un "

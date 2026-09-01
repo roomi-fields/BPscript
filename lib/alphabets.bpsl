@@ -5,11 +5,14 @@
 // ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
 //    voyage pas jusqu'aux consommateurs, une clé si.
 
+// Les prototypes de ce catalogue vivent dans `types` — invoquée ci-dessous.
+types
+
 def alphabets (documented:true, resolvedBy:Kairos, resolves:alphabet)
 
-def western (description:"Western chromatic — 7 natural notes, 5 alteration levels", runtime:audio, tuning:western_12TET, octaves:western, diapason:440, resolvesPitch:true, alterations(bb:-2, b:-1, "":0, "#":1, "##":2), baseNote:A, baseRegister:"4", terminals(C(), D(), E(), F(), G(), A(), B()))
+alphabet western (description:"Western chromatic — 7 natural notes, 5 alteration levels", runtime:audio, tuning:western_12TET, octaves:western, diapason:440, resolvesPitch:true, alterations(bb:-2, b:-1, "":0, "#":1, "##":2), baseNote:A, baseRegister:"4", terminals(C(), D(), E(), F(), G(), A(), B()))
 
-def sargam (description:"Indian sargam — 7 svaras", runtime:audio, tuning:sargam_12TET, octaves:saptak, diapason:240, resolvesPitch:true, alterations(komal:-1, "":0, tivra:1), baseNote:sa, baseRegister:madhya, terminals(sa(), re(), ga(), ma(), pa(), dha(), ni()))
+alphabet sargam (description:"Indian sargam — 7 svaras", runtime:audio, tuning:sargam_12TET, octaves:saptak, diapason:240, resolvesPitch:true, alterations(komal:-1, "":0, tivra:1), baseNote:sa, baseRegister:madhya, terminals(sa(), re(), ga(), ma(), pa(), dha(), ni()))
 
 // bp3_indian · ⚠️ CE N'EST PAS 'sargam'. BP3 RENOMME le clavier occidental, il ne le TRANSPOSE
 // pas : les trois conventions natives (ENGLISH/FRENCH/INDIAN) nomment les MÊMES touches.
@@ -24,7 +27,7 @@ def sargam (description:"Indian sargam — 7 svaras", runtime:audio, tuning:sarg
 // (komal, −1) et '#' (tivra, +1) — vérifié classe par classe sur les DEUX tables. Les deux
 // quirks de bord (ni# → classe 0 registre +1 ; sak → classe 11 registre −1) relèvent du repli
 // générique de degré, déjà porté par le résolveur de Kairos (src/pitch/bp3-alphabets.test.ts).
-def bp3_indian (description:"Sargam TEL QUE LE MOTEUR BP3 NATIF le nomme (convention de notes INDIAN) — alphabet de test BP3, à côté des autres (arbitrage Romain 2026-07-19)", runtime:audio, tuning:bp3_indian_12TET, octaves:bp3, diapason:440, resolvesPitch:true, alterations(k:-1, "":0, "#":1), baseNote:dha, baseRegister:"4", terminals(sa(), re(), ga(), ma(), pa(), dha(), ni()))
+alphabet bp3_indian (description:"Sargam TEL QUE LE MOTEUR BP3 NATIF le nomme (convention de notes INDIAN) — alphabet de test BP3, à côté des autres (arbitrage Romain 2026-07-19)", runtime:audio, tuning:bp3_indian_12TET, octaves:bp3, diapason:440, resolvesPitch:true, alterations(k:-1, "":0, "#":1), baseNote:dha, baseRegister:"4", terminals(sa(), re(), ga(), ma(), pa(), dha(), ni()))
 
 // bp3_english · ⚠️ CE N'EST PAS 'western'. Même jeu de naturelles, mais les REGISTRES sont ceux
 // du natif : l'octave −1 s'écrit '00' et non '-1' (table 'bp3', lue plus-long-d'abord).
@@ -33,7 +36,7 @@ def bp3_indian (description:"Sargam TEL QUE LE MOTEUR BP3 NATIF le nomme (conven
 // (B# → classe 0 registre +1, Cb → classe 11 registre −1) relèvent du repli générique de degré.
 // bp3_english · bp3-engine/csrc/bp3 -BP3main.h:136-147 (tables de noms) + Inits.c:445-530
 // (SetNoteNames, registres et quirks d'octave)
-def bp3_english (description:"Convention de notes ENGLISH du moteur BP3 natif — alphabet de test BP3, à côté des autres (décision Romain 2026-07-29 : la mécanique n'utilise que des alphabets)", runtime:audio, tuning:bp3_english_12TET, octaves:bp3, diapason:440, resolvesPitch:true, alterations(b:-1, "":0, "#":1), baseNote:A, baseRegister:"4", terminals(C(), D(), E(), F(), G(), A(), B()))
+alphabet bp3_english (description:"Convention de notes ENGLISH du moteur BP3 natif — alphabet de test BP3, à côté des autres (décision Romain 2026-07-29 : la mécanique n'utilise que des alphabets)", runtime:audio, tuning:bp3_english_12TET, octaves:bp3, diapason:440, resolvesPitch:true, alterations(b:-1, "":0, "#":1), baseNote:A, baseRegister:"4", terminals(C(), D(), E(), F(), G(), A(), B()))
 
 // bp3_fr · ⚠️ CE N'EST PAS 'solfege'. Même jeu de naturelles, mais le natif NOMME ses registres
 // un cran plus bas : la3 = A4 = 440 Hz (là où 'solfege' pose la4). D'où une table de registres
@@ -42,19 +45,19 @@ def bp3_english (description:"Convention de notes ENGLISH du moteur BP3 natif �
 // entière.
 // bp3_fr · bp3-engine/csrc/bp3 -BP3main.h:136-147 (tables de noms) + Inits.c:445-530
 // (SetNoteNames, registres et quirks d'octave)
-def bp3_fr (description:"Convention de notes FRENCH du moteur BP3 natif — alphabet de test BP3, à côté des autres (décision Romain 2026-07-29)", runtime:audio, tuning:bp3_fr_12TET, octaves:bp3_fr, diapason:440, resolvesPitch:true, alterations(b:-1, "":0, "#":1), baseNote:la, baseRegister:"3", terminals(do(), re(), mi(), fa(), sol(), la(), si()))
+alphabet bp3_fr (description:"Convention de notes FRENCH du moteur BP3 natif — alphabet de test BP3, à côté des autres (décision Romain 2026-07-29)", runtime:audio, tuning:bp3_fr_12TET, octaves:bp3_fr, diapason:440, resolvesPitch:true, alterations(b:-1, "":0, "#":1), baseNote:la, baseRegister:"3", terminals(do(), re(), mi(), fa(), sol(), la(), si()))
 
-def solfege (description:"Solfège latin — do ré mi fa sol la si", runtime:audio, tuning:solfege_12TET, octaves:western, diapason:440, resolvesPitch:true, alterations(bb:-2, b:-1, "":0, "#":1, "##":2), baseNote:la, baseRegister:"4", terminals(do(), re(), mi(), fa(), sol(), la(), si()))
+alphabet solfege (description:"Solfège latin — do ré mi fa sol la si", runtime:audio, tuning:solfege_12TET, octaves:western, diapason:440, resolvesPitch:true, alterations(bb:-2, b:-1, "":0, "#":1, "##":2), baseNote:la, baseRegister:"4", terminals(do(), re(), mi(), fa(), sol(), la(), si()))
 
-def arabic (description:"Arabic — 7 perde (noms de degrés) with quarter-tone alterations. rast≈do, sikah=tierce neutre, awj=septième neutre.", runtime:audio, tuning:arabic_24TET, diapason:440, resolvesPitch:true, alterations(bb:-4, b:-2, half_b:-1, "":0, "half_#":1, "#":2, "##":4), baseNote:husayni, terminals(rast(), dukah(), sikah(), jaharkah(), nawa(), husayni(), awj()))
+alphabet arabic (description:"Arabic — 7 perde (noms de degrés) with quarter-tone alterations. rast≈do, sikah=tierce neutre, awj=septième neutre.", runtime:audio, tuning:arabic_24TET, diapason:440, resolvesPitch:true, alterations(bb:-4, b:-2, half_b:-1, "":0, "half_#":1, "#":2, "##":4), baseNote:husayni, terminals(rast(), dukah(), sikah(), jaharkah(), nawa(), husayni(), awj()))
 
 // turkish · Turkish makam uses many more note names than 7. This is a representative subset.
 // Full system has named pitches for each of the 53 commas in common use.
-def turkish (description:"Turkish makam — note names from Ottoman/Turkish tradition", runtime:audio, tuning:turkish_53TET, octaves:turkish, diapason:440, resolvesPitch:true, alterations(bakiye:4, kucuk_mucenneb:5, "":0, buyuk_mucenneb:8, tanini:9), baseNote:neva, baseRegister:"", terminals(kaba_cargah(), yegah(), huseyni_asiran(), acem_asiran(), irak(), rast(), dugah(), segah(), buselik(), cargah(), neva(), huseyni(), acem(), evic(), mahur(), gerdaniye()))
+alphabet turkish (description:"Turkish makam — note names from Ottoman/Turkish tradition", runtime:audio, tuning:turkish_53TET, octaves:turkish, diapason:440, resolvesPitch:true, alterations(bakiye:4, kucuk_mucenneb:5, "":0, buyuk_mucenneb:8, tanini:9), baseNote:neva, baseRegister:"", terminals(kaba_cargah(), yegah(), huseyni_asiran(), acem_asiran(), irak(), rast(), dugah(), segah(), buselik(), cargah(), neva(), huseyni(), acem(), evic(), mahur(), gerdaniye()))
 
-def gamelan_pelog (description:"Javanese gamelan pelog — 7 tones", runtime:audio, tuning:gamelan_pelog, diapason:282, resolvesPitch:true, alterations(), baseNote:nem, terminals(nem(), barang(), bem(), gulu(), lima(), enam(), pitu()))
+alphabet gamelan_pelog (description:"Javanese gamelan pelog — 7 tones", runtime:audio, tuning:gamelan_pelog, diapason:282, resolvesPitch:true, alterations(), baseNote:nem, terminals(nem(), barang(), bem(), gulu(), lima(), enam(), pitu()))
 
-def gamelan_slendro (description:"Javanese gamelan slendro — 5 tones", runtime:audio, tuning:gamelan_slendro, diapason:282, resolvesPitch:true, alterations(), baseNote:nem, terminals(nem(), barang(), gulu(), dada(), lima()))
+alphabet gamelan_slendro (description:"Javanese gamelan slendro — 5 tones", runtime:audio, tuning:gamelan_slendro, diapason:282, resolvesPitch:true, alterations(), baseNote:nem, terminals(nem(), barang(), gulu(), dada(), lima()))
 
 // shakuhachi · meri = lowered (chin down), kari = raised (chin up). Additional fingerings exist
 // but vary by school.
@@ -66,10 +69,10 @@ def gamelan_slendro (description:"Javanese gamelan slendro — 5 tones", runtime
 // independantes concordent sur les cinq hauteurs — la premiere donne la fondamentale et l
 // ensemble des notes, la seconde l appariement nom par nom, qui est ce qui evite une
 // TRANSPOSITION silencieuse.
-def shakuhachi (description:"Shakuhachi — 5 base fingerings (Kinko-ryū)", runtime:audio, tuning:shakuhachi_12TET, octaves:shakuhachi, diapason:293.66, resolvesPitch:true, alterations(meri:-1, "":0, kari:1), baseNote:ro, baseRegister:otsu, terminals(ro(), tsu(), re(), chi(), ri()))
+alphabet shakuhachi (description:"Shakuhachi — 5 base fingerings (Kinko-ryū)", runtime:audio, tuning:shakuhachi_12TET, octaves:shakuhachi, diapason:293.66, resolvesPitch:true, alterations(meri:-1, "":0, kari:1), baseNote:ro, baseRegister:otsu, terminals(ro(), tsu(), re(), chi(), ri()))
 
 // bohlen_pierce · BP uses its own letter naming. No standard alteration system.
-def bohlen_pierce (description:"Bohlen-Pierce — 13 pitch classes in a tritave", runtime:audio, tuning:bohlen_pierce_equal, diapason:440, resolvesPitch:true, alterations(), baseNote:C, terminals(C(), Db(), D(), E(), F(), Gb(), G(), H(), Jb(), J(), A(), Bb(), B()))
+alphabet bohlen_pierce (description:"Bohlen-Pierce — 13 pitch classes in a tritave", runtime:audio, tuning:bohlen_pierce_equal, diapason:440, resolvesPitch:true, alterations(), baseNote:C, terminals(C(), Db(), D(), E(), F(), Gb(), G(), H(), Jb(), J(), A(), Bb(), B()))
 
 // tabla · Alphabet de percussion : aucune hauteur a resoudre, donc aucun tuning. Le champ
 // `voice` lie un terminal a une voix du catalogue du mot `voice`. CONTENU : les vingt bols de
@@ -83,19 +86,19 @@ def bohlen_pierce (description:"Bohlen-Pierce — 13 pitch classes in a tritave"
 // bol muet reste atomique. `ghe` et `tun` SORTENT : aucun des soixante-et-un alphabets du
 // corpus ne les declare, et le moteur les refuse a la compilation. Ni atomiques ni composes —
 // inexistants.
-def tabla (description:"Bols de tabla — les syllabes ATOMIQUES, celles qu'aucune autre ne compose", runtime:audio, resolvesPitch:false, alterations(), terminals(dha(voice:bayan_open), ta(voice:dayan_tap), dhin(voice:bayan_open), tin(voice:dayan_ring), dhee(), tee(voice:dayan_open), ge(voice:bayan_open), ke(voice:bayan_muted), ra(), tr(), kt(voice:dayan_dry), ti(voice:dayan_tap), ne(), na(voice:dayan_ring), tk(), dhr(), ng(), gr(), te(), tt(), ki(), ka(voice:bayan_muted)))
+alphabet tabla (description:"Bols de tabla — les syllabes ATOMIQUES, celles qu'aucune autre ne compose", runtime:audio, resolvesPitch:false, alterations(), terminals(dha(voice:bayan_open), ta(voice:dayan_tap), dhin(voice:bayan_open), tin(voice:dayan_ring), dhee(), tee(voice:dayan_open), ge(voice:bayan_open), ke(voice:bayan_muted), ra(), tr(), kt(voice:dayan_dry), ti(voice:dayan_tap), ne(), na(voice:dayan_ring), tk(), dhr(), ng(), gr(), te(), tt(), ki(), ka(voice:bayan_muted)))
 
 // simple · Alphabet ABSTRAIT : aucune hauteur, aucun accordage. Il existe pour que les scenes
 // de test structurelles (derivation, polymetrie, homomorphismes) restent abstraites tout en
 // satisfaisant le garde des terminaux. Ne jamais lui ajouter de diapason/baseNote : un symbole
 // de 'simple' ne sonne pas, il structure.
-def simple (description:"Abstract symbols — single lowercase letters, no pitch. For structural test scenes.", runtime:audio, resolvesPitch:false, alterations(), terminals(a(), b(), c(), d(), e(), f(), g(), h(), i(), j(), k(), l(), m(), n(), o(), p(), q(), r(), s(), t(), u(), v(), w(), x(), y(), z(), Z(), filler(), b1(), c1(), d1()))
+alphabet simple (description:"Abstract symbols — single lowercase letters, no pitch. For structural test scenes.", runtime:audio, resolvesPitch:false, alterations(), terminals(a(), b(), c(), d(), e(), f(), g(), h(), i(), j(), k(), l(), m(), n(), o(), p(), q(), r(), s(), t(), u(), v(), w(), x(), y(), z(), Z(), filler(), b1(), c1(), d1()))
 
 // shruti23 · Ancre = tonique sa_4 = 261.625 Hz (native -to.tryShruti). Registre en suffixe
 // séparé par '_' (sa_4, r1_4) — convention 'saptak_us'.
-def shruti23 (description:"22-shruti nommé BP3 — 23 degrés microtonaux (sa, r1..r4, g1..g4, m1, m2, m3p1, m4p2, p3, p4, d1..d4, n1..n4). Noms verbatim de -to.tryShruti, tonique sa.", runtime:audio, tuning:shruti23_native, octaves:saptak_us, diapason:261.625, resolvesPitch:true, alterations("":0), baseNote:sa, baseRegister:"4", terminals(sa(), r1(), r2(), r3(), r4(), g1(), g2(), g3(), g4(), m1(), m2(), m3p1(), m4p2(), p3(), p4(), d1(), d2(), d3(), d4(), n1(), n2(), n3(), n4()))
+alphabet shruti23 (description:"22-shruti nommé BP3 — 23 degrés microtonaux (sa, r1..r4, g1..g4, m1, m2, m3p1, m4p2, p3, p4, d1..d4, n1..n4). Noms verbatim de -to.tryShruti, tonique sa.", runtime:audio, tuning:shruti23_native, octaves:saptak_us, diapason:261.625, resolvesPitch:true, alterations("":0), baseNote:sa, baseRegister:"4", terminals(sa(), r1(), r2(), r3(), r4(), g1(), g2(), g3(), g4(), m1(), m2(), m3p1(), m4p2(), p3(), p4(), d1(), d2(), d3(), d4(), n1(), n2(), n3(), n4()))
 
 // tryCsoundObjects · bp3-ctests/-al.tryCsoundObjects (noms, verbatim) · -so.tryCsoundObjects
 // (prototypes, non portes)
-def tryCsoundObjects (description:"Objets sonores Csound de la grammaire de test tryCsoundObjects (sans hauteur)", runtime:audio, resolvesPitch:false, alterations(), terminals(a(voice:dummy_csound_a), b(voice:dummy_csound_b), c(voice:dummy_csound_c), d(voice:dummy_csound_d), e(voice:dummy_csound_e), f(voice:dummy_csound_f), midiobject(voice:dummy_csound_midiobject)))
+alphabet tryCsoundObjects (description:"Objets sonores Csound de la grammaire de test tryCsoundObjects (sans hauteur)", runtime:audio, resolvesPitch:false, alterations(), terminals(a(voice:dummy_csound_a), b(voice:dummy_csound_b), c(voice:dummy_csound_c), d(voice:dummy_csound_d), e(voice:dummy_csound_e), f(voice:dummy_csound_f), midiobject(voice:dummy_csound_midiobject)))
 
