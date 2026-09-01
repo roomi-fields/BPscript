@@ -55,39 +55,39 @@ def variation (documented:true, resolves:variation, resolvedBy:"Kairos", name:va
 // _comment : Modes discrets — un mot par (paramètre, mode), sans argument. Le mot natif est
 // porté verbatim par `bp3`.
 
-def velfixed (bp3:_velfixed, description:"Vélocité en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
+control velfixed (bp3:_velfixed, description:"Vélocité en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
 
-def velstep (bp3:_velstep, description:"Vélocité PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
+control velstep (bp3:_velstep, description:"Vélocité PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
 
-def modfixed (bp3:_modfixed, description:"Modulation en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
+control modfixed (bp3:_modfixed, description:"Modulation en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
 
-def modstep (bp3:_modstep, description:"Modulation PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
+control modstep (bp3:_modstep, description:"Modulation PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
 
-def pitchfixed (bp3:_pitchfixed, description:"Pitchbend en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
+control pitchfixed (bp3:_pitchfixed, description:"Pitchbend en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
 
-def pitchstep (bp3:_pitchstep, description:"Pitchbend PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
+control pitchstep (bp3:_pitchstep, description:"Pitchbend PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
 
-def pressfixed (bp3:_pressfixed, description:"Pression en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
+control pressfixed (bp3:_pressfixed, description:"Pression en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
 
-def presstep (bp3:_presstep, description:"Pression PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
+control presstep (bp3:_presstep, description:"Pression PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
 
-def volumefixed (bp3:_volumefixed, description:"Volume en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
+control volumefixed (bp3:_volumefixed, description:"Volume en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
 
-def volumestep (bp3:_volumestep, description:"Volume PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
+control volumestep (bp3:_volumestep, description:"Volume PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
 
-def articulfixed (bp3:_articulfixed, description:"Articulation en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net. L'articulation se pose par legato et staccato.", scope(symbol, group, rule, flow))
+control articulfixed (bp3:_articulfixed, description:"Articulation en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net. L'articulation se pose par legato et staccato.", scope(symbol, group, rule, flow))
 
-def articulstep (bp3:_articulstep, description:"Articulation PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
+control articulstep (bp3:_articulstep, description:"Articulation PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
 
-def panfixed (bp3:_panfixed, description:"Panoramique en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
+control panfixed (bp3:_panfixed, description:"Panoramique en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
 
-def panstep (bp3:_panstep, description:"Panoramique PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
+control panstep (bp3:_panstep, description:"Panoramique PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
 
-def mapfixed (bp3:_mapfixed, description:"Carte de touches en mode FIXE — la carte écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
+control mapfixed (bp3:_mapfixed, description:"Carte de touches en mode FIXE — la carte écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
 
-def mapstep (bp3:_mapstep, description:"Carte de touches PAR PALIERS — la carte glisse de note en note entre deux cartes écrites.", scope(symbol, group, rule, flow))
+control mapstep (bp3:_mapstep, description:"Carte de touches PAR PALIERS — la carte glisse de note en note entre deux cartes écrites.", scope(symbol, group, rule, flow))
 
-def transposefixed (bp3:_transposefixed, description:"Transposition en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
+control transposefixed (bp3:_transposefixed, description:"Transposition en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.", scope(symbol, group, rule, flow))
 
-def transposestep (bp3:_transposestep, description:"Transposition PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
+control transposestep (bp3:_transposestep, description:"Transposition PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.", scope(symbol, group, rule, flow))
 
