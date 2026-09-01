@@ -1,7 +1,7 @@
 import {
   CHAMPS_DE_FICHIER,
   entreesDe
-} from "./chunk-U5RZGEWL.js";
+} from "./chunk-Z7KGRXC3.js";
 export {
   CHAMPS_DE_FICHIER,
   entreesDe

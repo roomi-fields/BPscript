@@ -10,7 +10,11 @@ var CHAMPS_DE_FICHIER = /* @__PURE__ */ new Set([
   "documented"
 ]);
 function entreesDe(objet) {
-  return Object.keys(objet || {}).filter((k) => !CHAMPS_DE_FICHIER.has(k) && !k.startsWith("_"));
+  return Object.keys(objet || {}).filter((k) => {
+    if (CHAMPS_DE_FICHIER.has(k) || k.startsWith("_")) return false;
+    const v = objet[k];
+    return !!v && typeof v === "object" && !Array.isArray(v);
+  });
 }
 
 export {

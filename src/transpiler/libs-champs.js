@@ -73,5 +73,19 @@ export const CHAMPS_DE_FICHIER = new Set([
  * les places lit ce champ ; il ne le devine pas.**
  */
 export function entreesDe(objet) {
-  return Object.keys(objet || {}).filter((k) => !CHAMPS_DE_FICHIER.has(k) && !k.startsWith('_'));
+  return Object.keys(objet || {}).filter((k) => {
+    if (CHAMPS_DE_FICHIER.has(k) || k.startsWith('_')) return false;
+    // ⛔ ET LA NATURE ÉCARTE CE QUE LE NOM NE PEUT PAS. Une liste de noms ne dit rien d'un nom
+    // qu'elle ne connaît pas : `apporte` est entré dans neuf catalogues le 2026-09-01 et cette
+    // porte l'a rendu comme une entrée, dans les neuf. Deux de mes gardes l'ont exigé d'elle ce
+    // qu'ils exigent d'un alphabet — l'un a rougi, l'autre comptait un alphabet de plus en vert.
+    // ⛔ ET « UNE ENTRÉE EST UN OBJET » NE SUFFIT PAS : en JavaScript un TABLEAU est un objet, et
+    // `apporte` en est un. La clause de tableau doit être ÉCRITE. Kairos l'avait prédit avant la
+    // frappe, sur le mécanisme et non sur le champ — sa règle a survécu à l'instance qu'il visait.
+    // ⚠️ LES DEUX CRITÈRES RESTENT, sur deux faits distincts : ce nom est-il déclaré comme champ de
+    // fichier, et cette valeur a-t-elle la nature d'une entrée. L'en-tête de ce fichier disait déjà
+    // « écarter par le NOM reste nécessaire » — il reste vrai, il n'était pas suffisant.
+    const v = objet[k];
+    return !!v && typeof v === 'object' && !Array.isArray(v);
+  });
 }

@@ -5,7 +5,7 @@
 > vit dans le document d'architecture, chez Atlas, qui cite celui-ci.
 ## Ce qui est mesuré
 
-- **20 modules** dans `src/transpiler/`, **15157 lignes**.
+- **20 modules** dans `src/transpiler/`, **15171 lignes**.
 - Le **rôle** est lu dans l'en-tête de chaque fichier, verbatim — jamais interprété.
 - Les **arêtes** sont les imports d'un module vers un voisin du même dossier.
 
@@ -22,9 +22,9 @@
 | `resolution.js` | 187 | 0 | 1 | L'ÉTAGE QUI RÉSOUT — le troisième des quatre, et le seul qui n'avait pas de domicile. |
 | `orderTokens.js` | 123 | 0 | 0 | — |
 | `controlValidation.js` | 113 | 0 | 1 | Collecte récursivement toutes les paires de SettingBag de l'AST. |
+| `libs-champs.js` | 92 | 0 | 2 | LES CHAMPS DE FICHIER D'UNE LIBRAIRIE — déclarés UNE FOIS, pour tous mes lecteurs. |
 | `segmentation.js` | 81 | 0 | 1 | LA SEGMENTATION D'UN NOM COLLÉ — plus long préfixe, glouton, sans retour arrière. |
 | `syntaxe-data.js` *(généré)* | 79 | 0 | 2 | — |
-| `libs-champs.js` | 78 | 0 | 2 | LES CHAMPS DE FICHIER D'UNE LIBRAIRIE — déclarés UNE FOIS, pour tous mes lecteurs. |
 | `libs-bundle-check.js` | 76 | 0 | 0 | — |
 | `syntaxe-bundle.mjs` | 64 | 0 | 0 | GÉNÉRATEUR DE LA PORTE DU SCHÉMA DE SYNTAXE. |
 | `libs-data.js` *(généré)* | 60 | 0 | 3 | — |

@@ -125,8 +125,18 @@ let ordreNonTrivial = 0;
 for (const fichier of sources) {
   const nomLib = fichier.replace('.bpsl', '');
   const texte = readFileSync(join(LIB_DIR, fichier), 'utf-8');
-  // Une déclaration à corps parenthésé, sur une ligne : `def <nom> (…)`.
-  for (const m of texte.matchAll(/^def (\w+) \((.*)\)\s*$/gm)) {
+  // Une déclaration à corps parenthésé, sur une ligne : `def <nom> (…)` ou `<type> <nom> (…)`.
+  //
+  // ⛔ CE MOTIF NE LISAIT QUE `def`, ET LA BASCULE DES CATALOGUES L'A RENDU AVEUGLE SANS UN MOT.
+  // Le 2026-09-01, 204 entrées sont passées de `def western (…)` à `alphabet western (…)` : ce
+  // garde est resté VERT en examinant **388 assertions de moins**, sur six catalogues entiers.
+  // ⚠️ RIEN ICI N'A ROUGI — c'est la référence d'assertions du portillon qui l'a vu, et elle seule.
+  // « Une entrée retirée d'une librairie en emporte des centaines sans un mot » : c'est le même
+  // mécanisme, par la forme au lieu du contenu. Un garde qui filtre sur une graphie perd sa
+  // couverture le jour où la graphie change, et il le fait en vert.
+  // ⚠️ ET LE NOM D'UNE ENTRÉE PORTE UN TIRET — `bp3_Bohlen-Pierce`. `\w` ne le capture pas : neuf
+  // tempéraments sortaient du balayage par ce seul caractère.
+  for (const m of texte.matchAll(/^(?:def|[a-z][\w-]*) ([\w-]+) \((.*)\)\s*$/gm)) {
     const [, nomDecl, corps] = m;
     const publiee = nomDecl === nomLib ? LIBS[nomLib] : trouver(LIBS[nomLib], nomDecl);
     if (!publiee) { echecs.push(`B. ${nomLib}.${nomDecl} : déclaré dans la source, introuvable dans la donnée publiée`); continue; }

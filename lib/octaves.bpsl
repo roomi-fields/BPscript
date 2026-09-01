@@ -36,36 +36,39 @@
 // period notation For these conventions, 'arrows' (_v/_^) is proposed as a compatible
 // substitute.
 
+// Les prototypes de ce catalogue vivent dans `types` — invoquée ci-dessous.
+types
+
 def octaves (documented:true, resolvedBy:"Kairos", resolves:octaves)
 
-def western (position:suffix, separator:"", registers("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"), default:"4")
+octaves western (position:suffix, separator:"", registers("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"), default:"4")
 
-def arrows (position:suffix, separator:"_", registers(vv, v, "", "^", "^^"), default:"")
+octaves arrows (position:suffix, separator:"_", registers(vv, v, "", "^", "^^"), default:"")
 
-def saptak (position:prefix, separator:"_", registers(mandra, madhya, taar), default:madhya)
+octaves saptak (position:prefix, separator:"_", registers(mandra, madhya, taar), default:madhya)
 
-def turkish (position:prefix, separator:"_", registers("", tiz), default:"")
+octaves turkish (position:prefix, separator:"_", registers("", tiz), default:"")
 
-def gamelan (position:prefix, separator:"_", registers(ageng, tengah, alit), default:tengah)
+octaves gamelan (position:prefix, separator:"_", registers(ageng, tengah, alit), default:tengah)
 
-def shakuhachi (position:prefix, separator:"_", registers(otsu, kan, daikan), default:otsu)
+octaves shakuhachi (position:prefix, separator:"_", registers(otsu, kan, daikan), default:otsu)
 
-def korean (position:prefix, separator:"_", registers(tak, jung, cheong), default:jung)
+octaves korean (position:prefix, separator:"_", registers(tak, jung, cheong), default:jung)
 
 // saptak_us · Registre numérique en SUFFIXE séparé par '_' (sa_4, r1_4) — convention native
 // -to.tryShruti (22-shruti). Distinct de 'saptak' (préfixe mandra/madhya/taar).
-def saptak_us (position:suffix, separator:"_", registers("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"), default:"4")
+octaves saptak_us (position:suffix, separator:"_", registers("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"), default:"4")
 
 // bp3 · Registres du moteur BP3 natif, conventions ENGLISH/FRENCH/INDIAN. Identique à 'western'
 // SAUF le registre '00' — une octave SOUS '0' (quirk d'octave BP3 [79]). Le marqueur se lit en
 // plus-long-d'abord : '00' ne doit jamais être avalé par '0'. Le français seul ajoute '000'
 // (non porté ici : seul bp3_indian est servi).
 // bp3 · bp3-engine/csrc/bp3/Inits.c:451-497 (tables d'octaves natives)
-def bp3 (position:suffix, separator:"", registers("00", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"), default:"4")
+octaves bp3 (position:suffix, separator:"", registers("00", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"), default:"4")
 
 // bp3_fr · Registres du moteur BP3 natif, convention FRENCH. Décalés d'un cran sous 'bp3' (la3
 // = A4) et prolongés par '000' — l'octave sous '00'. Lecture plus-long-d'abord obligatoire :
 // '000' ne doit jamais être avalé par '00' ni par '0'.
 // bp3_fr · bp3-engine/csrc/bp3 -BP3main.h:136-147 + Inits.c:445-530
-def bp3_fr (position:suffix, separator:"", registers("000", "00", "0", "1", "2", "3", "4", "5", "6", "7", "8"), default:"3")
+octaves bp3_fr (position:suffix, separator:"", registers("000", "00", "0", "1", "2", "3", "4", "5", "6", "7", "8"), default:"3")
 

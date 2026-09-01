@@ -9,14 +9,14 @@ import {
   resolveActorAlphabet,
   resolveActorAlphabetSource,
   universeControlNames
-} from "./chunk-GAYSON5V.js";
+} from "./chunk-UPQX53EI.js";
 import {
   LexError,
   tokenize
 } from "./chunk-3Y64WDZ4.js";
 import {
   LIBS
-} from "./chunk-EYQ4JQQF.js";
+} from "./chunk-BVIQJVQJ.js";
 
 // src/transpiler/resolution.js
 function* noeuds(n, vus = /* @__PURE__ */ new Set()) {
