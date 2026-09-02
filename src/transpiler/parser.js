@@ -2107,6 +2107,18 @@ function parse(tokens, opts = {}) {
         + `déclare par 'def ${peek(1).value} (…)', et un exemplaire par son type en tête `
         + `('${peek(1).value} <nom> (…)'). Un seul mot déclare : 'def'.`, tok);
     }
+    // ── `actor` — un objet du socle dont le corps a une FORME PROPRE ──────────────────────────
+    // Décision de Romain, 2026-09-02 : `def` et `init` sont les deux mots racines, `actor` devient
+    // un objet de `types`. L'arbre ne change pas (voie a) : le lecteur d'acteur reste, plus bas, et
+    // il ne s'ouvre que si `actor` est EN PORTÉE — comme le drapeau, dont la forme est propre aussi.
+    // Sans `types` en portée, `actor basse (…)` est refusé comme tout type absent.
+    if (mot === 'actor' && ouvreUnNom(1)) {
+      if (!prototypesDeclares.has('actor')) {
+        throw new ParseError(`'actor ${peek(1).value}' : 'actor' n'est pas un type en portée. Il est `
+          + `un objet de 'types' — invoquer 'types', 'core', ou une librairie qui invoque 'types'.`, tok);
+      }
+      return null;
+    }
     if (!varConventions().has(mot) && !prototypesDeclares.has(mot)) {
       // ⚠️ UN TYPE INCONNU SUIVI D'UN NOM SE REFUSE EN NOMMANT LES TYPES, sans quoi
       // `lpf lpf1` tombe dans « n'est déclaré par aucune librairie chargée » et envoie l'auteur

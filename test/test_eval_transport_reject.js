@@ -31,39 +31,39 @@ function bothAccept(src, label) {
 
 // --- a. eval + out → REJET ---
 bothReject(
-  'actor viz  eval.hydra  out.audio\n-----\nS -> voix\nvoix -> `hydra: osc(4).out()`',
+  'types\nactor viz  eval.hydra  out.audio\n-----\nS -> voix\nvoix -> `hydra: osc(4).out()`',
   'sort en natif',
   'a. eval.hydra + out.audio',
 );
 bothReject(
-  'actor beat  out.midi(ch:3)  eval.strudel\n-----\nS -> voix\nvoix -> `strudel: s("bd")`',
+  'types\nactor beat  out.midi(ch:3)  eval.strudel\n-----\nS -> voix\nvoix -> `strudel: s("bd")`',
   'sort en natif',
   'a. out.midi + eval.strudel (ordre inverse)',
 );
 
 // --- b. out.video / out.visual → REJET (canal supprimé) ---
 bothReject(
-  'actor v  alphabet.western  out.video\n-----\nS -> v.C',
+  'types\nactor v  alphabet.western  out.video\n-----\nS -> v.C',
   'SUPPRIMÉ',
   'b. out.video (acteur de notes, sans eval)',
 );
 bothReject(
-  'actor v  alphabet.western  out.visual\n-----\nS -> v.C',
+  'types\nactor v  alphabet.western  out.visual\n-----\nS -> v.C',
   'SUPPRIMÉ',
   'b. out.visual',
 );
 
 // --- Formes CANONIQUES toujours acceptées (non-régression) ---
 bothAccept(
-  'actor viz  eval.hydra\n-----\nS -> voix\nvoix -> `hydra: osc(4).out()`',
+  'types\nactor viz  eval.hydra\n-----\nS -> voix\nvoix -> `hydra: osc(4).out()`',
   'canon : eval SANS out (sort en natif)',
 );
 bothAccept(
-  'actor v  alphabet.western  out.audio\n-----\nS -> v.C',
+  'types\nactor v  alphabet.western  out.audio\n-----\nS -> v.C',
   'canon : acteur de notes AVEC out.audio',
 );
 bothAccept(
-  'actor v  alphabet.western  out.midi(ch:10)\n-----\nS -> v.C',
+  'types\nactor v  alphabet.western  out.midi(ch:10)\n-----\nS -> v.C',
   'canon : out.midi(ch:10)',
 );
 

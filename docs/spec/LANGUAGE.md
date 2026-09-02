@@ -246,14 +246,13 @@ evenements** au meme instant. `<!depart` retient la suite jusqu'a l'arrivee du t
 Une scene commence par ce qu'elle declare, et se poursuit par ce qu'elle produit. La partie
 declarative fait exister des choses ; les regles de production les font sonner dans le temps.
 
-### Quatre mots
+### Deux mots
 
-Le coeur declaratif tient en quatre mots. Tout le reste s'ecrit en invoquant une librairie ou une
-categorie de reglages.
+Le coeur declaratif tient en deux mots, `def` et `init`. Tout le reste s'ecrit par un type en
+tete, en invoquant une librairie ou une categorie de reglages.
 
 | mot      | ce qu'il fait                                                          |
 | -------- | ---------------------------------------------------------------------- |
-| `actor` | declare **qui joue** : un acteur, son alphabet, sa sortie              |
 | *le type en tete* | declare **une variable** : le type, puis le nom qu'il donne      |
 | `def`   | declare **une definition** : un nom associe a un corps qu'on reinvoque, ou un objet racine |
 | `init`  | declare **l'etat de depart** de la scene                               |
@@ -261,7 +260,9 @@ categorie de reglages.
 ### Le type en tete -- declarer une variable
 
 Une variable porte un **type** qui dit ce qu'elle est. **Le type vient en tete, le nom ensuite** --
-l'ordre de toute declaration, `def` et `actor` comme celle-ci. Le point qualifie le type.
+l'ordre de toute declaration, `def` comme celle-ci. Le point qualifie le type. Les types du socle
+-- `control`, `addresskey`, `destination`, `enum`, `flag`, `symbol`, `actor` -- sont des objets de
+`types`, en portee quand ce fichier est invoque, par la scene ou par une librairie qu'elle invoque.
 
 ```text
 flag section:1
@@ -273,8 +274,9 @@ logic porte
 symbol pivot
 control vel(args:value, scope(symbol, group, rule, flow))
 addresskey ch(scope(flow))
-native srand(bp3:_srand)
+control srand(bp3:_srand, bpscript:false)
 destination midi(resolvedBy:runtime-MIDI, version:"1.0.0")
+actor basse  out.midi(ch:1)
 enum message(start, continue, stop)
 ```
 
@@ -327,8 +329,8 @@ se declare comme un type.
 | `logic`       | un signal lu comme un **etat haut ou bas**, dont ce sont les **transitions** qui font evenement |
 | `control`     | ce qui **module** un jeu -- il porte sa portee d'ecriture                                       |
 | `addresskey`  | ce qui **route** -- il atterrit dans l'adresse du signal                                        |
-| `native`      | ce qui **traduit** un geste du moteur natif                                                     |
 | `destination` | qui **resout** une librairie entiere                                                            |
+| `actor`       | **qui joue** : un acteur, son alphabet, sa sortie                                               |
 | `enum`        | un **vocabulaire ferme** : la suite des valeurs qu'une cle accepte                              |
 | *(aucun)*     | un symbole du flux qui n'est ni une note ni un nom de regle                                     |
 
@@ -574,11 +576,10 @@ Le compilateur transmet le code tel quel, avec son tag et sa place dans le flux.
 **Est reserve ce qui existe quand aucune librairie n'est invoquee.** Une scene nue n'a que ces
 mots : le parser les connait pour construire l'arbre, aucun catalogue ne peut les redefinir.
 
-**Quatre mots declaratifs** :
+**Deux mots declaratifs**, et le type en tete :
 
 | Mot      | Ce qu'il declare                  |
 | -------- | --------------------------------- |
-| `actor` | qui joue                          |
 | *le type en tete* | qu'un nom existe, et de quel type |
 | `def`   | qu'un nom vaut un corps, ou est un objet racine |
 | `init`  | l'etat de depart de la scene      |

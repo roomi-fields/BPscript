@@ -3,7 +3,7 @@ import {
 } from "./chunk-3Y64WDZ4.js";
 import {
   LIBS
-} from "./chunk-AML2GHTO.js";
+} from "./chunk-NGUE4MTO.js";
 import {
   CHAMPS_DE_FICHIER
 } from "./chunk-Z7KGRXC3.js";
@@ -1613,6 +1613,12 @@ function parse(tokens, opts = {}) {
         `'object ${peek(1).value}' : 'object' est SORTI du langage \u2014 la racine d'une famille se d\xE9clare par 'def ${peek(1).value} (\u2026)', et un exemplaire par son type en t\xEAte ('${peek(1).value} <nom> (\u2026)'). Un seul mot d\xE9clare : 'def'.`,
         tok
       );
+    }
+    if (mot === "actor" && ouvreUnNom(1)) {
+      if (!prototypesDeclares.has("actor")) {
+        throw new ParseError(`'actor ${peek(1).value}' : 'actor' n'est pas un type en port\xE9e. Il est un objet de 'types' \u2014 invoquer 'types', 'core', ou une librairie qui invoque 'types'.`, tok);
+      }
+      return null;
     }
     if (!varConventions().has(mot) && !prototypesDeclares.has(mot)) {
       const apresLeNom = peek(2).type;

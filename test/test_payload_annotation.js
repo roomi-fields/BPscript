@@ -269,7 +269,7 @@ section('nature — couverture des types de nœuds RHS');
 // ============================================================
 section('ActorDirective.references[] (forme canonique, lue par le dispatcher)');
 {
-  const ast = parseSource(`actor tabla\n  alphabet.tabla\n  out.midi(ch:10)\n-----\nS -> tabla.Sa`);
+  const ast = parseSource(`types\nactor tabla\n  alphabet.tabla\n  out.midi(ch:10)\n-----\nS -> tabla.Sa`);
   const actor = ast.actors[0];
   const refs = actor.references;
   assert('references[] présent', Array.isArray(refs) && refs.length >= 2, `got ${JSON.stringify(refs)}`);

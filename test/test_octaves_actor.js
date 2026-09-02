@@ -15,7 +15,7 @@ function resolve(src) {
 
 // 1. Parser : octaves.Y est reconnu comme clé d'entité (properties.octaves)
 {
-  const { ast } = resolve(`actor sitar
+  const { ast } = resolve(`types\nactor sitar
   alphabet.sargam
   octaves.arrows
   out.audio
@@ -29,7 +29,7 @@ S -> sitar.sa`);
 
 // 2. Défaut : sans octaves, hérite de la convention de l'alphabet (sargam → saptak, préfixe)
 {
-  const { res } = resolve(`actor sitar
+  const { res } = resolve(`types\nactor sitar
   alphabet.sargam
   out.audio
 -----
@@ -47,7 +47,7 @@ S -> sitar.sa`);
 
 // 3. Surcharge : octaves.arrows change la convention de registre (suffixe _, vv/v//^/^^)
 {
-  const { res } = resolve(`actor sitar
+  const { res } = resolve(`types\nactor sitar
   alphabet.sargam
   octaves.arrows
   out.audio

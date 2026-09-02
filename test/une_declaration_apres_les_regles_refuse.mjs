@@ -66,7 +66,6 @@ const S = 'core\nalphabet.western\n-----\n';
 const FORME = {
   // Trois seulement ont besoin d'une écriture : nues, elles manquent leur nom ou leur valeur.
   // Le reste s'éprouve NU — et c'est voulu : une forme écrite à la main est une forme qu'on choisit.
-  actor: 'actor v\n  out.audio',
   def: 'def k (vel:120)',
   diapason: 'diapason:442',
   // Les contrôles de tête à valeur, entrés le 2026-09-02 : nus, ils manqueraient leur valeur.
@@ -95,8 +94,10 @@ const LEGITIME_APRES = new Set([]);
 // l'union. INJECTION FAITE, ELLE N'A PAS MORDU : `zorglubinvente` ajouté aux mots réservés est
 // passé au vert. Une couverture qui se calcule depuis ce qu'elle couvre photographie l'état ; elle
 // ne l'exige pas.
+// ⛔ `actor` SORTI LE 2026-09-02 : il est un objet du socle, déclaré dans `types` — « `def` et `init`
+// sont les deux mots racines » (Romain). Il quitte la liste réservée de `core`, donc l'union.
 const DECLARATIONS_DE_TETE = new Set([
-  'actor', 'all_items', 'allitems', 'chromashift', 'core', 'def', 'diapason', 'eval',
+  'all_items', 'allitems', 'chromashift', 'core', 'def', 'diapason', 'eval',
   'homomorphism', 'improvize', 'init', 'ins', 'items', 'maxitems', 'meter', 'modulation',
   // ⛔ `scale` SORTI LE 2026-09-02, même cause qu'`alphabet` : c'est le prototype des gammes, fourni
   // par `types` (décision de Romain, « scale est le mot des gammes, gamut sort »), donc il quitte la
@@ -253,8 +254,10 @@ ok(err(`${S}S -> C4\n-----\nT -> D4\n`).length === 0,
 // de portée scène du registre — la table objet d'`engine` est sortie, ses mots de portée règle ou
 // flux avec elle, et les contrôles de tête des autres librairies (vel, pan, tempo, letring…) y
 // sont comptés comme le compilateur les compte. Mesuré à la frappe : 51 mots.
+// 51 → 49 le 2026-09-02 au soir : `scale` puis `actor` quittent la liste de `core` — deux types
+// fournis par `types`, deux décisions de Romain, aucune cécité d'instrument.
 const RESERVEES = UNION.length;
-ok(RESERVEES >= 50, `4. le vocabulaire de directives doit être chargé — ${RESERVEES} mot(s)`);
+ok(RESERVEES >= 49, `4. le vocabulaire de directives doit être chargé — ${RESERVEES} mot(s)`);
 // Le seuil est passé de 24 à 22 le 2026-08-09, et le motif s'écrit ici plutôt que dans un commit :
 // `mm` est SORTIE du langage (Romain 2026-06-26, fermée le 2026-08-09), donc elle disparaît des
 // deux listes — une forme qui n'existe plus ne peut pas être éprouvée. C'est le seul abaissement

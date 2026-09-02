@@ -126,6 +126,14 @@ const REGISTRE = [
   ['code-voices/starter-second.bps',      "n'est pas un type en portée", 'déclare un drapeau sans invoquer core ni types', 'kanopi', 'son propriétaire — écrire `core` en tête'],
   ['code-voices/strudel-intro.bps',       "n'est pas un type en portée", 'déclare un drapeau sans invoquer core ni types', 'kanopi', 'son propriétaire — écrire `core` en tête'],
   ['orchestrator/04-scenes-select.bps',   "n'est pas un type en portée", 'déclare un drapeau sans invoquer core ni types', 'kanopi', 'son propriétaire — écrire `core` en tête'],
+  // `actor` est un objet du socle depuis le 2026-09-02 (Romain : « def et init, deux mots racines »).
+  ['BPScript-tests/kairos-scene-mute-voix-de-code.bps', "n'est pas un type en portée", 'déclare un acteur sans invoquer core ni types', 'kanopi', 'son propriétaire — écrire `core` en tête'],
+  ['code-voices/01-strudel-solo.bps',     "n'est pas un type en portée", 'déclare un acteur sans invoquer core ni types', 'kanopi', 'son propriétaire — écrire `core` en tête'],
+  ['code-voices/02-strudel-hydra.bps',    "n'est pas un type en portée", 'déclare un acteur sans invoquer core ni types', 'kanopi', 'son propriétaire — écrire `core` en tête'],
+  ['code-voices/csound-intro.bps',        "n'est pas un type en portée", 'déclare un acteur sans invoquer core ni types', 'kanopi', 'son propriétaire — écrire `core` en tête'],
+  ['code-voices/js-webaudio.bps',         "n'est pas un type en portée", 'déclare un acteur sans invoquer core ni types', 'kanopi', 'son propriétaire — écrire `core` en tête'],
+  ['code-voices/mercury-intro.bps',       "n'est pas un type en portée", 'déclare un acteur sans invoquer core ni types', 'kanopi', 'son propriétaire — écrire `core` en tête'],
+  ['orchestrator/03-scenes-A-B.bps',      "n'est pas un type en portée", 'déclare un acteur sans invoquer core ni types', 'kanopi', 'son propriétaire — écrire `core` en tête'],
   // ⛔ DEUX SCÈNES QUE LA MIGRATION DE KANOPI N'A PAS PRISES, mesurées le 2026-08-19 : leur `var`
   // est suivi d'un BACKTICK, pas d'un type. La réécriture est la même que les dix-huit autres —
   // `var <nom> \`code\`` devient `symbol <nom> \`code\`` —, et elle est ÉPROUVÉE : la forme compile

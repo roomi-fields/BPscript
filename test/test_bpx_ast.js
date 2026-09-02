@@ -41,7 +41,7 @@ function backtickNodes(ast) {
   // ⚠️ LA SOURCE DE L'HÉRITAGE A CHANGÉ LE 2026-07-28 : le langage venait du nom de la TÊTE DE
   // RÈGLE, ce qui obligeait à nommer une règle comme un acteur — l'amalgame refusé depuis. Il
   // vient désormais de l'acteur qui QUALIFIE le bloc par le point, là où il qualifie déjà une note.
-  const r = compileToBPxAST('actor stru\n  eval.strudel\n-----\nS -> voix\nvoix -> stru.`note("c2")`');
+  const r = compileToBPxAST('types\nactor stru\n  eval.strudel\n-----\nS -> voix\nvoix -> stru.`note("c2")`');
   const bt = backtickNodes(r.ast)[0];
   check(bt && bt.payload?.interp === 'strudel', "interp 'auto' → 'strudel' (eval de l'acteur qui qualifie) : " + JSON.stringify(bt && bt.payload));
   check(bt && bt.actor === 'stru', "et le bloc porte l'IDENTITÉ de la voix, que le tag seul ne donne pas : " + JSON.stringify(bt && bt.actor));
@@ -83,7 +83,7 @@ function backtickNodes(ast) {
 // sous-scènes »). Le témoin est devenu un cas REFUSÉ, plus bas — le garder aurait fait rougir la
 // pierre tombale qu'il aurait dû protéger.
 {
-  const r = compileToBPxAST('actor tabla\n  alphabet.tabla\n  out.midi(ch:10)\n-----\nS -> tabla.dha');
+  const r = compileToBPxAST('types\nactor tabla\n  alphabet.tabla\n  out.midi(ch:10)\n-----\nS -> tabla.dha');
   const tr = r.ast.actors[0].references?.find((x) => x.category === 'transport');
   check(tr?.type === 'ActorReference' && tr?.name === 'midi' && tr?.params?.ch === 10,
     'ActorReference transport sur le nœud acteur : ' + JSON.stringify(tr));

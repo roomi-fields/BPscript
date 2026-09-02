@@ -28,7 +28,7 @@ const transportRef = (a) => a?.references?.find((x) => x.category === 'transport
 
 // ── OSC device + ch dans les params du transport (forme multi-ligne) ─────
 {
-  const a = actor('actor bass\n  alphabet.western\n  out.osc(device:bridge1, ch:5)\n-----\nAq -> C4', 'bass');
+  const a = actor('types\nactor bass\n  alphabet.western\n  out.osc(device:bridge1, ch:5)\n-----\nAq -> C4', 'bass');
   assert('transport type = osc', a?.properties?.transport?.key === 'osc', JSON.stringify(a?.properties?.transport));
   assert('device dans transport.params', a?.properties?.transport?.params?.device === 'bridge1',
     JSON.stringify(a?.properties?.transport?.params));
@@ -48,7 +48,7 @@ const transportRef = (a) => a?.references?.find((x) => x.category === 'transport
 
 // ── MIDI iso : ch dans transport.params ─────────────────────────────────
 {
-  const a = actor('actor lead out.midi(ch:10)\n-----\nAq -> C4', 'lead');
+  const a = actor('types\nactor lead out.midi(ch:10)\n-----\nAq -> C4', 'lead');
   assert('midi type', a?.properties?.transport?.key === 'midi');
   assert('midi ch=10 dans params', a?.properties?.transport?.params?.ch === 10,
     JSON.stringify(a?.properties?.transport?.params));
@@ -56,7 +56,7 @@ const transportRef = (a) => a?.references?.find((x) => x.category === 'transport
 
 // ── device seul (ch optionnel) ──────────────────────────────────────────
 {
-  const a = actor('actor pad out.osc(device:b2)\n-----\nAq -> C4', 'pad');
+  const a = actor('types\nactor pad out.osc(device:b2)\n-----\nAq -> C4', 'pad');
   assert('device seul → device=b2', a?.properties?.transport?.params?.device === 'b2',
     JSON.stringify(a?.properties?.transport?.params));
   assert('device seul → ch absent', a?.properties?.transport?.params?.ch === undefined,
@@ -65,7 +65,7 @@ const transportRef = (a) => a?.references?.find((x) => x.category === 'transport
 
 // ── acteur sans détails d'adresse → params vides ────────────────────────
 {
-  const a = actor('actor plain\n  alphabet.western\n  out.osc\n-----\nAq -> C4', 'plain');
+  const a = actor('types\nactor plain\n  alphabet.western\n  out.osc\n-----\nAq -> C4', 'plain');
   assert('transport osc sans params', a?.properties?.transport?.key === 'osc' &&
     Object.keys(a?.properties?.transport?.params || {}).length === 0,
     JSON.stringify(a?.properties?.transport));
@@ -80,7 +80,7 @@ const transportRef = (a) => a?.references?.find((x) => x.category === 'transport
   // ne dépend pas de la forme du flux ; la notation pointée lève l'ambiguïté sans rien changer aux
   // acteurs.
   const r = compileToBPxAST(
-    'actor v1 out.osc(device:d1, ch:1)\nactor v2 out.osc(device:d2, ch:2)\n-----\nAq -> v1.C4 v2.C4');
+    'types\nactor v1 out.osc(device:d1, ch:1)\nactor v2 out.osc(device:d2, ch:2)\n-----\nAq -> v1.C4 v2.C4');
   assert('la scène d essai COMPILE', (r.errors || []).length === 0, JSON.stringify(r.errors));
   const out = {};
   for (const a of r.ast.actors) {

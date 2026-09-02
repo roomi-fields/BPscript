@@ -50,10 +50,12 @@ ok(CONVENTIONS.length > 0, 'core.schema.varConventions doit être peuplé — sa
 // parenthèse ne valent pour lui. Le laisser dans la boucle ferait rougir un garde sur une décision
 // rendue ; l'en retirer SANS LE DIRE ferait croire qu'il suit la règle des autres.
 // ⚠️ IL EST DONC ÉPROUVÉ À PART, juste en dessous, avec ce qui lui est propre.
-const TYPES_A_PARENTHESE = TYPES.filter((t) => t !== 'flag');
-ok(TYPES_A_PARENTHESE.length === TYPES.length - 1,
-   `SOCLE : 'flag' doit être dans declarationTypes pour en être retiré ici — sinon cette exclusion `
-   + `porte sur rien et la matrice se croit complète. Vus : ${JSON.stringify(TYPES)}`);
+// ⚠️ `actor` AUSSI, depuis le 2026-09-02 : objet du socle, son corps garde sa FORME PROPRE (voie a,
+// Romain) — `actor basse  out.midi(ch:1)` rend un nœud d'acteur, pas une variable typée.
+const TYPES_A_PARENTHESE = TYPES.filter((t) => t !== 'flag' && t !== 'actor');
+ok(TYPES_A_PARENTHESE.length === TYPES.length - 2,
+   `SOCLE : 'flag' et 'actor' doivent être des objets de 'types' pour en être retirés ici — sinon `
+   + `cette exclusion porte sur rien et la matrice se croit complète. Vus : ${JSON.stringify(TYPES)}`);
 
 // ── A. UN TYPE PORTE SON TYPE EN FORME NUE — la faute d'origine, primitive par primitive ─────────
 for (const t of TYPES_A_PARENTHESE) {
@@ -97,7 +99,8 @@ ok(lire('zorglubinvente truc (x:1)').erreurs.length > 0, "D. TÉMOIN — et refu
 // ⛔ LE COMPTE SUIT LA SORTIE DE `flag` : ses deux lignes quittent les volets A et B (donc
 // -2 × 2 = -4) et son volet propre en apporte QUATRE, plus le socle qui prouve l'exclusion.
 // + 1 : l'assertion du socle — les six types de déclaration sont des objets de `types` (2026-09-02).
-const ATTENDU = 2 + TYPES.length * 4 + CONVENTIONS.length * 2 + 2 - 4 + 4 + 1 + 1;
+// − 4 de plus : `actor` sort de la matrice à parenthèse comme `flag`, sa forme est propre (2026-09-02).
+const ATTENDU = 2 + TYPES.length * 4 + CONVENTIONS.length * 2 + 2 - 4 + 4 + 1 + 1 - 4;
 ok(p + e.length === ATTENDU, `le garde doit couvrir les ${TYPES.length} types et les ${CONVENTIONS.length} conventions — ${p + e.length} cas au lieu de ${ATTENDU}`);
 
 if (e.length) { console.error(`[primitives] ${e.length} ÉCHEC(S) :`); for (const x of e) console.error('  ✗ ' + x); process.exit(1); }

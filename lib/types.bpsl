@@ -54,3 +54,4 @@ def destination
 def enum
 def flag
 def symbol
+def actor

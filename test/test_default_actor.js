@@ -63,7 +63,7 @@ const actors = (src) => compileToBPxAST(src).ast.actors;
   // 'sitar' porte un nom déjà pris par un acteur ». Ce banc l'ignorait : il lisait `.ast.actors`
   // sans regarder `errors`, et l'arbre d'un refus sortait complet. Ce qu'il éprouve — un acteur
   // déclaré n'appelle pas d'implicite — ne dépend pas du nom de la règle.
-  const a = actors('actor sitar out.midi(ch:3)\n-----\nS -> C4');
+  const a = actors('types\nactor sitar out.midi(ch:3)\n-----\nS -> C4');
   assert('un acteur déclaré', a.length === 1 && a[0].name === 'sitar');
   assert('pas synthetic', a[0].synthetic !== true);
   assert('pas d acteur implicite ajouté', !a.some((x) => x.name === 'scene' && x.synthetic));
@@ -74,7 +74,7 @@ const actors = (src) => compileToBPxAST(src).ast.actors;
   // ⚠️ MÊME CAUSE QU'AU VOLET 3 : `a1 -> C4` porte le nom d'un acteur, et `C4` appartient aux DEUX.
   // La scène était REFUSÉE et ce banc l'ignorait. Ce qu'il éprouve — plusieurs acteurs déclarés
   // n'appellent aucun implicite — ne dépend ni du nom des règles ni de la forme du flux.
-  const a = actors('actor a1 out.midi(ch:1)\nactor a2 out.osc(device:x)\n-----\nS -> a1.C4 a2.E4');
+  const a = actors('types\nactor a1 out.midi(ch:1)\nactor a2 out.osc(device:x)\n-----\nS -> a1.C4 a2.E4');
   assert('2 acteurs déclarés, pas d acteur implicite', a.length === 2 && !a.some((x) => x.synthetic));
 }
 
