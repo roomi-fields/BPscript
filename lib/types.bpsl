@@ -28,11 +28,11 @@
 
 def types (documented:true, resolves:types)
 
-def gamut (scope(scene))
-gamut interval
-gamut degree
+def scale (scope(scene))
+scale interval
+scale degree
 degree directional
-gamut composite
+scale composite
 
 // Un alphabet se déclare en tête de scène.
 def alphabet (scope(scene))

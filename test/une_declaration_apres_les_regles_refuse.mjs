@@ -98,7 +98,10 @@ const LEGITIME_APRES = new Set([]);
 const DECLARATIONS_DE_TETE = new Set([
   'actor', 'all_items', 'allitems', 'chromashift', 'core', 'def', 'diapason', 'eval',
   'homomorphism', 'improvize', 'init', 'ins', 'items', 'maxitems', 'meter', 'modulation',
-  'on_fail', 'out', 'qclock', 'quantization', 'randomize', 'rndtime', 'scale', 'scan',
+  // ⛔ `scale` SORTI LE 2026-09-02, même cause qu'`alphabet` : c'est le prototype des gammes, fourni
+  // par `types` (décision de Romain, « scale est le mot des gammes, gamut sort »), donc il quitte la
+  // liste réservée de `core`. `scale.raga_bhairav` compile toujours — `catalogAxes` route l'invocation.
+  'on_fail', 'out', 'qclock', 'quantization', 'randomize', 'rndtime', 'scan',
   // ⛔ `sounds` ET `test_alphabets` SORTIS LE 2026-08-22 : c'étaient des noms de FICHIER, et une
   // librairie s'invoque par le mot qu'elle DÉCLARE. Le mot qu'ils servaient — `sound` — est déjà
   // dans cette famille, une seule fois.

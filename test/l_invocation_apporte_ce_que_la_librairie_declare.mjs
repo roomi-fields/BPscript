@@ -59,16 +59,16 @@ ok(!passe('types\nresolvedBy x (a:1)'), "C. ni par une librairie qui ne la porte
 // qu'une librairie.
 ok(passe('core\nalphabet.western\nsettings\n-----\nS -> C4\n'),
   "C bis. `settings` reste un mot du langage, même si `core` porte une section de ce nom");
-// ⚠️ LA SECONDE COLLISION A DISPARU À LA SOURCE : `types` déclarait `scale`, Romain l'a renommé
-// `gamut` le jour même. Éprouver encore ce nom ici passerait POUR UNE AUTRE RAISON QUE LA SIENNE —
-// `scale` n'est plus un prototype, donc son refus ne dirait plus rien du mécanisme gardé. On éprouve
-// donc que le nom neuf, lui, dérive bien.
-ok(passe('types\ngamut x (description:"y")'),
-  "C bis. `gamut` est la racine renommée — elle dérive, elle ne confisque aucun mot");
+// ⚠️ LA SECONDE COLLISION A DISPARU, ET DEUX FOIS : `types` déclarait `scale`, Romain l'a renommé
+// `gamut` le 2026-08-25, puis a tranché l'inverse le 2026-09-02 — « `scale` est le mot des gammes ».
+// Le mot a donc QUITTÉ la liste réservée de `core` (un type fourni par une librairie n'appartient
+// pas au socle), et le prototype `scale` de `types` ouvre une déclaration : c'est ce qu'on éprouve.
+ok(passe('types\nscale x (description:"y")'),
+  "C bis. `scale` est le prototype des gammes — il dérive, et il n'est plus un mot réservé");
 
 // ── D. LA DONNÉE EST BIEN CELLE QU'ON CROIT — sinon les assertions ci-dessus ne prouvent rien ────
 ok(LIBS.types && typeof LIBS.types === 'object', "D. la librairie `types` doit être publiée");
-for (const n of ['gamut', 'interval', 'degree', 'directional', 'composite']) {
+for (const n of ['scale', 'interval', 'degree', 'directional', 'composite']) {
   ok(LIBS.types?.[n] && typeof LIBS.types[n] === 'object', `D. la librairie types doit déclarer le prototype ${n}`);
 }
 ok(typeof LIBS.scales?.resolvedBy === 'string', "D. `resolvedBy` doit être une CHAÎNE — le volet C repose dessus");

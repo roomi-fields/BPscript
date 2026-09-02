@@ -890,9 +890,12 @@ function parse(tokens, opts = {}) {
           // gagne, et le langage est plus local qu'une librairie.
           //
           // ⚠️ IL Y EN AVAIT DEUX. `types` déclarait un prototype nommé `scale`, le mot même qui
-          // invoque les gammes ; Romain l'a renommé `gamut` le jour de sa naissance, donc ce refus
-          // ne couvre plus qu'un site. Il reste écrit parce qu'il garde une FORME — une entrée de
-          // librairie qui porte un mot du langage — et non les deux cas qui l'ont fait naître.
+          // invoque les gammes ; Romain l'a renommé `gamut` le 2026-08-25, puis a tranché l'inverse
+          // le 2026-09-02 : « `scale` est le mot des gammes, `gamut` sort ». Le mot a donc QUITTÉ la
+          // liste réservée de `core` — un type fourni par une librairie n'appartient pas au socle,
+          // comme `alphabet`, `tuning`, `octaves` et `sound` avant lui — et le prototype `scale` de
+          // `types` ouvre une déclaration. Ce refus ne couvre plus qu'un site, `settings`, et il
+          // reste écrit parce qu'il garde une FORME, non les cas qui l'ont fait naître.
           const reserves = new Set(((loadLib('core') || {}).schema || {}).reservedDirectives || []);
           // ⛔ ET LA CHAÎNE `apporte` SE SUIT — « sa chaîne se résout transitivement », décision
           // Romain 2026-08-20, mesurée fausse ici le 2026-09-02 : `sounds` invoque `types` en tête

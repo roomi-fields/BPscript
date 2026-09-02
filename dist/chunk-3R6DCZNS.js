@@ -3,7 +3,7 @@ import {
 } from "./chunk-3Y64WDZ4.js";
 import {
   LIBS
-} from "./chunk-7CMALYLI.js";
+} from "./chunk-AML2GHTO.js";
 import {
   CHAMPS_DE_FICHIER
 } from "./chunk-Z7KGRXC3.js";
