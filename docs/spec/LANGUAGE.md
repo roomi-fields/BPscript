@@ -255,7 +255,7 @@ categorie de reglages.
 | -------- | ---------------------------------------------------------------------- |
 | `actor` | declare **qui joue** : un acteur, son alphabet, sa sortie              |
 | *le type en tete* | declare **une variable** : le type, puis le nom qu'il donne      |
-| `def`   | declare **une definition** : un nom associe a un corps qu'on reinvoque |
+| `def`   | declare **une definition** : un nom associe a un corps qu'on reinvoque, ou un objet racine |
 | `init`  | declare **l'etat de depart** de la scene                               |
 
 ### Le type en tete -- declarer une variable
@@ -276,7 +276,6 @@ addresskey ch(scope(flow))
 native srand(bp3:_srand)
 destination midi(resolvedBy:runtime-MIDI, version:"1.0.0")
 enum message(start, continue, stop)
-object racine(a:1)
 ```
 
 Le nom porte sa **valeur de depart**, collee a son deux-points. Le sujet de l'affectation est le
@@ -302,8 +301,8 @@ valeur -- `"x":1` et `"x"(b:1)` s'ecrivent l'une comme l'autre. Ce qui distingue
 nu est ce qui la suit : un deux-points ou une parenthese en font une cle.
 
 ```text
-object w (alterations("bb":-2, "b":-1, "":0, "#":1, "##":2))
-object w (sections("*"(dha:ta, ge:ke)))
+def w (alterations("bb":-2, "b":-1, "":0, "#":1, "##":2))
+def w (sections("*"(dha:ta, ge:ke)))
 ```
 
 Un **nom** qui commence par un chiffre porte au moins une lettre. `12TET` et `22shruti` sont des
@@ -311,8 +310,8 @@ noms ; `12` est un nombre. La position qualifie : en tete de declaration le mot 
 valeur c'est une grandeur avec son unite.
 
 ```text
-object 12TET (divisions:12)
-object w (a:100c, b:20ms)
+def 12TET (divisions:12)
+def w (a:100c, b:20ms)
 ```
 
 Ces types sont le SOCLE du langage. Les librairies l'etendent : toute entree d'un catalogue invoque
@@ -331,7 +330,6 @@ se declare comme un type.
 | `native`      | ce qui **traduit** un geste du moteur natif                                                     |
 | `destination` | qui **resout** une librairie entiere                                                            |
 | `enum`        | un **vocabulaire ferme** : la suite des valeurs qu'une cle accepte                              |
-| `object`      | la **racine** d'une famille -- le premier objet, celui qui ne derive de rien                    |
 | *(aucun)*     | un symbole du flux qui n'est ni une note ni un nom de regle                                     |
 
 **Le flag porte sa valeur initiale en meme temps que lui-meme.** `flag section:1` cree le drapeau
@@ -354,7 +352,7 @@ ensuite.** Ses types sont ceux des signaux : `signal`, `pitch`, `phase`, `logic`
 ```text
 def cadence sa re ga pa                  // une structure de terminaux
 def fondu phase `js: (t, dur) => 1 - t / dur`       // du code
-def kick (vel:120)                       // un prereglage
+def kick (vel:120)                       // un objet racine : un nom et un sac
 def accent(x) x(vel:120)                 // une transformation parametree
 def fast(x) {x}:2                        // une transformation structurelle
 ```
@@ -368,6 +366,15 @@ S -> C4!kick D4 accent(E4) fast(Motif)
 
 **Ce qui se definit est ce qui se reinvoque** -- un fil isole entre deux points ne se definit pas,
 puisqu'il vaut pour l'endroit ou il est ecrit.
+
+**Un nom et un sac separe declarent un objet racine** -- le premier d'une famille, celui qui ne
+derive de rien. Un nom nu vaut un objet vide. Ses exemplaires se declarent ensuite par son nom en
+tete, et chacun herite de ce qu'il n'ecrit pas :
+
+```text
+def gamme (culture, ratios)
+gamme ionian (ratios(1, 2), notes_count:7)
+```
 
 #### Declarer un terminal
 
@@ -573,7 +580,7 @@ mots : le parser les connait pour construire l'arbre, aucun catalogue ne peut le
 | -------- | --------------------------------- |
 | `actor` | qui joue                          |
 | *le type en tete* | qu'un nom existe, et de quel type |
-| `def`   | qu'un nom vaut un corps           |
+| `def`   | qu'un nom vaut un corps, ou est un objet racine |
 | `init`  | l'etat de depart de la scene      |
 
 **Un mot de section** : `template` ouvre le catalogue des formes, en fin de scene.
