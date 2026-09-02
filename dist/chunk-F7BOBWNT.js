@@ -9,14 +9,14 @@ import {
   resolveActorAlphabet,
   resolveActorAlphabetSource,
   universeControlNames
-} from "./chunk-WQI74RJP.js";
+} from "./chunk-OS4VZ4IJ.js";
 import {
   LexError,
   tokenize
 } from "./chunk-3Y64WDZ4.js";
 import {
   LIBS
-} from "./chunk-VEPRGLSC.js";
+} from "./chunk-6JRPVN2L.js";
 
 // src/transpiler/actorResolver.js
 function expandAlphabetTerminals(alphabetLib, octavesOverride) {
@@ -1030,7 +1030,8 @@ function refuserNomsEnDouble(ast, libCtx) {
   };
   for (const e of ast.inputs || []) noter(e?.name, "une entr\xE9e", e?.line);
   for (const v of ast.vars || []) {
-    const sorte = v?.varType?.kind === "flag" ? "un drapeau" : "une variable de travail";
+    const racine = v?.varType?.kind === "type" && v.varType.type === null;
+    const sorte = v?.varType?.kind === "flag" ? "un drapeau" : racine ? "une d\xE9finition" : "une variable de travail";
     for (const n of v?.names || []) noter(n, sorte, v?.line);
   }
   for (const a of ast.actors || []) if (!a?.synthetic) noter(a?.name, "un acteur", a?.line);

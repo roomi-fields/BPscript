@@ -56,7 +56,7 @@ const compile = (src) => {
 
 // ── A. UNE SCÈNE — l'héritage arrive, et il se distingue de ce qui est écrit ──────────────────
 {
-  const ast = compile('core\nobject alphabet (scope:scene, documented:true)\nalphabet western (scope:flow)\n'
+  const ast = compile('core\ndef alphabet (scope:scene, documented:true)\nalphabet western (scope:flow)\n'
     + '-----\nS -> C4\n');
   ok(valeur(ast, 'western', 'documented') === 'true',
      `A. ⛔ L'HÉRITAGE N'ARRIVE PAS : « western » dérive d'« alphabet » et ne porte pas son `
@@ -73,7 +73,7 @@ const compile = (src) => {
 
 // ── B. CE QUI EST ÉCRIT GAGNE — le témoin qui ne discriminait pas avant ───────────────────────
 {
-  const ast = compile('core\nobject alphabet (scope:scene)\nalphabet western (scope:flow)\n-----\nS -> C4\n');
+  const ast = compile('core\ndef alphabet (scope:scene)\nalphabet western (scope:flow)\n-----\nS -> C4\n');
   ok(valeur(ast, 'western', 'scope') === 'flow',
      `B. ⛔ LA SURCHARGE EST ÉCRASÉE : « western » écrit scope:flow et rend `
      + `${JSON.stringify(valeur(ast, 'western', 'scope'))}. Un héritage qui écrase l'écrit est une `
@@ -85,7 +85,7 @@ const compile = (src) => {
 
 // ── C. LA REMONTÉE EST TRANSITIVE, et le plus proche gagne sur le plus lointain ───────────────
 {
-  const ast = compile('core\nobject a (x:racine, y:racine)\na b (y:milieu)\nb c (z:feuille)\n-----\nS -> C4\n');
+  const ast = compile('core\ndef a (x:racine, y:racine)\na b (y:milieu)\nb c (z:feuille)\n-----\nS -> C4\n');
   ok(valeur(ast, 'c', 'x') === 'racine',
      `C. ⛔ LA REMONTÉE S'ARRÊTE AU PREMIER PARENT. Mesuré sur les librairies : 387 exemplaires `
      + `remontent d'un cran, 179 de deux, 7 de trois. Un mécanisme qui s'arrête au premier serait `
@@ -99,7 +99,7 @@ const compile = (src) => {
 
 // ── D. LA PARENTHÈSE ABSENTE VAUT PARENTHÈSE VIDE — et elle hérite ───────────────────────────
 {
-  const ast = compile('core\nobject alphabet (scope:scene)\nalphabet plain\n-----\nS -> C4\n');
+  const ast = compile('core\ndef alphabet (scope:scene)\nalphabet plain\n-----\nS -> C4\n');
   ok(valeur(ast, 'plain', 'scope') === 'scene' && herite(ast, 'plain', 'scope'),
      `D. ⛔ UN EXEMPLAIRE SANS CORPS N'HÉRITE PAS. « la parenthèse absente vaut parenthèse vide, et `
      + `le type voyage » — un sac fermé n'est pas une raison de ne rien recevoir. `
@@ -108,9 +108,9 @@ const compile = (src) => {
 
 // ── E. CE QUI N'EST PAS DÉCLARÉ N'EST PAS REFUSÉ, et rien ne boucle ──────────────────────────
 {
-  const ast = compile('core\nalphabet.western\nobject seul (a:1)\n-----\nS -> C4\n');
+  const ast = compile('core\nalphabet.western\ndef seul (a:1)\n-----\nS -> C4\n');
   ok(membres(ast, 'seul').length === 1,
-     `E. « object seul » a reçu une greffe : « object » est la RACINE du prototypal, elle ne se `
+     `E. « def seul » a reçu une greffe : « def » est la RACINE du prototypal, elle ne se `
      + `déclare jamais et ne transmet rien.`);
 
   // ⛔ LE CYCLE SE FABRIQUE DANS L'ARBRE : le langage ne l'écrit pas, l'étage doit y survivre.
@@ -127,7 +127,7 @@ const compile = (src) => {
 // ── F. UNE SOURCE DE LIBRAIRIE — la même règle, l'autre côté ──────────────────────────────────
 {
   const ast = compile('def temoin (documented:true, section:controls)\n'
-    + 'object reglage (scope:scene, bp3:none)\nreglage vitesse (bp3:tempo)\n');
+    + 'def reglage (scope:scene, bp3:none)\nreglage vitesse (bp3:tempo)\n');
   ok(valeur(ast, 'vitesse', 'scope') === 'scene' && herite(ast, 'vitesse', 'scope'),
      `F. ⛔ L'HÉRITAGE N'ARRIVE PAS DANS UNE SOURCE DE LIBRAIRIE. C'est la raison d'être de l'étage : `
      + `une scène et une librairie passent par la MÊME voie, donc par le même mécanisme. Si ce volet `
@@ -150,7 +150,7 @@ const compile = (src) => {
     // ne l'écrit pas. Le membre choisi est absent de tout le reste, pour qu'aucun homonyme ne
     // brouille le compte.
     const source = 'def temoin_derivation (documented:true, section:controls)\n'
-      + 'object socle_temoin (marque_heritee:oui)\n'
+      + 'def socle_temoin (marque_heritee:oui)\n'
       + 'socle_temoin exemplaire_temoin (bp3:none)\n';
     writeFileSync(join(bac, 'lib/temoin_derivation.bpsl'), source);
 

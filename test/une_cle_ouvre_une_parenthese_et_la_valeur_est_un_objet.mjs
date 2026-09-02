@@ -24,7 +24,9 @@ const T = 'core\nalphabet.western\n';
 const lire = (ligne) => {
   const r = compileToBPxAST(`${T}${ligne}\n-----\nS -> C4\n`);
   return { erreurs: (r.errors || []).map((e) => String(e.message ?? e)),
-           paires: (r.ast?.defs || [])[0]?.settings?.pairs };
+           // `def x (…)` est un objet RACINE depuis le 2026-09-02 : il vit dans `vars`, pas dans `defs`.
+           paires: ((r.ast?.vars || []).find((v) => v.varType?.kind === 'type' && v.varType.type === null)
+                    || (r.ast?.defs || [])[0])?.settings?.pairs };
 };
 /** La valeur portée par une clé, au bout d'un chemin de clés. */
 const valeur = (paires, ...chemin) => {

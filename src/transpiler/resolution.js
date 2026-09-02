@@ -1695,8 +1695,13 @@ export function refuserNomsEnDouble(ast, libCtx) {
   // une ligne peut en porter PLUSIEURS (`names`). Un drapeau (Romain 2026-07-30, `varType.kind ===
   // 'flag'`, ex-`@flag`) CRÉE un nom comme toute autre variable — le nom est `names[0]`, jamais
   // les états (`varType.states[].name`), qui sont des étiquettes internes.
+  // ⛔ UN OBJET RACINE — `def kick (vel:120)`, `varType.type === null` — EST UNE DÉFINITION, pas une
+  // variable de travail (2026-09-02, `object` sort et `def` est le mot unique). Son nom se DÉPLIE dans
+  // les règles comme une forme ; une tête de règle homonyme est donc l'ambiguïté que ce garde refuse,
+  // et la levée accordée aux variables de travail ne lui est pas accordée.
   for (const v of ast.vars || []) {
-    const sorte = v?.varType?.kind === 'flag' ? 'un drapeau' : 'une variable de travail';
+    const racine = v?.varType?.kind === 'type' && v.varType.type === null;
+    const sorte = v?.varType?.kind === 'flag' ? 'un drapeau' : (racine ? 'une définition' : 'une variable de travail');
     for (const n of v?.names || []) noter(n, sorte, v?.line);
   }
   // ⚠️ L'ACTEUR EST LÀ, ET IL Y EST REVENU LE 2026-07-28 AU SOIR. Je l'en avais écarté le matin,

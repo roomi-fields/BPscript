@@ -87,7 +87,9 @@ const compiler = (tete) => {
 {
   const PLACES = [
     ['def',              (n) => `def ${n} (x:1)`],
-    ['object',           (n) => `object ${n} (x:1)`],
+    // ⛔ LA LIGNE `object` EST SORTIE LE 2026-09-02 AVEC LE MOT — décision de Romain, `def` est le mot
+    // unique. La place qu'elle éprouvait — un nom chiffré en tête de déclaration de racine — est
+    // désormais celle de la ligne `def` juste au-dessus : ce n'est plus deux points, c'est un seul.
     ['symbol seul',      (n) => `symbol ${n}`],
     ['symbol, 2e nom',   (n) => `symbol a12, ${n}`],
     ['symbol, 1er nom',  (n) => `symbol ${n}, a12`],
@@ -106,7 +108,8 @@ const compiler = (tete) => {
 // Sans ce volet, « les noms chiffrés passent » ne se distingue pas de « le lecteur a cessé de
 // distinguer un nom d'un nombre ». C'est la seule ambiguïté que la clause ferme.
 {
-  for (const [place, tete] of [['def', 'def 12 (x:1)'], ['object', 'object 7 (x:1)'],
+  // `object 7 (x:1)` éprouvait la même clause par le mot `object`, sorti le 2026-09-02.
+  for (const [place, tete] of [['def', 'def 12 (x:1)'], ['def, 2e forme', 'def 7 (x:1)'],
                                ['symbol', 'symbol a, 12']]) {
     ok(messages(compiler(tete)) !== '',
        `C2. « ${tete} » doit être REFUSÉ (${place}) — un nombre pur n'est pas un nom.`);

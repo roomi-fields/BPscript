@@ -120,7 +120,11 @@ for (const [ligne, quoi, attendu] of REFUS) {
   // la corrige : cinq types nouveaux sont entrés dans `core.json` et ce garde a rougi en accusant
   // le MESSAGE, qui avait raison. Un garde qui recopie une liste devient sa concurrente.
   const TYPES_DECLARES = LIBS.core?.schema?.declarationTypes || [];
-  ok(TYPES_DECLARES.length >= 8,
+  // ⛔ 8 → 7 LE 2026-09-02 : `object` SORT des types de déclaration — décision de Romain, « def et
+  // object disent exactement la même chose, on doit en supprimer un ; je préfère migrer object vers
+  // def ». La racine s'écrit désormais `def <nom> (…)`. Le plancher suit UN retrait décidé, diff à
+  // l'appui ; il ne baisse jamais parce qu'un extracteur a cessé de voir.
+  ok(TYPES_DECLARES.length >= 7,
     `2. les types déclaratifs doivent se lire dans la donnée — reçu ${JSON.stringify(TYPES_DECLARES)}`);
   for (const [r, quoi] of [[rLpf, 'un mot hors catalogue'], [rZorglub, 'un mot inventé']]) {
     const m = msgs(r).join(' | ');

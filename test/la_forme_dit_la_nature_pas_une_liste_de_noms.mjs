@@ -57,7 +57,7 @@ try {
   // discriminant : une liste de noms ne pouvait pas connaître `cordes` ni `bourdon`.
   writeFileSync(join(bac, 'lib/temoin_forme.bpsl'),
     'def temoin_forme (documented:true, section:controls)\n'
-    + 'object piece (cordes(mi, la, re), bourdon:do, args(un, deux))\n');
+    + 'def piece (cordes(mi, la, re), bourdon:do, args(un, deux))\n');
 
   const regenerer = () => {
     const brut = execFileSync('node', ['src/transpiler/libs-bundle.js'], { cwd: bac, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });

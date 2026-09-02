@@ -46,7 +46,8 @@ console.log('[type-en-tête] un type en tête porte son corps entre parenthèses
 const TYPES = LIBS.core?.schema?.declarationTypes || [];
 ok(Array.isArray(TYPES) && TYPES.length >= 7,
   `0. les types déclaratifs se lisent dans la donnée — reçu ${JSON.stringify(TYPES)}`);
-for (const t of ['control', 'addresskey', 'native', 'destination', 'enum', 'object']) {
+// `object` n'y figure plus : il est SORTI du langage le 2026-09-02, `def` est le mot unique.
+for (const t of ['control', 'addresskey', 'native', 'destination', 'enum']) {
   ok(TYPES.includes(t), `0. le type '${t}' doit être DÉCLARÉ dans la donnée (décision 2026-08-16)`);
 }
 
@@ -58,12 +59,10 @@ for (const [ligne, nom, clesAttendues] of [
   ['addresskey ch(scope:flow)', 'ch', ['scope']],
   ['native srand(bp3:_srand)', 'srand', ['bp3']],
   ['destination midi(resolvedBy:runtime-MIDI, version:1.0.0)', 'midi', ['resolvedBy', 'version']],
-  // ⛔ `object` NE SERT QU'À NOMMER UNE RACINE — le premier objet d'une famille, celui qui ne dérive
-  // de rien (décision 2026-08-16). Romain donne le go EN GARDANT SA RÉSERVE sur son utilité, et la
-  // mesure lui donne raison : `object racine (a:1)` et `def racine (a:1)` rendent le même contenu,
-  // seul le mot qui nomme le rôle diffère. C'est une information, pas un échec — et elle est ici
-  // pour qu'un jour où le rôle porterait autre chose, ce garde le montre.
-  ['object racine(a:1, b:2)', 'racine', ['a', 'b']],
+  // ⛔ `object racine(…)` A QUITTÉ CETTE TABLE LE 2026-09-02. La réserve de Romain du 2026-08-16
+  // — `object racine (a:1)` et `def racine (a:1)` rendent le même contenu — a tranché : `object`
+  // est SORTI, `def` est le mot unique, et une racine n'est pas un TYPE en tête. Sa forme, et le
+  // collage de sa parenthèse, sont gardés par `def_declare_un_terminal.mjs`.
 ]) {
   const { erreurs, vars } = lire(ligne);
   ok(erreurs.length === 0, `1. '${ligne}' doit COMPILER — reçu : ${erreurs[0]?.slice(0, 120)}`);

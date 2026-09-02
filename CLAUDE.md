@@ -295,7 +295,7 @@ Mon identité : `BP_AGENT=<nom>`. Elle ne persiste pas entre appels shell, donc 
 préfixe : `BP_AGENT=<nom> ~/dev/bp/hub/tour <commande>`.
 
 1. **Au réveil, le courrier d'abord** : `tour inbox`, puis `TABLEAU.md` et mes contrats.
-   `tour inbox --ack` une fois traité.
+   `tour ack` une fois traité.
 2. **Un livrable poussé se route à l'architecte S'IL ENTRE DANS L'UN DES QUATRE MOTIFS**, dans le
    même geste que le push. Sinon il ne se route pas — **le pousser suffit**.
 3. **La dernière action avant de rendre la main est un courrier à l'architecte S'IL Y A MATIÈRE** :

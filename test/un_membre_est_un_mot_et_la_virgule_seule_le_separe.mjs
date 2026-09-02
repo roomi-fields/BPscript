@@ -35,7 +35,11 @@ const membres = (ligne) => {
   try { r = compileToBPxAST(`${TETE}${ligne}\n-----\nS -> C4\n`); }
   catch (e) { return { erreurs: ['JETÉ : ' + String(e.message)], cles: null }; }
   const erreurs = (r.errors || []).map((e) => String(e.message ?? e));
-  const sac = ((r.ast?.defs || [])[0]?.settings?.pairs || [])[0]?.value;
+  // ⛔ `def f (…)` est un objet RACINE dans `vars` depuis le 2026-09-02 — `def` est le mot unique,
+  // `object` est sorti. Le sac se lit là, ou dans `defs` pour les autres corps.
+  const noeud = (r.ast?.vars || []).find((d) => d.varType?.kind === 'type' && d.varType.type === null)
+    || (r.ast?.defs || [])[0];
+  const sac = (noeud?.settings?.pairs || [])[0]?.value;
   return { erreurs, cles: (sac?.pairs || []).map((p) => p.key) };
 };
 /** Le premier élément du flux, où l'espace sépare depuis toujours. */

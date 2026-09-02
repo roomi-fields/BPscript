@@ -26,7 +26,10 @@ const TETE = 'core\nalphabet.western\n';
 const valeur = (ligne) => {
   const r = compileToBPxAST(`${TETE}${ligne}\n-----\nS -> C4\n`);
   return { erreurs: (r.errors || []).map((e) => String(e.message ?? e)),
-           v: ((r.ast?.defs || [])[0]?.settings?.pairs || [])[0]?.value };
+           // ⛔ `def f (…)` — un nom et un sac — est un objet RACINE depuis le 2026-09-02, et il vit
+           // dans `vars`, pas dans `defs` : `def` est le mot unique, `object` est sorti.
+           v: (((r.ast?.vars || []).find((d) => d.varType?.kind === 'type' && d.varType.type === null)
+               || (r.ast?.defs || [])[0])?.settings?.pairs || [])[0]?.value };
 };
 
 console.log('[étiquette] l\'étiquette d\'un backtick se lit là où il est écrit');

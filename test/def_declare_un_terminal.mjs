@@ -90,8 +90,12 @@ for (const [quoi, corps, attendu] of FORMES) {
 // La leçon : quand un garde tombe en ouvrant une forme, il faut établir si la forme a changé de
 // SENS ou si le code a régressé. Ici la première ; effacer le témoin sans le rejouer ailleurs
 // aurait retiré la garde du régime des clés en croyant suivre une évolution.
+// ⛔ « UNE DÉFINITION SANS RIEN » A QUITTÉ CETTE LISTE LE 2026-09-02 — elle ne refuse plus. `def vide`
+// est un objet RACINE au sac vide : « un nom nu vaut un objet vide, et le type voyage » (prototypal
+// pur, Romain 2026-08-20), et `def` est le mot unique depuis que `object` est sorti (Romain,
+// 2026-09-02). Ce que ce témoin gardait — qu'un mot ILLISIBLE après le nom refuse en le nommant —
+// est tenu par les cinq lignes qui restent ; la forme nue, elle, est éprouvée au volet F.
 for (const [quoi, corps, fragment] of [
-  ['une définition sans rien',        'def vide',            /ne déclare rien/],
   ['un mot nu APRÈS une clé',         'def ka  hz:440  voice', /ni un appel de composant ni une affectation/],
   ['un mot nu dans le BLOC',          'def ka\n  hz:440\n  voice', /ni un appel de composant ni une affectation/],
   ['un point sans nom derrière',      'def ka  voice.',      /nom attendu après/],
@@ -163,8 +167,17 @@ for (const [quoi, corps] of [
      `E-départage. 'def suite voice sec' n'a AUCUNE ponctuation collée : c'est une STRUCTURE, `
      + `même si son premier terme s'appelle 'voice'. Reçu ${JSON.stringify(defDe(NU)?.kind)}. `
      + `Décider sur le nom ferait dépendre la forme d'un vocabulaire.`);
-  ok(messages(compiler('def vide2  ')) !== '',
-     `E-témoin. Une structure vide doit REFUSER — un nom qui ne vaut rien ne se réinvoque pas.`);
+  // ⛔ CE TÉMOIN A CHANGÉ DE SENS LE 2026-09-02, ET IL LE DIT. Il exigeait qu'un nom sans corps
+  // REFUSE ; le prototypal pur dit l'inverse — « un nom nu vaut un objet vide » — et `def` est
+  // devenu le mot unique de la déclaration (`object` sort). `def vide2` est donc une RACINE au sac
+  // vide, dans `vars`, et ce qui doit rester vrai est qu'elle n'est PAS lue comme une structure.
+  {
+    const r = compiler('def vide2  ');
+    const racine = (r.ast?.vars || []).find((v) => v.varType?.kind === 'type' && v.varType.type === null);
+    ok(messages(r) === '' && !!racine && (racine.settings?.pairs || []).length === 0 && !defDe(r),
+       `E-témoin. 'def vide2' est un objet RACINE au sac vide, jamais une structure — reçu `
+       + `${messages(r).slice(0, 60) || JSON.stringify(racine)}.`);
+  }
 }
 
 // ── F. LES DEUX CORPS QUE LA PARENTHESE DEPARTAGE — et c'est le COLLAGE qui tranche ─────────
@@ -182,8 +195,11 @@ for (const [quoi, corps] of [
     ['transformation paramétrée', 'def accent(x) x(vel:120)', 'transformation', ['x']],
     ['transformation structurelle', 'def fast(x) {x}:2',      'transformation', ['x']],
     ['deux paramètres',           'def entre(a, b) a b',      'transformation', ['a', 'b']],
-    ['préréglage',                'def kick (vel:120)',       'prereglage',     undefined],
   ];
+  // ⛔ LE PRÉRÉGLAGE A QUITTÉ CETTE TABLE LE 2026-09-02 : `def kick (vel:120)` n'est plus une
+  // « nature » de définition, c'est un OBJET RACINE — un nom et un sac, dans `vars`. Le collage de la
+  // parenthèse reste le seul discriminant, et c'est ce que le témoin juste après la boucle garde :
+  // collée, une transformation ; séparée, une racine.
   for (const [quoi, corps, nature, params] of PARENTHESE) {
     const r = compiler(corps);
     ok(messages(r) === '', `F. ${quoi} — REFUSÉ : ${messages(r).slice(0, 90)}`);
@@ -196,6 +212,19 @@ for (const [quoi, corps] of [
       ok(JSON.stringify(d?.params) === JSON.stringify(params),
          `F. ${quoi} — paramètres ${JSON.stringify(params)} attendus, reçu ${JSON.stringify(d?.params)}.`);
     }
+  }
+
+  // ⛔ LA PARENTHÈSE SÉPARÉE DÉCLARE UNE RACINE — un nom et un sac, dans `vars`, sans DefDirective.
+  // C'est la seconde branche du collage : `accent(x)` collé est une transformation ci-dessus,
+  // `kick (vel:120)` séparé est un objet. Si la racine tombait dans `defs`, ou si le sac se perdait,
+  // c'est ici que ça rougit — et le C-témoin d'avant ne garde plus cette forme.
+  {
+    const r = compiler('def kick (vel:120)');
+    const racine = (r.ast?.vars || []).find((v) => v.varType?.kind === 'type' && v.varType.type === null);
+    const vel = (racine?.settings?.pairs || []).find((p) => p.key === 'vel');
+    ok(messages(r) === '' && !!racine && racine.names?.[0] === 'kick' && vel?.value === 120 && !defDe(r),
+       `F-racine. 'def kick (vel:120)' est un objet RACINE porté par 'vars' avec son sac — reçu `
+       + `${messages(r).slice(0, 60) || JSON.stringify({ racine: racine?.names, vel: vel?.value, def: !!defDe(r) })}.`);
   }
 
   // ⚠️ L'APPEL — la moitié qui compte. Le bloc EXACT de la référence (`LANGUAGE.md:317-321`).

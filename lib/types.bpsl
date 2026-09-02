@@ -28,19 +28,19 @@
 
 def types (documented:true, resolves:types)
 
-object gamut (scope(scene))
+def gamut (scope(scene))
 gamut interval
 gamut degree
 degree directional
 gamut composite
 
 // Un alphabet se déclare en tête de scène.
-object alphabet (scope(scene))
+def alphabet (scope(scene))
 
 // Les prototypes des catalogues qui declarent leurs entrees par leur type. Nus : ce qu une entree
 // porte, elle le porte ; aucune portee n est posee ici sans arbitrage.
-object temperament
-object tuning
-object octaves
-object sound
-object midi_default
+def temperament
+def tuning
+def octaves
+def sound
+def midi_default

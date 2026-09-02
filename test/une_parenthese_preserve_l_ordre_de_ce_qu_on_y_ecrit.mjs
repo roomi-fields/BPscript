@@ -41,7 +41,9 @@ console.log('[ordre] une parenthèse préserve l\'ordre de ce qu\'on y écrit');
   const pairs = (src) => {
     const r = compileToBPxAST(`core\nalphabet.western\n${src}\n-----\nS -> C4\n`);
     ok((r.errors || []).length === 0, `A. '${src}' doit compiler (reçu : ${(r.errors || [])[0]?.message})`);
-    return ((r.ast?.defs || [])[0]?.settings?.pairs || [])
+    // `def x (…)` est un objet RACINE depuis le 2026-09-02 : il vit dans `vars`, pas dans `defs`.
+    return (((r.ast?.vars || []).find((v) => v.varType?.kind === 'type' && v.varType.type === null)
+             || (r.ast?.defs || [])[0])?.settings?.pairs || [])
       .find((p) => p.key === 'registers')?.value?.pairs?.map((p) => p.key);
   };
   const droit = pairs('def x (registers(mandra, madhya, taar))');

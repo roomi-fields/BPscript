@@ -167,7 +167,10 @@ const chaines = (ligne) => {
   const paires = (ligne) => {
     const r = compileToBPxAST(`core\nalphabet.western\n${ligne}\n-----\nS -> C4\n`);
     return { err: (r.errors || []).map((e) => String(e.message ?? e))[0] || '',
-             p: (r.ast?.defs || [])[0]?.settings?.pairs || [] };
+             // ⛔ `def f (…)` est un objet RACINE dans `vars` depuis le 2026-09-02 — `def` est le
+             // mot unique, `object` est sorti. Le sac se lit là, ou dans `defs` pour les autres corps.
+             p: ((r.ast?.vars || []).find((d) => d.varType?.kind === 'type' && d.varType.type === null)
+                 || (r.ast?.defs || [])[0])?.settings?.pairs || [] };
   };
   const { err, p } = paires('def x (a:"", b:"deux mots", c:"scale ""Ma05"" fin", d:nu, e:12)');
   ok(err === '', `E. la ligne d'épreuve doit COMPILER — reçu : ${err.slice(0, 90)}`);

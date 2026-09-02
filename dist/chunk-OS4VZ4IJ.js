@@ -3,7 +3,7 @@ import {
 } from "./chunk-3Y64WDZ4.js";
 import {
   LIBS
-} from "./chunk-VEPRGLSC.js";
+} from "./chunk-6JRPVN2L.js";
 import {
   CHAMPS_DE_FICHIER
 } from "./chunk-Z7KGRXC3.js";
@@ -1003,6 +1003,7 @@ function parse(tokens, opts = {}) {
           }
           if (dir.varType?.kind === "type") {
             for (const n of dir.names) prototypesDeclares.add(n);
+            if (dir.varType.type === null) for (const n of dir.names) definitionsDeclarees.add(n);
           }
         } else if (dir.type === "DefDirective") {
           definitionsDeclarees.add(dir.name);
@@ -1095,13 +1096,13 @@ function parse(tokens, opts = {}) {
     const formes = /* @__PURE__ */ new Map();
     for (const d of scene.defs || []) {
       if (!d || d.type !== "DefDirective") continue;
-      if (d.kind === "prereglage") {
-        formes.set(d.name, d);
-        continue;
-      }
       if (d.kind === "structure" || d.kind === "transformation") {
         formes.set(d.name, d);
       }
+    }
+    for (const v of scene.vars || []) {
+      if (!v || v.varType?.kind !== "type" || v.varType.type !== null || !v.settings) continue;
+      for (const n of v.names || []) formes.set(n, { kind: "prereglage", name: n, settings: v.settings, line: v.line });
     }
     if (!formes.size) return;
     const membresDroits = [];
@@ -1612,6 +1613,12 @@ function parse(tokens, opts = {}) {
       }
       return { type: "InDirective", name: roleName, transport: canal, mapping: table, line: tok.line };
     }
+    if (mot === "object" && ouvreUnNom(1)) {
+      throw new ParseError(
+        `'object ${peek(1).value}' : 'object' est SORTI du langage \u2014 la racine d'une famille se d\xE9clare par 'def ${peek(1).value} (\u2026)', et un exemplaire par son type en t\xEAte ('${peek(1).value} <nom> (\u2026)'). Un seul mot d\xE9clare : 'def'.`,
+        tok
+      );
+    }
     if (!typesDeclaratifs().has(mot) && !varConventions().has(mot) && !prototypesDeclares.has(mot)) {
       const finDeLigne = peek(2).type === T.NEWLINE || peek(2).type === T.EOF || peek(2).type === T.COMMENT;
       if (peek(1).type === T.IDENT && finDeLigne && !directiveDeclareeParLaLibrairie("core", mot) && porteesDeclarees(mot) === null) {
@@ -1910,9 +1917,9 @@ function parse(tokens, opts = {}) {
       if (at(T.LPAREN)) {
         const sac = parseRuntimeQualifier();
         return {
-          type: "DefDirective",
-          name: defName,
-          kind: "prereglage",
+          type: "VarDirective",
+          names: [defName],
+          varType: { kind: "type", type: null },
           settings: sac,
           line: tok.line
         };
@@ -1965,6 +1972,15 @@ function parse(tokens, opts = {}) {
         if (!suivant || suivant.type !== T.IDENT || !(suivant.col > 1)) break;
         while (at(T.NEWLINE) || at(T.COMMENT)) advance();
         lireUneCle(true);
+      }
+      if (lu === 0 && motDeclarant === "def" && (apresLeNom.type === T.NEWLINE || apresLeNom.type === T.EOF || apresLeNom.type === T.COMMENT)) {
+        return {
+          type: "VarDirective",
+          names: [defName],
+          varType: { kind: "type", type: null },
+          settings: { type: "SettingBag", pairs: [] },
+          line: tok.line
+        };
       }
       if (lu === 0) {
         throw new ParseError(

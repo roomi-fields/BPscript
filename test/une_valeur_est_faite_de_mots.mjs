@@ -28,7 +28,9 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const lire = (ligne) => {
   const r = compileToBPxAST(`core\n${ligne}\n\n-----\nS -> -\n`, {});
   return { ok: !(r.errors || []).length, err: String((r.errors || [])[0]?.message || ''),
-           def: (r.ast?.defs || [])[0] || null };
+           // `def x (…)` est un objet RACINE depuis le 2026-09-02 : il vit dans `vars`, pas dans `defs`.
+           def: (r.ast?.vars || []).find((v) => v.varType?.kind === 'type' && v.varType.type === null)
+                || (r.ast?.defs || [])[0] || null };
 };
 
 // ── A. LA MATRICE DES SIGNES — chacun doit être REFUSÉ dans une valeur ───────────────────────
@@ -75,8 +77,9 @@ const lire = (ligne) => {
           + `kind=${JSON.stringify(r.def?.kind)} — un nom tronqué écrase l'entrée voisine en silence.`);
   // Le témoin qui discrimine : la MÊME déclaration sans le suffixe reste vivante et garde sa nature.
   const t = lire('def fatbass (device(preset:bass-init))');
-  ok(t.ok && t.def?.name === 'fatbass' && t.def?.kind === 'prereglage',
-     `B-témoin. la déclaration SANS le nom illisible doit rester un préréglage nommé 'fatbass' — `
+  // `def fatbass (…)` est un objet RACINE depuis le 2026-09-02 : un nom, `type: null`, et son sac.
+  ok(t.ok && t.def?.names?.[0] === 'fatbass' && t.def?.varType?.type === null && !!t.def?.settings,
+     `B-témoin. la déclaration SANS le nom illisible doit rester un objet racine nommé 'fatbass' — `
    + `reçu name=${JSON.stringify(t.def?.name)} kind=${JSON.stringify(t.def?.kind)}. Sans ce témoin, `
    + `« la forme est refusée » ne se distingue pas de « le lecteur a cessé de lire les préréglages ».`);
 }

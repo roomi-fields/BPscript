@@ -46,7 +46,7 @@ for (const [quoi, src] of REFUS) {
 const SUCCES = [
   ['une scène juste', 'core\nalphabet.western\n-----\nS -> C4\n'],
   ['une librairie', 'def x (a:1)\n'],
-  ['un prototype et son exemplaire', 'object a (x)\na b (x:1)\n'],
+  ['un prototype et son exemplaire', 'def a (x)\na b (x:1)\n'],
 ];
 for (const [quoi, src] of SUCCES) {
   const r = c(src);

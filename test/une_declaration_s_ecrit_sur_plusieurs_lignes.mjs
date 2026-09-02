@@ -94,7 +94,8 @@ const lire = (src) => { try { return { ast: parse(tokenize(src)), err: null }; }
   const courte = lire('def x (a:1, b:2, letring)\nalphabet.western\n-----\nS -> C4\n');
   const longue = lire('def x (\n  a:1,\n  b:2,\n  letring\n)\nalphabet.western\n-----\nS -> C4\n');
   const paires = (r) => {
-    const d = (r.ast?.defs || []).find((x) => x.type === 'DefDirective');
+    // `def x (…)` est un objet RACINE depuis le 2026-09-02 : il vit dans `vars`, pas dans `defs`.
+    const d = (r.ast?.vars || []).find((v) => v.varType?.kind === 'type' && v.varType.type === null);
     return d?.settings?.pairs?.map((p) => `${p.key}=${p.value}`).join(' ') ?? null;
   };
   ok(paires(courte) !== null && paires(courte) === paires(longue),

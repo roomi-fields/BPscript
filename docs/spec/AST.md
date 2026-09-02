@@ -137,7 +137,13 @@ VarType =
   | { kind: "in",         channel: "midi" | "osc" | "keyboard" }
   | { kind: "convention", convention: "signal" | "pitch" | "phase" | "logic" }
   | { kind: "module",     module: string }
+  | { kind: "type",       type: string | null }   // le PARENT ; null = une racine, qui ne dérive de rien
 ```
+
+Un objet se déclare par son type en tête — `alphabet western (…)`, `degree bilaval (…)` — et
+`varType.type` nomme ce parent. Une **racine** se déclare par `def` — `def scale (…)`, `def kick
+(vel:120)` — et `varType.type` vaut `null` : elle ne dérive de rien. Les deux portent leur corps dans
+`settings`, le même sac ; la parenthèse absente vaut parenthèse vide.
 
 Une variable porte un **type** qui dit ce qu'elle est. Le nom vient d'abord, le type ensuite.
 
@@ -151,6 +157,7 @@ aucune valeur, et il porte une entrée par nom qui en écrit une — `symbol a:1
 | `in`          | une valeur qui vient du dehors : un **rôle**, et le canal qui l'apporte             |
 | `convention`  | un flux de nombres, et la façon dont le récepteur le lit                            |
 | `module`      | une **instance** de ce module — elle ne porte aucun corps propre                    |
+| `type`        | un **objet** : `type` nomme son parent, ou vaut `null` pour une racine (`def x (…)`) |
 | *(aucun)*     | un symbole du flux qui n'est ni une note ni un nom de règle                         |
 
 Un flag porte sa valeur initiale en même temps que lui-même, et une règle s'y conditionne par un
@@ -166,11 +173,10 @@ résolution la laisse telle quelle.
 DefDirective {
   type: "DefDirective"
   name: string
-  kind: "terminal" | "structure" | "prereglage" | "transformation" | "code"
+  kind: "terminal" | "structure" | "transformation" | "code"
   params: string[]                 // [] quand la définition n'en prend pas
   convention: "signal" | "pitch" | "phase" | "logic" | null
   keys: { [nom]: { kind: "value" | "ref", value: string | string[] } }   // corps `terminal`
-  settings: SettingBag             // corps `prereglage`
   body: RhsElement[]               // corps `structure` et `transformation`
   tag: string                      // corps `code` — le langage écrit devant le deux-points : "js"
   code: string                     // corps `code` — le texte du backtick, opaque pour BPScript
@@ -181,10 +187,12 @@ DefDirective {
 // champ `body` discriminé par `kind` ; le parser porte `kind` À LA RACINE et le contenu dans le champ
 // qui lui correspond — `keys`, `settings` ou `body` selon la sorte. Les deux disent la même chose ;
 // c'est le TYPE qui était en retard sur le code, et un dérivé se fait correspondre. La table
-// ci-dessous reste comme lecture des CINQ SORTES et de ce que chacune porte.
+// ci-dessous reste comme lecture des QUATRE SORTES et de ce que chacune porte.
+// ⚠️ `def kick (vel:120)` — un nom et un sac — n'est PAS une définition : c'est un objet RACINE, et
+// il vit dans `vars` comme un `VarDirective` dont `varType.type` vaut `null`. `def` est le mot
+// unique de la déclaration ; ce qu'il déclare se lit sur le corps qui suit le nom.
 DefBody =
     { kind: "terminal", proto: TerminalProto }         // def cloche  degree:0  voice.wobble
-  | { kind: "setting",  bag: SettingBag }              // def kick (vel:120)
   | { kind: "code",     backtick: BacktickInline }     // def fondu phase `js: …`
   | { kind: "elements", body: RhsElement[] }           // def cadence sa re ga pa
 

@@ -800,6 +800,11 @@ function parse(tokens, opts = {}) {
           // borne rien, et la forme validée le 2026-08-20 en demande trois étages.
           if (dir.varType?.kind === 'type') {
             for (const n of dir.names) prototypesDeclares.add(n);
+            // ⛔ ET UNE RACINE — `def kick (vel:120)`, `type === null` — EST UNE DÉFINITION : elle
+            // se déplie dans les règles comme un préréglage, donc son nom entre dans l'ensemble qui
+            // tranche APPEL ou RÉGLAGE. Sans ça, `kick(C4)` se lisait comme un sac et le refus
+            // « il se pose NU » ne tombait plus (mesuré le 2026-09-02, à la sortie d'`object`).
+            if (dir.varType.type === null) for (const n of dir.names) definitionsDeclarees.add(n);
           }
         } else if (dir.type === 'DefDirective') {
           // ⛔ ET LA DEFINITION DEVIENT APPELABLE — l ensemble qui porte la bascule appel/reglage
@@ -1055,10 +1060,20 @@ function parse(tokens, opts = {}) {
     const formes = new Map();
     for (const d of scene.defs || []) {
       if (!d || d.type !== 'DefDirective') continue;
-      if (d.kind === 'prereglage') { formes.set(d.name, d); continue; }
       if (d.kind === 'structure' || d.kind === 'transformation') {
         formes.set(d.name, d);
       }
+    }
+    // ── UN OBJET RACINE À SAC EST UN PRÉRÉGLAGE, ET IL SE POSE NU — `S -> C4!kick` ────────────
+    // ⛔ `def kick (vel:120)` produit une racine dans `scene.vars` depuis le 2026-09-02 (`def` est
+    // le mot unique, `object` sort). Ce lecteur ne lisait que `scene.defs` : la définition passait,
+    // l'appel tombait — « accepter n'est pas transmettre », la faute déjà payée le 2026-08-09 sur
+    // ces mêmes lignes. La racine SEULE entre ici (`varType.type === null`) : ce que `def x (sac)`
+    // écrit, et rien de plus. Qu'un exemplaire typé — `control kick (vel:120)` — soit appelable nu
+    // à son tour est une autre question, et elle n'est pas tranchée.
+    for (const v of scene.vars || []) {
+      if (!v || v.varType?.kind !== 'type' || v.varType.type !== null || !v.settings) continue;
+      for (const n of v.names || []) formes.set(n, { kind: 'prereglage', name: n, settings: v.settings, line: v.line });
     }
     if (!formes.size) return;
 
@@ -2076,6 +2091,17 @@ function parse(tokens, opts = {}) {
     // ⛔ ET UN PROTOTYPE DÉCLARÉ PAR LA SCÈNE OUVRE UNE DÉCLARATION. La sortie vivait ICI, en
     // amont : élargir le seul site de décision plus bas ne suffisait pas — on n'y arrivait jamais.
     // Deux endroits décident du même fait, et j'en avais corrigé un seul.
+    // ── `object` EST SORTI, ET LE REFUS PORTE SA RÉÉCRITURE ─────────────────────────────────
+    // Décision de Romain, 2026-09-02 : `object` et `def` disaient la même chose ; `def` reste.
+    // ⛔ UN MOT SORTI SE REFUSE AVEC SA RELÈVE, jamais par le refus générique « n'est pas un type »
+    // qui énumère les types et laisse l'auteur deviner — c'est la règle de `MOTS-SORTIS.md`, et
+    // le garde des prescriptions vérifie que `def <nom> (…)` est bien une forme vivante.
+    if (mot === 'object' && ouvreUnNom(1)) {
+      throw new ParseError(
+        `'object ${peek(1).value}' : 'object' est SORTI du langage — la racine d'une famille se `
+        + `déclare par 'def ${peek(1).value} (…)', et un exemplaire par son type en tête `
+        + `('${peek(1).value} <nom> (…)'). Un seul mot déclare : 'def'.`, tok);
+    }
     if (!typesDeclaratifs().has(mot) && !varConventions().has(mot)
         && !prototypesDeclares.has(mot)) {
       // ⚠️ UN TYPE INCONNU SUIVI D'UN NOM SE REFUSE EN NOMMANT LES TYPES, sans quoi
@@ -2902,9 +2928,25 @@ function parse(tokens, opts = {}) {
                  params, body: corps, line: tok.line };
       }
       if (at(T.LPAREN)) {
-        // PREREGLAGE : `def kick (vel:120)` — la parenthese est SEPAREE, c est un corps.
+        // ── UN NOM ET UN SAC : UN OBJET RACINE — `def kick (vel:120)` ────────────────────────
+        // ⛔ `def` EST LE MOT UNIQUE, ET IL REMPLACE `object` — décision de Romain, 2026-09-02 :
+        // « def et object disent exactement la même chose et ont le même usage, on doit en
+        // supprimer un ; je préfère migrer object vers def, def me parle plus ». Mesuré avant la
+        // frappe : `def kick (vel:120)` et `object kick (vel:120)` produisaient le MÊME sac, lu par
+        // le MÊME lecteur (`parseRuntimeQualifier`, celui du type en tête à 2196) ; seuls
+        // différaient le nœud et le champ de l'arbre — `defs` sans type, `vars` avec. `defs` n'a
+        // aucun lecteur chez BPx, kairos, kronos, bp3-frontend ni kanopi ; `vars` en a quatre.
+        //
+        // ⇒ Ce que `def` déclare ici est ce qu'`object` déclarait : une RACINE, le premier objet
+        // d'une famille, celui qui ne dérive de rien — `varType.type` vaut `null` pour le dire.
+        // `def scale (…)` puis `scale degree` puis `degree bilaval (…)` : la chaîne se lit comme
+        // avant, `prototypesDeclares` la reçoit par la même porte (`parseScene`, kind:'type').
+        //
+        // ⚠️ ET LE NOM RESTE APPELABLE NU DANS LE FLUX — `S -> C4!kick` : `deplierLesCommodites`
+        // lit désormais les racines de `scene.vars` comme des préréglages. Rien ne change pour
+        // l'auteur ; le corpus de 177 scènes n'écrit d'ailleurs aucun `def`.
         const sac = parseRuntimeQualifier();
-        return { type: 'DefDirective', name: defName, kind: 'prereglage',
+        return { type: 'VarDirective', names: [defName], varType: { kind: 'type', type: null },
                  settings: sac, line: tok.line };
       }
 
@@ -2994,6 +3036,19 @@ function parse(tokens, opts = {}) {
         lireUneCle(true);   // dans le BLOC : une clé par ligne, donc des parties multiples
       }
 
+      // ── UN NOM NU VAUT UN OBJET VIDE — `def temperament`, sans rien après ───────────────────
+      // ⛔ LA PARENTHÈSE ABSENTE VAUT PARENTHÈSE VIDE, ET LE TYPE VOYAGE — prototypal pur, décision
+      // de Romain du 2026-08-20, déjà appliquée au type en tête (2256). `object temperament` nu
+      // déclarait une racine vide ; `def` reprend ce mot, donc cette forme. Ce n'est PAS une faute
+      // de frappe : c'est le prototype qui donne un parent nommé à `temperament 12TET (…)`, et
+      // `lib/types.bpsl` en écrit sept ainsi.
+      // ⚠️ LA CONDITION EST ÉTROITE — rien après le nom, sur la même ligne. Un nom suivi d'un jeton
+      // illisible garde le refus ci-dessous, qui nomme ce qui a arrêté la lecture.
+      if (lu === 0 && motDeclarant === 'def'
+          && (apresLeNom.type === T.NEWLINE || apresLeNom.type === T.EOF || apresLeNom.type === T.COMMENT)) {
+        return { type: 'VarDirective', names: [defName], varType: { kind: 'type', type: null },
+                 settings: { type: 'SettingBag', pairs: [] }, line: tok.line };
+      }
       if (lu === 0) {
         throw new ParseError(
           // ⚠️ LE NOM CITÉ EST CELUI QUI A ÉTÉ LU, pas celui qui a été écrit. Quand un signe COLLÉ

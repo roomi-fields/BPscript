@@ -29,7 +29,9 @@ const lire = (ligne) => {
   try {
     const r = compileToBPxAST(`core\nalphabet.western\n${ligne}\n-----\nS -> C4\n`, {});
     const errs = (r.errors || []).map((x) => x.message || String(x));
-    return { ok: !errs.length, err: errs[0] || '', pairs: (r.ast?.defs || [])[0]?.settings?.pairs || [] };
+    // `def x (…)` est un objet RACINE depuis le 2026-09-02 : il vit dans `vars`, pas dans `defs`.
+    const racine = (r.ast?.vars || []).find((v) => v.varType?.kind === 'type' && v.varType.type === null);
+    return { ok: !errs.length, err: errs[0] || '', pairs: (racine || (r.ast?.defs || [])[0])?.settings?.pairs || [] };
   } catch (e) { return { ok: false, err: 'JET ' + e.message, pairs: [] }; }
 };
 /** ce que le bundle rendrait — la MÊME fonction que `libs-bundle.js`, à l'identique. */
