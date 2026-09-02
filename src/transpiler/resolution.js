@@ -914,7 +914,11 @@ export function validateTerminals(ast) {
   const declared = nomsDeclares(ast);
 
   errors.push(...validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet));
-  if (!anyAlphabet) return errors; // aucun alphabet de notes en portée (voix-code pure) → rien à valider sur les symboles NUS
+  // ⛔ SANS ALPHABET EN PORTÉE, UN SYMBOLE NON DÉCLARÉ EST REFUSÉ — Romain, 2026-09-02 : « si on
+  // n'invoque pas core et qu'on n'a pas déclaré d'alphabet, la compilation plantera quand l'utilisateur
+  // va utiliser un terminal non déclaré ». Ce validateur RENDAIT LA MAIN ici (« aucun alphabet →
+  // rien à valider ») : une scène nue acceptait n'importe quel symbole, en silence. Une voix de code
+  // garde ses symboles arbitraires par la clause ci-dessous, à sa place.
 
   // Terminaux RHS : Symbol non couvert = non déclaré.
   //
@@ -1007,9 +1011,12 @@ export function validateTerminals(ast) {
         message: cause
           ? `'${el.name}:${ligne.runtime}' déclare un terminal, et ${cause} La déclaration s'écrit `
             + `'<nom>:<canal>' — le terminal n'est pas en cause.`
-          : reste && reste !== el.name
-            ? `terminal '${el.name}' non déclaré — segmentation bloquée sur '${reste}', absent des alphabets en portée`
-            : `terminal '${el.name}' non déclaré — absent des alphabets en portée`,
+          : !anyAlphabet
+            ? `terminal '${el.name}' non déclaré — aucun alphabet en portée : invoquer 'core', qui déclare `
+              + `l'alphabet par défaut, ou déclarer un alphabet`
+            : reste && reste !== el.name
+              ? `terminal '${el.name}' non déclaré — segmentation bloquée sur '${reste}', absent des alphabets en portée`
+              : `terminal '${el.name}' non déclaré — absent des alphabets en portée`,
         line: el.line,
       });
     }
@@ -1396,7 +1403,7 @@ export function annotateBackticks(ast) {
   const acteurEval = {};
   for (const a of ast.actors || []) if (a.properties && a.properties.eval) acteurEval[a.name] = a.properties.eval;
   const sceneEval = (ast.directives || []).find((d) => d.name === 'eval' && (d.subkey || d.runtime));
-  const socleEval = (lesDefauts() || {}).eval;
+  const socleEval = (lesDefauts(ast) || {}).eval;
   const parDefaut = (sceneEval && (sceneEval.subkey || sceneEval.runtime)) || socleEval || null;
   const resoudre = (els) => {
     for (const el of els || []) {

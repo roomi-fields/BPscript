@@ -129,6 +129,29 @@ ok(parMot > 0, `aucune entrée par un mot de réglage sur ${scenes} scènes — 
      `une scène nue porte une section 'librairies' — reçu ${JSON.stringify(nue.ast && nue.ast.librairies)}`);
   ok(nue.ast && nue.ast.librairies && 'alphabet.western' in nue.ast.librairies && 'tuning.western_12TET' in nue.ast.librairies,
      `une scène nue joint ses DÉFAUTS — alphabet et accordage de l'acteur implicite — reçu ${JSON.stringify(Object.keys((nue.ast && nue.ast.librairies) || {}))}`);
+  // LES DÉFAUTS VIENNENT DE CE QUE LA SCÈNE INVOQUE, PAR NIVEAUX — Romain, 2026-09-02.
+  {
+    // sans `core` ni alphabet : aucun défaut, et un terminal non déclaré est refusé en nommant `core`
+    const nue = compileToBPxAST('-----\nS -> C4 D4\n', {});
+    ok(nue.errors.some((e) => /aucun alphabet en portée/.test(e.message) && /core/.test(e.message)),
+       `une scène qui n'invoque rien n'a aucun alphabet, et son terminal est refusé en nommant 'core' — reçu ${JSON.stringify(nue.errors.map((e) => e.message.slice(0, 60)))}`);
+    // `core` + un tempérament invoqué : le défaut d'alphabet reste (l'invocation ne le coupe plus)
+    const temp = compileToBPxAST('core\ntemperament.12TET\n-----\nS -> C4\n', {});
+    ok(temp.ast && 'alphabet.western' in temp.ast.librairies,
+       `'core' + 'temperament.12TET' : l'acteur implicite reçoit l'alphabet par défaut — reçu ${JSON.stringify(Object.keys((temp.ast && temp.ast.librairies) || {}))}`);
+    // une voix de code est un acteur comme un autre : elle hérite
+    const voix = compileToBPxAST('core\nactor v eval.js\n-----\nS -> v.C4\n', {});
+    ok(voix.ast && voix.ast.actors[0].properties.alphabet === 'western' && 'alphabet.western' in voix.ast.librairies,
+       `une voix de code hérite l'alphabet par défaut comme tout acteur — reçu ${JSON.stringify(voix.ast && voix.ast.actors[0].properties)}`);
+    // un alphabet qui n'écrit pas ses octaves porte celles du prototype, et la section les joint
+    const arabe = compileToBPxAST('core\nalphabet.arabic\n-----\nS -> rast dukah\n', {});
+    ok(arabe.ast && arabe.ast.librairies['alphabet.arabic'] && arabe.ast.librairies['alphabet.arabic'].membres.octaves === 'western'
+       && 'octaves.western' in arabe.ast.librairies,
+       `'alphabet.arabic' hérite 'octaves:western' du prototype et la section joint 'octaves.western' — reçu ${JSON.stringify(Object.keys((arabe.ast && arabe.ast.librairies) || {}))}`);
+    // et un alphabet sans hauteur garde ses terminaux nus malgré la convention héritée
+    const perc = compileToBPxAST('core\nactor tabla alphabet.tabla out.audio\n-----\nS -> tabla.dhin tabla.ka\n', {});
+    ok(perc.ast && !perc.errors.length, `'tabla.dhin' reste un terminal nu sous une convention d'octaves héritée — reçu ${JSON.stringify(perc.errors.map((e) => e.message.slice(0, 60)))}`);
+  }
   // Et une VOIX entre par le terminal qui la nomme, un étage sous les membres — la scène de
   // percussion n'est pas muette.
   const tabla = compileToBPxAST('core\nalphabet.tabla\n-----\nS -> dha ta\n', {});

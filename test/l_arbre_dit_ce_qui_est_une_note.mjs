@@ -97,9 +97,12 @@ const compiler = (src) => compileToBPxAST(src);
   ok(r.ast?.alphabetTerminals === undefined, '1. hauteur OPAQUE : alphabetTerminals ABSENT aussi');
 }
 {
+  // Une voix de code est un acteur comme un autre (Romain, 2026-09-02) : elle hérite l'alphabet que `core`
+  // déclare, donc un alphabet est EN PORTÉE et la liste existe — VIDE, parce qu'un bloc de code n'est
+  // pas une note. Absent dirait « hors de portée », ce qui n'est plus vrai.
   const r = compiler('core\nactor viz  eval.hydra\n-----\nS -> voix\nvoix -> viz.`osc(4).out()`');
-  ok(r.ast?.noteTerminals === undefined,
-    `1. VOIX-CODE pure : ABSENT — un bloc de code n'est pas une note (reçu ${JSON.stringify(r.ast?.noteTerminals)})`);
+  ok(Array.isArray(r.ast?.noteTerminals) && r.ast.noteTerminals.length === 0,
+    `1. VOIX-CODE pure : liste VIDE — l'alphabet hérité est en portée, et un bloc de code n'est pas une note (reçu ${JSON.stringify(r.ast?.noteTerminals)})`);
 }
 {
   // Un alphabet est en portée et la scène n'écrit aucune note : c'est un FAIT, donc une liste vide.
@@ -203,9 +206,12 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
     const nom = 'western';
     const sauvegarde = LIBS['alphabets'][nom].resolvesPitch;
     LIBS['alphabets'][nom] = { ...LIBS['alphabets'][nom], resolvesPitch: false };
-    const r = compiler(`core\nalphabet.${nom}\n-----\nmotif -> C4\nS -> motif`);
+    // ⚠️ SANS HAUTEUR, PAS DE REGISTRE : un alphabet qui ne résout aucune hauteur écrit ses terminaux
+    // NUS (Romain, 2026-09-02 — la convention d'octaves héritée est portée, pas appliquée). Le
+    // témoin écrit donc `C`, pas `C4` : `C4` serait refusé comme non déclaré, ce qui est juste.
+    const r = compiler(`core\nalphabet.${nom}\n-----\nmotif -> C\nS -> motif`);
     LIBS['alphabets'][nom] = { ...LIBS['alphabets'][nom], resolvesPitch: sauvegarde };
-    ok((r.ast?.alphabetTerminals || []).includes('C4') && !(r.ast?.noteTerminals || []).includes('C4'),
+    ok((r.ast?.alphabetTerminals || []).includes('C') && !(r.ast?.noteTerminals || []).includes('C'),
       "2bis. LE CODE SUIT LA DÉCLARATION, PAS L'ACCORDAGE : western privé de resolvesPitch se déclasse, "
       + `bien qu'il garde son accordage (reçu notes=${JSON.stringify(r.ast?.noteTerminals)} `
       + `alpha=${JSON.stringify(r.ast?.alphabetTerminals)}) — sans ce cas, un code lisant l'accordage passerait tout`);

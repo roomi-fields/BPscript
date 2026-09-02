@@ -38,7 +38,12 @@ function expandAlphabetTerminals(alphabetLib, octavesOverride) {
   // classe de faute que ce dépôt a déjà tranchée pour un caractère illisible. La porte écarte les
   // champs de fichier, et `registers` est exigé plutôt qu'espéré : une entrée mal formée retombe
   // sur les notes nues, et le validateur de références dit son mot.
-  const candidate = octaveConvention ? loadLib('octaves', octaveConvention) : null;
+  // ⚠️ UN REGISTRE EST UN RANG DE HAUTEUR : un alphabet qui ne résout aucune hauteur (`resolvesPitch:
+  // false` — tabla, dhati, abc…) écrit ses terminaux nus, quelle que soit la convention d'octaves
+  // qu'il porte. Depuis que `def alphabet` déclare l'octaviation par défaut et que chaque alphabet en
+  // hérite (Romain, 2026-09-02), la convention est TOUJOURS là ; c'est la donnée `resolvesPitch` qui
+  // dit si elle a un sens. Mesuré : sans cette ligne, `tabla.dhin` devenait `dhin0`…`dhin9`.
+  const candidate = octaveConvention && alphabetLib.resolvesPitch !== false ? loadLib('octaves', octaveConvention) : null;
   const octaveDef = candidate && Array.isArray(candidate.registers) ? candidate : null;
 
   const alts = alphabetLib.alterations && typeof alphabetLib.alterations === 'object'
@@ -103,8 +108,11 @@ function alphabetHerite(ast) {
   if (sceneAlpha) {
     return resolveActorAlphabet(sceneAlpha.subkey, ast.directives) ? sceneAlpha.subkey : null;
   }
-  if (ast.libRefs && ast.libRefs.length) return null;                    // hauteur opaque → Kairos (loi 35)
-  return (lesDefauts() || {}).alphabet || null;                          // niveau 1 : les défauts du socle
+  // ⛔ LE DÉFAUT VIENT DE CE QUE LA SCÈNE INVOQUE, ET DE RIEN D'AUTRE — Romain, 2026-09-02 : `core`
+  // déclare un alphabet par défaut, effectif quand `core` est invoqué, surchargé quand la scène ou un
+  // acteur déclare le sien. Ce qui vivait ici — « une invocation de scène coupe la cascade, la
+  // hauteur est opaque » — coupait le défaut dès qu'un tempérament ou un son était invoqué, et sort.
+  return (lesDefauts(ast) || {}).alphabet || null;                       // niveau 1 : le défaut invoqué
 }
 
 /**
@@ -140,8 +148,11 @@ function octavesHerite(ast, alphabetKey) {
     return connu(nom) ? nom : undefined;
   }
   if (!alphabetKey) return undefined;
-  const lib = resolveActorAlphabet(alphabetKey, ast.directives);         // niveau 2 : l'alphabet invoqué
-  return connu(lib && lib.octaves) ? lib.octaves : undefined;
+  // niveau 2 : l'alphabet invoqué — lu par la porte, qui rend ses membres PROPRES ET HÉRITÉS : un
+  // alphabet qui n'écrit pas ses octaves porte celles de son prototype (Romain, 2026-09-02).
+  const o = objet(`alphabet.${alphabetKey}`);
+  const oct = o && !o.ambigu ? o.membres.octaves : undefined;
+  return connu(oct) ? oct : undefined;
 }
 
 /**
@@ -195,8 +206,8 @@ function tuningHerite(ast, alphabetKey) {
 // Transport par défaut de l'acteur IMPLICITE — lu DANS core (donnée : `defaults.components
 // .transport`), plus de constante en dur (cascade de défauts, Romain 2026-07-05). Le repli
 // 'audio' n'est atteint QUE si core est absent/cassé (bug de config) — pas un défaut normal.
-function defaultActorTransport() {
-  return (lesDefauts() || {}).transport || 'audio';
+function defaultActorTransport(ast) {
+  return (lesDefauts(ast) || {}).transport || 'audio';
 }
 
 /**
@@ -229,7 +240,7 @@ function sortieHeritee(ast) {
   }
   if (sceneOut) return { key: sceneOut.subkey, params: sceneOut.params || {}, conflit: null };
   if (alphaBinding) return { key: alphaBinding.runtime, params: {}, conflit: null };
-  return { key: defaultActorTransport(), params: {}, conflit: null };
+  return { key: defaultActorTransport(ast), params: {}, conflit: null };
 }
 
 /**
@@ -287,19 +298,12 @@ function resolveActors(ast) {
     let alphabetKey = props.alphabet;
     const herite = [];   // les axes que la CASCADE fournit — ils s'annoncent en références plus bas
 
-    // Voix-code (eval présent) : porte du code étranger, pas un vocabulaire de notes →
-    // alphabet OPTIONNEL (pas d'héritage). Cf. docs/design/ACTOR.md §2.
-    const isCodeVoice = !!props.eval;
-
-    // RESOLVER-CASCADE-ALPHABET (modèle Romain 2026-07-13) : la cascade de défauts s'applique
-    // AUSSI à l'alphabet — « PAS D'ALPHABET » N'EXISTE PAS. Un acteur sans alphabet HÉRITE :
-    // scène (alphabet.X) → sinon socle core (western, lib/core.json defaults.components). On ne
-    // REJETTE JAMAIS pour 'no alphabet' (le rejet violait la cascade — bug §71 : bloquait le son
-    // d'une scène + acteur transport-seul). Loi 35 : si la scène INVOQUE une hauteur OPAQUE
-    // (mine./factory. libRef, résolue par Kairos), l'alphabet reste ABSENT ici (l'aval le
-    // remplit — mine/factory n'est qu'un préfixe de PROVENANCE, décision 2026-07-13) ; le socle
-    // core ne s'applique QUE si RIEN n'est invoqué. Une voix-code n'hérite pas (pas de notes).
-    if (!alphabetKey && !isCodeVoice) {
+    // LA CASCADE PAR NIVEAUX, UNIVERSELLE — Romain, 2026-09-02 : un acteur sans alphabet hérite de
+    // celui de la scène, sinon du défaut que `core` déclare quand `core` est invoqué. Aucune exception :
+    // une voix de code est un acteur comme un autre et hérite comme les autres — l'exception qui
+    // vivait ici (« porte de code étranger, pas un vocabulaire de notes ») était une seconde voie
+    // décidée par le compilateur sur un attribut, invisible dans la donnée ; elle sort.
+    if (!alphabetKey) {
       alphabetKey = alphabetHerite(ast);                                  // cascade scène → socle core
       if (alphabetKey) {
         props.alphabet = alphabetKey;                                     // matérialise l'héritage dans l'AST

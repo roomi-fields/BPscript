@@ -34,7 +34,9 @@ const dire = (ok, quoi) => { if (!ok) { echecs++; console.log('  ÉCHEC ' + quoi
 // reste du message doit être identique — c'est le juge, et il est aussi discriminant qu'il peut
 // l'être. Un juge qui ne comparerait que le NOMBRE d'erreurs certifierait deux refus étrangers.
 const norm = (m) => m.replace(/at line \d+:\d+/, '').replace(/\s+/g, ' ').trim();
-const compile = (src) => compileToBPxAST(src + '\n-----\nS -> C4 D4');
+// `core` en tête : sans lui aucun alphabet n'est en portée et `C4 D4` est refusé (Romain, 2026-09-02) ;
+// le sujet de ce garde — le préfixe de librairie ne contourne aucun refus — n'en dépend pas.
+const compile = (src) => compileToBPxAST('core\n' + src + '\n-----\nS -> C4 D4');
 
 // LA MATRICE SE CONSTRUIT DEPUIS LA DONNÉE, jamais une liste de paires écrite à la main.
 // ⛔ UN MOT DE TÊTE EST UN OBJET QUI DÉCLARE `scope(scene)`, dans n'importe quelle place de sa

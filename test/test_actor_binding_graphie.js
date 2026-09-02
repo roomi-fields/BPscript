@@ -61,8 +61,10 @@ console.log('\n=== §71 : une provenance NON posée sur la ligne d\'acteur → l
   // ⚠️ PAR LA PORTE COMPLÈTE, PAS PAR LE PARSEUR SEUL. L'ancienne forme préfixée produisait son
   // nœud AU PARSEUR, sans résolution — c'est exactement le contournement qui l'a fait sortir.
   // L'invocation directe EXIGE que la librairie existe : elle se mesure donc là où elle se résout.
-  const ast = compileToBPxAST('core\nactor voice out.audio\ntemperament.12TET\n-----\nS -> sa\n').ast;
-  assert('acteur sortie-seule : properties.alphabet ABSENT', ast.actors[0].properties.alphabet === undefined, JSON.stringify(ast.actors[0].properties.alphabet));
+  // Depuis le 2026-09-02 (Romain) un acteur sans alphabet HÉRITE celui que `core` déclare, même quand la
+  // scène invoque un tempérament : l'acteur porte `western`, et la règle écrit une note de cet alphabet.
+  const ast = compileToBPxAST('core\nactor voice out.audio\ntemperament.12TET\n-----\nS -> C4\n').ast;
+  assert('acteur sortie-seule : properties.alphabet = western (hérité de core)', ast.actors[0].properties.alphabet === 'western', JSON.stringify(ast.actors[0].properties.alphabet));
   assert('temperament.12TET → libRef de scène, adresse NUE', JSON.stringify(ast.libRefs) === '["temperament.12TET"]', JSON.stringify(ast.libRefs));
 }
 

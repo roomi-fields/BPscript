@@ -35,8 +35,9 @@ scale degree
 degree directional
 scale composite
 
-// Un alphabet se déclare en tête de scène.
-def alphabet (scope(scene))
+// Un alphabet se déclare en tête de scène. Il porte l'octaviation par défaut : un alphabet qui
+// n'écrit pas la sienne hérite de celle-ci, et celui qui l'écrit la surcharge.
+def alphabet (scope(scene), octaves:western)
 
 // Les prototypes des catalogues qui declarent leurs entrees par leur type. Nus : ce qu une entree
 // porte, elle le porte ; aucune portee n est posee ici sans arbitrage.

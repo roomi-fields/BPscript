@@ -36,6 +36,7 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
+import { lesDefauts } from '../src/transpiler/index-des-objets.js';
 import { exigerCorpus, toutesLesScenes } from './corpus.mjs';
 
 let passe = 0;
@@ -63,25 +64,32 @@ const SITUATIONS = [
    'core\n-----\nS -> C4 D4', { alphabet: 'western', octaves: 'western', tuning: 'western_12TET' }],
   ['la scène déclare son alphabet : il gagne sur le socle',
    'core\nalphabet.sargam\n-----\nS -> sa re', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
-  // Un alphabet SANS registres : l'absence est le sens (« notes nues »), pas un défaut à combler.
-  ['un alphabet sans registres reste sans registres (tabla : 39 frappes nues)',
-   'core\nalphabet.tabla\n-----\nS -> dha', { alphabet: 'tabla', octaves: null, tuning: null }],
+  // Un alphabet qui n'écrit pas ses registres HÉRITE ceux du prototype `alphabet` (Romain, 2026-09-02) ;
+  // ses terminaux restent nus parce qu'il ne résout aucune hauteur — la convention est portée, pas appliquée.
+  ['un alphabet sans registres écrits porte ceux du prototype (tabla : 39 frappes nues, convention héritée)',
+   'core\nalphabet.tabla\n-----\nS -> dha', { alphabet: 'tabla', octaves: 'western', tuning: null }],
   ['la scène déclare des registres : ils gagnent sur ceux de l\'alphabet',
    'core\nalphabet.sargam\noctaves.saptak\n-----\nS -> madhya_sa', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
   ['un acteur déclaré porte les siens',
    'core\nactor voix\n  alphabet.sargam\n  out.audio\n-----\nS -> voix.sa', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
-  // Les deux SEULES absences légitimes.
-  ['hauteur OPAQUE : l\'alphabet reste ABSENT, Kairos le remplit (loi 35)',
-   'core\ntemperament.12TET\n-----\nS -> C4', { alphabet: null, octaves: null, tuning: null }],
-  ['invocation par le canal NEUTRE : ABSENT aussi — le socle ne recouvre jamais un composant invoqué',
-   'core\nalphabet.abc\n-----\nS -> a b', { alphabet: null, octaves: null, tuning: null }],
-  ['une VOIX-CODE n\'a pas de vocabulaire de notes : ABSENT',
-   'core\nactor viz  eval.hydra\n-----\nS -> voix\nvoix -> viz.`osc(4).out()`', { alphabet: null, octaves: null, tuning: null }],
+  // ⛔ LA SEULE absence légitime : un alphabet porté par une ADRESSE (l'adresse remplace l'ardoise).
+  // Les deux autres « absences » qui vivaient ici sont SORTIES le 2026-09-02 (Romain : la surcharge par
+  // niveaux est universelle, aucune exception) — une invocation de scène ne coupe plus la cascade, et
+  // une voix de code est un acteur comme un autre.
+  ['un tempérament invoqué ne coupe pas la cascade : l\'acteur reçoit l\'alphabet que `core` déclare',
+   'core\ntemperament.12TET\n-----\nS -> C4', { alphabet: 'western', octaves: 'western', tuning: 'western_12TET' }],
+  // L'adresse remplace l'ardoise d'alphabet ; les registres, eux, sont ceux que l'alphabet adressé
+  // porte — hérités du prototype, puisque `abc` ne les écrit pas. Portés, pas appliqués : `abc` ne
+  // résout aucune hauteur et ses terminaux restent nus.
+  ['invocation par le canal NEUTRE : l\'alphabet reste ABSENT (l\'adresse remplace l\'ardoise), ses registres hérités sont portés',
+   'core\nalphabet.abc\n-----\nS -> a b', { alphabet: null, octaves: 'western', tuning: null }],
+  ['une VOIX-CODE est un acteur comme un autre : elle hérite l\'alphabet par défaut',
+   'core\nactor viz  eval.hydra\n-----\nS -> voix\nvoix -> viz.`osc(4).out()`', { alphabet: 'western', octaves: 'western', tuning: 'western_12TET' }],
   // ⚠️ L'ACCORDAGE vient de l'ALPHABET, jamais du socle core (Romain 2026-07-29). J'avais laissé
   // cet axe à vide sur 230 scènes en refusant de poser western_12TET sur du sargam — le refus
   // était juste, et la réponse est que je n'ai jamais à le poser : l'alphabet le déclare.
-  ['un alphabet non occidental porte SON accordage, pas celui du socle',
-   'core\nalphabet.gamelan_pelog\n-----\nS -> nem', { alphabet: 'gamelan_pelog', octaves: null, tuning: 'gamelan_pelog' }],
+  ['un alphabet non occidental porte SON accordage, pas celui du socle — et les registres du prototype, qu\'il n\'écrit pas',
+   'core\nalphabet.gamelan_pelog\n-----\nS -> nem', { alphabet: 'gamelan_pelog', octaves: 'western', tuning: 'gamelan_pelog' }],
   ['la scène peut surcharger l\'accordage de l\'alphabet',
    'core\nalphabet.western\ntuning.western_just\n-----\nS -> C4', { alphabet: 'western', octaves: 'western', tuning: 'western_just' }],
 ];
@@ -144,7 +152,7 @@ const sansRaison = [];
 // accordage doit le porter. Une matrice prouve mes deux exemples ; seul le balayage dit que la
 // famille est fermée. C'est aussi lui qui rendrait visible un alphabet ajouté sans accordage.
 const accordageManquant = [];
-let avecAlphabet = 0, opaques = 0, voixCode = 0, avecAccordage = 0;
+let avecAlphabet = 0, opaques = 0, voixCode = 0, avecAccordage = 0, sansDefaut = 0;
 for (const [nom, src] of sources) {
   let o;
   try { o = compiler(src); } catch { continue; }
@@ -179,11 +187,15 @@ for (const [nom, src] of sources) {
     // si. Un lecteur qui n'interroge qu'un étage conclut à l'absence quand la donnée a déménagé.
     const adresse = [...(o.ast.libRefs || []), ...(a.libRefs || [])];
     if (adresse.length) { opaques++; continue; }                             // hauteur opaque : légitime
+    // ⛔ AUCUN DÉFAUT EN PORTÉE — Romain, 2026-09-02 : l'alphabet par défaut est déclaré par `core`,
+    // effectif quand `core` est invoqué. Une scène qui n'invoque ni `core` ni une librairie qui
+    // l'invoque n'a aucun défaut, et son acteur sort sans alphabet POUR CETTE RAISON.
+    if (lesDefauts(o.ast) === null) { sansDefaut++; continue; }
     sansRaison.push(`${nom} → acteur '${a.name}'`);
   }
 }
 console.log(`[ast complet] ${sources.length} scènes · ${avecAlphabet} acteur(s) avec alphabet · `
-  + `${voixCode} voix-code · ${opaques} hauteur opaque · ${avecAccordage} avec accordage · `
+  + `${voixCode} voix-code · ${opaques} hauteur opaque · ${sansDefaut} sans défaut en portée · ${avecAccordage} avec accordage · `
   + `${sansRaison.length} SANS RAISON`);
 ok(accordageManquant.length === 0,
   `3. tout alphabet qui DÉCLARE un accordage doit le voir porté — ${accordageManquant.length} manquant(s) : ${accordageManquant.slice(0, 4).join(' · ')}`);

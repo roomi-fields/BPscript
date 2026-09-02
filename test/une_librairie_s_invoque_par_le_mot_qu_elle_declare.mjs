@@ -38,7 +38,10 @@ const ok = (cond, quoi) => { if (cond) p++; else e.push(quoi); };
 
 const refus = (src) => {
   try {
-    const r = compileToBPxAST(src.endsWith('\n') ? src : `${src}\n`);
+    // `core` en tête quand la scène ne l'écrit pas : sans alphabet en portée, `C4` est refusé
+    // (Romain, 2026-09-02), et ce garde mesure l'invocation, pas l'alphabet.
+    const avecSocle = src.startsWith('core') ? src : `core\n${src}`;
+    const r = compileToBPxAST(avecSocle.endsWith('\n') ? avecSocle : `${avecSocle}\n`);
     const x = (r.errors || [])[0];
     return x ? String(x.message || x) : null;
   } catch (err) { return `EXCEPTION ${err.message}`; }

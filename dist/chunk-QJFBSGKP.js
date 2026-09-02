@@ -1789,7 +1789,7 @@ tuning western_just_c (description:"Western en intonation juste BP3, C-ancr\xE9 
 // tempere \u2014 cette table decrit le systeme de notes, pas la facture d un instrument donne.
 tuning shakuhachi_12TET (description:"Shakuhachi 1.8 shaku \u2014 les cinq doigtes de base sur temperament egal", alphabet:shakuhachi, temperament:12TET, degrees(0, 3, 5, 7, 10))
 
-`, "fichier": "tunings.bpsl" }, { "nom": "types", "format": "bpsl", "texte": "// LES PROTOTYPES DES CATALOGUES.\n//\n// \u26D4 CE FICHIER D\xC9CLARE SON MOT \u2014 `resolves:types`. D\xE9cision Romain, 2026-08-21 : \xAB je comprends\n// qu'il faut mettre des `resolves` dans toutes les librairies, parce que M\xCAME `types` peut \xEAtre\n// invoqu\xE9 en d\xE9claratif \xBB. `lib/scales.bpsl` l'\xE9crit d'ailleurs en t\xEAte depuis sa conversion.\n//\n// \u26A0\uFE0F ET L'EN-T\xCATE DISAIT L'INVERSE \u2014 \xAB ce fichier ne d\xE9clare AUCUN mot d'invocation : rien de ce\n// qu'il porte n'est adressable par un axe \xBB. MESUR\xC9 LE 2026-08-21, LES DEUX MOITI\xC9S \xC9TAIENT\n// FAUSSES : `core` + `types` compile, et `types.gamut` aussi. La phrase d\xE9crivait une intention,\n// pas ce que le compilateur fait \u2014 et elle se lisait comme une mesure parce qu'elle citait un\n// consommateur. Une affirmation fausse sur mon code se retire de mon code.\n//\n// LA LIGNE DE PARTAGE DES GAMMES est la FA\xC7ON DE DIRE LES HAUTEURS : par intervalles exacts, par\n// degr\xE9s dans un temp\xE9rament, ou par assemblage. Trois mani\xE8res de d\xE9finir une \xE9chelle.\n// `directional` d\xE9rive de `degree` : une \xE9chelle dont la mont\xE9e diff\xE8re de la descente EST une\n// \xE9chelle \xE0 degr\xE9s, avec une propri\xE9t\xE9 en plus.\n//\n// \u26D4 UN PROTOTYPE NE D\xC9CLARE PAS CE QUE SES DESCENDANTS PORTERONT \u2014 Romain, 2026-08-25 : \xAB comme il\n// n'y a pas de classes, on ne fait pas de pr\xE9d\xE9finition d'objet vide : l'objet est d\xE9fini quand on\n// l'utilise \xBB. Il EXISTE, et ce qu'un exemplaire porte, il le porte. La nature d'un champ se lit\n// dans l'\xE9criture de l'exemplaire : une parenth\xE8se de membres nus est une suite, un deux-points est\n// une valeur. Un nom nu vaut un objet vide, et le type voyage.\n//\n// \u26A0\uFE0F LA LIGNE RESTE, POUR UNE RAISON MUSICALE : `interval`, `degree` et `composite` sont trois\n// FA\xC7ONS DE DIRE une gamme, pas des gammes. Les retirer obligerait \xE0 \xE9lire une gamme arbitraire\n// comme anc\xEAtre de toutes les autres. Ce qui reste est le seul r\xF4le prototypal r\xE9el \u2014 donner un\n// parent nomm\xE9 \xE0 `interval maqam_sikah (\u2026)`.\n\n// @documented\ndef types (resolves:types)\n\ndef scale (scope(scene))\nscale interval\nscale degree\ndegree directional\nscale composite\n\n// Un alphabet se d\xE9clare en t\xEAte de sc\xE8ne.\ndef alphabet (scope(scene))\n\n// Les prototypes des catalogues qui declarent leurs entrees par leur type. Nus : ce qu une entree\n// porte, elle le porte ; aucune portee n est posee ici sans arbitrage.\ndef temperament\ndef tuning\ndef octaves\ndef sound\ndef voice\ndef midi_default\n\n// Les types de d\xE9claration du socle : ce qu'une librairie ou une sc\xE8ne \xE9crit en t\xEAte d'une ligne\n// pour dire ce qu'elle d\xE9clare. Ils sont en port\xE9e quand ce fichier l'est.\ndef control\ndef addresskey\ndef destination\ndef enum\ndef flag\ndef symbol\ndef actor\n\n// Les conventions de lecture d'une variable. `signal` est un flux de nombres sans convention \u2014 le\n// cas ordinaire ; les trois autres en d\xE9rivent : un signal lu comme une hauteur, comme une position\n// dans un cycle, comme un \xE9tat haut ou bas.\ndef signal\nsignal pitch\nsignal phase\nsignal logic\n", "fichier": "types.bpsl" }, { "nom": "variation", "format": "bpsl", "texte": `// LA LIBRAIRIE \xAB variation \xBB \u2014 \xE9crite dans le langage qu'elle sert.
+`, "fichier": "tunings.bpsl" }, { "nom": "types", "format": "bpsl", "texte": "// LES PROTOTYPES DES CATALOGUES.\n//\n// \u26D4 CE FICHIER D\xC9CLARE SON MOT \u2014 `resolves:types`. D\xE9cision Romain, 2026-08-21 : \xAB je comprends\n// qu'il faut mettre des `resolves` dans toutes les librairies, parce que M\xCAME `types` peut \xEAtre\n// invoqu\xE9 en d\xE9claratif \xBB. `lib/scales.bpsl` l'\xE9crit d'ailleurs en t\xEAte depuis sa conversion.\n//\n// \u26A0\uFE0F ET L'EN-T\xCATE DISAIT L'INVERSE \u2014 \xAB ce fichier ne d\xE9clare AUCUN mot d'invocation : rien de ce\n// qu'il porte n'est adressable par un axe \xBB. MESUR\xC9 LE 2026-08-21, LES DEUX MOITI\xC9S \xC9TAIENT\n// FAUSSES : `core` + `types` compile, et `types.gamut` aussi. La phrase d\xE9crivait une intention,\n// pas ce que le compilateur fait \u2014 et elle se lisait comme une mesure parce qu'elle citait un\n// consommateur. Une affirmation fausse sur mon code se retire de mon code.\n//\n// LA LIGNE DE PARTAGE DES GAMMES est la FA\xC7ON DE DIRE LES HAUTEURS : par intervalles exacts, par\n// degr\xE9s dans un temp\xE9rament, ou par assemblage. Trois mani\xE8res de d\xE9finir une \xE9chelle.\n// `directional` d\xE9rive de `degree` : une \xE9chelle dont la mont\xE9e diff\xE8re de la descente EST une\n// \xE9chelle \xE0 degr\xE9s, avec une propri\xE9t\xE9 en plus.\n//\n// \u26D4 UN PROTOTYPE NE D\xC9CLARE PAS CE QUE SES DESCENDANTS PORTERONT \u2014 Romain, 2026-08-25 : \xAB comme il\n// n'y a pas de classes, on ne fait pas de pr\xE9d\xE9finition d'objet vide : l'objet est d\xE9fini quand on\n// l'utilise \xBB. Il EXISTE, et ce qu'un exemplaire porte, il le porte. La nature d'un champ se lit\n// dans l'\xE9criture de l'exemplaire : une parenth\xE8se de membres nus est une suite, un deux-points est\n// une valeur. Un nom nu vaut un objet vide, et le type voyage.\n//\n// \u26A0\uFE0F LA LIGNE RESTE, POUR UNE RAISON MUSICALE : `interval`, `degree` et `composite` sont trois\n// FA\xC7ONS DE DIRE une gamme, pas des gammes. Les retirer obligerait \xE0 \xE9lire une gamme arbitraire\n// comme anc\xEAtre de toutes les autres. Ce qui reste est le seul r\xF4le prototypal r\xE9el \u2014 donner un\n// parent nomm\xE9 \xE0 `interval maqam_sikah (\u2026)`.\n\n// @documented\ndef types (resolves:types)\n\ndef scale (scope(scene))\nscale interval\nscale degree\ndegree directional\nscale composite\n\n// Un alphabet se d\xE9clare en t\xEAte de sc\xE8ne. Il porte l'octaviation par d\xE9faut : un alphabet qui\n// n'\xE9crit pas la sienne h\xE9rite de celle-ci, et celui qui l'\xE9crit la surcharge.\ndef alphabet (scope(scene), octaves:western)\n\n// Les prototypes des catalogues qui declarent leurs entrees par leur type. Nus : ce qu une entree\n// porte, elle le porte ; aucune portee n est posee ici sans arbitrage.\ndef temperament\ndef tuning\ndef octaves\ndef sound\ndef voice\ndef midi_default\n\n// Les types de d\xE9claration du socle : ce qu'une librairie ou une sc\xE8ne \xE9crit en t\xEAte d'une ligne\n// pour dire ce qu'elle d\xE9clare. Ils sont en port\xE9e quand ce fichier l'est.\ndef control\ndef addresskey\ndef destination\ndef enum\ndef flag\ndef symbol\ndef actor\n\n// Les conventions de lecture d'une variable. `signal` est un flux de nombres sans convention \u2014 le\n// cas ordinaire ; les trois autres en d\xE9rivent : un signal lu comme une hauteur, comme une position\n// dans un cycle, comme un \xE9tat haut ou bas.\ndef signal\nsignal pitch\nsignal phase\nsignal logic\n", "fichier": "types.bpsl" }, { "nom": "variation", "format": "bpsl", "texte": `// LA LIBRAIRIE \xAB variation \xBB \u2014 \xE9crite dans le langage qu'elle sert.
 // Convertie depuis le JSON : le bundle en rend la M\xCAME donn\xE9e, les consommateurs ne
 // voient aucun changement. C'est l'AUTHORING qui change, pas la donn\xE9e.
 //
@@ -2600,6 +2600,25 @@ function index() {
       for (const nom of entreesDe(contenu)) entree(nom, contenu[nom], place);
     }
   }
+  const parNom = (nom) => objets2.get(nom) || [];
+  const prototypeDe = (nom) => {
+    const candidats = parNom(nom);
+    if (candidats.length === 1) return candidats[0];
+    const racines = candidats.filter((c) => !c.derive);
+    return racines.length === 1 ? racines[0] : null;
+  };
+  for (const liste of objets2.values()) {
+    for (const o of liste) {
+      if (!o.derive) continue;
+      const vus = /* @__PURE__ */ new Set([o]);
+      let proto = prototypeDe(o.derive);
+      while (proto && !vus.has(proto)) {
+        vus.add(proto);
+        for (const [k, v] of Object.entries(proto.membres)) if (!(k in o.membres)) o.membres[k] = v;
+        proto = proto.derive ? prototypeDe(proto.derive) : null;
+      }
+    }
+  }
   _index = { familles: familles2, objets: objets2 };
   _versionIndexee = version;
   return _index;
@@ -2641,8 +2660,36 @@ function objetUnique(nom) {
 function leSchema() {
   return objetUnique("schema");
 }
-function lesDefauts() {
-  return objetUnique("components");
+function lesDefauts(ast) {
+  const o = ast ? objetEnPortee("components", ast) : objet("components");
+  if (!o) return null;
+  if (o.ambigu) throw new Error(`'components' est d\xE9clar\xE9 par plusieurs librairies \u2014 ${o.ambigu.join(", ")}`);
+  return o.membres;
+}
+function motsInvoques(ast) {
+  const LIBS = leRegistre();
+  const apportePar = /* @__PURE__ */ new Map();
+  for (const [cle, lib] of Object.entries(LIBS)) {
+    if (!lib || typeof lib !== "object") continue;
+    const mot = motDe(cle.split("/")[0], LIBS[cle.split("/")[0]]);
+    if (!apportePar.has(mot)) apportePar.set(mot, /* @__PURE__ */ new Set());
+    for (const a of Array.isArray(lib.apporte) ? lib.apporte : []) apportePar.get(mot).add(a);
+  }
+  const vus = /* @__PURE__ */ new Set();
+  const file = (ast && ast.directives || []).map((d) => d && d.name).filter(Boolean);
+  while (file.length) {
+    const mot = file.shift();
+    if (vus.has(mot)) continue;
+    vus.add(mot);
+    for (const a of apportePar.get(mot) || []) file.push(a);
+  }
+  return vus;
+}
+function objetEnPortee(nom, ast) {
+  const o = objet(nom);
+  if (!o) return null;
+  if (o.ambigu) throw new Error(`'${nom}' est d\xE9clar\xE9 par plusieurs librairies \u2014 ${o.ambigu.join(", ")} \u2014 et le compilateur ne peut pas choisir`);
+  return motsInvoques(ast).has(o.famille) ? o : null;
 }
 
 // src/transpiler/constants.js
@@ -5473,12 +5520,12 @@ function parse(tokens, opts = {}) {
             keyTok
           );
         }
-        const motsInvoques = /* @__PURE__ */ new Set();
+        const motsInvoques2 = /* @__PURE__ */ new Set();
         for (const [fichier, lib] of Object.entries(libCtx._libs || {})) {
-          motsInvoques.add(fichier);
-          if (lib && typeof lib.resolves === "string" && lib.resolves) motsInvoques.add(lib.resolves);
+          motsInvoques2.add(fichier);
+          if (lib && typeof lib.resolves === "string" && lib.resolves) motsInvoques2.add(lib.resolves);
         }
-        if (motsInvoques.has(key)) {
+        if (motsInvoques2.has(key)) {
           throw new ParseError(
             `'${key}.${composant}:\u2026' \u2014 la librairie '${key}' est bien invoqu\xE9e, et elle ne d\xE9clare AUCUN contr\xF4le : rien ne s'y affecte par une parenth\xE8se. Le pr\xE9fixe est bon, la librairie n'est pas de celles qui portent des contr\xF4les.`,
             keyTok

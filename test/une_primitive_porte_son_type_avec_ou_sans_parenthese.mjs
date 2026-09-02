@@ -30,7 +30,7 @@ const lire = (source) => {
   try {
     // ⛔ `types` EST INVOQUÉ EN TÊTE — pas de socle implicite (Romain, 2026-09-02) : les types de
     // déclaration sont des objets de `lib/types.bpsl`, en portée quand ce fichier l'est.
-    const r = compileToBPxAST(`types\n${source}\n-----\nS -> C4\n`);
+    const r = compileToBPxAST(`core\n${source}\n-----\nS -> C4\n`);
     return { erreurs: (r.errors || []).map((x) => String(x.message ?? x)), v: (r.ast?.vars || [])[0] };
   } catch (err) { return { erreurs: [String(err.message)], v: null }; }
 };

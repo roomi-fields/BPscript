@@ -130,6 +130,33 @@ function index() {
       for (const nom of entreesDe(contenu)) entree(nom, contenu[nom], place);
     }
   }
+  // ⛔ LA DÉRIVATION SE RÉSOUT À LA LECTURE — un exemplaire porte les membres de sa chaîne de
+  // prototypes qu'il n'écrit pas. Le registre PORTE la structure et ne recopie pas l'héritage
+  // (Romain, 2026-08-29) ; c'est donc ici, à la porte, que `alphabet.arabic` reçoit le `scope` et
+  // l'`octaves` de `def alphabet`. Décision de Romain, 2026-09-02 : l'octaviation par défaut « doit
+  // être spécifiée dans le prototype d'alphabet », et la section joint le membre hérité.
+  // ⚠️ LE PROTOTYPE EST UNE RACINE : un nom de type peut aussi être celui d'un contrôle (`scale` est
+  // le prototype de `types` ET un contrôle de `transpo`) ; parmi les candidats, celui qui ne dérive
+  // de rien est le prototype. Une chaîne qui boucle s'arrête où elle repasse.
+  const parNom = (nom) => objets.get(nom) || [];
+  const prototypeDe = (nom) => {
+    const candidats = parNom(nom);
+    if (candidats.length === 1) return candidats[0];
+    const racines = candidats.filter((c) => !c.derive);
+    return racines.length === 1 ? racines[0] : null;
+  };
+  for (const liste of objets.values()) {
+    for (const o of liste) {
+      if (!o.derive) continue;
+      const vus = new Set([o]);
+      let proto = prototypeDe(o.derive);
+      while (proto && !vus.has(proto)) {
+        vus.add(proto);
+        for (const [k, v] of Object.entries(proto.membres)) if (!(k in o.membres)) o.membres[k] = v;
+        proto = proto.derive ? prototypeDe(proto.derive) : null;
+      }
+    }
+  }
   _index = { familles, objets };
   _versionIndexee = version;
   return _index;
@@ -199,5 +226,50 @@ function objetUnique(nom) {
 }
 /** Le schéma structurel — les membres de l'objet `schema` en portée du registre, ou `null` sans lui. */
 export function leSchema() { return objetUnique('schema'); }
-/** Les défauts de scène — les membres de l'objet `components` (alphabet, tuning, transport, eval), ou `null`. */
-export function lesDefauts() { return objetUnique('components'); }
+/**
+ * Les défauts de scène — les membres de l'objet `components` (alphabet, tuning, transport, eval),
+ * s'il est EN PORTÉE de la scène : sa librairie invoquée, directement ou par une autre. Sans scène,
+ * le registre entier fait portée (le vocabulaire, l'éditeur).
+ */
+export function lesDefauts(ast) {
+  const o = ast ? objetEnPortee('components', ast) : objet('components');
+  if (!o) return null;
+  if (o.ambigu) throw new Error(`'components' est déclaré par plusieurs librairies — ${o.ambigu.join(', ')}`);
+  return o.membres;
+}
+
+/**
+ * CE QU'UNE SCÈNE INVOQUE — les mots de ses invocations, et ceux que chaque librairie invoquée
+ * invoque à son tour (`apporte`), jusqu'au bout. Ce qu'une librairie déclare est en portée quand elle
+ * est invoquée, directement ou par une librairie qui l'invoque : c'est le principe d'invocation, le
+ * même que le parseur applique aux types du socle. Il vaut pour les DÉFAUTS de scène : `core` déclare
+ * un alphabet par défaut, effectif quand `core` est invoqué, surchargé par la scène ou l'acteur qui
+ * déclare le sien (Romain, 2026-09-02).
+ */
+export function motsInvoques(ast) {
+  const LIBS = leRegistre();
+  const apportePar = new Map();
+  for (const [cle, lib] of Object.entries(LIBS)) {
+    if (!lib || typeof lib !== 'object') continue;
+    const mot = motDe(cle.split('/')[0], LIBS[cle.split('/')[0]]);
+    if (!apportePar.has(mot)) apportePar.set(mot, new Set());
+    for (const a of (Array.isArray(lib.apporte) ? lib.apporte : [])) apportePar.get(mot).add(a);
+  }
+  const vus = new Set();
+  const file = ((ast && ast.directives) || []).map((d) => d && d.name).filter(Boolean);
+  while (file.length) {
+    const mot = file.shift();
+    if (vus.has(mot)) continue;
+    vus.add(mot);
+    for (const a of apportePar.get(mot) || []) file.push(a);
+  }
+  return vus;
+}
+
+/** Un objet par son nom, s'il est EN PORTÉE de la scène — sa famille invoquée — sinon `null`. */
+export function objetEnPortee(nom, ast) {
+  const o = objet(nom);
+  if (!o) return null;
+  if (o.ambigu) throw new Error(`'${nom}' est déclaré par plusieurs librairies — ${o.ambigu.join(', ')} — et le compilateur ne peut pas choisir`);
+  return motsInvoques(ast).has(o.famille) ? o : null;
+}

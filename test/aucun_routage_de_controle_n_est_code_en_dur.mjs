@@ -110,7 +110,8 @@ ok(Array.isArray(LIBS?.engine?.engine?.scan?.values) && LIBS.engine.engine.scan.
   // compilateur (`bpxAst.js:applyEnvironmentDefaults`), pas comparé : aucune recherche de
   // comparaison littérale ne pouvait le trouver, et c'est le garde des défauts d'environnement qui
   // l'a fait tomber. Il s'éprouve donc ici par la SORTIE, seule façon de voir un nom qu'on écrit.
-  const envAst = compileToBPxAST('-----\nS -> C4', { tempo: 90 }).ast;
+  // `core` en tête : sans lui, aucun alphabet n'est en portée et `C4` est refusé (Romain, 2026-09-02).
+  const envAst = compileToBPxAST('core\n-----\nS -> C4', { tempo: 90 }).ast;
   const envDirs = (envAst?.directives || []).filter((d) => d && d.fromEnvironment);
   ok(envDirs.length === 1 && envDirs[0].name === 'tempo',
      `porte 'défaut d'environnement' : le compilateur doit INSCRIRE le nom 'tempo' ; reçu `

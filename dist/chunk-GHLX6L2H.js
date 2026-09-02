@@ -15,21 +15,21 @@ import {
   resolveActorAlphabet,
   resolveActorAlphabetSource,
   universeControlNames
-} from "./chunk-ACCNGR3D.js";
+} from "./chunk-QJFBSGKP.js";
 import {
   LexError,
   tokenize
 } from "./chunk-3Y64WDZ4.js";
 import {
   LIBS
-} from "./chunk-NV6SJXIW.js";
+} from "./chunk-6IDJ6MK2.js";
 
 // src/transpiler/actorResolver.js
 function expandAlphabetTerminals(alphabetLib, octavesOverride) {
   const terminals = /* @__PURE__ */ new Set();
   if (!alphabetLib || !nomsDeTerminaux(alphabetLib)) return terminals;
   const octaveConvention = octavesOverride != null ? octavesOverride : alphabetLib.octaves;
-  const candidate = octaveConvention ? loadLib("octaves", octaveConvention) : null;
+  const candidate = octaveConvention && alphabetLib.resolvesPitch !== false ? loadLib("octaves", octaveConvention) : null;
   const octaveDef = candidate && Array.isArray(candidate.registers) ? candidate : null;
   const alts = alphabetLib.alterations && typeof alphabetLib.alterations === "object" && !Array.isArray(alphabetLib.alterations) ? Object.keys(alphabetLib.alterations) : Array.isArray(alphabetLib.alterations) && alphabetLib.alterations.length > 0 ? alphabetLib.alterations : [""];
   for (const note of nomsDeTerminaux(alphabetLib)) {
@@ -52,14 +52,13 @@ function alphabetHerite(ast) {
   if (sceneAlpha) {
     return resolveActorAlphabet(sceneAlpha.subkey, ast.directives) ? sceneAlpha.subkey : null;
   }
-  if (ast.libRefs && ast.libRefs.length) return null;
-  return (lesDefauts() || {}).alphabet || null;
+  return (lesDefauts(ast) || {}).alphabet || null;
 }
 function octavesHerite(ast, alphabetKey) {
   const connu = (nom) => {
     if (!nom) return false;
-    const o = objet(`octaves.${nom}`);
-    return !!(o && !o.ambigu);
+    const o2 = objet(`octaves.${nom}`);
+    return !!(o2 && !o2.ambigu);
   };
   const sceneOct = (ast.directives || []).find((d) => d.name === "octaves" && (d.subkey || d.runtime));
   if (sceneOct) {
@@ -67,8 +66,9 @@ function octavesHerite(ast, alphabetKey) {
     return connu(nom) ? nom : void 0;
   }
   if (!alphabetKey) return void 0;
-  const lib = resolveActorAlphabet(alphabetKey, ast.directives);
-  return connu(lib && lib.octaves) ? lib.octaves : void 0;
+  const o = objet(`alphabet.${alphabetKey}`);
+  const oct = o && !o.ambigu ? o.membres.octaves : void 0;
+  return connu(oct) ? oct : void 0;
 }
 function tuningHerite(ast, alphabetKey) {
   const connu = (nom) => !!(nom && loadLib("tuning", nom));
@@ -78,8 +78,8 @@ function tuningHerite(ast, alphabetKey) {
   const lib = resolveActorAlphabet(alphabetKey, ast.directives);
   return connu(lib && lib.tuning) ? lib.tuning : void 0;
 }
-function defaultActorTransport() {
-  return (lesDefauts() || {}).transport || "audio";
+function defaultActorTransport(ast) {
+  return (lesDefauts(ast) || {}).transport || "audio";
 }
 function sortieHeritee(ast) {
   const sceneOut = (ast.directives || []).find((d) => d.name === "out" && d.subkey);
@@ -98,7 +98,7 @@ function sortieHeritee(ast) {
   }
   if (sceneOut) return { key: sceneOut.subkey, params: sceneOut.params || {}, conflit: null };
   if (alphaBinding) return { key: alphaBinding.runtime, params: {}, conflit: null };
-  return { key: defaultActorTransport(), params: {}, conflit: null };
+  return { key: defaultActorTransport(ast), params: {}, conflit: null };
 }
 function evalHerite(ast) {
   const sceneEval = (ast.directives || []).find((d) => d.name === "eval" && d.subkey);
@@ -120,8 +120,7 @@ function resolveActors(ast) {
     const props = actor.properties;
     let alphabetKey = props.alphabet;
     const herite = [];
-    const isCodeVoice = !!props.eval;
-    if (!alphabetKey && !isCodeVoice) {
+    if (!alphabetKey) {
       alphabetKey = alphabetHerite(ast);
       if (alphabetKey) {
         props.alphabet = alphabetKey;
@@ -707,7 +706,6 @@ function validateTerminals(ast) {
   const { terminaux: known, aUnAlphabet: anyAlphabet } = terminauxEnPortee(ast);
   const declared = nomsDeclares(ast);
   errors.push(...validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet));
-  if (!anyAlphabet) return errors;
   const seen = /* @__PURE__ */ new Set();
   const COMPOSITES = ["voices", "elements", "content", "symbol", "triggers", "primary", "secondaries"];
   const verifier = (el) => {
@@ -734,7 +732,7 @@ function validateTerminals(ast) {
       const ligne = (ast.directives || []).find((d) => d && d.type === "Directive" && d.name === el.name && typeof d.runtime === "string");
       const cause = ligne && canalFautif(ligne.runtime);
       errors.push({
-        message: cause ? `'${el.name}:${ligne.runtime}' d\xE9clare un terminal, et ${cause} La d\xE9claration s'\xE9crit '<nom>:<canal>' \u2014 le terminal n'est pas en cause.` : reste && reste !== el.name ? `terminal '${el.name}' non d\xE9clar\xE9 \u2014 segmentation bloqu\xE9e sur '${reste}', absent des alphabets en port\xE9e` : `terminal '${el.name}' non d\xE9clar\xE9 \u2014 absent des alphabets en port\xE9e`,
+        message: cause ? `'${el.name}:${ligne.runtime}' d\xE9clare un terminal, et ${cause} La d\xE9claration s'\xE9crit '<nom>:<canal>' \u2014 le terminal n'est pas en cause.` : !anyAlphabet ? `terminal '${el.name}' non d\xE9clar\xE9 \u2014 aucun alphabet en port\xE9e : invoquer 'core', qui d\xE9clare l'alphabet par d\xE9faut, ou d\xE9clarer un alphabet` : reste && reste !== el.name ? `terminal '${el.name}' non d\xE9clar\xE9 \u2014 segmentation bloqu\xE9e sur '${reste}', absent des alphabets en port\xE9e` : `terminal '${el.name}' non d\xE9clar\xE9 \u2014 absent des alphabets en port\xE9e`,
         line: el.line
       });
     }
@@ -910,7 +908,7 @@ function annotateBackticks(ast) {
   const acteurEval = {};
   for (const a of ast.actors || []) if (a.properties && a.properties.eval) acteurEval[a.name] = a.properties.eval;
   const sceneEval = (ast.directives || []).find((d) => d.name === "eval" && (d.subkey || d.runtime));
-  const socleEval = (lesDefauts() || {}).eval;
+  const socleEval = (lesDefauts(ast) || {}).eval;
   const parDefaut = sceneEval && (sceneEval.subkey || sceneEval.runtime) || socleEval || null;
   const resoudre2 = (els) => {
     for (const el of els || []) {

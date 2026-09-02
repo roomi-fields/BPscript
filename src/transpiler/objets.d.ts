@@ -11,7 +11,10 @@ export interface Objet {
   famille: string;
   /** L'objet dont il dérive (le type en tête de sa déclaration), ou `null` pour une racine. */
   derive: string | null;
-  /** Ses membres propres, tels que la donnée les porte. */
+  /**
+   * Ses membres, RÉSOLUS : ceux qu'il écrit, et ceux de sa chaîne de prototypes qu'il n'écrit pas —
+   * ce qu'un exemplaire écrit gagne, ce qu'il n'écrit pas vient de son prototype. `derive` dit d'où.
+   */
   membres: Record<string, unknown>;
   /** La place du catalogue où il est rangé (`controls`, `objects`…), ou `null` à la racine. */
   place: string | null;

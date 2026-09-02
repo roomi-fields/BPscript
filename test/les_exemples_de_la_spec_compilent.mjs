@@ -574,8 +574,15 @@ for (const p of SPECS) {
       // unique et ne se pose que si le bloc n'a pas déjà le sien.
       const aDelimiteur = /^-----/m.test(src);
       const socle = (aCore ? '' : 'core\n') + (aAlphabet ? '' : 'alphabet.western\n');
+      // ⚠️ UN BLOC QUI DÉCLARE DES ACTEURS REÇOIT UNE NOTE PRÉFIXÉE PAR LE PREMIER. Depuis le
+      // 2026-09-02 tout acteur hérite l'alphabet que `core` déclare (Romain : aucune exception), donc
+      // deux acteurs d'un même bloc portent `western` et un `C4` nu est AMBIGU — c'est le principe de
+      // désambiguïsation du langage, pas un défaut de la bible. Le harnais préfixe, comme l'auteur le
+      // ferait ; sans acteur déclaré, la note nue va à l'acteur implicite.
+      const premierActeur = (src.match(/^actor\s+([A-Za-z_][\w]*)/m) || [])[1];
+      const note = premierActeur ? `${premierActeur}.C4` : 'C4';
       const texte = socle + (aRegle && !aDelimiteur ? '-----\n' : '') + src
-                  + (aRegle ? '\n' : '\nmode:ord\n-----\nS -> C4\n');
+                  + (aRegle ? '\n' : `\nmode:ord\n-----\nS -> ${note}\n`);
       let msg;
       try { msg = (compileToBPxAST(texte).errors || []).map((e) => e.message || e).join(' | '); }
       catch (e) { msg = e.message; }

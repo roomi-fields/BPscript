@@ -44,18 +44,22 @@ console.log('\n=== DÉFAUT @core : aucun alphabet de scène → socle western ==
   assert('notes attribuées à mavoix', r.notes.every((n) => n.act === 'mavoix'), JSON.stringify(r.notes));
 }
 
-console.log('\n=== @MINE : hauteur opaque de scène → alphabet ABSENT (Kairos résout), PAS de rejet ===');
+// ⛔ LES DEUX EXCEPTIONS QUI VIVAIENT ICI SONT SORTIES — Romain, 2026-09-02 : la surcharge par niveaux
+// est universelle. Une invocation de scène (un tempérament) ne coupe plus la cascade, et une voix de
+// code est un acteur comme un autre : elle hérite. Ce que ce fichier mesurait comme « absent » est
+// désormais l'alphabet que `core` déclare.
+console.log('\n=== TEMPÉRAMENT INVOQUÉ : la cascade ne se coupe pas, l\'acteur reçoit le défaut de core ===');
 {
-  const r = scene('core\ntemperament.12TET\nactor mavoix out.audio\n-----\nvoice -> sa re\n');
-  assert('0 erreur (compile, plus de rejet §71)', r.errors.length === 0, r.errors.join(' | '));
-  assert('alphabet ABSENT (opaque, loi 35 → aval)', r.alphabet === undefined, String(r.alphabet));
+  const r = scene('core\ntemperament.12TET\nactor mavoix out.audio\n-----\nvoice -> C4 D4\n');
+  assert('0 erreur', r.errors.length === 0, r.errors.join(' | '));
+  assert('alphabet = western (défaut de core, l\'invocation ne le coupe pas)', r.alphabet === 'western', String(r.alphabet));
   assert('transport présent (canon audio)', r.transport === 'audio', String(r.transport));
 }
 
-console.log('\n=== VOIX-CODE (eval) : PAS d\'héritage d\'alphabet ===');
+console.log('\n=== VOIX-CODE (eval) : un acteur comme un autre, elle hérite ===');
 {
   const r = scene('core\nactor stru eval.strudel\n-----\nS -> voix\nvoix -> `strudel: x`\n');
-  assert('alphabet ABSENT (voix-code, pas de vocabulaire de notes)', r.alphabet === undefined, String(r.alphabet));
+  assert('alphabet = western (hérité, aucune exception)', r.alphabet === 'western', String(r.alphabet));
 }
 
 console.log(`\n${ko === 0 ? 'OK' : 'ÉCHEC'} — ${ok} passés, ${ko} échoués`);

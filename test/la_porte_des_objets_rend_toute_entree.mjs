@@ -124,6 +124,32 @@ for (const [cle, place, nom] of attendues) {
      `4. 'alphabet.western' est documenté, 'alphabet.abc' ne l'est pas — reçu ${JSON.stringify([objet('alphabet.western').documented, objet('alphabet.abc').documented])}`);
 }
 
+// ── 5. LA DÉRIVATION SE RÉSOUT À LA PORTE — un objet porte les membres de son prototype qu'il n'écrit pas
+// Romain, 2026-09-02 : ce qu'un exemplaire écrit gagne, ce qu'il n'écrit pas vient de son prototype, à tous
+// les niveaux ; l'octaviation par défaut vit dans `def alphabet`, et chaque alphabet en hérite.
+{
+  let herites = 0;
+  for (const o of objets()) {
+    if (!o.derive) continue;
+    const proto = objet(o.derive);
+    if (!proto || proto.ambigu) continue;
+    for (const [k, v] of Object.entries(proto.membres)) {
+      const brut = (LIBS[o.famille === 'core' ? 'core' : Object.keys(LIBS).find((c) => ((LIBS[c] && LIBS[c].resolves) || c) === o.famille && (o.place ? LIBS[c][o.place] && LIBS[c][o.place][o.nom] : LIBS[c][o.nom]))] || {});
+      const propre = o.place ? brut[o.place] && brut[o.place][o.nom] : brut[o.nom];
+      if (propre && k in propre) continue;   // écrit par l'exemplaire : il gagne
+      herites++;
+      ok(k in o.membres && JSON.stringify(o.membres[k]) === JSON.stringify(v),
+         `5. '${o.chaine.join('.')}' dérive de '${o.derive}' et n'écrit pas '${k}' : il doit le porter tel que le prototype le déclare`);
+    }
+  }
+  ok(herites >= 20, `5. SOCLE : ${herites} membre(s) hérité(s) vérifié(s) — la mesure du 2026-09-02 en donnait 39 (scope ×24, octaves ×15)`);
+  const arabic = objet('alphabet.arabic');
+  ok(arabic && arabic.membres.octaves === 'western' && JSON.stringify(arabic.membres.scope) === '["scene"]',
+     `5. 'alphabet.arabic' porte 'octaves:western' et 'scope' hérités — reçu ${JSON.stringify(arabic && arabic.membres)}`);
+  const sargam = objet('alphabet.sargam');
+  ok(sargam && sargam.membres.octaves === 'saptak', `5. 'alphabet.sargam' écrit ses octaves et les garde — reçu ${JSON.stringify(sargam && sargam.membres.octaves)}`);
+}
+
 ok(passe >= 2000, `le garde doit avoir EXAMINÉ (${passe} assertions)`);
 if (echecs.length) {
   console.error(`[porte des objets] ${echecs.length} ÉCHEC(S) :`);
