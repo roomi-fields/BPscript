@@ -97,6 +97,11 @@ const SECTIONS = ['controls', 'engine', 'subgrammar'];
 const SANS_GESTE_NATIF = new Set([
   'wave', 'attack', 'release', 'detune', 'filter', 'filterQ',   // sortie audio
   'mode', 'scan', 'weight', 'on_fail', 'meter',                 // dérivation BPScript
+  // Les neuf réglages de tête de scène, contrôles depuis le 2026-09-02 (Romain : « le rangement ne
+  // type pas »). Ce sont des RÉGLAGES du moteur natif (Seed, MaxItemsProduce, AllItems, Improvize,
+  // Quantization, Qclock), pas des procédures `_xxx` : aucun nom natif n'est déclaré tant qu'il
+  // n'est pas mesuré, et le frontal BP3 les lit par son chemin dédié, comme `mode` et `weight`.
+  'seed', 'maxitems', 'items', 'allitems', 'all_items', 'improvize', 'quantization', 'qclock', 'timepatterns',
   'offvel', 'pressure', 'mute', 'unmute', 'panic', 'sync', 'cc', // MIDI, gestes écrits autrement
   'scaleshift',                                                  // transposition, calcul BPScript
   // ⚠️ `transpose` EST LE CAS QUI M'A REPRIS, et il vaut d'être nommé ici. Le mot `_transpose`

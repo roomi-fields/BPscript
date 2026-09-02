@@ -19,21 +19,26 @@
 //
 // ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
 //    voyage pas jusqu'aux consommateurs, une clé si.
+//
+// Chaque voix se déclare par son type en tête, `voice` — le prototype vit dans `types`, invoqué
+// ci-dessous. La clé `section` dit seulement la place du paquet où elle se range.
 
-def voices (documented:true, resolvedBy:Kairos, name:voices, objects(
-  wobble(audio:"`js: (t, dur, env) => (2*((t*env.pitch)%1)-1) * (0.55+0.45*Math.sin(2*Math.PI*5.5*t)) * Math.max(0,1-t/dur)`"),
-  fatbass(audio:"`js: (t, dur, env) => ((2*((t*env.pitch)%1)-1) + (2*((t*env.pitch*1.01)%1)-1)) * 0.4 * Math.max(0,1-t/dur)`",
-          for(sub37(device(preset:bass-init, glide:0.2, osc1-wave:saw)))),
-  bayan_open(audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; const b = 2*(h-Math.floor(h))-1; return (Math.sin(2*Math.PI*80*t)*0.8 + b*0.2) * Math.exp(-t/0.35); }`"),
-  bayan_muted(audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; const b = 2*(h-Math.floor(h))-1; return (Math.sin(2*Math.PI*120*t)*0.5 + b*0.5) * Math.exp(-t/0.08); }`"),
-  dayan_ring(audio:"`js: (t) => (Math.sin(2*Math.PI*320*t) + Math.sin(2*Math.PI*480*t)) * 0.5 * Math.exp(-t/0.4)`"),
-  dayan_tap(audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; return (2*(h-Math.floor(h))-1) * Math.exp(-t/0.06); }`"),
-  dayan_dry(audio:"`js: (t) => (Math.sin(2*Math.PI*494*t) + Math.sin(2*Math.PI*587*t)) * 0.5 * Math.exp(-t/0.06)`"),
-  dayan_open(audio:"`js: (t) => (Math.sin(2*Math.PI*392*t) + Math.sin(2*Math.PI*494*t) + Math.sin(2*Math.PI*523*t) + Math.sin(2*Math.PI*587*t)) * 0.25 * Math.exp(-t/0.22)`"),
-  dummy_csound_a(audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`"),
-  dummy_csound_b(audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`"),
-  dummy_csound_c(audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`"),
-  dummy_csound_d(audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`"),
-  dummy_csound_e(audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`"),
-  dummy_csound_f(audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`"),
-  dummy_csound_midiobject(audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`")), resolves:voice)
+types
+
+def voices (documented:true, resolvedBy:Kairos, name:voices, resolves:voice)
+
+voice wobble (audio:"`js: (t, dur, env) => (2*((t*env.pitch)%1)-1) * (0.55+0.45*Math.sin(2*Math.PI*5.5*t)) * Math.max(0,1-t/dur)`", section:objects)
+voice fatbass (audio:"`js: (t, dur, env) => ((2*((t*env.pitch)%1)-1) + (2*((t*env.pitch*1.01)%1)-1)) * 0.4 * Math.max(0,1-t/dur)`", for(sub37(device(preset:bass-init, glide:0.2, osc1-wave:saw))), section:objects)
+voice bayan_open (audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; const b = 2*(h-Math.floor(h))-1; return (Math.sin(2*Math.PI*80*t)*0.8 + b*0.2) * Math.exp(-t/0.35); }`", section:objects)
+voice bayan_muted (audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; const b = 2*(h-Math.floor(h))-1; return (Math.sin(2*Math.PI*120*t)*0.5 + b*0.5) * Math.exp(-t/0.08); }`", section:objects)
+voice dayan_ring (audio:"`js: (t) => (Math.sin(2*Math.PI*320*t) + Math.sin(2*Math.PI*480*t)) * 0.5 * Math.exp(-t/0.4)`", section:objects)
+voice dayan_tap (audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; return (2*(h-Math.floor(h))-1) * Math.exp(-t/0.06); }`", section:objects)
+voice dayan_dry (audio:"`js: (t) => (Math.sin(2*Math.PI*494*t) + Math.sin(2*Math.PI*587*t)) * 0.5 * Math.exp(-t/0.06)`", section:objects)
+voice dayan_open (audio:"`js: (t) => (Math.sin(2*Math.PI*392*t) + Math.sin(2*Math.PI*494*t) + Math.sin(2*Math.PI*523*t) + Math.sin(2*Math.PI*587*t)) * 0.25 * Math.exp(-t/0.22)`", section:objects)
+voice dummy_csound_a (audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`", section:objects)
+voice dummy_csound_b (audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`", section:objects)
+voice dummy_csound_c (audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`", section:objects)
+voice dummy_csound_d (audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`", section:objects)
+voice dummy_csound_e (audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`", section:objects)
+voice dummy_csound_f (audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`", section:objects)
+voice dummy_csound_midiobject (audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`", section:objects)

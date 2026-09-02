@@ -40,8 +40,8 @@ ok(passe('scale\nbilaval x (a:1)'), "A. une VRAIE entrée de catalogue dérive a
 
 // ── B. TÉMOINS — l'invocation apporte ce que LA librairie déclare, pas ce qu'une autre déclare ───
 // ⚠️ `core` N'EST PLUS LE TÉMOIN : il apporte `audio`, qui invoque `types` en tête, et la chaîne se
-// suit transitivement depuis le 2026-09-02 — `interval` lui arrive. `engine` n'invoque rien.
-ok(!passe('engine\ninterval x (ratios(1))'), "B. TÉMOIN — `engine` ne déclare pas `interval` et n'apporte rien, il reste refusé");
+// suit transitivement depuis le 2026-09-02 — `interval` lui arrive. `eval` n'invoque rien.
+ok(!passe('eval\ninterval x (ratios(1))'), "B. TÉMOIN — `eval` ne déclare pas `interval` et n'apporte rien, il reste refusé");
 ok(passe('core\ninterval x (ratios(1))'), "B. et `core` l'apporte PAR SA CHAÎNE — core → audio → types");
 ok(!passe('interval x (ratios(1))'), "B. TÉMOIN — sans aucune invocation, rien n'est apporté");
 ok(!passe('types\nzorglubinvente x (a:1)'), "B. TÉMOIN — un mot que `types` ne déclare pas reste refusé");

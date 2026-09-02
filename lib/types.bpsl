@@ -43,6 +43,7 @@ def temperament
 def tuning
 def octaves
 def sound
+def voice
 def midi_default
 
 // Les types de déclaration du socle : ce qu'une librairie ou une scène écrit en tête d'une ligne

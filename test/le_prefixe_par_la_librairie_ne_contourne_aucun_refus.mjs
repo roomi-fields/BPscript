@@ -37,13 +37,21 @@ const norm = (m) => m.replace(/at line \d+:\d+/, '').replace(/\s+/g, ' ').trim()
 const compile = (src) => compileToBPxAST(src + '\n-----\nS -> C4 D4');
 
 // LA MATRICE SE CONSTRUIT DEPUIS LA DONNÉE, jamais une liste de paires écrite à la main.
-// ⚠️ `reservedDirectives` PORTE DEUX FORMES depuis le 2026-08-10 (mise en conformité des
-// librairies) : array plat (core.json) ou objet {nom: {description, scope}} (engine — chaque clé y
-// porte sa portée). Les deux se lisent par leurs NOMS.
+// ⛔ UN MOT DE TÊTE EST UN OBJET QUI DÉCLARE `scope(scene)`, dans n'importe quelle place de sa
+// librairie — la même lecture que le compilateur (`reservedDirectiveNames`, libs.js). La table
+// objet `schema.reservedDirectives` d'`engine` est sortie le 2026-09-02 ; `core` garde sa liste
+// plate, les mots du langage qu'aucune librairie ne déclare.
 const paires = [];
 for (const [lib, data] of Object.entries(LIBS)) {
   const rd = (data.schema && data.schema.reservedDirectives) || [];
-  for (const d of (Array.isArray(rd) ? rd : Object.keys(rd))) paires.push([lib, d]);
+  for (const d of (Array.isArray(rd) ? rd : [])) paires.push([lib, d]);
+  for (const section of Object.values(data || {})) {
+    if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
+    for (const [d, def] of Object.entries(section)) {
+      if (d.startsWith('_') || !def || typeof def !== 'object') continue;
+      if (Array.isArray(def.scope) && def.scope.includes('scene')) paires.push([lib, d]);
+    }
+  }
   for (const d of Object.keys(data.values || {})) paires.push([lib, d]);
 }
 

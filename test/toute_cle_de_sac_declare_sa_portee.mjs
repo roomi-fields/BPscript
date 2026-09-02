@@ -215,11 +215,15 @@ for (const [racine, attendu] of Object.entries(PAR_DESTINATAIRE)) {
 //     Son objection — un reset est une ACTION, pas un état — est tombée sur la mesure du natif :
 //     `ScriptUtils.c:1628-1637` porte les DEUX cas, OFF et ON. La règle des paires n'a plus
 //     d'exception, et ce compte est ce qui le tient.
-ok(CLES.filter((c) => c.source.startsWith('engine.')).length === 24,
+//   engine 24 → 33 le 2026-09-02 : les NEUF réglages de tête de scène (seed, maxitems, items,
+//     allitems, all_items, improvize, quantization, qclock, timepatterns) deviennent des contrôles
+//     de portée `scene` — Romain : « la nature se déclare par le type en tête, la place par scope, le
+//     rangement ne type pas ». Ils vivaient dans la table réservée d'`engine`, qui est sortie.
+ok(CLES.filter((c) => c.source.startsWith('engine.')).length === 33,
    `C. ${CLES.filter((c) => c.source.startsWith('engine.')).length} contrôles balayés sous `
-   + `'engine.', 24 attendus (les procédures moteur rapatriées de lib/controls.json, plus `
+   + `'engine.', 33 attendus (les procédures moteur rapatriées de lib/controls.json, plus `
    + `'articulcont' — le mode continu suit son paramètre, et 'legato'/'staccato' vivent ici — `
-   + `plus la paire 'resetweights'/'keepweights').`);
+   + `plus la paire 'resetweights'/'keepweights', plus les neuf réglages de tête de scène).`);
 ok(CLES.filter((c) => c.source.startsWith('modulation.')).length === 0,
    `C. ${CLES.filter((c) => c.source.startsWith('modulation.')).length} entrée(s) de modulation `
    + `balayée(s) — ZÉRO attendu depuis l'archivage du 2026-08-22. Un compte NON NUL ici veut dire `

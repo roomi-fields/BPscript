@@ -24,6 +24,7 @@
  * trop large, et elle est ici la plus fournie.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
+import { universeReservedDirectives } from '../src/transpiler/libs.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
 
 let passe = 0;
@@ -68,18 +69,25 @@ const FORME = {
   actor: 'actor v\n  out.audio',
   def: 'def k (vel:120)',
   diapason: 'diapason:442',
+  // Les contrôles de tête à valeur, entrés le 2026-09-02 : nus, ils manqueraient leur valeur.
+  fadeout: 'fadeout:2', pan: 'pan:64', rate: 'rate:1', syncdelay: 'syncdelay:10', tempo: 'tempo:120',
+  vel: 'vel:80', volume: 'volume:100', volumecontrol: 'volumecontrol:100', pancontrol: 'pancontrol:64',
 };
 
 // (b) LES CONTRÔLES DE PORTÉE — refusés EN TÊTE, avec un message qui dit OÙ ils vivent. Leur refus
 //     tient à leur PORTÉE, pas à leur position, donc la prémisse de la matrice ne vaut pas pour eux.
-const CONTROLES_DE_PORTEE = new Set([
-  'destru', 'failed', 'filter', 'goto', 'legato', 'order', 'repeat', 'retro', 'rotate',
-  'scaleshift', 'shuffle', 'staccato', 'stop', 'weight',
-]);
+// ⛔ DOUZE MOTS SONT SORTIS DE CETTE FAMILLE LE 2026-09-02 — destru, failed, goto, legato, order,
+//     repeat, retro, rotate, shuffle, staccato, stop, weight. Ils n'étaient à l'union que par la
+//     table réservée d'`engine`, qui les DUPLIQUAIT ; ils sont des contrôles de portée règle ou
+//     flux, refusés en tête par leur portée, et l'union ne porte plus que les mots de portée scène.
+//     Les deux qui restent viennent de la liste de `core`.
+const CONTROLES_DE_PORTEE = new Set(['filter', 'scaleshift']);
 
-// (c) `mode` — LE SEUL MOT QUI PASSE DANS LES DEUX POSITIONS, et c'est sa définition : il gouverne
-//     la sous-grammaire QUI SUIT. 67 scènes du corpus sur 263 en vivent.
-const LEGITIME_APRES = new Set(['mode']);
+// (c) `mode` PASSE DANS LES DEUX POSITIONS, et c'est sa définition : il gouverne la sous-grammaire
+//     QUI SUIT. 67 scènes du corpus sur 263 en vivent. ⚠️ Il a quitté l'union le 2026-09-02 avec la
+//     table d'`engine` — sa portée est `subgrammar`, pas `scene` — donc cette famille est vide ici ;
+//     son passage dans les deux positions reste gardé par le corpus.
+const LEGITIME_APRES = new Set([]);
 
 // ⛔ ET CETTE TROISIÈME FAMILLE SE NOMME AUSSI. Mon premier jet la calculait comme « tout ce qui
 // n'est ni contrôle de portée ni `mode` » — donc un mot réservé NEUF y tombait tout seul, et le
@@ -105,10 +113,20 @@ const DECLARATIONS_DE_TETE = new Set([
   // par les librairies invoquées. Un type fourni par une librairie n'appartient pas au socle, donc
   // le mot quitte `core.schema.reservedDirectives` — et l'exemption qui le nommait ici sort avec
   // lui. Une exemption qui ne désigne plus rien de vivant est un trou au nom de quelqu'un.
-  'seed', 'settings', 'timepatterns', 'transpose', ]);
+  'seed', 'settings', 'timepatterns', 'transpose',
+  // ⛔ VINGT ET UN MOTS ENTRENT LE 2026-09-02, parce que l'union se lit désormais par la porte du
+  // compilateur : tout contrôle de portée `scene` du registre est un mot de tête, quelle que soit
+  // la librairie qui le porte — expression, midi, time, variation, engine. Ils passaient déjà en
+  // tête avant ce jour ; seul l'instrument ne les comptait pas.
+  'fadeout', 'keepcontrols', 'keepweights', 'letring', 'pan', 'pancontrol', 'pedalhold',
+  'pedalrelease', 'rate', 'resetcontrols', 'resetnotes', 'resetweights', 'smooth', 'striated',
+  'strikeagain', 'sustain', 'syncdelay', 'tempo', 'vel', 'volume', 'volumecontrol', ]);
 
-const nomsReserves0 = (rd) => (Array.isArray(rd) ? rd : Object.keys(rd || {}));
-const UNION = [...new Set(Object.values(LIBS).flatMap((f) => nomsReserves0(f?.schema?.reservedDirectives)))].sort();
+// ⛔ L'UNION SE LIT PAR LA PORTE, PLUS PAR UN CHEMIN DU PAQUET. Depuis le 2026-09-02 la table
+// réservée d'`engine` est sortie : un mot de tête est un objet qui déclare `scope(scene)`, dans
+// n'importe quelle place du registre, et c'est `universeReservedDirectives` qui en fait l'union —
+// la même que celle du compilateur. Une mesure ad hoc contournerait la porte que le code expose.
+const UNION = [...universeReservedDirectives()].sort();
 const DECLARATIONS = [...DECLARATIONS_DE_TETE].sort().map((m) => [m, FORME[m] || m]);
 
 console.log(`[declaration apres regles] union ${UNION.length} mots · ${DECLARATIONS.length} declarations `
@@ -228,9 +246,12 @@ ok(err(`${S}S -> C4\n-----\nT -> D4\n`).length === 0,
 // vocabulaire RÉEL du langage n'a pas rétréci, il s'est redistribué — c'est l'UNION, pas la seule
 // part de `core`, que ce témoin doit garder. `reservedDirectives` porte deux formes (array plat
 // ou objet {nom:{description,scope}}) ; les deux se comptent par leurs noms.
-const nomsReserves = (rd) => (Array.isArray(rd) ? rd : Object.keys(rd || {}));
-const RESERVEES = new Set(Object.values(LIBS).flatMap((f) => nomsReserves(f?.schema?.reservedDirectives))).size;
-ok(RESERVEES >= 40, `4. le vocabulaire de directives doit être chargé — ${RESERVEES} mot(s)`);
+// ⛔ 2026-09-02 : L'UNION SE LIT PAR LA PORTE (`universeReservedDirectives`), et elle porte tout mot
+// de portée scène du registre — la table objet d'`engine` est sortie, ses mots de portée règle ou
+// flux avec elle, et les contrôles de tête des autres librairies (vel, pan, tempo, letring…) y
+// sont comptés comme le compilateur les compte. Mesuré à la frappe : 51 mots.
+const RESERVEES = UNION.length;
+ok(RESERVEES >= 50, `4. le vocabulaire de directives doit être chargé — ${RESERVEES} mot(s)`);
 // Le seuil est passé de 24 à 22 le 2026-08-09, et le motif s'écrit ici plutôt que dans un commit :
 // `mm` est SORTIE du langage (Romain 2026-06-26, fermée le 2026-08-09), donc elle disparaît des
 // deux listes — une forme qui n'existe plus ne peut pas être éprouvée. C'est le seul abaissement

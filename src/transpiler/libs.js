@@ -341,8 +341,6 @@ function porteesDeclarees(nom) {
   if (!nom) return null;
   for (const lib of Object.values(registry)) {
     if (!lib || typeof lib !== 'object') continue;
-    const res = lib.schema && lib.schema.reservedDirectives;
-    if (res && !Array.isArray(res) && res[nom] && Array.isArray(res[nom].scope)) return res[nom].scope;
     for (const section of Object.values(lib)) {
       if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
       const def = section[nom];
@@ -365,8 +363,6 @@ function groupeDUnicite(nom) {
   if (!nom) return null;
   for (const lib of Object.values(registry)) {
     if (!lib || typeof lib !== 'object') continue;
-    const res = lib.schema && lib.schema.reservedDirectives;
-    if (res && !Array.isArray(res) && res[nom] && res[nom].unicite) return res[nom].unicite;
     for (const section of Object.values(lib)) {
       if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
       const def = section[nom];
@@ -381,12 +377,10 @@ function directiveDeclareeParLaLibrairie(lib, nom) {
   if (!file || !nom) return false;
   const declareeIci = (f) => {
     if (!f) return false;
-    // `reservedDirectives` porte DEUX formes légitimes — array plat (core.json) ou objet
-    // {nom: {description, scope}} (engine, depuis 2026-08-10). Les deux se
-    // consultent par présence du nom, jamais recopiées l'une dans l'autre.
+    // `reservedDirectives` est une liste plate de noms — la seule forme depuis le 2026-09-02, la
+    // table objet d'`engine` étant devenue des contrôles qui déclarent leur portée.
     const reserved = (f.schema && f.schema.reservedDirectives) || [];
     if (Array.isArray(reserved) && reserved.includes(nom)) return true;
-    if (!Array.isArray(reserved) && Object.prototype.hasOwnProperty.call(reserved, nom)) return true;
     if (f.values && Object.prototype.hasOwnProperty.call(f.values, nom)) return true;
     if (f.controls && Object.prototype.hasOwnProperty.call(f.controls, nom)) return true;
     // ⚠️ LA PORTÉE FAIT FOI, PAS LA SECTION — même lecture que `porteesDeclarees` et
@@ -593,29 +587,42 @@ function loadLibsFromDirectives(directives) {
   // 2026-08-15 : elles vivent chez le canal qui les porte, et se lisent en union du registre.
   const coreLib = loadJsonFile('core') || {};
   const schema = coreLib.schema || {};
-  // ⚠️ `reservedDirectives` PORTE DEUX FORMES, ET LES DEUX SONT LÉGITIMES (2026-08-10) : `core.json`
-  // le garde en LISTE PLATE (noms seuls — ses ~30 clés d'axe/tombstone n'ont pas encore de scope
-  // mesuré) ; `engine` le porte en OBJET `{nom: {description, scope}}` (chaque
-  // clé y porte sa portée, exigé par Romain). `nomsReserves` lit les deux sans en préférer une.
-  const nomsReserves = (rd) => (Array.isArray(rd) ? rd : Object.keys(rd || {}));
+  // ⚠️ `reservedDirectives` N'A PLUS QU'UNE FORME : la liste plate de `core` — les mots du langage
+  // qu'aucune librairie ne déclare. La forme OBJET `{nom: {description, scope}}` qu'`engine` a
+  // portée du 2026-08-10 au 2026-09-02 est sortie avec sa table : chaque mot y est désormais un
+  // `control` qui déclare sa portée (Romain, 2026-09-02 : « le rangement ne type pas »).
+  const nomsReserves = (rd) => (Array.isArray(rd) ? rd : []);
   // UNION sur TOUTES les librairies du REGISTRE, pas seulement `core` — sinon une clé qui ne vit
   // QUE dans `engine`/`time` (mode, seed, tempo…) redevient « inconnue » en forme nue dès que
   // `core.json` ne la duplique plus (2026-08-10, solde des 15 collisions core/engine : une clé ne
   // vit que dans UNE librairie). Conforme à LIBRAIRIES.md:34 : « les catégories du cœur s'invoquent
   // directement, sans nommer la librairie qui les porte » — donc TOUJOURS résolues, quelle que soit
   // l'invocation de la scène, comme `core` l'était déjà seul avant ce chantier.
+  // ⛔ ET LA PORTÉE FAIT FOI, PAS LA TABLE : un mot de tête de scène est un objet qui déclare
+  // `scope(scene)`, dans n'importe quelle place de n'importe quelle librairie du registre. C'est la
+  // même lecture que `porteesDeclarees` et `directiveDeclareeParLaLibrairie`.
   ctx.reservedDirectiveNames = new Set(nomsReserves(schema.reservedDirectives));
   ctx.addressKeys = new Set();
   for (const lib of Object.values(registry)) {
     const s = lib && lib.schema;
     if (s && s.reservedDirectives) for (const n of nomsReserves(s.reservedDirectives)) ctx.reservedDirectiveNames.add(n);
+    for (const section of Object.values(lib || {})) {
+      if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
+      for (const [nom, def] of Object.entries(section)) {
+        if (nom.startsWith('_') || !def || typeof def !== 'object') continue;
+        if (Array.isArray(def.scope) && def.scope.includes('scene')) ctx.reservedDirectiveNames.add(nom);
+      }
+    }
     // ── LES CLÉS D'ADRESSE VIVENT CHEZ LE CANAL QUI LES PORTE ────────────────────────────────
     // Décision de Romain (2026-08-15) : `ch`, `channel`, `device`, `port` et `note` quittent le
     // socle pour `midi`. Le destinataire cesse donc d'être écrit dans une légende du schéma — il
     // se lit sur le `resolvedBy` de la librairie qui les déclare, comme pour tout le reste.
     // Même UNION que les directives réservées, et pour la même raison : une clé qui ne vit que
     // dans `midi` doit rester résolue quelle que soit l'invocation de la scène.
-    if (s && s.addressKeys) for (const n of nomsReserves(s.addressKeys)) ctx.addressKeys.add(n);
+    // `addressKeys` est un OBJET `{nom: {…}}` — chaque clé porte sa portée — et se lit par ses noms.
+    if (s && s.addressKeys) {
+      for (const n of (Array.isArray(s.addressKeys) ? s.addressKeys : Object.keys(s.addressKeys))) ctx.addressKeys.add(n);
+    }
     // ⚠️ ET LA PORTÉE FAIT FOI, PAS LA SECTION OÙ LE MOT EST RANGÉ. Règle 3 de Romain : « tous les
     // contrôles acceptés AVEC LEURS PORTÉES sont définis dans les librairies uniquement ». Un
     // contrôle qui déclare `scope` contenant `scene` s'écrit donc en tête, et doit y être reconnu.
@@ -624,13 +631,6 @@ function loadLibsFromDirectives(directives) {
     // section `subgrammar` de `engine`, et restaient INCONNUS en tête — 24 sources du corpus les
     // écrivent. Les recopier dans `schema.reservedDirectives` aurait fait DEUX domiciles pour un
     // nom ; c'est la résolution qui devait apprendre à lire la portée.
-    for (const section of Object.values(lib || {})) {
-      if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
-      for (const [nom, def] of Object.entries(section)) {
-        if (nom.startsWith('_') || !def || typeof def !== 'object') continue;
-        if (Array.isArray(def.scope) && def.scope.includes('scene')) ctx.reservedDirectiveNames.add(nom);
-      }
-    }
   }
   // Clés réservées de `[]` (docs/spec/LANGUAGE.md §« Clés reservees de [] ») : elles ne sont
   // pas des contrôles de librairie, le compilateur les comprend lui-même. Toute autre clé

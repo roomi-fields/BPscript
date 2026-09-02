@@ -56,9 +56,10 @@ const err = (src) => {
 };
 
 // ── 1. LA DONNÉE — les portées déclarées sont celles du moteur, dans TOUTES ses sections ─────
-// `destru` est déclaré DEUX fois dans cette librairie (le vocabulaire réservé et la section des
-// procédures de sous-grammaire). Une seule corrigée laisserait l'autre répondre — et c'est la
-// section interrogée qui gagne, donc le hasard.
+// `destru` a été déclaré DEUX fois dans cette librairie jusqu'au 2026-09-02 (le vocabulaire réservé
+// et la place des procédures) ; la table réservée d'`engine` est sortie ce jour-là — chaque mot est
+// un `control` qui déclare sa portée, une fois. Le balayage reste sur TOUTES les places : une
+// seconde déclaration qui reviendrait serait vue et éprouvée comme la première.
 {
   const ATTENDU = ['subgrammar', 'rule'];
   let vues = 0;
@@ -76,13 +77,9 @@ const err = (src) => {
          + `${JSON.stringify(cible.scope)}`);
     }
   }
-  // Le vocabulaire réservé, atteint par son propre chemin.
-  const res = LIB?.schema?.reservedDirectives?.destru;
-  if (res && Array.isArray(res.scope)) {
-    vues++;
-    ok(!res.scope.includes('scene'), "1. 'schema.reservedDirectives.destru' déclare encore 'scene'");
-  }
-  ok(vues >= 2, `1. les DEUX déclarations de 'destru' doivent être éprouvées — ${vues} vue(s)`);
+  ok(vues >= 1, `1. la déclaration de 'destru' doit être éprouvée — ${vues} vue(s)`);
+  ok(!LIB?.schema?.reservedDirectives,
+     "1. `engine` ne porte plus de table réservée — chaque mot est un contrôle qui déclare sa portée (2026-09-02)");
 }
 
 // ── 2. LA SURFACE — chaque graphie est acceptée là où la portée la met, refusée ailleurs ─────

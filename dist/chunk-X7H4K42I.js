@@ -3,7 +3,7 @@ import {
 } from "./chunk-3Y64WDZ4.js";
 import {
   LIBS
-} from "./chunk-JE66RPU6.js";
+} from "./chunk-7CMALYLI.js";
 import {
   CHAMPS_DE_FICHIER
 } from "./chunk-Z7KGRXC3.js";
@@ -140,8 +140,6 @@ function porteesDeclarees(nom) {
   if (!nom) return null;
   for (const lib of Object.values(registry)) {
     if (!lib || typeof lib !== "object") continue;
-    const res = lib.schema && lib.schema.reservedDirectives;
-    if (res && !Array.isArray(res) && res[nom] && Array.isArray(res[nom].scope)) return res[nom].scope;
     for (const section of Object.values(lib)) {
       if (!section || typeof section !== "object" || Array.isArray(section)) continue;
       const def = section[nom];
@@ -154,8 +152,6 @@ function groupeDUnicite(nom) {
   if (!nom) return null;
   for (const lib of Object.values(registry)) {
     if (!lib || typeof lib !== "object") continue;
-    const res = lib.schema && lib.schema.reservedDirectives;
-    if (res && !Array.isArray(res) && res[nom] && res[nom].unicite) return res[nom].unicite;
     for (const section of Object.values(lib)) {
       if (!section || typeof section !== "object" || Array.isArray(section)) continue;
       const def = section[nom];
@@ -171,7 +167,6 @@ function directiveDeclareeParLaLibrairie(lib, nom) {
     if (!f) return false;
     const reserved = f.schema && f.schema.reservedDirectives || [];
     if (Array.isArray(reserved) && reserved.includes(nom)) return true;
-    if (!Array.isArray(reserved) && Object.prototype.hasOwnProperty.call(reserved, nom)) return true;
     if (f.values && Object.prototype.hasOwnProperty.call(f.values, nom)) return true;
     if (f.controls && Object.prototype.hasOwnProperty.call(f.controls, nom)) return true;
     for (const section of Object.values(f)) {
@@ -320,19 +315,21 @@ function loadLibsFromDirectives(directives) {
   };
   const coreLib = loadJsonFile("core") || {};
   const schema = coreLib.schema || {};
-  const nomsReserves = (rd) => Array.isArray(rd) ? rd : Object.keys(rd || {});
+  const nomsReserves = (rd) => Array.isArray(rd) ? rd : [];
   ctx.reservedDirectiveNames = new Set(nomsReserves(schema.reservedDirectives));
   ctx.addressKeys = /* @__PURE__ */ new Set();
   for (const lib of Object.values(registry)) {
     const s = lib && lib.schema;
     if (s && s.reservedDirectives) for (const n of nomsReserves(s.reservedDirectives)) ctx.reservedDirectiveNames.add(n);
-    if (s && s.addressKeys) for (const n of nomsReserves(s.addressKeys)) ctx.addressKeys.add(n);
     for (const section of Object.values(lib || {})) {
       if (!section || typeof section !== "object" || Array.isArray(section)) continue;
       for (const [nom, def] of Object.entries(section)) {
         if (nom.startsWith("_") || !def || typeof def !== "object") continue;
         if (Array.isArray(def.scope) && def.scope.includes("scene")) ctx.reservedDirectiveNames.add(nom);
       }
+    }
+    if (s && s.addressKeys) {
+      for (const n of Array.isArray(s.addressKeys) ? s.addressKeys : Object.keys(s.addressKeys)) ctx.addressKeys.add(n);
     }
   }
   ctx.qualifierKeys = new Set(schema.qualifierKeys || []);
