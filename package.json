@@ -26,8 +26,8 @@
     "bundle:syntaxe": "node src/transpiler/syntaxe-bundle.mjs > src/transpiler/syntaxe-data.js.tmp && mv src/transpiler/syntaxe-data.js.tmp src/transpiler/syntaxe-data.js",
     "bundle:gabarits": "node src/transpiler/gabarits-bundle.mjs > src/transpiler/gabarits-data.js.tmp && mv src/transpiler/gabarits-data.js.tmp src/transpiler/gabarits-data.js",
     "publier": "node scripts/publier.mjs",
-    "construire": "node scripts/construire.mjs",
-    "garde:construire": "node scripts/construire.mjs --verifier"
+    "construire": "node scripts/construire.mjs && node scripts/deriver-files.mjs",
+    "garde:construire": "node scripts/construire.mjs --verifier && node scripts/deriver-files.mjs --verifier"
   },
   "devDependencies": {
     "@lezer/generator": "^1.8.0",
