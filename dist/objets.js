@@ -1,11 +1,16 @@
+import "./chunk-PGU4LUJQ.js";
+import "./chunk-RCJEGB4M.js";
 import {
-  LIBS,
-  PLACES
-} from "./chunk-4TF53S6W.js";
+  leRegistre,
+  placesDesLibrairies
+} from "./chunk-GPY3QWCT.js";
+import "./chunk-3Y64WDZ4.js";
+import "./chunk-4TF53S6W.js";
 import {
   CHAMPS_DU_PAQUET,
   entreesDe
 } from "./chunk-JWEI77WV.js";
+import "./chunk-YT6XIK2B.js";
 
 // src/transpiler/objets.js
 function motDe(cle, lib) {
@@ -28,6 +33,8 @@ function index() {
     if (!objets2.has(o.nom)) objets2.set(o.nom, []);
     objets2.get(o.nom).push(o);
   };
+  const LIBS = leRegistre();
+  const PLACES = placesDesLibrairies(LIBS);
   for (const [cle, lib] of Object.entries(LIBS)) {
     if (!lib || typeof lib !== "object" || Array.isArray(lib)) continue;
     const mot = motDe(cle, lib);

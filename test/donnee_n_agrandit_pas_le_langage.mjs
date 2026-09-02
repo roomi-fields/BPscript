@@ -19,6 +19,7 @@
  * MESURÉ, pas choisi — les 57 contrôles du dépôt les portent tous les deux. Tout le reste est
  * refusé BRUYAMMENT, à la seule exception de la documentation préfixée `_`, admise explicitement.
  */
+import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur (2026-09-02)
 import { registerLib, loadLibsFromDirectives, clearRegistry, registerAll } from '../src/transpiler/libs.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
 

@@ -54,7 +54,11 @@
  */
 import { readFileSync } from 'node:fs';
 import { compileToBPxAST } from '../src/transpiler/index.js';
-import { LIBS } from '../src/transpiler/libs-data.js';
+// ⛔ LE REGISTRE VIVANT, PAS LE PAQUET : ce garde INJECTE une faute dans un alphabet pour voir le
+// compilateur changer de verdict. Depuis le 2026-09-02 le compilateur lit ses librairies dans leurs
+// sources, et le paquet `libs-data.js` n'est qu'un dérivé — muter le paquet ne l'atteindrait plus.
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 // ⛔ CETTE LISTE ÉTAIT UNE COPIE, ET ELLE A FAIT ROUGIR CE GARDE TROIS FOIS POUR LA MÊME RAISON :
 // `resolves` le 2026-08-10, `documented` le 2026-08-24, et son propre commentaire annonçait la

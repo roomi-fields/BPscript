@@ -18,6 +18,7 @@
  * DEUX SENS (§injection) : une clé absente de `controls.json` fait mordre le garde ; une clé
  * présente le laisse muet.
  */
+import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur (2026-09-02)
 import { universeControlNames } from '../src/transpiler/libs.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
 

@@ -27,6 +27,7 @@
  *
  * INJECTION dans l'ACCUSÉ (le `implements` retiré, la cible faussée) et dans le JUGE.
  */
+import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur (2026-09-02)
 import { createRequire } from 'node:module';
 import { loadLibsFromDirectives, registerLib, clearRegistry, registerAll } from '../src/transpiler/libs.js';
 

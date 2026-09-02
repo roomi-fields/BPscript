@@ -87,6 +87,8 @@ function addressKeys() {
 let _actorKeys = null;
 function actorKeysData() {
   if (_actorKeys) return _actorKeys;
+  // Sans `core` au registre, aucune clé d'acteur n'est connue — rendu sans mémoriser (cf. les axes).
+  if (!loadLib('core')) return { valides: new Set(), perimees: new Set(), toutes: new Set() };
   const sch = (loadLib('core') || {}).schema || {};
   const valides = sch.actorKeys, perimees = sch.deprecatedActorKeys || [];
   if (!Array.isArray(valides) || valides.length === 0) {
@@ -137,7 +139,11 @@ function actorKeysData() {
 let _catalogAxisKeys = null;
 function catalogAxisKeys() {
   if (_catalogAxisKeys) return _catalogAxisKeys;
-  const core = loadLib('core') || {};
+  // ⚠️ SANS `core` AU REGISTRE, IL N'Y A PAS D'AXE — et ce n'est pas une faute : aucun socle n'est
+  // implicite (Romain, 2026-09-02), et une librairie se lit avant que `core` soit chargé. On rend
+  // alors un ensemble vide SANS le mémoriser, pour que la table se lise dès que `core` arrive.
+  const core = loadLib('core');
+  if (!core) return new Set();
   const axes = core?.schema?.catalogAxes;
   if (!Array.isArray(axes) || axes.length === 0) {
     throw new Error("lib/core.json schema.catalogAxes est vide ou absent — le parseur n'a plus d'axes de catalogue");
@@ -2109,6 +2115,11 @@ function parse(tokens, opts = {}) {
     // ⛔ UN MOT SORTI SE REFUSE AVEC SA RELÈVE, jamais par le refus générique « n'est pas un type »
     // qui énumère les types et laisse l'auteur deviner — c'est la règle de `MOTS-SORTIS.md`, et
     // le garde des prescriptions vérifie que `def <nom> (…)` est bien une forme vivante.
+    // ⛔ LES DEUX MOTS RACINES — `def` et `init` — sont la SYNTAXE que le compilateur connaît en dur,
+    // et les seuls (Romain, 2026-09-02). Ils ont chacun leur lecteur, plus bas ; ils ne sont pas des
+    // types en tête, et leur exemption ne dépend d'aucune liste de `core` : une librairie doit se
+    // lire avant que `core` soit chargé.
+    if (mot === 'def' || mot === 'init') return null;
     if (mot === 'object' && ouvreUnNom(1)) {
       throw new ParseError(
         `'object ${peek(1).value}' : 'object' est SORTI du langage — la racine d'une famille se `

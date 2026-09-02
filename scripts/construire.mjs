@@ -61,9 +61,27 @@ async function construireTout(portes, sortie) {
   const entryPoints = Object.fromEntries(
     portes.map(([cible, source]) => [cible.replace(/^dist\//, '').replace(/\.js$/, ''), source]),
   );
+  // ⛔ LES SOURCES DE LIBRAIRIE S'EMBARQUENT COMME TEXTE — Romain, 2026-08-30 : « le parseur tourne
+  // déjà dans le navigateur ; ce qui manque n'est pas la capacité de compiler, c'est l'accès au
+  // système de fichiers, et un .bpsl embarqué comme texte le règle sans générer de module ». Le
+  // module `sources.js` lit `lib/` sur le disque ; dans une porte construite, il est REMPLACÉ par la
+  // même liste, lue ici au moment de la construction. Un seul import site, deux fournisseurs, choisis
+  // à la construction — jamais à l'exécution. Rien n'est écrit dans `src/`.
+  const { sourcesDeLibrairie } = await import('../src/transpiler/sources.js');
+  const sourcesEmbarquees = {
+    name: 'sources-de-librairie-embarquees',
+    setup(b) {
+      b.onResolve({ filter: /[\\/]sources\.js$/ }, (args) => (
+        args.importer.includes('/src/transpiler/') ? { path: 'sources-de-librairie', namespace: 'bpscript-sources' } : null));
+      b.onLoad({ filter: /.*/, namespace: 'bpscript-sources' }, () => ({
+        contents: `const SOURCES = ${JSON.stringify(sourcesDeLibrairie())};\nexport function sourcesDeLibrairie() { return SOURCES.map((s) => ({ ...s })); }\n`,
+        loader: 'js',
+      }));
+    },
+  };
   const r = await esbuild.build({
     entryPoints, bundle: true, format: 'esm', platform: 'neutral', splitting: true,
-    packages: 'external', outdir: sortie, metafile: true,
+    packages: 'external', outdir: sortie, metafile: true, plugins: [sourcesEmbarquees],
   });
   return Object.values(r.metafile.outputs).reduce((t, o) => t + o.bytes, 0);
 }

@@ -12,6 +12,7 @@
  * il n'EST PAS le résolveur (rôle Kairos, PORTER≠RÉSOUDRE) : c'est un oracle de référence + un garde
  * anti-régression sur la grille. La résolution hz réelle (et sa preuve e2e) vit chez Kairos.
  */
+import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur (2026-09-02)
 import { loadLib } from '../src/transpiler/libs.js';
 
 // ⛔ CE BANC LISAIT SES TROIS LIBRAIRIES PAR LEUR CHEMIN, et il est tombé DEUX FOIS — une par

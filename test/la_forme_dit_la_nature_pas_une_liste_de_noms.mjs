@@ -33,7 +33,9 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 // ── A. LE CODE VOUÉ AU RETRAIT N'A PLUS D'APPELANT VIVANT ────────────────────────────────────
 {
-  const source = readFileSync(`${RACINE}/src/transpiler/libs-bundle.js`, 'utf8');
+  // Le prédicat vit dans `librairies.js` depuis que le compilateur lit ses sources (2026-09-02) ;
+  // `libs-bundle.js` ne fait plus qu'imprimer le registre.
+  const source = readFileSync(`${RACINE}/src/transpiler/librairies.js`, 'utf8');
   for (const mort of ['CLES_LISTES', 'clesListesDuFichier']) {
     ok(!source.includes(mort),
        `A. ⛔ « ${mort} » VIT ENCORE dans le générateur du bundle. Une liste de noms laissée à côté `
@@ -92,7 +94,7 @@ try {
 
   // ── E. LE PRÉDICAT MORD — la faute lui est donnée, il doit rougir ──────────────────────────
   {
-    const chemin = join(bac, 'src/transpiler/libs-bundle.js');
+    const chemin = join(bac, 'src/transpiler/librairies.js');
     const texte = readFileSync(chemin, 'utf8');
     const ancre = 'const estUneSuite = (sac) => Boolean(sac && sac.type === \'SettingBag\'';
     ok(texte.includes(ancre),

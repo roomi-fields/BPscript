@@ -184,9 +184,10 @@ const compile = (src) => {
     // ⛔ L'INJECTION QUI PROUVE LE FILTRE : on le RETIRE, et le paquet doit grossir. Sans ce
     // retrait, ce volet serait vert dans un dépôt où le filtre n'existe pas — le corpus ne pose
     // aucune greffe, et « rien à filtrer » a la même empreinte que « ne filtre plus ».
-    const chemin = join(bac, 'src/transpiler/libs-bundle.js');
+    // Le filtre vit dans `librairies.js` depuis que le compilateur lit ses sources (2026-09-02).
+    const chemin = join(bac, 'src/transpiler/librairies.js');
     const texte = readFileSync(chemin, 'utf8');
-    const ancre = '        if (p.herite) continue;';
+    const ancre = '      if (p.herite) continue;';
     ok(texte.includes(ancre),
        `G. ⛔ ANCRE INTROUVABLE « ${ancre} » — le filtre a changé de graphie, et l'injection `
        + `mesurerait un fichier qu'elle n'a pas modifié. Un garde se prouve sur la graphie que le `

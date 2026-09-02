@@ -18,6 +18,7 @@
  * faux pour la casse : dans cinq d'entre elles le tiret collé formait déjà un nom déclaré, donc
  * la nouvelle règle les CONFIRME au lieu de les casser.
  */
+import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur (2026-09-02)
 import { tokenize } from '../src/transpiler/tokenizer.js';
 import { parse } from '../src/transpiler/parser.js';
 

@@ -45,6 +45,7 @@
  * INJECTION dans l'ACCUSÉ (un champ retiré, un contrôle neuf muet) et dans le JUGE (la décision
  * rejouée isolée).
  */
+import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur (2026-09-02)
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';

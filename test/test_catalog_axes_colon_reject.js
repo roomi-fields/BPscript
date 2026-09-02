@@ -11,6 +11,7 @@
 // Réf : parser.js CATALOG_AXIS_KEYS (doit rester le miroir de core.json schema.catalogAxes) ;
 //       libs.js describeVocabulary().components ; décision hub 2026-06-26 (« . appelle / : affecte »).
 
+import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur (2026-09-02)
 import { parse } from '../src/transpiler/parser.js';
 import { tokenize } from '../src/transpiler/tokenizer.js';
 import { describeVocabulary } from '../src/transpiler/libs.js';

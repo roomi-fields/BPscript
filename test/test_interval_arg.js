@@ -18,6 +18,7 @@
  * Run: node test/test_interval_arg.js
  */
 
+import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur (2026-09-02)
 import { LIBS as BUNDLED } from '../src/transpiler/libs-data.js';
 import { readFileSync } from 'fs';
 import { tokenize } from '../src/transpiler/tokenizer.js';

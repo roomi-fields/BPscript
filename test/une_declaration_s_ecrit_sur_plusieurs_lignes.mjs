@@ -19,6 +19,7 @@
  * refuser un retour à la ligne — le lecteur de sortie d'acteur reprend par `continue` à trois
  * endroits distincts, un seul aurait été couvert.
  */
+import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur (2026-09-02)
 import { tokenize } from '../src/transpiler/tokenizer.js';
 import { parse } from '../src/transpiler/parser.js';
 

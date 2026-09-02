@@ -1,6 +1,7 @@
 // Garde-fou : `octaves` = 6e clé d'entité d'acteur (décision cles-acteur-six, Romain 2026-06-16).
 // `actor X octaves.Y` SURCHARGE la convention de registre ; défaut = héritée de l'alphabet.
 // Résolu en amont (actorResolver) : ne traverse pas l'AST vers BPx.
+import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur (2026-09-02)
 import { tokenize } from '../src/transpiler/tokenizer.js';
 import { parse } from '../src/transpiler/parser.js';
 import { resolveActors } from '../src/transpiler/actorResolver.js';

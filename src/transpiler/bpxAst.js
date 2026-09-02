@@ -21,7 +21,7 @@
 import { tokenize, LexError } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
 import { resoudre, noterLePassage, emitSceneMeter, refuserEsclaveSansMaitre, poserLaVoixDesTerminaux, retirerArdoiseAlphabet, applyDefaultActor, hasTempoDirective, applyEnvironmentDefaults, canonicalizeLhsContext, canonicalizeLhsElement, canonicalizeRhsElement, canonicalizeContexts, ctxSymbolToElement, enrichRemoteHeadContext, canalFautif, nomsDeclares, validateCallVocabulary, terminauxEnPortee, validateTerminals, restesDeSegmentation, emitSceneLibRefs, deriveAlphabetFromTuning, emitActorLibRefs, emitNoteTerminals, resolveHomomorphismMarkers, annotateBackticks, poserLeDestinataireDesReglages, refuserAttenteNonDeclaree, refuserNomsEnDouble, applySceneValues, validateReferences, splitCompoundTerminals, chargerPorteesPermises, singleCharAlphabetSet, splitLhsElement, splitRhsElement, tokenizeCompoundName, makeSplitAtom } from './resolution.js';
-import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary, universeControlNames, nomsDeTerminaux, groupeDUnicite} from './libs.js';
+import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary, universeControlNames, nomsDeTerminaux, groupeDUnicite, brancherLeCompilateur } from './libs.js';
 import { LIBS } from './libs-data.js';
 import { segmenter } from './segmentation.js';
 
@@ -502,3 +502,9 @@ export function compileToBPxAST(source, environnement) {
 
 
 export default compileToBPxAST;
+
+// ⛔ LE COMPILATEUR SE BRANCHE SUR SON CHARGEUR ICI, À SA DÉFINITION — et nulle part ailleurs. Le
+// chargeur lit les librairies dans leurs sources PAR le compilateur (2026-09-02) ; l'importer depuis
+// le chargeur fermerait un cycle. Quiconque entre par une porte qui porte cette fonction — `index`,
+// `bpxAst` — trouve le registre prêt à se construire ; entrer par le parseur seul n'est pas un chemin.
+brancherLeCompilateur(compileToBPxAST);

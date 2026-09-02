@@ -1,5 +1,6 @@
 import {
   ParseError,
+  brancherLeCompilateur,
   describeVocabulary,
   groupeDUnicite,
   loadLib,
@@ -9,7 +10,7 @@ import {
   resolveActorAlphabet,
   resolveActorAlphabetSource,
   universeControlNames
-} from "./chunk-ZDOPWJPU.js";
+} from "./chunk-GPY3QWCT.js";
 import {
   LexError,
   tokenize
@@ -1864,6 +1865,7 @@ function compileToBPxAST(source, environnement) {
   return result;
 }
 var bpxAst_default = compileToBPxAST;
+brancherLeCompilateur(compileToBPxAST);
 
 export {
   resoudreSource,

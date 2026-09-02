@@ -28,7 +28,8 @@
  * prototypes quitteront `types`, et la chaîne `scale.degree.bilaval` se lira alors ici sans qu'un
  * consommateur change.
  */
-import { LIBS, PLACES } from './libs-data.js';
+import './index.js';   // la porte : elle branche le compilateur sur son chargeur
+import { leRegistre, placesDesLibrairies } from './libs.js';
 import { entreesDe, CHAMPS_DU_PAQUET } from './libs-champs.js';
 
 /** Le mot d'une famille — ce qu'on invoque. Lu dans la donnée tant que le paquet la porte. */
@@ -60,6 +61,9 @@ function index() {
     if (!objets.has(o.nom)) objets.set(o.nom, []);
     objets.get(o.nom).push(o);
   };
+  // La source est le REGISTRE du compilateur — lu dans les sources de `lib/`, jamais dans le paquet.
+  const LIBS = leRegistre();
+  const PLACES = placesDesLibrairies(LIBS);
   for (const [cle, lib] of Object.entries(LIBS)) {
     if (!lib || typeof lib !== 'object' || Array.isArray(lib)) continue;
     const mot = motDe(cle, lib);

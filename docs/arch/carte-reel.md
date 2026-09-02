@@ -5,7 +5,7 @@
 > vit dans le document d'architecture, chez Atlas, qui cite celui-ci.
 ## Ce qui est mesuré
 
-- **21 modules** dans `src/transpiler/`, **15505 lignes**.
+- **23 modules** dans `src/transpiler/`, **15376 lignes**.
 - Le **rôle** est lu dans l'en-tête de chaque fichier, verbatim — jamais interprété.
 - Les **arêtes** sont les imports d'un module vers un voisin du même dossier.
 
@@ -13,14 +13,14 @@
 
 | Module | Lignes | Importe | Importé par | Rôle (lu dans l'en-tête) |
 | --- | ---: | ---: | ---: | --- |
-| `parser.js` | 7895 | 4 | 2 | BPScript Parser |
+| `parser.js` | 7906 | 4 | 2 | BPScript Parser |
 | `resolution.js` | 3019 | 4 | 1 | L'ÉTAGE QUI RÉSOUT — le troisième des quatre, et le seul qui n'avait pas de domicile. |
-| `libs.js` | 1346 | 3 | 6 | BPScript Library Loader |
-| `libs-bundle.js` | 615 | 3 | 0 | BPScript Libs Bundle Generator |
+| `libs.js` | 1386 | 4 | 7 | BPScript Library Loader |
 | `actorResolver.js` | 585 | 1 | 2 | BPScript Actor Resolver |
 | `tokenizer.js` | 514 | 0 | 2 | BPScript Tokenizer |
-| `bpxAst.js` | 505 | 8 | 1 | Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table |
-| `objets.js` | 140 | 2 | 0 | LA PORTE DES OBJETS — ce qu'une librairie déclare, rendu comme des objets et non comme une table |
+| `bpxAst.js` | 511 | 8 | 1 | Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table |
+| `librairies.js` | 334 | 1 | 1 | LA LECTURE DES LIBRAIRIES — une source écrite dans le langage devient un objet du registre. |
+| `objets.js` | 144 | 3 | 0 | LA PORTE DES OBJETS — ce qu'une librairie déclare, rendu comme des objets et non comme une table |
 | `orderTokens.js` | 123 | 0 | 0 | — |
 | `controlValidation.js` | 113 | 0 | 1 | Collecte récursivement toutes les paires de SettingBag de l'AST. |
 | `libs-champs.js` | 98 | 0 | 3 | LES CHAMPS DE FICHIER D'UNE LIBRAIRIE — déclarés UNE FOIS, pour tous mes lecteurs. |
@@ -28,10 +28,12 @@
 | `syntaxe-data.js` *(généré)* | 79 | 0 | 2 | — |
 | `libs-bundle-check.js` | 76 | 0 | 0 | — |
 | `syntaxe-bundle.mjs` | 64 | 0 | 0 | GÉNÉRATEUR DE LA PORTE DU SCHÉMA DE SYNTAXE. |
-| `libs-data.js` *(généré)* | 60 | 0 | 5 | — |
+| `libs-data.js` *(généré)* | 60 | 0 | 3 | — |
 | `gabarits-bundle.mjs` | 57 | 0 | 0 | GÉNÉRATEUR DE LA PORTE DES GABARITS DE RÉGLAGES NATIFS. |
 | `libs-types.js` | 56 | 1 | 0 | GÉNÉRATEUR DU TYPE DU PAQUET — `libs-data.d.ts`. |
-| `index.js` | 38 | 2 | 1 | BPScript Transpiler — Façade |
+| `sources.js` | 48 | 0 | 1 | LES SOURCES DE LIBRAIRIE — ce que `lib/` contient, rendu comme du texte. |
+| `libs-bundle.js` | 43 | 2 | 0 | LE PAQUET DÉRIVÉ — `libs-data.js`, imprimé depuis le registre du compilateur. |
+| `index.js` | 38 | 2 | 2 | BPScript Transpiler — Façade |
 | `constants.js` | 33 | 0 | 1 | BPScript — constantes partagées transpileur |
 | `gabarits-data.js` *(généré)* | 8 | 0 | 0 | — |
 
@@ -46,6 +48,7 @@ flowchart LR
   gabarits_bundle_mjs["gabarits-bundle.mjs"]
   gabarits_data_js["gabarits-data.js"]
   index_js["index.js"]
+  librairies_js["librairies.js"]
   libs_bundle_check_js["libs-bundle-check.js"]
   libs_bundle_js["libs-bundle.js"]
   libs_champs_js["libs-champs.js"]
@@ -57,6 +60,7 @@ flowchart LR
   parser_js["parser.js"]
   resolution_js["resolution.js"]
   segmentation_js["segmentation.js"]
+  sources_js["sources.js"]
   syntaxe_bundle_mjs["syntaxe-bundle.mjs"]
   syntaxe_data_js["syntaxe-data.js"]
   tokenizer_js["tokenizer.js"]
@@ -71,14 +75,16 @@ flowchart LR
   bpxAst_js --> controlValidation_js
   index_js --> bpxAst_js
   index_js --> libs_js
-  libs_bundle_js --> libs_champs_js
+  librairies_js --> libs_champs_js
   libs_bundle_js --> index_js
   libs_bundle_js --> libs_js
   libs_types_js --> libs_data_js
-  libs_js --> libs_data_js
+  libs_js --> librairies_js
+  libs_js --> sources_js
   libs_js --> syntaxe_data_js
   libs_js --> libs_champs_js
-  objets_js --> libs_data_js
+  objets_js --> index_js
+  objets_js --> libs_js
   objets_js --> libs_champs_js
   parser_js --> tokenizer_js
   parser_js --> libs_js

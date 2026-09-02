@@ -18,12 +18,48 @@
  *     node src/transpiler/libs-bundle.js > src/transpiler/libs-data.js
  */
 
-import { LIBS as BUNDLED_LIBS } from './libs-data.js';
+import { chargerLesLibrairies, placesDesLibrairies } from './librairies.js';
+import { sourcesDeLibrairie } from './sources.js';
 import { SYNTAXE } from './syntaxe-data.js';
 import { CHAMPS_DE_FICHIER } from './libs-champs.js';
 
-// Registry: pre-loaded libs (browser or Node pre-registration)
-const registry = {};
+/**
+ * LE REGISTRE — ce que le compilateur sait des librairies, CONSTRUIT DEPUIS LEURS SOURCES.
+ *
+ * Décision de Romain, 2026-09-02 : « je ne comprends pas pourquoi on aurait besoin du nom du fichier
+ * ni de resolves ; pourquoi la structure des objets ne suffit pas ». Elle suffit. Le registre se
+ * remplit au premier accès, en lisant `lib/` par le compilateur lui-même (`librairies.js`, point
+ * fixe depuis un registre vide — 22 sources, trois passes, une seconde) ; le paquet `libs-data.js`
+ * n'est plus qu'un dérivé imprimé pour les consommateurs qui le lisent encore.
+ *
+ * ⚠️ PENDANT LE CHARGEMENT, LE REGISTRE EST PARTIEL ET C'EST NORMAL : compiler une source appelle
+ * ce chargeur, qui rend ce qui est déjà construit. Le point fixe reprend ce qui manque.
+ */
+const _registre = {};
+let _charge = false;
+/**
+ * LE COMPILATEUR EST BRANCHÉ PAR LA PORTE, JAMAIS IMPORTÉ D'ICI. Ce chargeur a besoin du compilateur
+ * pour LIRE ses librairies, et le compilateur a besoin de ce chargeur : importer `index.js` d'ici
+ * fermerait un cycle, que l'architecture refuse (aucun cycle dans la carte). `index.js`, la porte,
+ * branche donc le compilateur à son chargement ; quiconque entre par la porte trouve le registre
+ * prêt à se construire. Entrer par ce module SEUL — sans la porte — n'est pas un chemin.
+ */
+let _compiler = null;
+function brancherLeCompilateur(compiler) { _compiler = compiler; }
+function assurerLeRegistre() {
+  if (_charge) return;
+  if (typeof _compiler !== 'function') {
+    throw new Error("le registre des librairies ne peut pas se construire : aucun compilateur n'est branché — "
+      + "entrer par la porte 'index.js', qui le branche à son chargement");
+  }
+  _charge = true;
+  chargerLesLibrairies(sourcesDeLibrairie(), _compiler, registerLib);
+}
+/** Le registre, chargé s'il ne l'est pas encore. La seule porte de lecture. */
+function leRegistre() {
+  assurerLeRegistre();
+  return _registre;
+}
 
 // Cache loaded libs (from filesystem or registry)
 const cache = {};
@@ -32,7 +68,7 @@ const cache = {};
  * Register a single lib by name (e.g. "controls" → contents of lib/controls.json).
  */
 function registerLib(name, data) {
-  registry[name] = data;
+  leRegistre()[name] = data;
   cache[name] = data;  // also populate cache
   _universeControls = null;  // le registre a bougé → recalculer l'univers
   _universeComponentControls = null;
@@ -58,7 +94,7 @@ function registerAll(libs) {
  * Clear all registered libs and cache (for testing).
  */
 function clearRegistry() {
-  for (const k of Object.keys(registry)) delete registry[k];
+  for (const k of Object.keys(leRegistre())) delete leRegistre()[k];
   for (const k of Object.keys(cache)) delete cache[k];
   _universeControls = null;
   _universeComponentControls = null;
@@ -79,7 +115,7 @@ function clearRegistry() {
 let _universeControls = null;
 function universeControlNames() {
   if (!_universeControls) {
-    const allDirs = Object.keys(registry).map((name) => ({ name }));
+    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
     _universeControls = loadLibsFromDirectives(allDirs).controlNames;
   }
   return _universeControls;
@@ -91,7 +127,7 @@ function universeControlNames() {
 let _universeIntervalControls = null;
 function universeIntervalControls() {
   if (!_universeIntervalControls) {
-    const allDirs = Object.keys(registry).map((name) => ({ name }));
+    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
     _universeIntervalControls = loadLibsFromDirectives(allDirs).intervalControls;
   }
   return _universeIntervalControls;
@@ -102,7 +138,7 @@ function universeIntervalControls() {
 let _universeComponentControls = null;
 function universeComponentControls() {
   if (!_universeComponentControls) {
-    const allDirs = Object.keys(registry).map((name) => ({ name }));
+    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
     _universeComponentControls = loadLibsFromDirectives(allDirs).componentControls;
   }
   return _universeComponentControls;
@@ -128,7 +164,7 @@ let _universeReservedDirectives = null;
  */
 function universeReservedDirectives() {
   if (!_universeReservedDirectives) {
-    const allDirs = Object.keys(registry).map((name) => ({ name }));
+    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
     _universeReservedDirectives = loadLibsFromDirectives(allDirs).reservedDirectiveNames;
   }
   return _universeReservedDirectives;
@@ -136,7 +172,7 @@ function universeReservedDirectives() {
 
 function universeAddressKeys() {
   if (!_universeAddressKeys) {
-    const allDirs = Object.keys(registry).map((name) => ({ name }));
+    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
     _universeAddressKeys = loadLibsFromDirectives(allDirs).addressKeys;
   }
   return _universeAddressKeys;
@@ -147,7 +183,7 @@ function universeAddressKeys() {
 let _universeSacs = null;
 function universeSacs() {
   if (!_universeSacs) {
-    const allDirs = Object.keys(registry).map((name) => ({ name }));
+    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
     const c = loadLibsFromDirectives(allDirs);
     // `specs` : la déclaration COMPLÈTE (args, values, range…) de l'UNIVERS, indépendante de
     // `controls` — un réglage réservé (qualifierKeys) est un mot du LANGAGE, il doit savoir
@@ -163,7 +199,7 @@ function universeSacs() {
 let _universeRuleScope = null;
 function universeRuleScopeControls() {
   if (!_universeRuleScope) {
-    const allDirs = Object.keys(registry).map((name) => ({ name }));
+    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
     _universeRuleScope = loadLibsFromDirectives(allDirs).ruleScopeControls;
   }
   return _universeRuleScope;
@@ -173,16 +209,12 @@ function universeRuleScopeControls() {
 let _universeRuleAllowed = null;
 function universeRuleAllowedControls() {
   if (!_universeRuleAllowed) {
-    const allDirs = Object.keys(registry).map((name) => ({ name }));
+    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
     _universeRuleAllowed = loadLibsFromDirectives(allDirs).ruleAllowedControls;
   }
   return _universeRuleAllowed;
 }
 
-// Auto-register the pre-bundled libs at module load (Node AND browser).
-// This replaces the former Node-only `fs` fallback: the registry is always
-// populated from libs-data.js, so loadJsonFile never needs the filesystem.
-registerAll(BUNDLED_LIBS);
 
 /**
  * LE MOT SOUS LEQUEL UNE LIBRAIRIE S'INVOQUE — lu dans SA donnee, jamais ecrit ici.
@@ -209,7 +241,7 @@ registerAll(BUNDLED_LIBS);
  */
 function motsDInvocation() {
   const table = new Map();
-  for (const [fichier, lib] of Object.entries(registry)) {
+  for (const [fichier, lib] of Object.entries(leRegistre())) {
     const mot = lib && typeof lib === 'object' ? lib.resolves : null;
     if (!mot) continue;
     if (!table.has(mot)) table.set(mot, []);
@@ -234,7 +266,7 @@ function loadJsonFile(name) {
   if (cache[canonical]) return cache[canonical];
 
   // Try registry first (canonical then original name)
-  const regData = registry[canonical] || registry[name];
+  const regData = leRegistre()[canonical] || leRegistre()[name];
   if (regData) {
     cache[canonical] = regData;
     return regData;
@@ -339,7 +371,7 @@ function loadLib(name, subkey) {
  */
 function porteesDeclarees(nom) {
   if (!nom) return null;
-  for (const lib of Object.values(registry)) {
+  for (const lib of Object.values(leRegistre())) {
     if (!lib || typeof lib !== 'object') continue;
     for (const section of Object.values(lib)) {
       if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
@@ -361,7 +393,7 @@ function porteesDeclarees(nom) {
  */
 function groupeDUnicite(nom) {
   if (!nom) return null;
-  for (const lib of Object.values(registry)) {
+  for (const lib of Object.values(leRegistre())) {
     if (!lib || typeof lib !== 'object') continue;
     for (const section of Object.values(lib)) {
       if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
@@ -460,7 +492,7 @@ function resolveActorAlphabetSource(nom, directives) {
     const e = loadJsonFile(fichiers[i]);
     const entry = e && (e.alphabets?.[nom] || e[nom]);
     if (entry && nomsDeTerminaux(entry)) {
-      return { entry, lib: i === 0 ? null : (registry[fichiers[i]] || {}).resolves || fichiers[i] };
+      return { entry, lib: i === 0 ? null : (leRegistre()[fichiers[i]] || {}).resolves || fichiers[i] };
     }
   }
   const standard = loadLib('alphabet', nom);
@@ -603,7 +635,7 @@ function loadLibsFromDirectives(directives) {
   // même lecture que `porteesDeclarees` et `directiveDeclareeParLaLibrairie`.
   ctx.reservedDirectiveNames = new Set(nomsReserves(schema.reservedDirectives));
   ctx.addressKeys = new Set();
-  for (const lib of Object.values(registry)) {
+  for (const lib of Object.values(leRegistre())) {
     const s = lib && lib.schema;
     if (s && s.reservedDirectives) for (const n of nomsReserves(s.reservedDirectives)) ctx.reservedDirectiveNames.add(n);
     for (const section of Object.values(lib || {})) {
@@ -1132,12 +1164,17 @@ function loadLibsFromDirectives(directives) {
   // contrôles CHARGÉS — donc convertir `lib/midi.bpsl` en bundle refusait le fichier, parce que
   // `expression` n'était pas invoquée par lui : une librairie devenait illisible à cause d'une
   // déclaration parfaitement juste.
+  // ⚠️ ET LA LIBRAIRIE CIBLE PEUT NE PAS ÊTRE ENCORE AU REGISTRE — c'est l'AMORÇAGE, pas une faute
+  // (2026-09-02 : le compilateur lit les sources l'une après l'autre, par point fixe, depuis un
+  // registre vide). `audio.volume` réalise `expression.volume` ; tant qu'`expression` n'est pas
+  // chargée, la question ne se pose pas encore, et une passe suivante la posera. Le refus ne vaut
+  // que quand la librairie EST là et que le mot n'y est pas : là, c'est une coquille.
   const declareDansLeRegistre = (qualifie) => {
     const point = qualifie.indexOf('.');
     if (point < 0) return false;
-    const lib = registry[qualifie.slice(0, point)];
+    const lib = leRegistre()[qualifie.slice(0, point)];
     const nom = qualifie.slice(point + 1);
-    if (!lib || typeof lib !== 'object') return false;
+    if (!lib || typeof lib !== 'object') return 'librairie absente';
     for (const section of Object.values(lib)) {
       if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
       if (section[nom] && typeof section[nom] === 'object') return true;
@@ -1150,7 +1187,9 @@ function loadLibsFromDirectives(directives) {
     return false;
   };
   for (const [qual, cible] of Object.entries(ctx.implementedInterface)) {
-    if (!declareDansLeRegistre(cible)) {
+    const declaree = declareDansLeRegistre(cible);
+    if (declaree === 'librairie absente') continue;
+    if (!declaree) {
       throw new Error(
         `'${qual}' déclare 'implements:${cible}', et '${cible}' n'est déclaré nulle part. Une `
         + `réalisation vise une interface EXISTANTE, écrite '<librairie>.<contrôle>'.`);
@@ -1218,7 +1257,7 @@ function loadLibsFromDirectives(directives) {
   // du runtime actif, que le vocabulaire ne connaît pas. Aujourd'hui un seul environnement en
   // déclare un, donc la lecture est sans ambiguïté ; le jour où `audio-default` donnera une autre
   // valeur à `volume`, il faudra dire laquelle le vocabulaire publie.
-  for (const lib of Object.values(registry)) {
+  for (const lib of Object.values(leRegistre())) {
     const valeurs = lib && lib.controlDefaults;
     if (!valeurs || typeof valeurs !== 'object' || Array.isArray(valeurs)) continue;
     for (const [nom, valeur] of Object.entries(valeurs)) {
@@ -1278,7 +1317,7 @@ function describeVocabulary(directives = []) {
   // Romain a tranché l'autre sens le 2026-08-08 : « invoquer commande, systématiquement — si un mot
   // est inconnu dans le corpus invoqué, alors erreur ».
   const aUneScene = Array.isArray(directives) && directives.length > 0;
-  const allDirs = aUneScene ? directives : Object.keys(registry).map((name) => ({ name }));
+  const allDirs = aUneScene ? directives : Object.keys(leRegistre()).map((name) => ({ name }));
   const ctx = loadLibsFromDirectives(allDirs);
   const isEntry = (v) => v && typeof v === 'object' && !Array.isArray(v);
   // ⛔ LA LISTE DES CHAMPS DE FICHIER NE SE RECOPIE PLUS ICI — celle qui vivait à cette ligne
@@ -1340,6 +1379,7 @@ function describeVocabulary(directives = []) {
   };
 }
 
-export { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, groupeDUnicite, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, universeAddressKeys, universeReservedDirectives, registerLib, registerAll, clearRegistry,
+export { placesDesLibrairies };
+export { leRegistre, brancherLeCompilateur, loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, groupeDUnicite, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, universeAddressKeys, universeReservedDirectives, registerLib, registerAll, clearRegistry,
   nomsDeTerminaux,
 };
