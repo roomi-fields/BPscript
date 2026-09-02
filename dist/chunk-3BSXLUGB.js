@@ -1903,6 +1903,10 @@ function assurerLeRegistre() {
   _charge = true;
   chargerLesLibrairies(sourcesDeLibrairie(), _compiler, registerLib);
 }
+var _version = 0;
+function versionDuRegistre() {
+  return _version;
+}
 function leRegistre() {
   assurerLeRegistre();
   return _registre;
@@ -1911,6 +1915,7 @@ var cache = {};
 function registerLib(name, data) {
   leRegistre()[name] = data;
   cache[name] = data;
+  _version++;
   _universeControls = null;
   _universeComponentControls = null;
   _universeRuleScope = null;
@@ -6425,6 +6430,7 @@ function parse(tokens, opts = {}) {
 export {
   placesDesLibrairies,
   brancherLeCompilateur,
+  versionDuRegistre,
   leRegistre,
   universeControlNames,
   loadLib,

@@ -19,8 +19,16 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 // ── 0. LE SOCLE — l'assiette vient du paquet, la porte doit la couvrir entièrement ──────────────
 const attendues = [];   // [clé de paquet, place|null, nom]
+const sousDossiers = [];   // [clé de paquet] — un catalogue de sous-dossier est UNE entrée de son dossier
+// Le mot d'une clé du paquet : `resolves`, sinon la clé ; pour `settings/test1`, le mot de `settings`.
+const motDe = (cle) => {
+  const barre = cle.indexOf('/');
+  const tete = barre > 0 ? cle.slice(0, barre) : cle;
+  return (LIBS[tete] && LIBS[tete].resolves) || tete;
+};
 for (const [cle, lib] of Object.entries(LIBS)) {
   if (!lib || typeof lib !== 'object' || Array.isArray(lib)) continue;
+  if (cle.includes('/')) { sousDossiers.push(cle); continue; }
   const places = new Set((PLACES[cle] || []));
   for (const nom of entreesDe(lib)) if (!places.has(nom)) attendues.push([cle, null, nom]);
   for (const place of places) for (const nom of entreesDe(lib[place] || {})) attendues.push([cle, place, nom]);
@@ -30,8 +38,23 @@ ok(familles().length >= 20, `0. SOCLE : ${familles().length} famille(s) — sous
 
 // ── 1. CHAQUE ENTRÉE EST RENDUE PAR SA FAMILLE, AVEC SES MEMBRES ────────────────────────────────
 const parFamille = new Map(familles().map((m) => [m, famille(m)]));
+// Un catalogue de sous-dossier est l'entrée de son dossier : `settings/test1` → `settings.test1`,
+// avec le contenu du fichier pour membres. Mesuré le 2026-09-02 : rendu comme une famille à part, il
+// ne se résolvait par aucune chaîne qu'une scène écrit.
+ok(sousDossiers.length > 0, `1. SOCLE : aucun catalogue de sous-dossier dans le paquet — la mesure du 2026-09-02 en donnait 3`);
+for (const cle of sousDossiers) {
+  const mot = motDe(cle);
+  const nom = cle.slice(cle.indexOf('/') + 1);
+  const e = objet(`${mot}.${nom}`);
+  ok(e && !e.ambigu && e.famille === mot && e.nom === nom,
+     `1. '${cle}' doit être l'entrée '${mot}.${nom}' de la famille '${mot}' — reçu ${JSON.stringify(e && (e.ambigu || e.chaine))}`);
+  ok(!familles().includes(cle), `1. '${cle}' ne doit pas être une famille — les familles sont des MOTS`);
+  ok(e && entreesDe(LIBS[cle]).every((k) => k in e.membres),
+     `1. '${mot}.${nom}' porte le contenu du fichier pour membres — reçu ${JSON.stringify(e && Object.keys(e.membres))}`);
+  ok(e && e.documented === Boolean(LIBS[cle].documented), `1. '${mot}.${nom}' — documented ${JSON.stringify(e && e.documented)}`);
+}
 for (const [cle, place, nom] of attendues) {
-  const mot = (LIBS[cle] && LIBS[cle].resolves) || cle;
+  const mot = motDe(cle);
   const f = parFamille.get(mot);
   const e = f && f.entrees.find((o) => o.nom === nom && o.place === place);
   ok(!!e, `1. '${cle}${place ? '.' + place : ''}.${nom}' n'est pas rendu par la famille '${mot}'`);
@@ -79,7 +102,7 @@ ok(familles().includes('scale') && familles().includes('alphabet') && familles()
 // `alphabets`, documenté, dans la même famille. La racine de la famille ne garde qu'un contributeur ;
 // c'est l'entrée qui porte le signal, et ce volet tient sur TOUTES les entrées de TOUS les catalogues.
 for (const [cle, place, nom] of attendues) {
-  const mot = (LIBS[cle] && LIBS[cle].resolves) || cle;
+  const mot = motDe(cle);
   const e = parFamille.get(mot).entrees.find((o) => o.nom === nom && o.place === place);
   if (!e) continue;   // déjà rougi au volet 1
   ok(e.documented === Boolean(LIBS[cle].documented),

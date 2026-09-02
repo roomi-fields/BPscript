@@ -55,6 +55,20 @@ function assurerLeRegistre() {
   _charge = true;
   chargerLesLibrairies(sourcesDeLibrairie(), _compiler, registerLib);
 }
+/**
+ * LA VERSION DU REGISTRE, pour qui en dérive un index et le mémorise : elle change à chaque
+ * enregistrement, et un index mémorisé sous une autre version est périmé.
+ *
+ * ⛔ CE QUI A COÛTÉ CE POINT, mesuré le 2026-09-02 sur la porte CONSTRUITE, hors dépôt : le premier
+ * `compileToBPxAST` d'un processus déclenche le chargement, qui compile chaque source de librairie,
+ * dont chacune passe par la jonction des librairies à l'arbre, qui lit l'index des objets — et
+ * l'index se mémorisait là, sur un registre encore PARTIEL, pour tout le processus. Toute scène
+ * compilée ensuite recevait une section vide. Le garde était vert parce qu'il interrogeait la porte
+ * AVANT de compiler : le premier index se construisait alors sur le registre complet. Un index qui
+ * se mémorise pendant l'amorçage mémorise l'amorçage — sauf s'il sait que le registre a bougé.
+ */
+let _version = 0;
+function versionDuRegistre() { return _version; }
 /** Le registre, chargé s'il ne l'est pas encore. La seule porte de lecture. */
 function leRegistre() {
   assurerLeRegistre();
@@ -70,6 +84,7 @@ const cache = {};
 function registerLib(name, data) {
   leRegistre()[name] = data;
   cache[name] = data;  // also populate cache
+  _version++;
   _universeControls = null;  // le registre a bougé → recalculer l'univers
   _universeComponentControls = null;
   _universeRuleScope = null;
@@ -1380,6 +1395,6 @@ function describeVocabulary(directives = []) {
 }
 
 export { placesDesLibrairies };
-export { leRegistre, brancherLeCompilateur, loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, groupeDUnicite, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, universeAddressKeys, universeReservedDirectives, registerLib, registerAll, clearRegistry,
+export { leRegistre, versionDuRegistre, brancherLeCompilateur, loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, groupeDUnicite, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, universeAddressKeys, universeReservedDirectives, registerLib, registerAll, clearRegistry,
   nomsDeTerminaux,
 };

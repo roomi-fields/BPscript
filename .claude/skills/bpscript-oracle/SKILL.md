@@ -169,13 +169,11 @@ forme avec `S -> lead.C4` compile. *Un refus se lit avant d'être compté.*
 **Le type vient en tête**, et la **position** qualifie la ligne, de part et d'autre du délimiteur
 `-----`. L'arobase de tête est sortie le 2026-08-16.
 
-> ⚠️ **La scène qui suit est SUSPENDUE depuis le 2026-09-02** : la portée des types du socle est
-> entrée le jour même, et cette scène ne porte aucune invocation avant sa première déclaration.
-> **Elle ne peut pas être re-mesurée aujourd'hui** — le paquet publié de BPscript ne s'importe plus
-> (`ed3d208`, un chunk absent), et Atlas ne recopie pas à la main une forme qu'il ne compile pas.
-> **La réécriture attendue est une ligne `core` en tête**, avant `flag`.
+**L'invocation vient avant toute déclaration** : un type du socle n'est en portée que s'il est
+invoqué, et le registre se remplit à la lecture.
 
 ```bpscript
+core
 flag section:1
 symbol x
 in.midi sync1

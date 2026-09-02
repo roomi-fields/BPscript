@@ -28,6 +28,7 @@ import { segmenter } from './segmentation.js';
 import { resolveActors, expandAlphabetTerminals, alphabetHerite, octavesHerite, tuningHerite,
          sortieHeritee, evalHerite, defaultActorTransport } from './actorResolver.js';
 import { validateControls } from './controlValidation.js';
+import { joindreLesLibrairies } from './librairies-jointes.js';
 
 /**
  * Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table
@@ -463,6 +464,10 @@ export function resoudreSource(source, environnement) {
     // exactement comme quand la découpe vivait en aval dans BPx.
     splitCompoundTerminals(ast, libCtx);
     retirerArdoiseAlphabet(ast);  // EN DERNIER : l'adresse remplace l'ardoise pour l'aval, jamais pour le pipeline interne
+    // L'ARBRE JOINT LE CONTENU DES LIBRAIRIES QU'IL INVOQUE — décision de Romain, 2026-09-02. Après
+    // tout ce qui pose une référence (liaisons d'acteur, défauts, adresses) : la section lit l'arbre
+    // FINAL, et elle est la dernière chose qui s'y ajoute.
+    result.errors.push(...joindreLesLibrairies(ast));
   } catch (e) {
     if (e instanceof ParseError) result.errors.push({ message: e.message, line: e.token && e.token.line });
     // Un caractère illisible est une erreur de COMPILATION, pas un plantage. Elle arrivait ici en

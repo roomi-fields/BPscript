@@ -3,14 +3,17 @@ import {
   brancherLeCompilateur,
   describeVocabulary,
   groupeDUnicite,
+  leRegistre,
   loadLib,
   loadLibsFromDirectives,
   nomsDeTerminaux,
   parse,
+  placesDesLibrairies,
   resolveActorAlphabet,
   resolveActorAlphabetSource,
-  universeControlNames
-} from "./chunk-ERJ6VM3M.js";
+  universeControlNames,
+  versionDuRegistre
+} from "./chunk-3BSXLUGB.js";
 import {
   LexError,
   tokenize
@@ -18,6 +21,11 @@ import {
 import {
   LIBS
 } from "./chunk-4TF53S6W.js";
+import {
+  CHAMPS_DE_FICHIER,
+  CHAMPS_DU_PAQUET,
+  entreesDe
+} from "./chunk-JWEI77WV.js";
 
 // src/transpiler/actorResolver.js
 function expandAlphabetTerminals(alphabetLib, octavesOverride) {
@@ -1761,6 +1769,198 @@ function validateControls(ast, controls, qualifies = {}) {
   return errors;
 }
 
+// src/transpiler/index-des-objets.js
+function motDe(cle, lib) {
+  return lib && typeof lib.resolves === "string" && lib.resolves || cle;
+}
+function membresDe(objet2, exclure = /* @__PURE__ */ new Set()) {
+  const out = {};
+  for (const [k, v] of Object.entries(objet2 || {})) {
+    if (k === "_derive" || k.startsWith("_") || exclure.has(k)) continue;
+    out[k] = v;
+  }
+  return out;
+}
+var _index = null;
+var _versionIndexee = -1;
+function index() {
+  const LIBS2 = leRegistre();
+  const version = versionDuRegistre();
+  if (_index && _versionIndexee === version) return _index;
+  const familles2 = /* @__PURE__ */ new Map();
+  const objets2 = /* @__PURE__ */ new Map();
+  const poser = (o) => {
+    if (!objets2.has(o.nom)) objets2.set(o.nom, []);
+    objets2.get(o.nom).push(o);
+  };
+  const PLACES = placesDesLibrairies(LIBS2);
+  const familleDe = (mot) => {
+    if (!familles2.has(mot)) familles2.set(mot, { nom: mot, membres: {}, entrees: [], contributeurs: [] });
+    return familles2.get(mot);
+  };
+  for (const [cle, lib] of Object.entries(LIBS2)) {
+    if (!lib || typeof lib !== "object" || Array.isArray(lib)) continue;
+    const barre = cle.indexOf("/");
+    if (barre > 0) {
+      const dossier = cle.slice(0, barre);
+      const mot2 = motDe(dossier, LIBS2[dossier]);
+      const fam2 = familleDe(mot2);
+      fam2.contributeurs.push(cle);
+      const o = {
+        nom: cle.slice(barre + 1),
+        famille: mot2,
+        derive: null,
+        membres: membresDe(lib, CHAMPS_DE_FICHIER),
+        place: null,
+        chaine: [mot2, cle.slice(barre + 1)],
+        documented: Boolean(lib.documented)
+      };
+      fam2.entrees.push(o);
+      poser(o);
+      continue;
+    }
+    const mot = motDe(cle, lib);
+    const places = new Set((PLACES[cle] || []).filter((p) => p !== "_deduites"));
+    const fam = familleDe(mot);
+    fam.contributeurs.push(cle);
+    for (const [k, v] of Object.entries(lib)) {
+      if (k.startsWith("_") || CHAMPS_DU_PAQUET.has(k) || places.has(k)) continue;
+      if (v && typeof v === "object" && !Array.isArray(v)) continue;
+      if (!(k in fam.membres)) fam.membres[k] = v;
+    }
+    const entree = (nom, brut, place) => {
+      const o = {
+        nom,
+        famille: mot,
+        derive: typeof brut._derive === "string" ? brut._derive : null,
+        membres: membresDe(brut),
+        place,
+        chaine: [mot, nom],
+        documented: Boolean(lib.documented)
+      };
+      fam.entrees.push(o);
+      poser(o);
+    };
+    for (const nom of entreesDe(lib)) {
+      if (places.has(nom)) continue;
+      entree(nom, lib[nom], null);
+    }
+    for (const place of places) {
+      const contenu = lib[place];
+      if (!contenu || typeof contenu !== "object" || Array.isArray(contenu)) continue;
+      for (const nom of entreesDe(contenu)) entree(nom, contenu[nom], place);
+    }
+  }
+  _index = { familles: familles2, objets: objets2 };
+  _versionIndexee = version;
+  return _index;
+}
+var copie = (o) => ({ ...o, membres: { ...o.membres }, chaine: [...o.chaine] });
+function familles() {
+  return [...index().familles.keys()];
+}
+function famille(mot) {
+  const f = index().familles.get(mot);
+  if (!f) return null;
+  return { nom: f.nom, membres: { ...f.membres }, entrees: f.entrees.map(copie) };
+}
+function objet(chaine) {
+  const segments = String(chaine || "").split(".").filter(Boolean);
+  if (!segments.length) return null;
+  const nom = segments[segments.length - 1];
+  const candidats = (index().objets.get(nom) || []).filter((o) => {
+    const c = o.chaine;
+    if (segments.length > c.length) return false;
+    for (let i = 1; i <= segments.length; i++) if (c[c.length - i] !== segments[segments.length - i]) return false;
+    return true;
+  });
+  if (candidats.length === 1) return copie(candidats[0]);
+  if (candidats.length === 0) return null;
+  return { ambigu: candidats.map((o) => o.chaine.join(".")) };
+}
+function objets() {
+  const out = [];
+  for (const liste of index().objets.values()) for (const o of liste) out.push(copie(o));
+  return out;
+}
+
+// src/transpiler/librairies-jointes.js
+var NOM_D_ENTREE = /^[A-Za-z0-9_][A-Za-z0-9_-]*$/;
+function estUnePlaceOuUnMembre(chaine) {
+  const [mot, nom, ...reste] = chaine.split(".");
+  if (reste.length) return false;
+  const f = famille(mot);
+  if (!f) return false;
+  return nom in f.membres || f.entrees.some((e) => e.place === nom);
+}
+function referencesDe(ast) {
+  const chaines = [];
+  const mots = [];
+  const vu = /* @__PURE__ */ new Set();
+  const noter = (liste, x) => {
+    if (!vu.has(x)) {
+      vu.add(x);
+      liste.push(x);
+    }
+  };
+  const visiter = (o) => {
+    if (!o || typeof o !== "object") return;
+    if (Array.isArray(o)) {
+      for (const x of o) visiter(x);
+      return;
+    }
+    for (const [k, v] of Object.entries(o)) {
+      if (k === "librairies") continue;
+      if (k === "libRefs" && Array.isArray(v)) {
+        for (const r of v) if (typeof r === "string") noter(chaines, r);
+      } else if (k === "references" && Array.isArray(v)) {
+        for (const r of v) if (r && r.type === "ActorReference" && r.category !== "transport") noter(chaines, `${r.category}.${r.name}`);
+      } else if (k === "pairs" && Array.isArray(v)) {
+        for (const p of v) if (p && typeof p.key === "string") noter(mots, p.key);
+      } else if (k === "directives" && Array.isArray(v)) {
+        for (const d of v) if (d && typeof d.name === "string" && !d.subkey) noter(mots, d.name);
+        visiter(v);
+      } else visiter(v);
+    }
+  };
+  visiter(ast);
+  return { chaines, mots };
+}
+function joindreLesLibrairies(ast) {
+  const fautes = [];
+  const FAMILLES = new Set(familles());
+  const section = {};
+  const { chaines, mots } = referencesDe(ast);
+  const file = [...chaines];
+  for (const mot of mots) {
+    const o = objet(mot);
+    if (!o) continue;
+    if (o.ambigu) file.push(...o.ambigu);
+    else file.push(o.chaine.join("."));
+  }
+  while (file.length) {
+    const chaine = file.shift();
+    if (chaine in section) continue;
+    const segments = chaine.split(".");
+    if (!FAMILLES.has(segments[0])) continue;
+    if (!segments.every((s) => NOM_D_ENTREE.test(s))) continue;
+    const o = objet(chaine);
+    if (!o) {
+      if (estUnePlaceOuUnMembre(chaine)) continue;
+      fautes.push({ message: `librairies jointes : '${chaine}' est invoqu\xE9 par la sc\xE8ne et la porte des objets ne le rend pas` });
+      continue;
+    }
+    if (o.ambigu) {
+      fautes.push({ message: `librairies jointes : '${chaine}' d\xE9signe plusieurs objets \u2014 ${o.ambigu.join(", ")}` });
+      continue;
+    }
+    section[chaine] = o;
+    for (const [k, v] of Object.entries(o.membres)) if (FAMILLES.has(k) && typeof v === "string") file.push(`${k}.${v}`);
+  }
+  ast.librairies = section;
+  return fautes;
+}
+
 // src/transpiler/bpxAst.js
 function segmenterLesTerminaux(ast, known, paquets) {
   const lire = (nom) => {
@@ -1852,6 +2052,7 @@ function resoudreSource(source, environnement) {
     result.errors.push(...refuserEsclaveSansMaitre(ast));
     splitCompoundTerminals(ast, libCtx);
     retirerArdoiseAlphabet(ast);
+    result.errors.push(...joindreLesLibrairies(ast));
   } catch (e) {
     if (e instanceof ParseError) result.errors.push({ message: e.message, line: e.token && e.token.line });
     else if (e instanceof LexError) result.errors.push({ message: e.message, line: e.line });
@@ -1868,6 +2069,10 @@ var bpxAst_default = compileToBPxAST;
 brancherLeCompilateur(compileToBPxAST);
 
 export {
+  familles,
+  famille,
+  objet,
+  objets,
   resoudreSource,
   compileToBPxAST,
   bpxAst_default

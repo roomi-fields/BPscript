@@ -5,7 +5,7 @@
 > vit dans le document d'architecture, chez Atlas, qui cite celui-ci.
 ## Ce qui est mesuré
 
-- **23 modules** dans `src/transpiler/`, **15397 lignes**.
+- **25 modules** dans `src/transpiler/`, **15601 lignes**.
 - Le **rôle** est lu dans l'en-tête de chaque fichier, verbatim — jamais interprété.
 - Les **arêtes** sont les imports d'un module vers un voisin du même dossier.
 
@@ -15,12 +15,13 @@
 | --- | ---: | ---: | ---: | --- |
 | `parser.js` | 7906 | 4 | 2 | BPScript Parser |
 | `resolution.js` | 3019 | 4 | 1 | L'ÉTAGE QUI RÉSOUT — le troisième des quatre, et le seul qui n'avait pas de domicile. |
-| `libs.js` | 1386 | 4 | 7 | BPScript Library Loader |
+| `libs.js` | 1401 | 4 | 7 | BPScript Library Loader |
 | `actorResolver.js` | 585 | 1 | 2 | BPScript Actor Resolver |
+| `bpxAst.js` | 516 | 9 | 2 | Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table |
 | `tokenizer.js` | 514 | 0 | 2 | BPScript Tokenizer |
-| `bpxAst.js` | 511 | 8 | 2 | Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table |
 | `librairies.js` | 347 | 1 | 1 | LA LECTURE DES LIBRAIRIES — une source écrite dans le langage devient un objet du registre. |
-| `objets.js` | 152 | 3 | 0 | LA PORTE DES OBJETS — ce qu'une librairie déclare, rendu comme des objets et non comme une table |
+| `index-des-objets.js` | 182 | 2 | 2 | L'INDEX DES OBJETS — ce que les librairies déclarent, rendu comme des objets, pour la porte |
+| `librairies-jointes.js` | 125 | 1 | 1 | L'ARBRE JOINT LE CONTENU DES LIBRAIRIES QU'IL INVOQUE — décision de Romain, 2026-09-02. |
 | `orderTokens.js` | 123 | 0 | 0 | — |
 | `controlValidation.js` | 113 | 0 | 1 | Collecte récursivement toutes les paires de SettingBag de l'AST. |
 | `libs-champs.js` | 98 | 0 | 3 | LES CHAMPS DE FICHIER D'UNE LIBRAIRIE — déclarés UNE FOIS, pour tous mes lecteurs. |
@@ -35,6 +36,7 @@
 | `libs-bundle.js` | 43 | 2 | 0 | LE PAQUET DÉRIVÉ — `libs-data.js`, imprimé depuis le registre du compilateur. |
 | `index.js` | 38 | 2 | 1 | BPScript Transpiler — Façade |
 | `constants.js` | 33 | 0 | 1 | BPScript — constantes partagées transpileur |
+| `objets.js` | 29 | 2 | 0 | LA PORTE DES OBJETS — ce qu'une librairie déclare, rendu comme des objets et non comme une table |
 | `gabarits-data.js` *(généré)* | 8 | 0 | 0 | — |
 
 ## Flux réel
@@ -47,7 +49,9 @@ flowchart LR
   controlValidation_js["controlValidation.js"]
   gabarits_bundle_mjs["gabarits-bundle.mjs"]
   gabarits_data_js["gabarits-data.js"]
+  index_des_objets_js["index-des-objets.js"]
   index_js["index.js"]
+  librairies_jointes_js["librairies-jointes.js"]
   librairies_js["librairies.js"]
   libs_bundle_check_js["libs-bundle-check.js"]
   libs_bundle_js["libs-bundle.js"]
@@ -73,8 +77,12 @@ flowchart LR
   bpxAst_js --> segmentation_js
   bpxAst_js --> actorResolver_js
   bpxAst_js --> controlValidation_js
+  bpxAst_js --> librairies_jointes_js
+  index_des_objets_js --> libs_js
+  index_des_objets_js --> libs_champs_js
   index_js --> bpxAst_js
   index_js --> libs_js
+  librairies_jointes_js --> index_des_objets_js
   librairies_js --> libs_champs_js
   libs_bundle_js --> index_js
   libs_bundle_js --> libs_js
@@ -84,8 +92,7 @@ flowchart LR
   libs_js --> syntaxe_data_js
   libs_js --> libs_champs_js
   objets_js --> bpxAst_js
-  objets_js --> libs_js
-  objets_js --> libs_champs_js
+  objets_js --> index_des_objets_js
   parser_js --> tokenizer_js
   parser_js --> libs_js
   parser_js --> constants_js

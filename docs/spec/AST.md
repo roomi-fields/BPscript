@@ -38,8 +38,30 @@ Scene {
   libRefs?: string[]                 // invocations par provenance, adresses opaques
   noteTerminals?: string[]           // les noms de cette scène qui SONT des notes
   alphabetTerminals?: string[]       // les noms qui sont des terminaux sans hauteur
+  librairies: { [chaine: string]: Objet }   // le contenu des librairies que la scène invoque
 }
 ```
+
+### `librairies` — l'arbre joint le contenu des librairies qu'il invoque
+
+L'arbre est autoportant : ce qu'une scène invoque dans une librairie voyage avec elle. La section
+porte, sous sa **chaîne d'invocation** (`alphabet.western`, `tuning.western_12TET`,
+`homomorphism.dhati`), **un `Objet` tel que la porte des objets le rend** — `bpscript/objets`, dont
+`objets.d.ts` est le contrat. La forme de l'objet vit là et ne se recopie pas ici.
+
+Un objet entre s'il est nommé par l'arbre :
+
+- par une **chaîne** — un `libRefs` de scène ou d'acteur, une liaison d'acteur ; une chaîne désigne un
+  objet ;
+- par un **mot** — la clé d'un réglage (`scaleshift:2`), le nom d'une directive sans sous-clé ; un mot
+  désigne chaque objet qui le porte, le contrôle déclaré comme la fonction digitale avec son corps ;
+- par un **membre** d'un objet déjà entré dont la clé est un mot de famille — un accordage nomme un
+  tempérament, le tempérament entre.
+
+Rien d'autre n'entre, et rien n'est calculé : `Sa` reste `Sa`, la résolution appartient à l'aval, qui
+lit ici la donnée qu'il relisait dans un catalogue. Les défauts entrent par la même voie : une scène
+sans accordage explicite porte celui de son acteur implicite. Une scène qui n'invoque rien porte une
+section vide.
 
 ### `noteTerminals` et `alphabetTerminals` — l'arbre dit lui-même ce qui est une note
 
