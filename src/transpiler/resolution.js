@@ -54,6 +54,7 @@ import { sortieHeritee, alphabetHerite, octavesHerite, tuningHerite, evalHerite 
   from './actorResolver.js';
 import { parse, ParseError } from './parser.js';
 import { LIBS } from './libs-data.js';
+import { leSchema, lesDefauts } from './index-des-objets.js';
 import { universeControlNames, resolveActorAlphabet, nomsDeTerminaux, loadLib } from './libs.js';
 import { expandAlphabetTerminals } from './actorResolver.js';
 import { resolveActorAlphabetSource } from './libs.js';
@@ -657,7 +658,7 @@ const isCtxWildcardName = (s) => s === '?' || CTX_METAVAR_RE.test(s);
  * faute de terminal.
  */
 export function canalFautif(canal) {
-  const cat = LIBS.core?.schema?.channels || {};
+  const cat = (leSchema() || {}).channels || {};
   const c = cat[canal];
   if (!c) return `le canal '${canal}' n'existe pas — les canaux sont ${Object.keys(cat).join(', ')}. `
     + `La liste est FERMÉE.`;
@@ -1395,7 +1396,7 @@ export function annotateBackticks(ast) {
   const acteurEval = {};
   for (const a of ast.actors || []) if (a.properties && a.properties.eval) acteurEval[a.name] = a.properties.eval;
   const sceneEval = (ast.directives || []).find((d) => d.name === 'eval' && (d.subkey || d.runtime));
-  const socleEval = loadLib('core')?.defaults?.components?.eval;
+  const socleEval = (lesDefauts() || {}).eval;
   const parDefaut = (sceneEval && (sceneEval.subkey || sceneEval.runtime)) || socleEval || null;
   const resoudre = (els) => {
     for (const el of els || []) {
@@ -1577,7 +1578,7 @@ export function refuserAttenteNonDeclaree(ast) {
   // mot RETIRÉ du langage, dont la légende parle encore de direction. On aurait exempté une racine
   // morte. Le catalogue, lui, ne décrit que ce qui existe.
   const directions = new Set();
-  for (const canal of Object.values(LIBS.core?.schema?.channels || {})) {
+  for (const canal of Object.values((leSchema() || {}).channels || {})) {
     if (!canal || typeof canal !== 'object') continue;
     for (const [cle, valeur] of Object.entries(canal)) {
       if (typeof valeur === 'boolean' && valeur === true && cle !== 'writable') directions.add(cle);
@@ -2201,7 +2202,7 @@ export function validateReferences(ast, libCtx = {}) {
   // LE CANAL D'UNE RÉALISATION EST LE NOM DE SA LIBRAIRIE, quand ce nom est un canal déclaré
   // (`midi.volume` → canal `midi`). Aucun nom n'est écrit ici : le catalogue des canaux et les
   // liens de réalisation sont tous deux de la donnée.
-  const canauxDeclares = new Set(Object.keys(LIBS.core?.schema?.channels || {}));
+  const canauxDeclares = new Set(Object.keys((leSchema() || {}).channels || {}));
   const realisationsPar = {};      // nom nu → Set des canaux qui le réalisent
   for (const [face, reals] of Object.entries(libCtx.implementations || {})) {
     const nom = face.slice(face.indexOf('.') + 1);
@@ -2521,7 +2522,7 @@ export function validateReferences(ast, libCtx = {}) {
   const motsDeclares = () => new Set(
     Object.values(LIBS).map((l) => l && typeof l === 'object' ? l.resolves : null).filter(Boolean));
   const libExiste = (nom) => motsDeclares().has(nom);
-  const motsDuLangage = new Set(loadLib('core')?.schema?.reservedDirectives || []);
+  const motsDuLangage = new Set((leSchema() || {}).reservedDirectives || []);
   // ⛔ LA TÊTE NUE ACCEPTAIT ENCORE LE NOM DE FICHIER, ET C'ÉTAIT LA DERNIÈRE BRÈCHE.
   //
   // Ce juge écartait les directives SANS sous-clé — `if (!d.subkey) continue` — donc `alphabets` seul
@@ -2788,10 +2789,10 @@ export function validateReferences(ast, libCtx = {}) {
   // de SORTIE se reconnaît à ce qu'elle est déclarée clé d'acteur (`schema.actorKeys`) et qu'elle
   // nomme une direction que les canaux portent (`schema.channels`) — deux listes de la donnée qui
   // se croisent. Ajouter une clé au langage se fait donc en librairie, sans une ligne de code.
-  const canaux = LIBS.core?.schema?.channels || {};
+  const canaux = (leSchema() || {}).channels || {};
   const directionsDeCanal = new Set(Object.values(canaux)
     .flatMap((c) => Object.entries(c || {}).filter(([, v]) => typeof v === 'boolean').map(([k]) => k)));
-  const clesDeSortie = new Set((LIBS.core?.schema?.actorKeys || [])
+  const clesDeSortie = new Set(((leSchema() || {}).actorKeys || [])
     .filter((k) => directionsDeCanal.has(k) && !catalogAxes.includes(k)));
   for (const def of ast.defs || []) {
     if (!def || def.kind !== 'terminal' || !def.keys) continue;
@@ -2831,16 +2832,19 @@ export function chargerPorteesPermises() {
       else w(v);
     }
   };
-  // `controls.json` SCINDÉ le 2026-08-10 (une librairie, un destinataire — LIBRAIRIES.md:213) en
-  // quatre fichiers ; `controls` lui-même n'est plus qu'un stub d'`apporte` (aucun contrôle
-  // propre), donc les QUATRE remplacent l'ancien `w(LIBS.controls)` seul.
+  // ⛔ CINQ LIBRAIRIES NOMMÉES, ET C'EST UNE DETTE MESURÉE, PAS UN CHOIX — 2026-09-02. Lire le
+  // registre ENTIER ici change le langage, mesuré : le refus témoin « 'scaleshift' ne peut pas
+  // s'écrire en tête de scène » disparaissait (garde `une_declaration_apres_les_regles_refuse`), et
+  // la table gagnait vingt clés — les dix-huit modes de `variation`, `syncdelay`, `tempo` — dont la
+  // portée n'est lue nulle part aujourd'hui. `vel` est en outre déclaré DEUX fois (`expression.vel`,
+  // `settings.vel`), et une table à dernier-qui-parle n'a pas de règle pour ça. Qui l'emporte quand
+  // un mot est déclaré deux fois, et ce que vaut une portée déclarée hors de ces cinq, est une
+  // décision de langage remontée à Romain ; la liste reste jusqu'à son mot. `controls.json` a été
+  // SCINDÉ le 2026-08-10 en ces quatre-là, et les procédures moteur ont rejoint `engine`.
   w(LIBS.expression);
   w(LIBS.midi);
   w(LIBS.audio);
   w(LIBS.transpo);
-  // Les procédures MOTEUR (mode/scan/weight/goto/rndtime, destru/randomize…) ont rejoint
-  // lib/engine.bpsl le 2026-08-10 (une clé ne vit que dans UNE librairie) — leur `scope` doit
-  // continuer à alimenter cette table, sinon `(scan:…)`/`(weight:…)` redeviennent « inconnu ».
   w(LIBS.engine);
   // ── UNE CLÉ D'ADRESSE PORTE SA PROPRE PORTÉE, comme tout le reste du vocabulaire ────────────
   // Elles ont quitté le socle le 2026-08-15 (décision Romain : « dans midi ») pour la librairie du

@@ -55,8 +55,8 @@ Un objet entre s'il est nommé par l'arbre :
   objet ;
 - par un **mot** — la clé d'un réglage (`scaleshift:2`), le nom d'une directive sans sous-clé ; un mot
   désigne chaque objet qui le porte, le contrôle déclaré comme la fonction digitale avec son corps ;
-- par un **membre** d'un objet déjà entré dont la clé est un mot de famille — un accordage nomme un
-  tempérament, le tempérament entre.
+- par un **membre** d'un objet déjà entré dont la clé est un mot de famille, à toute profondeur — un
+  accordage nomme un tempérament, un terminal nomme sa voix, et l'objet nommé entre.
 
 Rien d'autre n'entre, et rien n'est calculé : `Sa` reste `Sa`, la résolution appartient à l'aval, qui
 lit ici la donnée qu'il relisait dans un catalogue. Les défauts entrent par la même voie : une scène

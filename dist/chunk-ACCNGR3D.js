@@ -2,7 +2,9 @@ import {
   T
 } from "./chunk-3Y64WDZ4.js";
 import {
-  CHAMPS_DE_FICHIER
+  CHAMPS_DE_FICHIER,
+  CHAMPS_DU_PAQUET,
+  entreesDe
 } from "./chunk-JWEI77WV.js";
 import {
   SYNTAXE
@@ -2516,6 +2518,133 @@ function describeVocabulary(directives = []) {
   };
 }
 
+// src/transpiler/index-des-objets.js
+function motDe(cle, lib) {
+  return lib && typeof lib.resolves === "string" && lib.resolves || cle;
+}
+function membresDe(objet2, exclure = /* @__PURE__ */ new Set()) {
+  const out = {};
+  for (const [k, v] of Object.entries(objet2 || {})) {
+    if (k === "_derive" || k.startsWith("_") || exclure.has(k)) continue;
+    out[k] = v;
+  }
+  return out;
+}
+var _index = null;
+var _versionIndexee = -1;
+function index() {
+  const LIBS = leRegistre();
+  const version = versionDuRegistre();
+  if (_index && _versionIndexee === version) return _index;
+  const familles2 = /* @__PURE__ */ new Map();
+  const objets2 = /* @__PURE__ */ new Map();
+  const poser = (o) => {
+    if (!objets2.has(o.nom)) objets2.set(o.nom, []);
+    objets2.get(o.nom).push(o);
+  };
+  const PLACES = placesDesLibrairies(LIBS);
+  const familleDe = (mot) => {
+    if (!familles2.has(mot)) familles2.set(mot, { nom: mot, membres: {}, entrees: [], contributeurs: [] });
+    return familles2.get(mot);
+  };
+  for (const [cle, lib] of Object.entries(LIBS)) {
+    if (!lib || typeof lib !== "object" || Array.isArray(lib)) continue;
+    const barre = cle.indexOf("/");
+    if (barre > 0) {
+      const dossier = cle.slice(0, barre);
+      const mot2 = motDe(dossier, LIBS[dossier]);
+      const fam2 = familleDe(mot2);
+      fam2.contributeurs.push(cle);
+      const o = {
+        nom: cle.slice(barre + 1),
+        famille: mot2,
+        derive: null,
+        membres: membresDe(lib, CHAMPS_DE_FICHIER),
+        place: null,
+        chaine: [mot2, cle.slice(barre + 1)],
+        documented: Boolean(lib.documented)
+      };
+      fam2.entrees.push(o);
+      poser(o);
+      continue;
+    }
+    const mot = motDe(cle, lib);
+    const places2 = new Set((PLACES[cle] || []).filter((p) => p !== "_deduites"));
+    const fam = familleDe(mot);
+    fam.contributeurs.push(cle);
+    for (const [k, v] of Object.entries(lib)) {
+      if (k.startsWith("_") || CHAMPS_DU_PAQUET.has(k) || places2.has(k)) continue;
+      if (v && typeof v === "object" && !Array.isArray(v)) continue;
+      if (!(k in fam.membres)) fam.membres[k] = v;
+    }
+    const entree = (nom, brut, place) => {
+      const o = {
+        nom,
+        famille: mot,
+        derive: typeof brut._derive === "string" ? brut._derive : null,
+        membres: membresDe(brut),
+        place,
+        chaine: [mot, nom],
+        documented: Boolean(lib.documented)
+      };
+      fam.entrees.push(o);
+      poser(o);
+    };
+    for (const nom of entreesDe(lib)) {
+      if (places2.has(nom)) continue;
+      entree(nom, lib[nom], null);
+    }
+    for (const place of places2) {
+      const contenu = lib[place];
+      if (!contenu || typeof contenu !== "object" || Array.isArray(contenu)) continue;
+      for (const nom of entreesDe(contenu)) entree(nom, contenu[nom], place);
+    }
+  }
+  _index = { familles: familles2, objets: objets2 };
+  _versionIndexee = version;
+  return _index;
+}
+var copie = (o) => ({ ...o, membres: { ...o.membres }, chaine: [...o.chaine] });
+function familles() {
+  return [...index().familles.keys()];
+}
+function famille(mot) {
+  const f = index().familles.get(mot);
+  if (!f) return null;
+  return { nom: f.nom, membres: { ...f.membres }, entrees: f.entrees.map(copie) };
+}
+function objet(chaine) {
+  const segments = String(chaine || "").split(".").filter(Boolean);
+  if (!segments.length) return null;
+  const nom = segments[segments.length - 1];
+  const candidats = (index().objets.get(nom) || []).filter((o) => {
+    const c = o.chaine;
+    if (segments.length > c.length) return false;
+    for (let i = 1; i <= segments.length; i++) if (c[c.length - i] !== segments[segments.length - i]) return false;
+    return true;
+  });
+  if (candidats.length === 1) return copie(candidats[0]);
+  if (candidats.length === 0) return null;
+  return { ambigu: candidats.map((o) => o.chaine.join(".")) };
+}
+function objets() {
+  const out = [];
+  for (const liste of index().objets.values()) for (const o of liste) out.push(copie(o));
+  return out;
+}
+function objetUnique(nom) {
+  const o = objet(nom);
+  if (!o) return null;
+  if (o.ambigu) throw new Error(`'${nom}' est d\xE9clar\xE9 par plusieurs librairies \u2014 ${o.ambigu.join(", ")} \u2014 et le compilateur ne peut pas choisir`);
+  return o.membres;
+}
+function leSchema() {
+  return objetUnique("schema");
+}
+function lesDefauts() {
+  return objetUnique("components");
+}
+
 // src/transpiler/constants.js
 var BP3_OPERATORS = Object.freeze({ plus: "+", fin: ";", star: "*" });
 
@@ -2533,14 +2662,15 @@ function addressKeys() {
   }
   return keys;
 }
+var motReserve = (nom) => ((leSchema() || {}).reservedDirectives || []).includes(nom);
 var _actorKeys = null;
 function actorKeysData() {
   if (_actorKeys) return _actorKeys;
-  if (!loadLib("core")) return { valides: /* @__PURE__ */ new Set(), perimees: /* @__PURE__ */ new Set(), toutes: /* @__PURE__ */ new Set() };
-  const sch = (loadLib("core") || {}).schema || {};
+  const sch = leSchema();
+  if (!sch) return { valides: /* @__PURE__ */ new Set(), perimees: /* @__PURE__ */ new Set(), toutes: /* @__PURE__ */ new Set() };
   const valides = sch.actorKeys, perimees = sch.deprecatedActorKeys || [];
   if (!Array.isArray(valides) || valides.length === 0) {
-    throw new Error("lib/core.json schema.actorKeys est vide ou absent \u2014 le parseur n'a plus de cl\xE9s d'acteur");
+    throw new Error("l'objet 'schema' ne d\xE9clare aucune cl\xE9 d'acteur (actorKeys) \u2014 le parseur n'a plus de cl\xE9s d'acteur");
   }
   _actorKeys = {
     valides: new Set(valides),
@@ -2552,11 +2682,11 @@ function actorKeysData() {
 var _catalogAxisKeys = null;
 function catalogAxisKeys() {
   if (_catalogAxisKeys) return _catalogAxisKeys;
-  const core = loadLib("core");
-  if (!core) return /* @__PURE__ */ new Set();
-  const axes = core?.schema?.catalogAxes;
+  const sch = leSchema();
+  if (!sch) return /* @__PURE__ */ new Set();
+  const axes = sch.catalogAxes;
   if (!Array.isArray(axes) || axes.length === 0) {
-    throw new Error("lib/core.json schema.catalogAxes est vide ou absent \u2014 le parseur n'a plus d'axes de catalogue");
+    throw new Error("l'objet 'schema' ne d\xE9clare aucun axe de catalogue (catalogAxes) \u2014 le parseur n'a plus d'axes de catalogue");
   }
   _catalogAxisKeys = new Set(axes);
   return _catalogAxisKeys;
@@ -2564,15 +2694,13 @@ function catalogAxisKeys() {
 var _deprecatedTransports = null;
 function deprecatedTransports() {
   if (_deprecatedTransports) return _deprecatedTransports;
-  const core = loadLib("core") || {};
-  _deprecatedTransports = new Set(core.schema && core.schema.deprecatedTransports || []);
+  _deprecatedTransports = new Set((leSchema() || {}).deprecatedTransports || []);
   return _deprecatedTransports;
 }
 var _channelCatalog = null;
 function channelCatalog() {
   if (_channelCatalog) return _channelCatalog;
-  const core = loadLib("core") || {};
-  _channelCatalog = core.schema && core.schema.channels || {};
+  _channelCatalog = (leSchema() || {}).channels || {};
   return _channelCatalog;
 }
 var _outChannels = null;
@@ -2632,8 +2760,8 @@ var _voicesIndex = null;
 function voicesIndex() {
   if (_voicesIndex) return _voicesIndex;
   _voicesIndex = /* @__PURE__ */ new Map();
-  const lib = loadLib("voice");
-  for (const [name, def] of Object.entries(lib && lib.objects || {})) {
+  const voix = (famille("voice")?.entrees || []).map((o) => [o.nom, o.membres]);
+  for (const [name, def] of voix) {
     const forDevices = def && typeof def.for === "object" && def.for ? { ...def.for } : {};
     _voicesIndex.set(name, { base: def, forDevices });
   }
@@ -2939,7 +3067,7 @@ function parse(tokens, opts = {}) {
           initialModifiers = dir.modifiers || null;
         } else {
           scene.directives.push(dir);
-          const reserves = new Set(((loadLib("core") || {}).schema || {}).reservedDirectives || []);
+          const reserves = new Set((leSchema() || {}).reservedDirectives || []);
           const librairiesVues = /* @__PURE__ */ new Set();
           const apporterLesPrototypesDe = (nomLib) => {
             if (!nomLib || librairiesVues.has(nomLib)) return;
@@ -3466,7 +3594,7 @@ function parse(tokens, opts = {}) {
     const nom = tok.value;
     const canal = peek(2).value;
     if (!outChannels().has(canal) || !writableChannels().has(canal)) return null;
-    if (porteesDeclarees(nom) !== null || directiveDeclareeParLaLibrairie("core", nom)) return null;
+    if (porteesDeclarees(nom) !== null || motReserve(nom)) return null;
     advance();
     advance();
     advance();
@@ -3476,7 +3604,7 @@ function parse(tokens, opts = {}) {
     if (!at(T.IDENT)) return null;
     const tok = current();
     const mot = tok.value;
-    if (mot === "in" && peek(1).type === T.IDENT && !directiveDeclareeParLaLibrairie("core", "in")) {
+    if (mot === "in" && peek(1).type === T.IDENT && !motReserve("in") && porteesDeclarees("in") === null) {
       throw new ParseError(`'in ${peek(1).value}' est refus\xE9 \u2014 une entr\xE9e d\xE9clare son CANAL : 'in.<canal> ${peek(1).value}'. Les canaux d'entr\xE9e sont ${[...inChannels()].join(", ")}. Sans lui, aucun runtime n'est adress\xE9 et rien ne d\xE9clenche.`, tok);
     }
     if (mot === "in" && peek(1).type === T.PERIOD && !peek(1).spaceBefore && peek(2).type === T.IDENT) {
@@ -3527,7 +3655,7 @@ function parse(tokens, opts = {}) {
     if (!prototypesDeclares.has(mot)) {
       const apresLeNom = peek(2).type;
       const formeDeDeclaration = apresLeNom === T.NEWLINE || apresLeNom === T.EOF || apresLeNom === T.COMMENT || apresLeNom === T.COLON && !peek(2).spaceBefore;
-      if (peek(1).type === T.IDENT && formeDeDeclaration && !directiveDeclareeParLaLibrairie("core", mot) && porteesDeclarees(mot) === null) {
+      if (peek(1).type === T.IDENT && formeDeDeclaration && !motReserve(mot) && porteesDeclarees(mot) === null) {
         throw new ParseError(`'${mot} ${peek(1).value}' : '${mot}' n'est pas un type en port\xE9e. Un type en t\xEAte est un objet en port\xE9e \u2014 d\xE9clar\xE9 par la sc\xE8ne, ou apport\xE9 par une librairie invoqu\xE9e en t\xEAte (le socle vit dans 'types') \u2014 ou in.<canal>.`, tok);
       }
       return null;
@@ -4523,7 +4651,7 @@ function parse(tokens, opts = {}) {
   }
   function parseSubgrammars(initialMode, initialModifiers) {
     const subs = [];
-    let index = 1;
+    let index2 = 1;
     let safety = 0;
     let currentMode = initialMode || null;
     let currentModifiers = initialModifiers || null;
@@ -4553,7 +4681,7 @@ function parse(tokens, opts = {}) {
           blockModifiers = dir.modifiers || null;
           currentModifiers = blockModifiers;
         } else if (dir.name !== "mode") {
-          const axes = new Set(loadLib("core")?.schema?.catalogAxes || []);
+          const axes = new Set((leSchema() || {}).catalogAxes || []);
           const porteesDuMot = porteesDeclarees(dirNom);
           if (porteesDuMot && !porteesDuMot.includes("scene") && !axes.has(dirNom)) {
             const PLACE = {
@@ -4595,7 +4723,7 @@ function parse(tokens, opts = {}) {
         skipNewlines();
       }
       if (rules.length > 0) {
-        subs.push({ type: "Subgrammar", index: index++, rules, mode: blockMode, modifiers: blockModifiers });
+        subs.push({ type: "Subgrammar", index: index2++, rules, mode: blockMode, modifiers: blockModifiers });
       } else if (at(T.SEPARATOR)) {
         advance();
         skipNewlines();
@@ -5592,7 +5720,7 @@ function parse(tokens, opts = {}) {
       if (at(T.LBRACKET) && peek(1).type === T.IDENT) {
         const nom = peek(1).value;
         const CROCHET_EN_FLUX = /* @__PURE__ */ new Set(["seed"]);
-        if (CROCHET_EN_FLUX.has(nom) && !directiveDeclareeParLaLibrairie("engine", nom)) {
+        if (CROCHET_EN_FLUX.has(nom) && porteesDeclarees(nom) === null && !motReserve(nom)) {
           throw new ParseError(
             `'![${nom}:\u2026]' : '${nom}' n'est plus d\xE9clar\xE9 par la librairie 'engine'. La re-semence en flux traduit le '_srand(N)' natif, et le mot qui la porte vient d'une librairie comme tous les autres.`,
             current()
@@ -6428,10 +6556,7 @@ function parse(tokens, opts = {}) {
 }
 
 export {
-  placesDesLibrairies,
   brancherLeCompilateur,
-  versionDuRegistre,
-  leRegistre,
   universeControlNames,
   loadLib,
   groupeDUnicite,
@@ -6440,6 +6565,12 @@ export {
   nomsDeTerminaux,
   loadLibsFromDirectives,
   describeVocabulary,
+  familles,
+  famille,
+  objet,
+  objets,
+  leSchema,
+  lesDefauts,
   ParseError,
   parse
 };

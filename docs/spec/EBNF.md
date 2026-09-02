@@ -160,7 +160,8 @@ acteur, une variable, une définition et un terminal restent des `IDENT`, et com
 lettre.
 
 Une librairie s'invoque par son nom, l'entrée après le point : c'est la forme unique de tout ce qui
-vit dans un catalogue. `core` apporte le socle ; une scène qui ne l'écrit pas n'a aucun défaut.
+vit dans un catalogue. `core` apporte le socle ; une scène qui ne l'écrit pas n'a aucune valeur par
+défaut, et une déclaration par un type du socle y est refusée en nommant ce qui manque.
 
 Un réglage s'écrit par sa catégorie, l'entrée après le point. La catégorie dit à quoi le réglage
 touche, donc qui le consomme : `transpo.` la hauteur, `time.` le temps qui s'écoule, `engine.`

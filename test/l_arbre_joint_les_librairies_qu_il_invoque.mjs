@@ -93,12 +93,23 @@ for (const nom of nomsBps()) {
     const attendu = objet(chaine);
     ok(attendu && !attendu.ambigu && JSON.stringify(e) === JSON.stringify(attendu),
        `${nom} : 'librairies[${chaine}]' n'est pas l'objet que la porte rend — l'arbre ne calcule rien, il joint`);
-    for (const [k, v] of Object.entries(e.membres || {})) {
-      if (!FAMILLES.has(k) || typeof v !== 'string') continue;
-      const suivie = `${k}.${v}`;
+    // À TOUTE PROFONDEUR — la voix d'un terminal vit sous `terminals.<t>.voice` (mesuré par kairos,
+    // 2026-09-02). Le garde descend avec sa propre marche, pas celle du compilateur.
+    const nommees = [];
+    const descendre = (o, chemin) => {
+      if (!o || typeof o !== 'object') return;
+      if (Array.isArray(o)) { o.forEach((x, i) => descendre(x, `${chemin}[${i}]`)); return; }
+      for (const [k, v] of Object.entries(o)) {
+        // une valeur qui n'est pas un nom d'entrée (le corps d'une voix, `audio: \`js: …\``) n'est pas une référence
+        if (FAMILLES.has(k) && typeof v === 'string' && /^[A-Za-z0-9_][A-Za-z0-9_-]*$/.test(v)) nommees.push([`${k}.${v}`, `${chemin}.${k}`]);
+        else descendre(v, `${chemin}.${k}`);
+      }
+    };
+    descendre(e.membres || {}, 'membres');
+    for (const [suivie, ou] of nommees) {
       if (!atteintes.has(suivie)) suivies++;
       atteintes.add(suivie);
-      ok(suivie in section, `${nom} : '${chaine}' nomme '${suivie}' par son membre '${k}', et la section ne le porte pas`);
+      ok(suivie in section, `${nom} : '${chaine}' nomme '${suivie}' par '${ou}', et la section ne le porte pas`);
     }
   }
   // 4. la section est minimale : aucune entrée hors des références et de ce qu'elles nomment
@@ -118,6 +129,12 @@ ok(parMot > 0, `aucune entrée par un mot de réglage sur ${scenes} scènes — 
      `une scène nue porte une section 'librairies' — reçu ${JSON.stringify(nue.ast && nue.ast.librairies)}`);
   ok(nue.ast && nue.ast.librairies && 'alphabet.western' in nue.ast.librairies && 'tuning.western_12TET' in nue.ast.librairies,
      `une scène nue joint ses DÉFAUTS — alphabet et accordage de l'acteur implicite — reçu ${JSON.stringify(Object.keys((nue.ast && nue.ast.librairies) || {}))}`);
+  // Et une VOIX entre par le terminal qui la nomme, un étage sous les membres — la scène de
+  // percussion n'est pas muette.
+  const tabla = compileToBPxAST('core\nalphabet.tabla\n-----\nS -> dha ta\n', {});
+  const voix = Object.keys((tabla.ast && tabla.ast.librairies) || {}).filter((k) => k.startsWith('voice.'));
+  ok(voix.includes('voice.bayan_open') && voix.includes('voice.dayan_tap'),
+     `'alphabet.tabla' fait entrer ses voix par 'terminals.<t>.voice' — reçu ${JSON.stringify(voix)}`);
   // Et une fonction digitale entre AVEC son corps.
   const digitale = compileToBPxAST('core\n-----\nS -> C4(scaleshift:2)\n', {});
   const f = digitale.ast && digitale.ast.librairies && digitale.ast.librairies['function.scaleshift'];

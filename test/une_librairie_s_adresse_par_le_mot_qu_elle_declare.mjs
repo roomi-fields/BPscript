@@ -68,8 +68,12 @@ function appels() {
 const APPELS = appels();
 
 // ── SOCLE — un garde qui n'a rien examiné est vert pour la mauvaise raison ───────────────────
-ok(APPELS.length >= 20,
-   `SOCLE : ${APPELS.length} appel(s) au chargeur trouvé(s), 20 au moins attendus. Sous ce seuil, `
+// Le plancher était à 20 pour une vingtaine d'appels ; le 2026-09-02 les tables du socle ont cessé
+// de se lire par `loadLib('core')` (elles se lisent par l'objet `schema`), et les catalogues
+// `voice`, `octaves`, `eval` par l'index des objets : il reste NEUF appels littéraux, tous des
+// lectures d'une entrée par le mot qui l'invoque. Le plancher suit la mesure, sous elle d'un seul.
+ok(APPELS.length >= 8,
+   `SOCLE : ${APPELS.length} appel(s) au chargeur trouvé(s), 8 au moins attendus. Sous ce seuil, `
  + `ce garde est vert parce qu'il ne lit plus le code, pas parce que les adresses sont justes.`);
 ok(fichiersDuMot.size >= 20,
    `SOCLE : ${fichiersDuMot.size} mot(s) déclaré(s) lus dans le bundle, 20 au moins attendus.`);

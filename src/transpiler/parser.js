@@ -8,6 +8,7 @@
  */
 
 import { T } from './tokenizer.js';
+import { leSchema, famille } from './index-des-objets.js';
 import { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, universeAddressKeys } from './libs.js';
 import { BP3_OPERATORS } from './constants.js';
 // ⛔ LE SCHÉMA DE SYNTAXE N'EST PAS UNE LIBRAIRIE — il se lit par SA PROPRE PORTE, jamais par le
@@ -84,15 +85,23 @@ function addressKeys() {
  * Mesuré le 2026-08-06 : sortir `sounds` des deux listes rendait `sounds:tabla_perc`
  * SILENCIEUSEMENT ACCEPTÉ. Un nom peut figurer dans une liste pour fermer, jamais pour ouvrir.
  */
+/**
+ * UN MOT RÉSERVÉ DU LANGAGE — déclaré par l'objet `schema` (`reservedDirectives`), lu par son nom
+ * d'objet et jamais par le nom d'une librairie (décision de Romain, 2026-09-02). Le compagnon de
+ * `porteesDeclarees` : l'un dit les mots de tête du langage, l'autre les réglages qui déclarent où
+ * ils s'écrivent ; une directive « déclarée par le socle » est l'un ou l'autre.
+ */
+const motReserve = (nom) => ((leSchema() || {}).reservedDirectives || []).includes(nom);
+
 let _actorKeys = null;
 function actorKeysData() {
   if (_actorKeys) return _actorKeys;
-  // Sans `core` au registre, aucune clé d'acteur n'est connue — rendu sans mémoriser (cf. les axes).
-  if (!loadLib('core')) return { valides: new Set(), perimees: new Set(), toutes: new Set() };
-  const sch = (loadLib('core') || {}).schema || {};
+  // Sans objet `schema` au registre, aucune clé d'acteur n'est connue — rendu sans mémoriser (cf. les axes).
+  const sch = leSchema();
+  if (!sch) return { valides: new Set(), perimees: new Set(), toutes: new Set() };
   const valides = sch.actorKeys, perimees = sch.deprecatedActorKeys || [];
   if (!Array.isArray(valides) || valides.length === 0) {
-    throw new Error("lib/core.json schema.actorKeys est vide ou absent — le parseur n'a plus de clés d'acteur");
+    throw new Error("l'objet 'schema' ne déclare aucune clé d'acteur (actorKeys) — le parseur n'a plus de clés d'acteur");
   }
   _actorKeys = { valides: new Set(valides), perimees: new Set(perimees),
                  toutes: new Set([...valides, ...perimees]) };
@@ -142,11 +151,11 @@ function catalogAxisKeys() {
   // ⚠️ SANS `core` AU REGISTRE, IL N'Y A PAS D'AXE — et ce n'est pas une faute : aucun socle n'est
   // implicite (Romain, 2026-09-02), et une librairie se lit avant que `core` soit chargé. On rend
   // alors un ensemble vide SANS le mémoriser, pour que la table se lise dès que `core` arrive.
-  const core = loadLib('core');
-  if (!core) return new Set();
-  const axes = core?.schema?.catalogAxes;
+  const sch = leSchema();
+  if (!sch) return new Set();
+  const axes = sch.catalogAxes;
   if (!Array.isArray(axes) || axes.length === 0) {
-    throw new Error("lib/core.json schema.catalogAxes est vide ou absent — le parseur n'a plus d'axes de catalogue");
+    throw new Error("l'objet 'schema' ne déclare aucun axe de catalogue (catalogAxes) — le parseur n'a plus d'axes de catalogue");
   }
   _catalogAxisKeys = new Set(axes);
   return _catalogAxisKeys;
@@ -162,8 +171,7 @@ function catalogAxisKeys() {
 let _deprecatedTransports = null;
 function deprecatedTransports() {
   if (_deprecatedTransports) return _deprecatedTransports;
-  const core = loadLib('core') || {};
-  _deprecatedTransports = new Set((core.schema && core.schema.deprecatedTransports) || []);
+  _deprecatedTransports = new Set((leSchema() || {}).deprecatedTransports || []);
   return _deprecatedTransports;
 }
 
@@ -177,8 +185,7 @@ function deprecatedTransports() {
 let _channelCatalog = null;
 function channelCatalog() {
   if (_channelCatalog) return _channelCatalog;
-  const core = loadLib('core') || {};
-  _channelCatalog = (core.schema && core.schema.channels) || {};
+  _channelCatalog = (leSchema() || {}).channels || {};
   return _channelCatalog;
 }
 
@@ -336,7 +343,9 @@ function voicesIndex() {
   // declare `voice`, et c est ce mot qui adresse la librairie partout ailleurs. Son FICHIER a
   // change d extension le 2026-08-24 sans qu une seule ligne d ici ne bouge — c est la preuve du
   // decouplage, et la raison pour laquelle aucun message de refus ne nomme plus un fichier.
-  const lib = loadLib('voice');
+  // Le catalogue se lit par l'INDEX DES OBJETS, par le mot qui l'invoque — jamais par une table de
+  // fichiers (décision de Romain, 2026-09-02 : le compilateur lit, il ne connaît pas de liste de noms).
+  const voix = (famille('voice')?.entrees || []).map((o) => [o.nom, o.membres]);
   // ⛔ LA RELATION SE LIT DANS UN MEMBRE, ELLE NE SE RECONSTRUIT PLUS D'UN NOM. Décision Romain,
   // 2026-08-24, `une-specialisation-par-appareil-est-un-membre-jamais-un-nom` : le nom redevient un
   // nom, la destination devient une clé, et le compilateur peut la lire.
@@ -345,7 +354,7 @@ function voicesIndex() {
   // la clé du catalogue. Kairos portait l'autre moitié — il ASSEMBLAIT la même chaîne pour adresser
   // l'entrée. Deux dépôts reconstruisaient une structure que personne n'avait écrite, et la donnée
   // ne la portait nulle part. Le découpage est RETIRÉ, pas doublé.
-  for (const [name, def] of Object.entries((lib && lib.objects) || {})) {
+  for (const [name, def] of voix) {
     const forDevices = def && typeof def.for === 'object' && def.for ? { ...def.for } : {};
     _voicesIndex.set(name, { base: def, forDevices });
   }
@@ -909,7 +918,7 @@ function parse(tokens, opts = {}) {
           // comme `alphabet`, `tuning`, `octaves` et `sound` avant lui — et le prototype `scale` de
           // `types` ouvre une déclaration. Ce refus ne couvre plus qu'un site, `settings`, et il
           // reste écrit parce qu'il garde une FORME, non les cas qui l'ont fait naître.
-          const reserves = new Set(((loadLib('core') || {}).schema || {}).reservedDirectives || []);
+          const reserves = new Set((leSchema() || {}).reservedDirectives || []);
           // ⛔ ET LA CHAÎNE `apporte` SE SUIT — « sa chaîne se résout transitivement », décision
           // Romain 2026-08-20, mesurée fausse ici le 2026-09-02 : `sounds` invoque `types` en tête
           // et `gamut x (a:1)` restait refusé sous `sounds`. Une scène qui invoque `audio` reçoit
@@ -2006,7 +2015,7 @@ function parse(tokens, opts = {}) {
     if (!outChannels().has(canal) || !writableChannels().has(canal)) return null;
     // Un mot que le vocabulaire déclare garde sa lecture de réglage — `eval:X`, `sound:X`… La
     // question se pose dans les deux sens, donc les deux lecteurs sont interrogés.
-    if (porteesDeclarees(nom) !== null || directiveDeclareeParLaLibrairie('core', nom)) return null;
+    if (porteesDeclarees(nom) !== null || motReserve(nom)) return null;
     advance(); advance(); advance();               // nom : canal
     // ⛔ C'EST LA PRÉSENCE DE CETTE ENTRÉE QUI CONFÈRE LE STATUT DE TERMINAL D'ALPHABET, et son
     // absence est MUETTE. Mesuré le 2026-08-18 : une écriture qui ne la posait pas faisait maigrir
@@ -2051,7 +2060,7 @@ function parse(tokens, opts = {}) {
     // de BPx la refusait, le type publié de runtime-in la déclarait impossible, et son code
     // l'ignorait en silence — un `null` n'apparie aucun canal. La forme traversait trois frontières
     // pour mourir sans un mot à la quatrième.
-    if (mot === 'in' && peek(1).type === T.IDENT && !directiveDeclareeParLaLibrairie('core', 'in')) {
+    if (mot === 'in' && peek(1).type === T.IDENT && !motReserve('in') && porteesDeclarees('in') === null) {
       throw new ParseError(`'in ${peek(1).value}' est refusé — une entrée déclare son CANAL : `
         + `'in.<canal> ${peek(1).value}'. Les canaux d'entrée sont ${[...inChannels()].join(', ')}. `
         + `Sans lui, aucun runtime n'est adressé et rien ne déclenche.`, tok);
@@ -2162,7 +2171,7 @@ function parse(tokens, opts = {}) {
       const apresLeNom = peek(2).type;
       const formeDeDeclaration = apresLeNom === T.NEWLINE || apresLeNom === T.EOF
         || apresLeNom === T.COMMENT || (apresLeNom === T.COLON && !peek(2).spaceBefore);
-      if (peek(1).type === T.IDENT && formeDeDeclaration && !directiveDeclareeParLaLibrairie('core', mot)
+      if (peek(1).type === T.IDENT && formeDeDeclaration && !motReserve(mot)
           && porteesDeclarees(mot) === null) {
         // ⚠️ CE REFUS ÉNUMÉRAIT LE CATALOGUE DE MODULES, et il l'a perdu avec lui : un refus qui
         // nomme une forme la ressuscite pour son lecteur. C'est le troisième domicile d'un mot
@@ -4259,7 +4268,7 @@ function parse(tokens, opts = {}) {
           // `scale.raga_bhairav` se déclare bien en tête. Ma première écriture lui donnait le
           // message du réglage et lui retirait le sien. Un mot peut être les deux ; ce qui décide
           // est qu'il soit DÉCLARABLE, et la donnée le dit par `catalogAxes`.
-          const axes = new Set((loadLib('core')?.schema?.catalogAxes) || []);
+          const axes = new Set((leSchema() || {}).catalogAxes || []);
           const porteesDuMot = porteesDeclarees(dirNom);
           if (porteesDuMot && !porteesDuMot.includes('scene') && !axes.has(dirNom)) {
             const PLACE = { subgrammar: 'en tête de sous-grammaire, dans la parenthèse du mode '
@@ -6292,7 +6301,7 @@ function parse(tokens, opts = {}) {
       if (at(T.LBRACKET) && peek(1).type === T.IDENT) {
         const nom = peek(1).value;
         const CROCHET_EN_FLUX = new Set(['seed']);   // graphie ratifiée : `![seed:N]` (Romain)
-        if (CROCHET_EN_FLUX.has(nom) && !directiveDeclareeParLaLibrairie('engine', nom)) {
+        if (CROCHET_EN_FLUX.has(nom) && porteesDeclarees(nom) === null && !motReserve(nom)) {
           throw new ParseError(
             `'![${nom}:…]' : '${nom}' n'est plus déclaré par la librairie 'engine'. La re-semence en `
             + `flux traduit le '_srand(N)' natif, et le mot qui la porte vient d'une librairie `

@@ -2,18 +2,20 @@ import {
   ParseError,
   brancherLeCompilateur,
   describeVocabulary,
+  famille,
+  familles,
   groupeDUnicite,
-  leRegistre,
+  leSchema,
+  lesDefauts,
   loadLib,
   loadLibsFromDirectives,
   nomsDeTerminaux,
+  objet,
   parse,
-  placesDesLibrairies,
   resolveActorAlphabet,
   resolveActorAlphabetSource,
-  universeControlNames,
-  versionDuRegistre
-} from "./chunk-XJJV7JT7.js";
+  universeControlNames
+} from "./chunk-ACCNGR3D.js";
 import {
   LexError,
   tokenize
@@ -21,11 +23,6 @@ import {
 import {
   LIBS
 } from "./chunk-NV6SJXIW.js";
-import {
-  CHAMPS_DE_FICHIER,
-  CHAMPS_DU_PAQUET,
-  entreesDe
-} from "./chunk-JWEI77WV.js";
 
 // src/transpiler/actorResolver.js
 function expandAlphabetTerminals(alphabetLib, octavesOverride) {
@@ -56,10 +53,14 @@ function alphabetHerite(ast) {
     return resolveActorAlphabet(sceneAlpha.subkey, ast.directives) ? sceneAlpha.subkey : null;
   }
   if (ast.libRefs && ast.libRefs.length) return null;
-  return loadLib("core")?.defaults?.components?.alphabet || null;
+  return (lesDefauts() || {}).alphabet || null;
 }
 function octavesHerite(ast, alphabetKey) {
-  const connu = (nom) => !!(nom && loadLib("octaves")?.[nom]);
+  const connu = (nom) => {
+    if (!nom) return false;
+    const o = objet(`octaves.${nom}`);
+    return !!(o && !o.ambigu);
+  };
   const sceneOct = (ast.directives || []).find((d) => d.name === "octaves" && (d.subkey || d.runtime));
   if (sceneOct) {
     const nom = sceneOct.subkey || sceneOct.runtime;
@@ -78,8 +79,7 @@ function tuningHerite(ast, alphabetKey) {
   return connu(lib && lib.tuning) ? lib.tuning : void 0;
 }
 function defaultActorTransport() {
-  const core = loadLib("core");
-  return core && core.defaults && core.defaults.components && core.defaults.components.transport || "audio";
+  return (lesDefauts() || {}).transport || "audio";
 }
 function sortieHeritee(ast) {
   const sceneOut = (ast.directives || []).find((d) => d.name === "out" && d.subkey);
@@ -103,9 +103,8 @@ function sortieHeritee(ast) {
 function evalHerite(ast) {
   const sceneEval = (ast.directives || []).find((d) => d.name === "eval" && d.subkey);
   if (!sceneEval) return void 0;
-  const catalogue = loadLib("eval");
-  const connus = catalogue && catalogue.objects || catalogue || {};
-  return connus[sceneEval.subkey] ? sceneEval.subkey : void 0;
+  const connus = new Set((famille("eval")?.entrees || []).map((o) => o.nom));
+  return connus.has(sceneEval.subkey) ? sceneEval.subkey : void 0;
 }
 function resolveActors(ast) {
   const errors = [];
@@ -599,7 +598,7 @@ var INLINE_FLIP_PALIER4 = true;
 var CTX_METAVAR_RE = /^\?\d+$/;
 var isCtxWildcardName = (s) => s === "?" || CTX_METAVAR_RE.test(s);
 function canalFautif(canal) {
-  const cat = LIBS.core?.schema?.channels || {};
+  const cat = (leSchema() || {}).channels || {};
   const c = cat[canal];
   if (!c) return `le canal '${canal}' n'existe pas \u2014 les canaux sont ${Object.keys(cat).join(", ")}. La liste est FERM\xC9E.`;
   if (!c.out) return `'${canal}' n'est pas une sortie \u2014 un terminal sonne, il ne se lit pas. Les canaux de sortie sont ${Object.keys(cat).filter((k) => cat[k].out).join(", ")}.`;
@@ -911,7 +910,7 @@ function annotateBackticks(ast) {
   const acteurEval = {};
   for (const a of ast.actors || []) if (a.properties && a.properties.eval) acteurEval[a.name] = a.properties.eval;
   const sceneEval = (ast.directives || []).find((d) => d.name === "eval" && (d.subkey || d.runtime));
-  const socleEval = loadLib("core")?.defaults?.components?.eval;
+  const socleEval = (lesDefauts() || {}).eval;
   const parDefaut = sceneEval && (sceneEval.subkey || sceneEval.runtime) || socleEval || null;
   const resoudre2 = (els) => {
     for (const el of els || []) {
@@ -990,7 +989,7 @@ function refuserAttenteNonDeclaree(ast) {
   for (const d of ast.declarations || []) if (d && d.name) connus.add(d.name);
   for (const a of ast.actors || []) if (a && a.name) connus.add(a.name);
   const directions = /* @__PURE__ */ new Set();
-  for (const canal of Object.values(LIBS.core?.schema?.channels || {})) {
+  for (const canal of Object.values((leSchema() || {}).channels || {})) {
     if (!canal || typeof canal !== "object") continue;
     for (const [cle, valeur] of Object.entries(canal)) {
       if (typeof valeur === "boolean" && valeur === true && cle !== "writable") directions.add(cle);
@@ -1271,7 +1270,7 @@ function validateReferences(ast, libCtx = {}) {
       col
     });
   };
-  const canauxDeclares = new Set(Object.keys(LIBS.core?.schema?.channels || {}));
+  const canauxDeclares = new Set(Object.keys((leSchema() || {}).channels || {}));
   const realisationsPar = {};
   for (const [face, reals] of Object.entries(libCtx.implementations || {})) {
     const nom = face.slice(face.indexOf(".") + 1);
@@ -1421,7 +1420,7 @@ function validateReferences(ast, libCtx = {}) {
     Object.values(LIBS).map((l) => l && typeof l === "object" ? l.resolves : null).filter(Boolean)
   );
   const libExiste = (nom) => motsDeclares().has(nom);
-  const motsDuLangage = new Set(loadLib("core")?.schema?.reservedDirectives || []);
+  const motsDuLangage = new Set((leSchema() || {}).reservedDirectives || []);
   for (const d of ast.directives || []) {
     if (!d || !d.name) continue;
     if (!d.subkey) {
@@ -1536,9 +1535,9 @@ function validateReferences(ast, libCtx = {}) {
     const props = actor.properties || {};
     for (const axis of catalogAxes) if (props[axis]) checkComponent(axis, props[axis], actor.line);
   }
-  const canaux = LIBS.core?.schema?.channels || {};
+  const canaux = (leSchema() || {}).channels || {};
   const directionsDeCanal = new Set(Object.values(canaux).flatMap((c) => Object.entries(c || {}).filter(([, v]) => typeof v === "boolean").map(([k]) => k)));
-  const clesDeSortie = new Set((LIBS.core?.schema?.actorKeys || []).filter((k) => directionsDeCanal.has(k) && !catalogAxes.includes(k)));
+  const clesDeSortie = new Set(((leSchema() || {}).actorKeys || []).filter((k) => directionsDeCanal.has(k) && !catalogAxes.includes(k)));
   for (const def of ast.defs || []) {
     if (!def || def.kind !== "terminal" || !def.keys) continue;
     for (const [axe, ref] of Object.entries(def.keys)) {
@@ -1769,121 +1768,6 @@ function validateControls(ast, controls, qualifies = {}) {
   return errors;
 }
 
-// src/transpiler/index-des-objets.js
-function motDe(cle, lib) {
-  return lib && typeof lib.resolves === "string" && lib.resolves || cle;
-}
-function membresDe(objet2, exclure = /* @__PURE__ */ new Set()) {
-  const out = {};
-  for (const [k, v] of Object.entries(objet2 || {})) {
-    if (k === "_derive" || k.startsWith("_") || exclure.has(k)) continue;
-    out[k] = v;
-  }
-  return out;
-}
-var _index = null;
-var _versionIndexee = -1;
-function index() {
-  const LIBS2 = leRegistre();
-  const version = versionDuRegistre();
-  if (_index && _versionIndexee === version) return _index;
-  const familles2 = /* @__PURE__ */ new Map();
-  const objets2 = /* @__PURE__ */ new Map();
-  const poser = (o) => {
-    if (!objets2.has(o.nom)) objets2.set(o.nom, []);
-    objets2.get(o.nom).push(o);
-  };
-  const PLACES = placesDesLibrairies(LIBS2);
-  const familleDe = (mot) => {
-    if (!familles2.has(mot)) familles2.set(mot, { nom: mot, membres: {}, entrees: [], contributeurs: [] });
-    return familles2.get(mot);
-  };
-  for (const [cle, lib] of Object.entries(LIBS2)) {
-    if (!lib || typeof lib !== "object" || Array.isArray(lib)) continue;
-    const barre = cle.indexOf("/");
-    if (barre > 0) {
-      const dossier = cle.slice(0, barre);
-      const mot2 = motDe(dossier, LIBS2[dossier]);
-      const fam2 = familleDe(mot2);
-      fam2.contributeurs.push(cle);
-      const o = {
-        nom: cle.slice(barre + 1),
-        famille: mot2,
-        derive: null,
-        membres: membresDe(lib, CHAMPS_DE_FICHIER),
-        place: null,
-        chaine: [mot2, cle.slice(barre + 1)],
-        documented: Boolean(lib.documented)
-      };
-      fam2.entrees.push(o);
-      poser(o);
-      continue;
-    }
-    const mot = motDe(cle, lib);
-    const places = new Set((PLACES[cle] || []).filter((p) => p !== "_deduites"));
-    const fam = familleDe(mot);
-    fam.contributeurs.push(cle);
-    for (const [k, v] of Object.entries(lib)) {
-      if (k.startsWith("_") || CHAMPS_DU_PAQUET.has(k) || places.has(k)) continue;
-      if (v && typeof v === "object" && !Array.isArray(v)) continue;
-      if (!(k in fam.membres)) fam.membres[k] = v;
-    }
-    const entree = (nom, brut, place) => {
-      const o = {
-        nom,
-        famille: mot,
-        derive: typeof brut._derive === "string" ? brut._derive : null,
-        membres: membresDe(brut),
-        place,
-        chaine: [mot, nom],
-        documented: Boolean(lib.documented)
-      };
-      fam.entrees.push(o);
-      poser(o);
-    };
-    for (const nom of entreesDe(lib)) {
-      if (places.has(nom)) continue;
-      entree(nom, lib[nom], null);
-    }
-    for (const place of places) {
-      const contenu = lib[place];
-      if (!contenu || typeof contenu !== "object" || Array.isArray(contenu)) continue;
-      for (const nom of entreesDe(contenu)) entree(nom, contenu[nom], place);
-    }
-  }
-  _index = { familles: familles2, objets: objets2 };
-  _versionIndexee = version;
-  return _index;
-}
-var copie = (o) => ({ ...o, membres: { ...o.membres }, chaine: [...o.chaine] });
-function familles() {
-  return [...index().familles.keys()];
-}
-function famille(mot) {
-  const f = index().familles.get(mot);
-  if (!f) return null;
-  return { nom: f.nom, membres: { ...f.membres }, entrees: f.entrees.map(copie) };
-}
-function objet(chaine) {
-  const segments = String(chaine || "").split(".").filter(Boolean);
-  if (!segments.length) return null;
-  const nom = segments[segments.length - 1];
-  const candidats = (index().objets.get(nom) || []).filter((o) => {
-    const c = o.chaine;
-    if (segments.length > c.length) return false;
-    for (let i = 1; i <= segments.length; i++) if (c[c.length - i] !== segments[segments.length - i]) return false;
-    return true;
-  });
-  if (candidats.length === 1) return copie(candidats[0]);
-  if (candidats.length === 0) return null;
-  return { ambigu: candidats.map((o) => o.chaine.join(".")) };
-}
-function objets() {
-  const out = [];
-  for (const liste of index().objets.values()) for (const o of liste) out.push(copie(o));
-  return out;
-}
-
 // src/transpiler/librairies-jointes.js
 var NOM_D_ENTREE = /^[A-Za-z0-9_][A-Za-z0-9_-]*$/;
 function estUnePlaceOuUnMembre(chaine) {
@@ -1926,6 +1810,20 @@ function referencesDe(ast) {
   visiter(ast);
   return { chaines, mots };
 }
+function suivreLesMembres(membres, FAMILLES, noter) {
+  const visiter = (o) => {
+    if (!o || typeof o !== "object") return;
+    if (Array.isArray(o)) {
+      for (const x of o) visiter(x);
+      return;
+    }
+    for (const [k, v] of Object.entries(o)) {
+      if (FAMILLES.has(k) && typeof v === "string" && NOM_D_ENTREE.test(v)) noter(`${k}.${v}`);
+      else visiter(v);
+    }
+  };
+  visiter(membres);
+}
 function joindreLesLibrairies(ast) {
   const fautes = [];
   const FAMILLES = new Set(familles());
@@ -1955,7 +1853,7 @@ function joindreLesLibrairies(ast) {
       continue;
     }
     section[chaine] = o;
-    for (const [k, v] of Object.entries(o.membres)) if (FAMILLES.has(k) && typeof v === "string") file.push(`${k}.${v}`);
+    suivreLesMembres(o.membres, FAMILLES, (chaine2) => file.push(chaine2));
   }
   ast.librairies = section;
   return fautes;
@@ -2069,10 +1967,6 @@ var bpxAst_default = compileToBPxAST;
 brancherLeCompilateur(compileToBPxAST);
 
 export {
-  familles,
-  famille,
-  objet,
-  objets,
   resoudreSource,
   compileToBPxAST,
   bpxAst_default

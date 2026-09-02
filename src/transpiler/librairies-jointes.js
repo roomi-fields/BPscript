@@ -85,6 +85,21 @@ export function referencesDe(ast) {
   return { chaines, mots };
 }
 
+/** Chaque membre, à toute profondeur, dont la clé est un mot de famille et la valeur un nom. */
+export function suivreLesMembres(membres, FAMILLES, noter) {
+  const visiter = (o) => {
+    if (!o || typeof o !== 'object') return;
+    if (Array.isArray(o)) { for (const x of o) visiter(x); return; }
+    for (const [k, v] of Object.entries(o)) {
+      // Une valeur qui n'est pas un NOM ne désigne pas une entrée : `audio: \`js: …\`` sur une voix est
+      // son corps, pas une référence.
+      if (FAMILLES.has(k) && typeof v === 'string' && NOM_D_ENTREE.test(v)) noter(`${k}.${v}`);
+      else visiter(v);
+    }
+  };
+  visiter(membres);
+}
+
 /**
  * Pose `ast.librairies` : chaque objet invoqué, puis ce que ces objets nomment.
  * @returns {Array<{message: string}>} les fautes — une référence que la porte ne rend pas
@@ -117,7 +132,11 @@ export function joindreLesLibrairies(ast) {
     }
     if (o.ambigu) { fautes.push({ message: `librairies jointes : '${chaine}' désigne plusieurs objets — ${o.ambigu.join(', ')}` }); continue; }
     section[chaine] = o;
-    for (const [k, v] of Object.entries(o.membres)) if (FAMILLES.has(k) && typeof v === 'string') file.push(`${k}.${v}`);
+    // ⛔ À TOUTE PROFONDEUR — « une règle qui vaut à l'entrée et pas au fond d'un sac n'est pas une
+    // règle ». Mesuré par kairos le 2026-09-02 : la voix d'un terminal vit sous `terminals.dha.voice`,
+    // un étage sous les membres de premier niveau, et aucune voix n'entrait ; une scène de percussion
+    // partait muette. Le mot de famille se reconnaît où qu'il soit dans l'objet.
+    suivreLesMembres(o.membres, FAMILLES, (chaine) => file.push(chaine));
   }
   ast.librairies = section;
   return fautes;

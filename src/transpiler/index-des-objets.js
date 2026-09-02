@@ -179,3 +179,25 @@ export function objets() {
   for (const liste of index().objets.values()) for (const o of liste) out.push(copie(o));
   return out;
 }
+
+/**
+ * LES TABLES DU SOCLE SE LISENT PAR L'OBJET QUI LES PORTE, JAMAIS PAR LE NOM D'UNE LIBRAIRIE.
+ *
+ * Décision de Romain, 2026-09-02 : « rien ne se code en dur de ce qui se déclare — le compilateur
+ * lit, il ne connaît pas de liste de noms ». Le schéma structurel (`catalogAxes`, `channels`,
+ * `actorKeys`, `qualifierKeys`, `reservedDirectives`…) et les défauts de scène (`components`) sont
+ * des OBJETS déclarés par une librairie — `core` aujourd'hui. Treize lectures les cherchaient par
+ * `loadLib('core')` : une librairie qui aurait déclaré son propre `schema` n'aurait jamais été lue,
+ * et le mot `core` vivait dans le compilateur. Ces deux portes lisent l'objet par son NOM, dans le
+ * registre entier ; deux librairies qui déclareraient le même sont une ambiguïté, et elle crie.
+ */
+function objetUnique(nom) {
+  const o = objet(nom);
+  if (!o) return null;
+  if (o.ambigu) throw new Error(`'${nom}' est déclaré par plusieurs librairies — ${o.ambigu.join(', ')} — et le compilateur ne peut pas choisir`);
+  return o.membres;
+}
+/** Le schéma structurel — les membres de l'objet `schema` en portée du registre, ou `null` sans lui. */
+export function leSchema() { return objetUnique('schema'); }
+/** Les défauts de scène — les membres de l'objet `components` (alphabet, tuning, transport, eval), ou `null`. */
+export function lesDefauts() { return objetUnique('components'); }

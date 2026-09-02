@@ -12,6 +12,7 @@
  */
 
 import { loadLib, resolveActorAlphabet, nomsDeTerminaux} from './libs.js';
+import { lesDefauts, objet, famille } from './index-des-objets.js';
 
 /**
  * Expand an alphabet lib into a set of terminal names.
@@ -103,7 +104,7 @@ function alphabetHerite(ast) {
     return resolveActorAlphabet(sceneAlpha.subkey, ast.directives) ? sceneAlpha.subkey : null;
   }
   if (ast.libRefs && ast.libRefs.length) return null;                    // hauteur opaque → Kairos (loi 35)
-  return loadLib('core')?.defaults?.components?.alphabet || null;        // niveau 1 : socle core
+  return (lesDefauts() || {}).alphabet || null;                          // niveau 1 : les défauts du socle
 }
 
 /**
@@ -132,7 +133,7 @@ function octavesHerite(ast, alphabetKey) {
   // `octaves.nexistepas` était recopié sur l'acteur et le validateur de références le refusait
   // DEUX FOIS — une pour la directive, une pour la copie. Un même défaut qui parle deux fois se
   // lit comme deux défauts ; la scène en a un. Le cri reste, à sa place, sur la directive.
-  const connu = (nom) => !!(nom && loadLib('octaves')?.[nom]);
+  const connu = (nom) => { if (!nom) return false; const o = objet(`octaves.${nom}`); return !!(o && !o.ambigu); };
   const sceneOct = (ast.directives || []).find((d) => d.name === 'octaves' && (d.subkey || d.runtime));
   if (sceneOct) {
     const nom = sceneOct.subkey || sceneOct.runtime;                     // niveau 3 : la scène
@@ -195,8 +196,7 @@ function tuningHerite(ast, alphabetKey) {
 // .transport`), plus de constante en dur (cascade de défauts, Romain 2026-07-05). Le repli
 // 'audio' n'est atteint QUE si core est absent/cassé (bug de config) — pas un défaut normal.
 function defaultActorTransport() {
-  const core = loadLib('core');
-  return (core && core.defaults && core.defaults.components && core.defaults.components.transport) || 'audio';
+  return (lesDefauts() || {}).transport || 'audio';
 }
 
 /**
@@ -252,9 +252,8 @@ function evalHerite(ast) {
   // ⚠️ LE CATALOGUE VIT SOUS `objects`, comme toutes les librairies de ce dépôt — l'interroger à
   // plat rendait `undefined` pour TOUS les interprètes, y compris ceux qu'il déclare. Le garde
   // aurait été vert (rien ne descend, rien ne contredit) : c'est l'instrument qui aurait menti.
-  const catalogue = loadLib('eval');
-  const connus = (catalogue && catalogue.objects) || catalogue || {};
-  return connus[sceneEval.subkey] ? sceneEval.subkey : undefined;
+  const connus = new Set((famille('eval')?.entrees || []).map((o) => o.nom));
+  return connus.has(sceneEval.subkey) ? sceneEval.subkey : undefined;
 }
 
 /**
