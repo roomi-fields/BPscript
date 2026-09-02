@@ -101,9 +101,10 @@ control keymap (bp3:_keymap, args(p1, q1, p2, q2), range(0, 127), description:"K
 
 control mapcont (bp3:_mapcont, description:"Carte de touches en mode CONTINU — la carte glisse PENDANT les notes, par messages intermédiaires. BP3 _mapcont — registre du moteur natif, bp3-engine `origin/wasm` : capture-run/console_strings.json porte « 44 0 _mapcont ». Ses deux frères discrets vivent dans la librairie variation ; leur destinataire se lit sur le champ resolvedBy de ce fichier-là, jamais ici.", scope(symbol, group, rule, flow), transportGroup:midi)
 
-control pressure (args(value), range(0, 127), description:"MIDI Channel Pressure (aftertouch)", scope(symbol, group, rule, flow), transportGroup:midi)
-
-control press (bp3:_press, args(value), range(0, 127), description:"MIDI Channel Pressure (alias for pressure)", scope(symbol, group, rule, flow), transportGroup:midi)
+// pressure · LE MOT DU LANGAGE POUR LA PRESSION DE CANAL, et le geste natif `_press` le sert.
+// L'alias `press` est SORTI le 2026-09-02 (décision 3606 de l'architecte) : deux mots pour un
+// geste, et le natif était porté par l'alias. Une scène qui écrit `press:` est refusée.
+control pressure (bp3:_press, args(value), range(0, 127), description:"MIDI Channel Pressure (aftertouch)", scope(symbol, group, rule, flow), transportGroup:midi)
 
 control presscont (bp3:_presscont, description:"Enable continuous channel pressure interpolation", scope(symbol, group, rule, flow), transportGroup:midi)
 

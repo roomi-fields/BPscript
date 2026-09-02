@@ -189,7 +189,9 @@ for (const { source, nom, def } of CLES) {
 //   audio 6 -> 7 : `volume` entre le 2026-08-15, REALISATION audio de l'interface generique.
 //   Romain a debloque le canal, runtime-audio a mesure le siege (gain d'acteur), la grandeur
 //   (gain lineaire) et la plage (0..127, celle de l'interface -- la conversion est chez lui).
-const PAR_DESTINATAIRE = { expression: 14, midi: 37, audio: 7, transpo: 5, variation: 18 };
+//   midi 37 -> 36 : `press` SORT le 2026-09-02 (décision 3606) — un alias de `pressure`, qui
+//   reçoit le geste natif `_press` que l'alias portait.
+const PAR_DESTINATAIRE = { expression: 14, midi: 36, audio: 7, transpo: 5, variation: 18 };
 for (const [racine, attendu] of Object.entries(PAR_DESTINATAIRE)) {
   const n = CLES.filter((c) => c.source.startsWith(`${racine}.`)).length;
   ok(n === attendu,

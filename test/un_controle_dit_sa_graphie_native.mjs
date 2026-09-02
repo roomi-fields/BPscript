@@ -103,7 +103,8 @@ const SANS_GESTE_NATIF = new Set([
   // Quantization, Qclock), pas des procédures `_xxx` : aucun nom natif n'est déclaré tant qu'il
   // n'est pas mesuré, et le frontal BP3 les lit par son chemin dédié, comme `mode` et `weight`.
   'seed', 'maxitems', 'items', 'allitems', 'all_items', 'improvize', 'quantization', 'qclock', 'timepatterns',
-  'offvel', 'pressure', 'mute', 'unmute', 'panic', 'sync', 'cc', // MIDI, gestes écrits autrement
+  // `pressure` est SORTI de cette liste le 2026-09-02 : il porte `_press` depuis que l'alias `press` a quitté `midi`.
+  'offvel', 'mute', 'unmute', 'panic', 'sync', 'cc', // MIDI, gestes écrits autrement
   'scaleshift',                                                  // transposition, calcul BPScript
   // ⚠️ `transpose` EST LE CAS QUI M'A REPRIS, et il vaut d'être nommé ici. Le mot `_transpose`
   // existe bien dans la table, et j'en avais conclu que la clé `transpose` en était l'image. C'est
