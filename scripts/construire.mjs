@@ -156,6 +156,17 @@ if (process.argv[1] && process.argv[1].endsWith('construire.mjs')) {
     for (const [nom, source] of copies) {
       writeFileSync(join(cible, nom.replace(/^dist\//, '')), readFileSync(join(RACINE, source), 'utf8'));
     }
+    // ⛔ UN FICHIER VIDE DANS UNE PORTE EST UN DÉFAUT DE CONSTRUCTION, pas un fichier. Mesuré par Atlas
+    // le 2026-09-02 : le regroupeur a émis un morceau de ZÉRO octet (un module qui ne faisait que
+    // réexporter, importé pour son effet de bord), `dist/index.js` l'importait en première ligne, le
+    // publieur ne l'a pas emporté, et le paquet publié ne s'importait plus — deux commits d'affilée,
+    // sans qu'aucun garde ne rougisse ici. Le constructeur refuse donc d'émettre un fichier vide.
+    const vides = Object.entries(contenuDe(cible)).filter(([, t]) => t.length === 0).map(([f]) => f);
+    if (vides.length) {
+      console.error(`[construire] ⛔ ${vides.length} fichier(s) VIDE(S) émis : ${vides.join(', ')} — un morceau `
+        + `vide est un module importé pour son seul effet de bord ; importer ce qui fait l'effet, pas ce qui le réexporte.`);
+      process.exit(1);
+    }
 
     if (verifier) {
       // ⛔ LE TÉMOIN — le détecteur voit-il les trois familles quand elles sont là, et se tait-il

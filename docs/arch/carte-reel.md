@@ -5,7 +5,7 @@
 > vit dans le document d'architecture, chez Atlas, qui cite celui-ci.
 ## Ce qui est mesuré
 
-- **23 modules** dans `src/transpiler/`, **15389 lignes**.
+- **23 modules** dans `src/transpiler/`, **15393 lignes**.
 - Le **rôle** est lu dans l'en-tête de chaque fichier, verbatim — jamais interprété.
 - Les **arêtes** sont les imports d'un module vers un voisin du même dossier.
 
@@ -18,9 +18,9 @@
 | `libs.js` | 1386 | 4 | 7 | BPScript Library Loader |
 | `actorResolver.js` | 585 | 1 | 2 | BPScript Actor Resolver |
 | `tokenizer.js` | 514 | 0 | 2 | BPScript Tokenizer |
-| `bpxAst.js` | 511 | 8 | 1 | Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table |
+| `bpxAst.js` | 511 | 8 | 2 | Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table |
 | `librairies.js` | 347 | 1 | 1 | LA LECTURE DES LIBRAIRIES — une source écrite dans le langage devient un objet du registre. |
-| `objets.js` | 144 | 3 | 0 | LA PORTE DES OBJETS — ce qu'une librairie déclare, rendu comme des objets et non comme une table |
+| `objets.js` | 148 | 3 | 0 | LA PORTE DES OBJETS — ce qu'une librairie déclare, rendu comme des objets et non comme une table |
 | `orderTokens.js` | 123 | 0 | 0 | — |
 | `controlValidation.js` | 113 | 0 | 1 | Collecte récursivement toutes les paires de SettingBag de l'AST. |
 | `libs-champs.js` | 98 | 0 | 3 | LES CHAMPS DE FICHIER D'UNE LIBRAIRIE — déclarés UNE FOIS, pour tous mes lecteurs. |
@@ -33,7 +33,7 @@
 | `libs-types.js` | 56 | 1 | 0 | GÉNÉRATEUR DU TYPE DU PAQUET — `libs-data.d.ts`. |
 | `sources.js` | 48 | 0 | 1 | LES SOURCES DE LIBRAIRIE — ce que `lib/` contient, rendu comme du texte. |
 | `libs-bundle.js` | 43 | 2 | 0 | LE PAQUET DÉRIVÉ — `libs-data.js`, imprimé depuis le registre du compilateur. |
-| `index.js` | 38 | 2 | 2 | BPScript Transpiler — Façade |
+| `index.js` | 38 | 2 | 1 | BPScript Transpiler — Façade |
 | `constants.js` | 33 | 0 | 1 | BPScript — constantes partagées transpileur |
 | `gabarits-data.js` *(généré)* | 8 | 0 | 0 | — |
 
@@ -83,7 +83,7 @@ flowchart LR
   libs_js --> sources_js
   libs_js --> syntaxe_data_js
   libs_js --> libs_champs_js
-  objets_js --> index_js
+  objets_js --> bpxAst_js
   objets_js --> libs_js
   objets_js --> libs_champs_js
   parser_js --> tokenizer_js

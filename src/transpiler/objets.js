@@ -28,7 +28,11 @@
  * prototypes quitteront `types`, et la chaîne `scale.degree.bilaval` se lira alors ici sans qu'un
  * consommateur change.
  */
-import './index.js';   // la porte : elle branche le compilateur sur son chargeur
+// ⛔ LE BRANCHEMENT DU COMPILATEUR, IMPORTÉ LÀ OÙ IL EST FAIT — `bpxAst.js`, jamais `index.js`.
+// Mesuré par Atlas le 2026-09-02 : importer `index.js` (qui ne fait que réexporter) pour son effet de
+// bord faisait émettre au regroupeur un MORCEAU VIDE, partagé entre `dist/index.js` et `dist/objets.js`
+// — zéro octet, absent du paquet publié, et le premier import du paquet échouait.
+import './bpxAst.js';
 import { leRegistre, placesDesLibrairies } from './libs.js';
 import { entreesDe, CHAMPS_DU_PAQUET } from './libs-champs.js';
 
