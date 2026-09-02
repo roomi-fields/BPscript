@@ -131,9 +131,10 @@ for (const [ligne, quoi, attendu] of REFUS) {
     const m = msgs(r).join(' | ');
     // ⚠️ LE REFUS N'ÉNUMÈRE PLUS LES MODULES, et c'est voulu : un refus qui nomme une forme la
     // ressuscite pour son lecteur. Le catalogue est archivé le 2026-08-23, la liste part avec lui.
-    ok(/signal, pitch, phase, logic/.test(m) && /in\.<canal>/.test(m) && !/adsr|lfo|ramp/.test(m),
-      `2. le refus ${quoi} doit ÉNUMÉRER les conventions et le canal d'entrée, et NE PLUS nommer `
-      + `les modules archivés — reçu : ${m.slice(0, 160)}`);
+    // Les conventions sont des objets de `types` depuis le 2026-09-02 : le refus ne les énumère plus.
+    ok(/in\.<canal>/.test(m) && !/adsr|lfo|ramp/.test(m),
+      `2. le refus ${quoi} doit nommer le canal d'entrée, et NE PLUS nommer les modules archivés `
+      + `— reçu : ${m.slice(0, 160)}`);
     // ⚠️ LE REFUS N'ÉNUMÈRE PLUS LES TYPES : ils sont des objets en portée (tout ce qu'une librairie
     // invoquée apporte, des centaines de noms), et une liste ne dirait rien. Il nomme d'où ils
     // viennent — un objet en portée, et le fichier qui porte le socle.

@@ -78,7 +78,10 @@ TYPE_DECLARE = IDENT ;
 nom_pose   = NOM_DECLARE , [ ":" , ( INT | FLOAT | NOM ) ] ;   (* signal grain:0.5 *)
 
 NOM        = [ "_" ] , IDENT ;   (* une valeur porte le tiret bas des gestes natifs *)
-CONVENTION = "signal" | "pitch" | "phase" | "logic" ;
+(* CONVENTION — un objet en portee dont la RACINE DE DERIVATION est `signal` : `signal` lui-meme, et ce
+   qui en derive dans `types` — `pitch`, `phase`, `logic`. Aucun nom n'est ecrit ici : les conventions
+   sont des objets, declares comme les autres types du socle, en portee quand `types` l'est. *)
+CONVENTION = IDENT ;
 IN_CHANNEL = "midi" | "osc" | "keyboard" ;
 ```
 

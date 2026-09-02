@@ -97,17 +97,11 @@ function actorKeysData() {
   return _actorKeys;
 }
 
-/** Les quatre conventions d'une variable — lues dans la donnée, pas listées ici. */
-let _varConventions = null;
-function varConventions() {
-  if (_varConventions) return _varConventions;
-  const c = ((loadLib('core') || {}).schema || {}).varConventions;
-  if (!Array.isArray(c) || c.length === 0) {
-    throw new Error("lib/core.json schema.varConventions est vide ou absent");
-  }
-  _varConventions = new Set(c);
-  return _varConventions;
-}
+// ⛔ LES CONVENTIONS DE LECTURE NE SONT PLUS UNE LISTE — décision de Romain, 2026-09-02 : `signal`,
+// `pitch`, `phase` et `logic` sont des objets de `types`, `pitch`, `phase` et `logic` dérivant de
+// `signal`. Une convention se reconnaît à sa RACINE DE DÉRIVATION, lue dans la donnée
+// (`racineDe`, dans `parse`), jamais à un nom dans une liste : c'est ce qui permet au compilateur de lire
+// une librairie avant que `core` soit chargé, et à une scène de redéfinir `signal` si elle le veut.
 
 // ⛔ IL N'Y A PLUS DE LISTE DES TYPES DE DÉCLARATION — décision de Romain, 2026-09-02 : les types du
 // socle (`control`, `addresskey`, `destination`, `enum`, `flag`, `symbol`) sont des objets déclarés
@@ -489,6 +483,19 @@ function parse(tokens, opts = {}) {
    * L'ordre reste celui du langage : un prototype se déclare avant d'être dérivé.
    */
   const prototypesDeclares = new Set();
+  /**
+   * DE QUOI CHAQUE PROTOTYPE EN PORTÉE DÉRIVE — rempli avec le registre ci-dessus, depuis la donnée
+   * (`_derive` d'une entrée de librairie, type en tête d'une déclaration de la scène). Sert à lire la
+   * RACINE d'un objet : une convention de lecture est un objet dont la racine est `signal` (Romain,
+   * 2026-09-02 — les conventions sont des objets de `types`, plus une liste de `core`).
+   */
+  const derivations = new Map();
+  const racineDe = (nom) => {
+    let courant = nom;
+    const vus = new Set();
+    while (courant && !vus.has(courant)) { vus.add(courant); const p = derivations.get(courant); if (!p) return courant; courant = p; }
+    return courant;
+  };
 
   // VARIABLES DE TRAVAIL déclarées par `var`. Sous-ensemble du précédent, tenu à part parce
   // qu'elles font plus que gagner sur un homonyme : elles portent leur PROPRE NATURE dans l'arbre.
@@ -789,7 +796,7 @@ function parse(tokens, opts = {}) {
           // décider de la modélisation à la place de qui écrit la librairie : le prototypal pur ne
           // borne rien, et la forme validée le 2026-08-20 en demande trois étages.
           if (dir.varType?.kind === 'type') {
-            for (const n of dir.names) prototypesDeclares.add(n);
+            for (const n of dir.names) { prototypesDeclares.add(n); if (dir.varType.type) derivations.set(n, dir.varType.type); }
             // ⛔ ET UNE RACINE — `def kick (vel:120)`, `type === null` — EST UNE DÉFINITION : elle
             // se déplie dans les règles comme un préréglage, donc son nom entre dans l'ensemble qui
             // tranche APPEL ou RÉGLAGE. Sans ça, `kick(C4)` se lisait comme un sac et le refus
@@ -910,6 +917,7 @@ function parse(tokens, opts = {}) {
               if (nom.startsWith('_') || !valeur || typeof valeur !== 'object' || Array.isArray(valeur)) continue;
               if (reserves.has(nom)) continue;
               prototypesDeclares.add(nom);
+              if (typeof valeur._derive === 'string' && valeur._derive) derivations.set(nom, valeur._derive);
             }
             for (const a of Array.isArray(lib.apporte) ? lib.apporte : []) apporterLesPrototypesDe(a);
           };
@@ -2119,7 +2127,7 @@ function parse(tokens, opts = {}) {
       }
       return null;
     }
-    if (!varConventions().has(mot) && !prototypesDeclares.has(mot)) {
+    if (!prototypesDeclares.has(mot)) {
       // ⚠️ UN TYPE INCONNU SUIVI D'UN NOM SE REFUSE EN NOMMANT LES TYPES, sans quoi
       // `lpf lpf1` tombe dans « n'est déclaré par aucune librairie chargée » et envoie l'auteur
       // chercher une librairie au lieu de lui dire que le mot n'est pas un type. La condition est
@@ -2149,9 +2157,8 @@ function parse(tokens, opts = {}) {
         // nomme une forme la ressuscite pour son lecteur. C'est le troisième domicile d'un mot
         // retiré, après le parseur et les librairies — et aucun garde ne compile un message.
         throw new ParseError(`'${mot} ${peek(1).value}' : '${mot}' n'est pas un type en portée. Un `
-          + `type en tête vient des conventions (${[...varConventions()].join(', ')}), de in.<canal>, `
-          + `ou d'un objet en portée — déclaré par la scène, ou apporté par une librairie invoquée en `
-          + `tête (le socle vit dans 'types').`, tok);
+          + `type en tête est un objet en portée — déclaré par la scène, ou apporté par une librairie `
+          + `invoquée en tête (le socle vit dans 'types') — ou in.<canal>.`, tok);
       }
       return null;
     }
@@ -2251,7 +2258,9 @@ function parse(tokens, opts = {}) {
     // ⛔ ET UN PROTOTYPE DÉCLARÉ PAR LA SCÈNE OUVRE UNE DÉCLARATION COMME UN TYPE DU SOCLE — le
     // type en tête PORTE la dérivation, c'est le prototypal pur. Mesuré avant : zéro nom de
     // 'scales' croise le vocabulaire, donc ses onze prototypes n'ombragent aucun mot du langage.
-    if (prototypesDeclares.has(mot) && at(T.LPAREN)) {
+    // ⚠️ UNE CONVENTION NE PORTE PAS DE CORPS — `signal grain (x:1)` reste refusé comme avant que les
+    // conventions soient des objets : elles se déclarent nues, avec leur valeur de départ.
+    if (prototypesDeclares.has(mot) && racineDe(mot) !== 'signal' && at(T.LPAREN)) {
       const sac = parseRuntimeQualifier();
       return { type: 'VarDirective', names: [premier], varType: { kind: 'type', type: mot },
                settings: sac, line: tok.line };
@@ -2283,7 +2292,9 @@ function parse(tokens, opts = {}) {
     // ── LA CONVENTION — un seul nom ────────────────────────────────────────────────────────
     // ⚠️ LE MODULE PARTAGEAIT CETTE BRANCHE et il en sort avec le catalogue : plus aucun chemin ne
     // produit un `varType.kind === 'module'`, donc plus rien n'en lit un.
-    if (varConventions().has(mot)) {
+    // Une convention est un objet en portée dont la racine de dérivation est `signal` — le nom de
+    // la forme que l'arbre porte (`kind: 'convention'`, contrat lu par BPx et bp3-frontend).
+    if (racineDe(mot) === 'signal') {
       const varType = { kind: 'convention', convention: mot };
       const d = { type: 'VarDirective', names: [premier], varType, line: tok.line };
       return departs.length ? { ...d, initial: departs } : d;
@@ -2899,8 +2910,8 @@ function parse(tokens, opts = {}) {
       // a deviner d apres le contenu de la parenthese.
       // ── LE CODE TYPE : `def fondu phase `js: …`` ────────────────────────────────────────
       // `LANGUAGE.md:307` : « Ses types sont ceux des signaux : signal, pitch, phase, logic. »
-      // Le type se lit dans la DONNEE (`core.json`, schema.varConventions) — la meme liste que
-      // `var` consulte deja pour ses conventions. Aucun nom de type n est ecrit ici.
+      // Le type se lit dans la DONNEE — un objet en portee dont la racine de derivation est
+      // `signal`, la meme lecture que la declaration par le type. Aucun nom de type n est ecrit ici.
       // ⚠️ CE CORPS ETAIT REFUSE PAR LE PALIER STRUCTURE, et volontairement : `phase` est un terme
       // nu, il tombait dans la branche structure et devenait un TERMINAL — un arbre plausible et
       // faux. Le refus posait la question ; c est ici qu elle se resout, sur la meme FORME (un
@@ -2917,7 +2928,7 @@ function parse(tokens, opts = {}) {
         return { type: 'DefDirective', name: defName, kind: 'code',
                  convention: null, tag, code, line: tok.line };
       }
-      if (at(T.IDENT) && varConventions().has(current().value)
+      if (at(T.IDENT) && racineDe(current().value) === 'signal'
           && peek(1) && peek(1).type === T.BACKTICK) {
         const convention = advance().value;
         const bt = current();

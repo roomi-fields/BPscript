@@ -5,7 +5,7 @@
 > vit dans le document d'architecture, chez Atlas, qui cite celui-ci.
 ## Ce qui est mesuré
 
-- **21 modules** dans `src/transpiler/`, **15490 lignes**.
+- **21 modules** dans `src/transpiler/`, **15505 lignes**.
 - Le **rôle** est lu dans l'en-tête de chaque fichier, verbatim — jamais interprété.
 - Les **arêtes** sont les imports d'un module vers un voisin du même dossier.
 
@@ -13,10 +13,10 @@
 
 | Module | Lignes | Importe | Importé par | Rôle (lu dans l'en-tête) |
 | --- | ---: | ---: | ---: | --- |
-| `parser.js` | 7884 | 4 | 2 | BPScript Parser |
+| `parser.js` | 7895 | 4 | 2 | BPScript Parser |
 | `resolution.js` | 3019 | 4 | 1 | L'ÉTAGE QUI RÉSOUT — le troisième des quatre, et le seul qui n'avait pas de domicile. |
 | `libs.js` | 1346 | 3 | 6 | BPScript Library Loader |
-| `libs-bundle.js` | 611 | 3 | 0 | BPScript Libs Bundle Generator |
+| `libs-bundle.js` | 615 | 3 | 0 | BPScript Libs Bundle Generator |
 | `actorResolver.js` | 585 | 1 | 2 | BPScript Actor Resolver |
 | `tokenizer.js` | 514 | 0 | 2 | BPScript Tokenizer |
 | `bpxAst.js` | 505 | 8 | 1 | Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table |

@@ -39,7 +39,8 @@ const schema = LIBS.core?.schema || {};
 // Les types de déclaration : les objets de `types`, moins l'entrée qui porte le fichier lui-même.
 const TYPES = Object.entries(LIBS.types || {})
   .filter(([k, v]) => k !== 'types' && v && typeof v === 'object' && !Array.isArray(v)).map(([k]) => k);
-const CONVENTIONS = schema.varConventions || [];
+// Les conventions : `signal` et ce qui en dérive — des objets de `types` depuis le 2026-09-02.
+const CONVENTIONS = TYPES.filter((k) => k === 'signal' || LIBS.types[k]._derive === 'signal');
 ok(TYPES.length > 0, 'les objets de `types` doivent être peuplés — sans eux le garde examine zéro');
 ok(['control', 'addresskey', 'destination', 'enum', 'flag', 'symbol'].every((t) => TYPES.includes(t)),
    `les six types du socle doivent être des objets de 'types' — vus : ${JSON.stringify(TYPES)}`);
@@ -52,8 +53,8 @@ ok(CONVENTIONS.length > 0, 'core.schema.varConventions doit être peuplé — sa
 // ⚠️ IL EST DONC ÉPROUVÉ À PART, juste en dessous, avec ce qui lui est propre.
 // ⚠️ `actor` AUSSI, depuis le 2026-09-02 : objet du socle, son corps garde sa FORME PROPRE (voie a,
 // Romain) — `actor basse  out.midi(ch:1)` rend un nœud d'acteur, pas une variable typée.
-const TYPES_A_PARENTHESE = TYPES.filter((t) => t !== 'flag' && t !== 'actor');
-ok(TYPES_A_PARENTHESE.length === TYPES.length - 2,
+const TYPES_A_PARENTHESE = TYPES.filter((t) => t !== 'flag' && t !== 'actor' && !CONVENTIONS.includes(t));
+ok(TYPES_A_PARENTHESE.length === TYPES.length - 2 - CONVENTIONS.length && CONVENTIONS.length === 4,
    `SOCLE : 'flag' et 'actor' doivent être des objets de 'types' pour en être retirés ici — sinon `
    + `cette exclusion porte sur rien et la matrice se croit complète. Vus : ${JSON.stringify(TYPES)}`);
 
@@ -100,7 +101,8 @@ ok(lire('zorglubinvente truc (x:1)').erreurs.length > 0, "D. TÉMOIN — et refu
 // -2 × 2 = -4) et son volet propre en apporte QUATRE, plus le socle qui prouve l'exclusion.
 // + 1 : l'assertion du socle — les six types de déclaration sont des objets de `types` (2026-09-02).
 // − 4 de plus : `actor` sort de la matrice à parenthèse comme `flag`, sa forme est propre (2026-09-02).
-const ATTENDU = 2 + TYPES.length * 4 + CONVENTIONS.length * 2 + 2 - 4 + 4 + 1 + 1 - 4;
+// − 4 par convention : elles sont dans TYPES depuis le 2026-09-02 et sortent de la matrice à parenthèse.
+const ATTENDU = 2 + TYPES.length * 4 + CONVENTIONS.length * 2 + 2 - 4 + 4 + 1 + 1 - 4 - 4 * CONVENTIONS.length;
 ok(p + e.length === ATTENDU, `le garde doit couvrir les ${TYPES.length} types et les ${CONVENTIONS.length} conventions — ${p + e.length} cas au lieu de ${ATTENDU}`);
 
 if (e.length) { console.error(`[primitives] ${e.length} ÉCHEC(S) :`); for (const x of e) console.error('  ✗ ' + x); process.exit(1); }

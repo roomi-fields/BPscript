@@ -396,9 +396,13 @@ async function collectBps(restants, compileToBPxAST, registerLib) {
     const sacVide = { type: 'SettingBag', pairs: [] };
     const declarations = [
       ...(r.ast.defs || []),
-      ...(r.ast.vars || []).filter((v) => v.varType?.kind === 'type')
+      // ⚠️ UNE CONVENTION EST UN EXEMPLAIRE COMME UN AUTRE — `signal pitch` dans `types.bpsl` déclare
+      // l'objet `pitch`, qui dérive de `signal`. Le parseur rend ce nœud sous la sorte `convention`
+      // (le contrat que BPx et bp3-frontend lisent) ; pour le paquet c'est une dérivation, et elle
+      // se publie comme les autres (Romain, 2026-09-02 : les conventions sont des objets de `types`).
+      ...(r.ast.vars || []).filter((v) => v.varType?.kind === 'type' || v.varType?.kind === 'convention')
         .map((v) => ({ type: 'DefDirective', name: v.names[0], settings: v.settings || sacVide,
-                       derivedeDe: v.varType.type, line: v.line })),
+                       derivedeDe: v.varType.kind === 'type' ? v.varType.type : v.varType.convention, line: v.line })),
     ];
     for (const d of declarations) {
       if (d.type !== 'DefDirective') continue;

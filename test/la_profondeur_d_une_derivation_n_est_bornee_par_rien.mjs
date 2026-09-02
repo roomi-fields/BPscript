@@ -47,9 +47,10 @@ ok(passe('def a (x)\na b (x:1)\nb c (x:1)'), "B. un exemplaire QUI PORTE UNE VAL
 // porte pas de corps. Ma première écriture testait donc ce refus-là en croyant tester la dérivation,
 // et elle restait verte sous l'injection qui ouvre le registre à tout. Une assertion qui passe pour
 // une autre raison que la sienne est un garde absent qui s'ignore.
-ok(passe('signal ondes'), "C. la convention se déclare NUE — sans quoi l'assertion suivante ne teste pas ce qu'elle dit");
-ok(!passe('signal ondes\nondes truc (x:1)'), "C. une CONVENTION déclare un nom sans en faire un prototype");
-ok(!passe('flag etat (a:1)\netat truc (x:1)'), "C. un DRAPEAU non plus — il déclare des états, pas un modèle");
+// `types` en tête : les conventions et le drapeau sont des objets de ce fichier (2026-09-02).
+ok(passe('types\nsignal ondes'), "C. la convention se déclare NUE — sans quoi l'assertion suivante ne teste pas ce qu'elle dit");
+ok(!passe('types\nsignal ondes\nondes truc (x:1)'), "C. une CONVENTION déclare un nom sans en faire un prototype");
+ok(!passe('types\nflag etat (a:1)\netat truc (x:1)'), "C. un DRAPEAU non plus — il déclare des états, pas un modèle");
 // `types` est invoqué : `control` est un objet de ce fichier, pas un socle implicite (Romain, 2026-09-02).
 ok(passe('types\ncontrol vel2 (x)\nvel2 truc (x:1)'), "C. mais tout TYPE en ouvre une, pas seulement `object`");
 ok(!passe('control vel2 (x)\nvel2 truc (x:1)'), "C-témoin. sans `types` en portée, `control` n'est pas un type — aucun socle implicite");

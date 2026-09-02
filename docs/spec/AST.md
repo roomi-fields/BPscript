@@ -135,7 +135,7 @@ VarDirective {
 VarType =
     { kind: "flag",       initiale: number, states: [] }
   | { kind: "in",         channel: "midi" | "osc" | "keyboard" }
-  | { kind: "convention", convention: "signal" | "pitch" | "phase" | "logic" }
+  | { kind: "convention", convention: string }   // un objet dont la racine de dérivation est `signal` — `signal`, `pitch`, `phase`, `logic`
   | { kind: "module",     module: string }
   | { kind: "type",       type: string | null }   // le PARENT ; null = une racine, qui ne dérive de rien
 ```
@@ -175,7 +175,7 @@ DefDirective {
   name: string
   kind: "terminal" | "structure" | "transformation" | "code"
   params: string[]                 // [] quand la définition n'en prend pas
-  convention: "signal" | "pitch" | "phase" | "logic" | null
+  convention: string | null     // un objet dont la racine de dérivation est `signal`, ou rien
   keys: { [nom]: { kind: "value" | "ref", value: string | string[] } }   // corps `terminal`
   body: RhsElement[]               // corps `structure` et `transformation`
   tag: string                      // corps `code` — le langage écrit devant le deux-points : "js"

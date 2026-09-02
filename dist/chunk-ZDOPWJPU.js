@@ -3,7 +3,7 @@ import {
 } from "./chunk-3Y64WDZ4.js";
 import {
   LIBS
-} from "./chunk-NGUE4MTO.js";
+} from "./chunk-4TF53S6W.js";
 import {
   CHAMPS_DE_FICHIER
 } from "./chunk-JWEI77WV.js";
@@ -653,16 +653,6 @@ function actorKeysData() {
   };
   return _actorKeys;
 }
-var _varConventions = null;
-function varConventions() {
-  if (_varConventions) return _varConventions;
-  const c = ((loadLib("core") || {}).schema || {}).varConventions;
-  if (!Array.isArray(c) || c.length === 0) {
-    throw new Error("lib/core.json schema.varConventions est vide ou absent");
-  }
-  _varConventions = new Set(c);
-  return _varConventions;
-}
 var _catalogAxisKeys = null;
 function catalogAxisKeys() {
   if (_catalogAxisKeys) return _catalogAxisKeys;
@@ -817,6 +807,18 @@ function parse(tokens, opts = {}) {
   const nomsDeclaresLocalement = /* @__PURE__ */ new Set();
   const acteursDeclares = /* @__PURE__ */ new Set();
   const prototypesDeclares = /* @__PURE__ */ new Set();
+  const derivations = /* @__PURE__ */ new Map();
+  const racineDe = (nom) => {
+    let courant = nom;
+    const vus = /* @__PURE__ */ new Set();
+    while (courant && !vus.has(courant)) {
+      vus.add(courant);
+      const p = derivations.get(courant);
+      if (!p) return courant;
+      courant = p;
+    }
+    return courant;
+  };
   const nomsVariables = /* @__PURE__ */ new Set();
   function warn(message, line) {
     if (opts.onWarning) opts.onWarning({ message, line });
@@ -989,7 +991,10 @@ function parse(tokens, opts = {}) {
             nomsVariables.add(n);
           }
           if (dir.varType?.kind === "type") {
-            for (const n of dir.names) prototypesDeclares.add(n);
+            for (const n of dir.names) {
+              prototypesDeclares.add(n);
+              if (dir.varType.type) derivations.set(n, dir.varType.type);
+            }
             if (dir.varType.type === null) for (const n of dir.names) definitionsDeclarees.add(n);
           }
         } else if (dir.type === "DefDirective") {
@@ -1047,6 +1052,7 @@ function parse(tokens, opts = {}) {
               if (nom.startsWith("_") || !valeur || typeof valeur !== "object" || Array.isArray(valeur)) continue;
               if (reserves.has(nom)) continue;
               prototypesDeclares.add(nom);
+              if (typeof valeur._derive === "string" && valeur._derive) derivations.set(nom, valeur._derive);
             }
             for (const a of Array.isArray(lib.apporte) ? lib.apporte : []) apporterLesPrototypesDe(a);
           };
@@ -1620,11 +1626,11 @@ function parse(tokens, opts = {}) {
       }
       return null;
     }
-    if (!varConventions().has(mot) && !prototypesDeclares.has(mot)) {
+    if (!prototypesDeclares.has(mot)) {
       const apresLeNom = peek(2).type;
       const formeDeDeclaration = apresLeNom === T.NEWLINE || apresLeNom === T.EOF || apresLeNom === T.COMMENT || apresLeNom === T.COLON && !peek(2).spaceBefore;
       if (peek(1).type === T.IDENT && formeDeDeclaration && !directiveDeclareeParLaLibrairie("core", mot) && porteesDeclarees(mot) === null) {
-        throw new ParseError(`'${mot} ${peek(1).value}' : '${mot}' n'est pas un type en port\xE9e. Un type en t\xEAte vient des conventions (${[...varConventions()].join(", ")}), de in.<canal>, ou d'un objet en port\xE9e \u2014 d\xE9clar\xE9 par la sc\xE8ne, ou apport\xE9 par une librairie invoqu\xE9e en t\xEAte (le socle vit dans 'types').`, tok);
+        throw new ParseError(`'${mot} ${peek(1).value}' : '${mot}' n'est pas un type en port\xE9e. Un type en t\xEAte est un objet en port\xE9e \u2014 d\xE9clar\xE9 par la sc\xE8ne, ou apport\xE9 par une librairie invoqu\xE9e en t\xEAte (le socle vit dans 'types') \u2014 ou in.<canal>.`, tok);
       }
       return null;
     }
@@ -1659,7 +1665,7 @@ function parse(tokens, opts = {}) {
         line: tok.line
       };
     }
-    if (prototypesDeclares.has(mot) && at(T.LPAREN)) {
+    if (prototypesDeclares.has(mot) && racineDe(mot) !== "signal" && at(T.LPAREN)) {
       const sac = parseRuntimeQualifier();
       return {
         type: "VarDirective",
@@ -1691,7 +1697,7 @@ function parse(tokens, opts = {}) {
     const departs = [];
     const d0 = lireDepart(premier);
     if (d0 !== null) departs.push({ name: premier, value: d0 });
-    if (varConventions().has(mot)) {
+    if (racineDe(mot) === "signal") {
       const varType = { kind: "convention", convention: mot };
       const d = { type: "VarDirective", names: [premier], varType, line: tok.line };
       return departs.length ? { ...d, initial: departs } : d;
@@ -1864,7 +1870,7 @@ function parse(tokens, opts = {}) {
           line: tok.line
         };
       }
-      if (at(T.IDENT) && varConventions().has(current().value) && peek(1) && peek(1).type === T.BACKTICK) {
+      if (at(T.IDENT) && racineDe(current().value) === "signal" && peek(1) && peek(1).type === T.BACKTICK) {
         const convention = advance().value;
         const bt = current();
         const brut = expect(T.BACKTICK).value;

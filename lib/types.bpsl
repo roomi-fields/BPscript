@@ -55,3 +55,11 @@ def enum
 def flag
 def symbol
 def actor
+
+// Les conventions de lecture d'une variable. `signal` est un flux de nombres sans convention — le
+// cas ordinaire ; les trois autres en dérivent : un signal lu comme une hauteur, comme une position
+// dans un cycle, comme un état haut ou bas.
+def signal
+signal pitch
+signal phase
+signal logic
