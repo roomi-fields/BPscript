@@ -47,6 +47,10 @@
       "default": "./dist/libs-data.js"
     },
     "./libs-champs": "./dist/libs-champs.js",
+    "./objets": {
+      "types": "./dist/objets.d.ts",
+      "default": "./dist/objets.js"
+    },
     "./syntaxe-data": "./dist/syntaxe-data.js",
     "./gabarits-data": "./dist/gabarits-data.js",
     "./editor-lang": "./dist/editor-lang.js",
@@ -59,11 +63,11 @@
   "files": [
     "dist/bpxAst.js",
     "dist/chunk-3Y64WDZ4.js",
-    "dist/chunk-AX6PPBGT.js",
-    "dist/chunk-H5FX2D5J.js",
+    "dist/chunk-DH3AJ3AO.js",
+    "dist/chunk-E5Z3N3TD.js",
+    "dist/chunk-JWEI77WV.js",
     "dist/chunk-NGUE4MTO.js",
     "dist/chunk-YT6XIK2B.js",
-    "dist/chunk-Z7KGRXC3.js",
     "dist/editor-lang.js",
     "dist/empreinte.js",
     "dist/gabarits-data.js",
@@ -71,6 +75,8 @@
     "dist/libs-champs.js",
     "dist/libs-data.d.ts",
     "dist/libs-data.js",
+    "dist/objets.d.ts",
+    "dist/objets.js",
     "dist/orderTokens.js",
     "dist/parser.js",
     "dist/syntaxe-data.js",

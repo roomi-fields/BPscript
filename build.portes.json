@@ -4,6 +4,7 @@
     "dist/index.js": "src/transpiler/index.js",
     "dist/libs-data.js": "src/transpiler/libs-data.js",
     "dist/libs-champs.js": "src/transpiler/libs-champs.js",
+    "dist/objets.js": "src/transpiler/objets.js",
     "dist/syntaxe-data.js": "src/transpiler/syntaxe-data.js",
     "dist/gabarits-data.js": "src/transpiler/gabarits-data.js",
     "dist/editor-lang.js": "public/editor/bpscript-lang.js",
@@ -14,6 +15,7 @@
   },
   "copies": {
     "dist/libs-data.d.ts": "src/transpiler/libs-data.d.ts",
+    "dist/objets.d.ts": "src/transpiler/objets.d.ts",
     "dist/empreinte.js": "src/empreinte.js"
   },
   "_empreinte": "dist/empreinte.js est COPIÉ, jamais regroupé : le publieur y grave le commit en remplaçant une ligne exacte, et un bundler la réécrit (var + export séparé). Faire passer une gravure par un regroupeur, c est faire dépendre la publication de la forme de sortie d un outil.",

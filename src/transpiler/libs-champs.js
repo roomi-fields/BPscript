@@ -56,9 +56,15 @@
  * à leur nature, et ce paquet porte 74 booléens réels. **Mesuré à un étage, conclu sur le suivant**,
  * puis routé à quatre destinataires comme un argument. runtime-midi l'a réfuté avec ce paquet même.
  */
-export const CHAMPS_DE_FICHIER = new Set([
-  'resolvedBy', 'resolves', 'name', 'description', 'version', 'type', 'section', 'documented',
-]);
+/**
+ * ⛔ DEUX NATURES, DEUX ENSEMBLES — décision de Romain, 2026-09-02 (`section-name-version-type-sortent-
+ * library-tombe`, `resolves-sort…`). Les champs DU PAQUET ne parlent que de la table de fichiers et
+ * SORTENT avec elle ; la porte des objets (`objets.js`) ne les expose pas. Les MEMBRES DE RACINE sont
+ * ce que l'objet racine d'un catalogue porte en propre, et ils restent.
+ */
+export const CHAMPS_DU_PAQUET = new Set(['resolves', 'name', 'section', 'type', 'version']);
+export const MEMBRES_DE_RACINE = new Set(['resolvedBy', 'description', 'documented']);
+export const CHAMPS_DE_FICHIER = new Set([...CHAMPS_DU_PAQUET, ...MEMBRES_DE_RACINE]);
 
 /**
  * Les entrées d'un objet de librairie, à un niveau donné : ni champ de fichier, ni note privée.
