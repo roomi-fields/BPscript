@@ -55,7 +55,7 @@ let _index = null;
 
 /**
  * L'index de tous les objets de toutes les librairies — reconstruit une fois, jamais recopié.
- * Chaque objet porte : nom, famille, derive, membres, place, chaine.
+ * Chaque objet porte : nom, famille, derive, membres, place, chaine, documented.
  */
 function index() {
   if (_index) return _index;
@@ -82,10 +82,14 @@ function index() {
       if (v && typeof v === 'object' && !Array.isArray(v)) continue;   // une entrée, lue plus bas
       if (!(k in fam.membres)) fam.membres[k] = v;
     }
+    // ⛔ `documented` SE LIT SUR L'ENTRÉE, CHEZ SON CONTRIBUTEUR — jamais sur la famille. Deux
+    // catalogues servent `alphabet` : l'un porte `// @documented`, l'autre non, et la racine de la
+    // famille ne garde que le premier. Mesuré par kairos le 2026-09-02 : `membres.documented` valait
+    // `true` pour les 24 entrées. Ce qu'un catalogue déclare vaut pour CHACUNE de ses entrées.
     const entree = (nom, brut, place) => {
       const o = {
         nom, famille: mot, derive: typeof brut._derive === 'string' ? brut._derive : null,
-        membres: membresDe(brut), place, chaine: [mot, nom],
+        membres: membresDe(brut), place, chaine: [mot, nom], documented: Boolean(lib.documented),
       };
       fam.entrees.push(o);
       poser(o);

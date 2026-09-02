@@ -74,6 +74,33 @@ for (const m of familles()) {
 ok(familles().includes('scale') && familles().includes('alphabet') && familles().includes('sound') && !familles().includes('scales') && !familles().includes('sounds'),
    `3. les familles se nomment par le MOT, jamais par le fichier — reçu ${JSON.stringify(familles())}`);
 
+// ── 4. `documented` SE LIT SUR L'ENTRÉE, CHEZ SON CONTRIBUTEUR ──────────────────────────────────
+// Décision de Romain, 2026-09-02 : `test_alphabets` reste publié et NON documenté, à côté de
+// `alphabets`, documenté, dans la même famille. La racine de la famille ne garde qu'un contributeur ;
+// c'est l'entrée qui porte le signal, et ce volet tient sur TOUTES les entrées de TOUS les catalogues.
+for (const [cle, place, nom] of attendues) {
+  const mot = (LIBS[cle] && LIBS[cle].resolves) || cle;
+  const e = parFamille.get(mot).entrees.find((o) => o.nom === nom && o.place === place);
+  if (!e) continue;   // déjà rougi au volet 1
+  ok(e.documented === Boolean(LIBS[cle].documented),
+     `4. '${mot}.${nom}' — documented ${JSON.stringify(e.documented)} au lieu de ${JSON.stringify(Boolean(LIBS[cle].documented))}, la valeur de son contributeur '${cle}'`);
+}
+{
+  // Le témoin qui DISCRIMINE : une famille à deux contributeurs de statuts opposés. Une porte qui
+  // recopierait la racine rendrait la même valeur sur les 24 ; celle-ci en rend deux.
+  const contributeurs = Object.keys(LIBS).filter((cle) => LIBS[cle] && (LIBS[cle].resolves || cle) === 'alphabet');
+  const statuts = new Set(contributeurs.map((cle) => Boolean(LIBS[cle].documented)));
+  ok(contributeurs.length >= 2 && statuts.size === 2,
+     `4. SOCLE : la famille 'alphabet' doit être servie par deux catalogues de statuts opposés — reçu ${JSON.stringify(contributeurs.map((c) => [c, Boolean(LIBS[c].documented)]))}`);
+  const alphabet = parFamille.get('alphabet');
+  const documentes = alphabet.entrees.filter((o) => o.documented).length;
+  const non = alphabet.entrees.filter((o) => !o.documented).length;
+  ok(documentes > 0 && non > 0,
+     `4. la famille 'alphabet' rend des entrées documentées ET non documentées — reçu ${documentes} / ${non}`);
+  ok(objet('alphabet.western').documented === true && objet('alphabet.abc').documented === false,
+     `4. 'alphabet.western' est documenté, 'alphabet.abc' ne l'est pas — reçu ${JSON.stringify([objet('alphabet.western').documented, objet('alphabet.abc').documented])}`);
+}
+
 ok(passe >= 2000, `le garde doit avoir EXAMINÉ (${passe} assertions)`);
 if (echecs.length) {
   console.error(`[porte des objets] ${echecs.length} ÉCHEC(S) :`);

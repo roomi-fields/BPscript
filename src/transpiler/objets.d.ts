@@ -17,12 +17,21 @@ export interface Objet {
   place: string | null;
   /** Sa chaîne d'invocation, de la famille à lui : `['alphabet', 'western']`. */
   chaine: string[];
+  /**
+   * Entre-t-il dans l'aide publiée ? Lu chez SON contributeur — la ligne `// @documented` du
+   * catalogue qui le déclare. C'est ici que le signal se lit : deux catalogues peuvent servir une
+   * même famille, l'un documenté, l'autre non, et la racine de la famille n'en garde qu'un.
+   */
+  documented: boolean;
 }
 
 /** Une famille : sa racine et ses entrées. */
 export interface Famille {
   nom: string;
-  /** Les membres propres de la racine : `documented`, `resolvedBy`, `description`, `apporte`… */
+  /**
+   * Les membres propres de la racine : `resolvedBy`, `description`, `apporte`… — ceux du PREMIER
+   * contributeur quand plusieurs catalogues servent le mot. `documented` se lit sur chaque entrée.
+   */
   membres: Record<string, unknown>;
   entrees: Objet[];
 }

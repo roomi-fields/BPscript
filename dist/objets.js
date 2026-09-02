@@ -53,7 +53,8 @@ function index() {
         derive: typeof brut._derive === "string" ? brut._derive : null,
         membres: membresDe(brut),
         place,
-        chaine: [mot, nom]
+        chaine: [mot, nom],
+        documented: Boolean(lib.documented)
       };
       fam.entrees.push(o);
       poser(o);

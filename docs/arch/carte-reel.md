@@ -5,7 +5,7 @@
 > vit dans le document d'architecture, chez Atlas, qui cite celui-ci.
 ## Ce qui est mesuré
 
-- **23 modules** dans `src/transpiler/`, **15393 lignes**.
+- **23 modules** dans `src/transpiler/`, **15397 lignes**.
 - Le **rôle** est lu dans l'en-tête de chaque fichier, verbatim — jamais interprété.
 - Les **arêtes** sont les imports d'un module vers un voisin du même dossier.
 
@@ -20,7 +20,7 @@
 | `tokenizer.js` | 514 | 0 | 2 | BPScript Tokenizer |
 | `bpxAst.js` | 511 | 8 | 2 | Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table |
 | `librairies.js` | 347 | 1 | 1 | LA LECTURE DES LIBRAIRIES — une source écrite dans le langage devient un objet du registre. |
-| `objets.js` | 148 | 3 | 0 | LA PORTE DES OBJETS — ce qu'une librairie déclare, rendu comme des objets et non comme une table |
+| `objets.js` | 152 | 3 | 0 | LA PORTE DES OBJETS — ce qu'une librairie déclare, rendu comme des objets et non comme une table |
 | `orderTokens.js` | 123 | 0 | 0 | — |
 | `controlValidation.js` | 113 | 0 | 1 | Collecte récursivement toutes les paires de SettingBag de l'AST. |
 | `libs-champs.js` | 98 | 0 | 3 | LES CHAMPS DE FICHIER D'UNE LIBRAIRIE — déclarés UNE FOIS, pour tous mes lecteurs. |
