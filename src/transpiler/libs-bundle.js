@@ -276,17 +276,36 @@ function sacEnObjet(sac, fichier = '?', declaration = '?') {
   return out;
 }
 
-async function collectBps(dir, prefix, compileToBPxAST) {
+/** Les sources écrites dans le langage, dans l'ordre des noms — l'ordre du paquet. */
+function sourcesBps(dir, prefix) {
+  const out = [];
   for (const entry of readdirSync(dir).sort()) {
     const full = join(dir, entry);
-    if (statSync(full).isDirectory()) { await collectBps(full, prefix + entry + '/', compileToBPxAST); continue; }
+    if (statSync(full).isDirectory()) { out.push(...sourcesBps(full, prefix + entry + '/')); continue; }
     if (!entry.endsWith('.bpsl')) continue;
-    const nom = prefix + entry.replace('.bpsl', '');
+    out.push({ entry, full, nom: prefix + entry.replace('.bpsl', '') });
+  }
+  return out;
+}
+
+// ⛔ L'ORDRE DE LECTURE SUIT LA CHAÎNE `apporte`, PAS L'ALPHABET — ET C'EST UN POINT FIXE, JAMAIS UNE
+// LISTE DE NOMS. Une source invoque en tête ce dont elle dérive (`types` porte les types du socle
+// depuis le 2026-09-02, et six catalogues de contrôles l'invoquent). Lue par ordre alphabétique,
+// `audio` passait avant `types` et lisait le `types` du paquet COMMITÉ — sans `control` — donc ne
+// compilait plus, et le paquet ne pouvait plus être régénéré depuis ses sources : l'amorçage ne
+// tenait qu'à l'ancien paquet. Mesuré le 2026-09-02, six sources sur vingt-deux.
+// ⇒ Une source qui ne compile pas est REPRISE après les autres ; chaque librairie construite entre
+// au registre du compilateur, et les sources lues ensuite la voient telle qu'elle vient d'être
+// écrite. Une passe sans progrès s'arrête et nomme chaque refus : c'est une vraie faute de source.
+async function collectBps(restants, compileToBPxAST, registerLib) {
+  const encore = [];
+  const refus = [];
+  for (const { entry, full, nom } of restants) {
     ecritesDansLeLangage.add(nom);
     const r = compileToBPxAST(readFileSync(full, 'utf-8'));
     if ((r.errors || []).length) {
-      console.error(`[bundle] ⛔ lib/${entry} NE COMPILE PAS : ${r.errors[0].message}`);
-      process.exitCode = 1;
+      encore.push({ entry, full, nom });
+      refus.push(`lib/${entry} NE COMPILE PAS : ${r.errors[0].message}`);
       continue;
     }
     const lib = { controls: {} };
@@ -497,7 +516,15 @@ async function collectBps(dir, prefix, compileToBPxAST) {
     }
     if (!Object.keys(lib.controls).length) delete lib.controls;
     libs[nom] = lib;
+    registerLib(nom, lib);
   }
+  if (!encore.length) return;
+  if (encore.length === restants.length) {
+    for (const m of refus) console.error(`[bundle] ⛔ ${m}`);
+    process.exitCode = 1;
+    return;
+  }
+  await collectBps(encore, compileToBPxAST, registerLib);
 }
 
 
@@ -507,11 +534,12 @@ async function collectBps(dir, prefix, compileToBPxAST) {
 // est commité. Ma première version écrivait un bundle intermédiaire dans `libs-data.js` pour casser
 // la circularité — elle DÉTRUISAIT donc le bundle commité au moment même où on le vérifiait, et le
 // garde comparait le frais à ce qu'il venait lui-même d'écraser.
-// La circularité n'a pas besoin de ça : le bundle COMMITÉ suffit à charger le transpileur. Il est
-// peut-être périmé pour d'autres librairies, mais un fichier de librairie ne déclare aucun `core`
-// et n'a donc besoin d'AUCUN vocabulaire pour être lu.
+// La circularité n'a pas besoin de ça : le bundle COMMITÉ suffit à charger le transpileur. Il sert
+// d'amorce, et chaque librairie construite ici le REMPLACE au registre au fil de la lecture — une
+// source qui invoque `types` en tête lit le `types` de cette régénération, jamais celui du paquet.
 const { compileToBPxAST } = await import('./index.js');
-await collectBps(LIB_DIR, '', compileToBPxAST);
+const { registerLib } = await import('./libs.js');
+await collectBps(sourcesBps(LIB_DIR, ''), compileToBPxAST, registerLib);
 captureDigitalBodies(LIB_DIR);
 
 // Output as ES module

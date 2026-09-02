@@ -27,6 +27,8 @@
 // forme n existe ni au moteur d origine, ni dans une seule des 274 scenes, et l arbre ne l
 // appliquait nulle part. Romain l a supprimee. L axe tombe avec elle.
 
+types
+
 def midi (documented:true, resolves:midi, resolvedBy:"runtime-MIDI", name:midi, description:"Contrôles spécifiques au transport MIDI — match EXACT LIBRAIRIES.md:172.", section:controls)
 
 // ═══ LES CLES D ADRESSE ═══

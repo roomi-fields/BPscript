@@ -50,6 +50,8 @@
 // librairies : ils s'écrivent partout où un réglage de jeu s'écrit — sur un symbole, sur un
 // groupe, sur une règle, et dans le flux.
 
+types
+
 def variation (documented:true, resolves:variation, resolvedBy:"Kairos", name:variation, description:"Modes de variation DISCRETS des paramètres de jeu — fixe et paliers. Entre deux valeurs écrites d'un même paramètre, le mode dit si la première TIENT jusqu'à la seconde (fixe) ou si elle GLISSE de note en note (paliers). Ces deux modes se résolvent à la note, donc avant qu'un son ne soit émis : ils appartiennent à Kairos. Le troisième mode — continu — glisse PENDANT les notes, par messages intermédiaires : il ne peut être rendu que par celui qui émet, et il vit donc dans la librairie de son paramètre.", version:0.1.0, section:controls)
 
 // _comment : Modes discrets — un mot par (paramètre, mode), sans argument. Le mot natif est

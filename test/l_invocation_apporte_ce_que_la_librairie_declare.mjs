@@ -39,7 +39,10 @@ ok(passe('types\ndirectional y (ascending(1), descending(2))'),
 ok(passe('scale\nbilaval x (a:1)'), "A. une VRAIE entrée de catalogue dérive aussi — tout objet est un modèle");
 
 // ── B. TÉMOINS — l'invocation apporte ce que LA librairie déclare, pas ce qu'une autre déclare ───
-ok(!passe('core\ninterval x (ratios(1))'), "B. TÉMOIN — `core` ne déclare pas `interval`, il reste refusé");
+// ⚠️ `core` N'EST PLUS LE TÉMOIN : il apporte `audio`, qui invoque `types` en tête, et la chaîne se
+// suit transitivement depuis le 2026-09-02 — `interval` lui arrive. `engine` n'invoque rien.
+ok(!passe('engine\ninterval x (ratios(1))'), "B. TÉMOIN — `engine` ne déclare pas `interval` et n'apporte rien, il reste refusé");
+ok(passe('core\ninterval x (ratios(1))'), "B. et `core` l'apporte PAR SA CHAÎNE — core → audio → types");
 ok(!passe('interval x (ratios(1))'), "B. TÉMOIN — sans aucune invocation, rien n'est apporté");
 ok(!passe('types\nzorglubinvente x (a:1)'), "B. TÉMOIN — un mot que `types` ne déclare pas reste refusé");
 
@@ -70,7 +73,7 @@ for (const n of ['gamut', 'interval', 'degree', 'directional', 'composite']) {
 }
 ok(typeof LIBS.scales?.resolvedBy === 'string', "D. `resolvedBy` doit être une CHAÎNE — le volet C repose dessus");
 
-const ATTENDU = 3 + 3 + 3 + 2 + 1 + 5 + 1;
+const ATTENDU = 3 + 3 + 3 + 2 + 1 + 5 + 1 + 1; // + « core l'apporte par sa chaîne » (2026-09-02)
 ok(p + e.length === ATTENDU, `le garde doit éprouver ${ATTENDU} cas — ${p + e.length} seulement`);
 
 if (e.length) { console.error(`[invocation] ${e.length} ÉCHEC(S) :`); for (const x of e) console.error('  ✗ ' + x); process.exit(1); }

@@ -32,8 +32,21 @@ const verifier = (cond, quoi) => { if (cond) { ok += 1; } else { ko += 1; consol
 
 const dispo = new Set(nomsBps());
 /** Énumère une grammaire, dans l'ordre demandé. Rend la liste des items, ou null. */
+// ⚠️ TEMPORAIRE, ET DIT COMME TEL. `tryflags2` déclare ses drapeaux sans invoquer `core` ni `types`,
+// et il n'y a plus de socle implicite depuis le 2026-09-02 (Romain) : elle ne compile plus telle
+// qu'écrite, elle est à kanopi, et le registre du corpus l'inscrit avec sa réécriture — `core` en
+// tête. Ce garde éprouve une faute d'ÉNUMÉRATION que seule cette grammaire montre ; il lui pose
+// donc la ligne que kanopi va écrire, en mémoire, et rien d'autre. À RETIRER quand kanopi a migré :
+// le témoin ci-dessous rougit le jour où la scène porte déjà sa ligne.
+const SOCLE_EN_TETE = /^(core|types)\s*$/m;
+function sourceDe(nom) {
+  const src = readFileSync(bpsPath(nom), 'utf-8');
+  if (nom !== 'tryflags2') return src;
+  verifier(!SOCLE_EN_TETE.test(src), 'tryflags2 porte désormais son socle en tête — kanopi a migré, RETIRER le préfixe posé ici');
+  return `core\n${src}`;
+}
 function enumerer(nom, deriverAvant) {
-  const out = compileToBPxAST(readFileSync(bpsPath(nom), 'utf-8'));
+  const out = compileToBPxAST(sourceDe(nom));
   if (out.errors.length) return null;
   const session = createSession(out.ast, { seed: 1 });
   if (deriverAvant) { try { session.derive(); } catch { return null; } }

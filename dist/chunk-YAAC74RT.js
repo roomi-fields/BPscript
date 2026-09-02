@@ -9,14 +9,14 @@ import {
   resolveActorAlphabet,
   resolveActorAlphabetSource,
   universeControlNames
-} from "./chunk-OS4VZ4IJ.js";
+} from "./chunk-2CDRHRA3.js";
 import {
   LexError,
   tokenize
 } from "./chunk-3Y64WDZ4.js";
 import {
   LIBS
-} from "./chunk-6JRPVN2L.js";
+} from "./chunk-JE66RPU6.js";
 
 // src/transpiler/actorResolver.js
 function expandAlphabetTerminals(alphabetLib, octavesOverride) {

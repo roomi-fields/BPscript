@@ -31,7 +31,8 @@ console.log('[tiret-bas] une valeur peut commencer par un tiret bas');
 // autres. Elles sont écrites une par une, et le garde rougit si l'une d'elles se referme.
 for (const [ou, src] of [
   ['un sac de définition',            `${TETE}def x (bp3:_srand)\n-----\nS -> C4`],
-  ['un sac de type en tête',          `${TETE}native srand(bp3:_srand)\n-----\nS -> C4`],
+  // Forme B (Romain, 2026-09-02) : un geste natif est un `control` qui porte `bpscript:false`.
+  ['un sac de type en tête',          `${TETE}control srand(bp3:_srand, bpscript:false)\n-----\nS -> C4`],
   ['un sac du flux',                  `${TETE}-----\nS -> C4(vel:_srand)`],
   ['un corps indenté',                `${TETE}def x\n  bp3:_srand\n\n-----\nS -> C4`],
   ['la valeur de départ d\'une convention', `${TETE}signal grain:_x\n-----\nS -> C4`],

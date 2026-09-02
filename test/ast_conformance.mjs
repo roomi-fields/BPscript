@@ -140,6 +140,11 @@ const ERREURS_ADMISES = [
   // Elles étaient déjà rouges avant le chantier du jour — ce garde ne les regardait simplement pas.
   { demo: 'trySrand', pourquoi: 'scène incomplète (kanopi) : terminaux nus sans convention de notes déclarée', date: '2026-08-08' },
   { demo: 'tryCsoundObjects', pourquoi: 'scène incomplète (kanopi) : objets sonores nus sans convention de notes', date: '2026-08-08' },
+  // ⛔ PLUS DE SOCLE IMPLICITE — Romain, 2026-09-02 : « si la scène n'invoque ni types ni core, alors
+  // ça plante si flag n'est pas défini ». Ces trois scènes déclarent un drapeau ou un symbole sans
+  // invoquer `core`, `types`, ni une librairie qui invoque `types`. La réécriture est une ligne en
+  // tête : `core`. kanopi prévenu à la frappe avec la liste exacte ; ces entrées sortent dès qu'il a migré.
+  { demo: 'koto2', pourquoi: 'déclare des drapeaux sans invoquer core ni types (kanopi) — aucun socle implicite', date: '2026-09-02' },
   // ⛔ controls.json SUPPRIME (Romain, 2026-08-10 : « on supprime controls.json et tous les
   // appels a cette librairie sont supprimes »). `core` amene desormais le meme ensemble
   // (`core.apporte`) qu'apportait le stub `controls` — la migration est mecanique, une ligne

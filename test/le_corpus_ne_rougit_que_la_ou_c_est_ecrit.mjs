@@ -111,6 +111,21 @@ const REGISTRE = [
   // d'origine ; kanopi a migré, et la scène refuse de nouveau pour ce qu'elle est — des objets
   // sonores nus sans convention de notes déclarée. Le compte n'a pas bougé, la raison si.
   ['BPScript-tests/tryCsoundObjects.bps', 'non déclaré', 'objets sonores nus sans convention de notes déclarée', 'kanopi', 'kanopi — il instruit après l ouverture de def'],
+  // ⛔ PLUS DE SOCLE IMPLICITE — Romain, 2026-09-02 : « si la scène n'invoque ni types ni core, alors
+  // ça plante si flag n'est pas défini, et si l'utilisateur a redéfini flag […] ça fera ce qu'il
+  // demande, comme dans un vrai langage ». Les types de déclaration sont des objets de `types` ;
+  // ces trois scènes déclarent sans invoquer `core`, `types`, ni une librairie qui invoque `types`.
+  // MESURE AVANT LA FRAPPE : 177 scènes du corpus, TROIS changent de verdict, celles-ci. La
+  // réécriture est une ligne en tête, `core`. kanopi prévenu à la frappe avec la liste exacte.
+  ['BPScript-tests/koto2.bps',            "n'est pas un type en portée", 'déclare des drapeaux sans invoquer core ni types — aucun socle implicite depuis le 2026-09-02', 'kanopi', 'son propriétaire — écrire `core` en tête'],
+  ['BPScript-tests/tryFlags.bps',         "n'est pas un type en portée", 'déclare un symbole et des drapeaux sans invoquer core ni types', 'kanopi', 'son propriétaire — écrire `core` en tête'],
+  ['BPScript-tests/tryflags2.bps',        "n'est pas un type en portée", 'déclare des drapeaux sans invoquer core ni types', 'kanopi', 'son propriétaire — écrire `core` en tête'],
+  // Et CINQ scènes hors du corpus de test, même cause, même réécriture — mesurées par ce garde.
+  ['code-voices/hydra-audio.bps',         "n'est pas un type en portée", 'déclare un drapeau sans invoquer core ni types', 'kanopi', 'son propriétaire — écrire `core` en tête'],
+  ['code-voices/starter-main.bps',        "n'est pas un type en portée", 'déclare un drapeau sans invoquer core ni types', 'kanopi', 'son propriétaire — écrire `core` en tête'],
+  ['code-voices/starter-second.bps',      "n'est pas un type en portée", 'déclare un drapeau sans invoquer core ni types', 'kanopi', 'son propriétaire — écrire `core` en tête'],
+  ['code-voices/strudel-intro.bps',       "n'est pas un type en portée", 'déclare un drapeau sans invoquer core ni types', 'kanopi', 'son propriétaire — écrire `core` en tête'],
+  ['orchestrator/04-scenes-select.bps',   "n'est pas un type en portée", 'déclare un drapeau sans invoquer core ni types', 'kanopi', 'son propriétaire — écrire `core` en tête'],
   // ⛔ DEUX SCÈNES QUE LA MIGRATION DE KANOPI N'A PAS PRISES, mesurées le 2026-08-19 : leur `var`
   // est suivi d'un BACKTICK, pas d'un type. La réécriture est la même que les dix-huit autres —
   // `var <nom> \`code\`` devient `symbol <nom> \`code\`` —, et elle est ÉPROUVÉE : la forme compile

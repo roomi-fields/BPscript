@@ -50,7 +50,9 @@ function backtickNodes(ast) {
 // 4. flagStates LU depuis `var <nom> flag: ...` (ex-`flag`, tombée le 2026-08-05 — `flag` n'est
 // plus une directive de tête de scène, EBNF.md:29-33 : quatre mots déclaratifs seulement).
 {
-  const r = compileToBPxAST('flag section:1\ncore\n-----\nS -> C4');
+  // `core` AVANT le drapeau : `flag` est un objet de `types`, que `core` apporte par sa chaîne, et
+  // le registre se remplit à la lecture — aucun socle implicite (Romain, 2026-09-02).
+  const r = compileToBPxAST('core\nflag section:1\n-----\nS -> C4');
   const vd = (r.ast.vars || []).find((v) => v.names?.[0] === 'section' && v.varType?.kind === 'flag');
   check(!!vd, "directive var section flag: présente dans l'arbre");
   // ⛔ LES ETATS NOMMES SONT SORTIS LE 2026-08-22 (Romain). Ce qui se lit depuis la directive est
@@ -113,7 +115,7 @@ function backtickNodes(ast) {
 // 7. États de drapeau nommés RÉSOLUS dans l'AST (bug BPx G2) : la garde porte l'ENTIER, pas le nom
 // (`var <nom> flag: ...`, ex-`flag` tombée le 2026-08-05)
 {
-  const r = compileToBPxAST('flag section:1\n-----\n[section==1] S -> A\n[section==2] S -> Two\n-----\nA -> C4\nTwo -> C4 C4');
+  const r = compileToBPxAST('types\nflag section:1\n-----\n[section==1] S -> A\n[section==2] S -> Two\n-----\nA -> C4\nTwo -> C4 C4');
   const guards = [];
   for (const sg of r.ast.subgrammars) for (const rule of sg.rules) {
     const gg = Array.isArray(rule.guard) ? rule.guard : (rule.guard ? [rule.guard] : []);
@@ -125,10 +127,10 @@ function backtickNodes(ast) {
   // ⛔ UN AUTRE DRAPEAU RESTE UNE CHAÎNE — c'est la référence croisée, fidèle BP3. Mais il doit
   // être DÉCLARÉ : ce volet éprouvait 'other', qui n'est ni un état de 'section' ni un drapeau,
   // donc un nom qui ne désigne RIEN. Il certifiait le trou que la décision du 2026-08-20 ferme.
-  const r2 = compileToBPxAST('flag section:1\nflag autre:9\n-----\n[section==autre] S -> A\n-----\nA -> C4');
+  const r2 = compileToBPxAST('types\nflag section:1\nflag autre:9\n-----\n[section==autre] S -> A\n-----\nA -> C4');
   check(r2.ast.subgrammars[0].rules[0].guard[0].value === 'autre', 'le nom d un AUTRE DRAPEAU déclaré reste une chaîne (réf croisée)');
   // ET SON COMPLÉMENT : un nom qui ne désigne rien est REFUSÉ — l'incomplétude se refuse à l'usage.
-  const r3 = compileToBPxAST('flag section:1\n-----\n[section==other] S -> A\n-----\nA -> C4');
+  const r3 = compileToBPxAST('types\nflag section:1\n-----\n[section==other] S -> A\n-----\nA -> C4');
   check((r3.errors || []).length > 0, 'un nom qui n est ni un état ni un drapeau est REFUSÉ');
 }
 

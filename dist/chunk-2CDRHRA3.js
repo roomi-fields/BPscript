@@ -3,7 +3,7 @@ import {
 } from "./chunk-3Y64WDZ4.js";
 import {
   LIBS
-} from "./chunk-6JRPVN2L.js";
+} from "./chunk-JE66RPU6.js";
 import {
   CHAMPS_DE_FICHIER
 } from "./chunk-Z7KGRXC3.js";
@@ -666,16 +666,6 @@ function varConventions() {
   _varConventions = new Set(c);
   return _varConventions;
 }
-var _typesDeclaratifs = null;
-function typesDeclaratifs() {
-  if (_typesDeclaratifs) return _typesDeclaratifs;
-  const c = ((loadLib("core") || {}).schema || {}).declarationTypes;
-  if (!Array.isArray(c) || c.length === 0) {
-    throw new Error("lib/core.json schema.declarationTypes est vide ou absent");
-  }
-  _typesDeclaratifs = new Set(c);
-  return _typesDeclaratifs;
-}
 var _catalogAxisKeys = null;
 function catalogAxisKeys() {
   if (_catalogAxisKeys) return _catalogAxisKeys;
@@ -1051,11 +1041,19 @@ function parse(tokens, opts = {}) {
         } else {
           scene.directives.push(dir);
           const reserves = new Set(((loadLib("core") || {}).schema || {}).reservedDirectives || []);
-          for (const [nom, valeur] of Object.entries(loadLib(dir.name) || {})) {
-            if (nom.startsWith("_") || !valeur || typeof valeur !== "object" || Array.isArray(valeur)) continue;
-            if (reserves.has(nom)) continue;
-            prototypesDeclares.add(nom);
-          }
+          const librairiesVues = /* @__PURE__ */ new Set();
+          const apporterLesPrototypesDe = (nomLib) => {
+            if (!nomLib || librairiesVues.has(nomLib)) return;
+            librairiesVues.add(nomLib);
+            const lib = loadLib(nomLib) || {};
+            for (const [nom, valeur] of Object.entries(lib)) {
+              if (nom.startsWith("_") || !valeur || typeof valeur !== "object" || Array.isArray(valeur)) continue;
+              if (reserves.has(nom)) continue;
+              prototypesDeclares.add(nom);
+            }
+            for (const a of Array.isArray(lib.apporte) ? lib.apporte : []) apporterLesPrototypesDe(a);
+          };
+          apporterLesPrototypesDe(dir.name);
         }
       } else if (atProductionBlock()) {
         for (const d of parseProductionBlock()) scene.directives.push(d);
@@ -1619,15 +1617,17 @@ function parse(tokens, opts = {}) {
         tok
       );
     }
-    if (!typesDeclaratifs().has(mot) && !varConventions().has(mot) && !prototypesDeclares.has(mot)) {
-      const finDeLigne = peek(2).type === T.NEWLINE || peek(2).type === T.EOF || peek(2).type === T.COMMENT;
-      if (peek(1).type === T.IDENT && finDeLigne && !directiveDeclareeParLaLibrairie("core", mot) && porteesDeclarees(mot) === null) {
-        throw new ParseError(`'${mot} ${peek(1).value}' : '${mot}' n'est pas un type. Un type en t\xEAte vient des conventions (${[...varConventions()].join(", ")}) ou des types de base (${[...typesDeclaratifs()].join(", ")}, in.<canal>).`, tok);
+    if (!varConventions().has(mot) && !prototypesDeclares.has(mot)) {
+      const apresLeNom = peek(2).type;
+      const formeDeDeclaration = apresLeNom === T.NEWLINE || apresLeNom === T.EOF || apresLeNom === T.COMMENT || apresLeNom === T.COLON && !peek(2).spaceBefore;
+      if (peek(1).type === T.IDENT && formeDeDeclaration && !directiveDeclareeParLaLibrairie("core", mot) && porteesDeclarees(mot) === null) {
+        throw new ParseError(`'${mot} ${peek(1).value}' : '${mot}' n'est pas un type en port\xE9e. Un type en t\xEAte vient des conventions (${[...varConventions()].join(", ")}), de in.<canal>, ou d'un objet en port\xE9e \u2014 d\xE9clar\xE9 par la sc\xE8ne, ou apport\xE9 par une librairie invoqu\xE9e en t\xEAte (le socle vit dans 'types').`, tok);
       }
       return null;
     }
     if (!ouvreUnNom(1)) {
       if (peek(1).type === T.NEWLINE || peek(1).type === T.EOF) {
+        if (loadLib(mot) || catalogAxisKeys().has(mot)) return null;
         throw new ParseError(`'${mot}' doit nommer ce qu'il d\xE9clare \u2014 le type vient en t\xEAte, le nom ensuite ('${mot} <nom>').`, tok);
       }
       return null;
@@ -1656,7 +1656,7 @@ function parse(tokens, opts = {}) {
         line: tok.line
       };
     }
-    if ((typesDeclaratifs().has(mot) || prototypesDeclares.has(mot)) && at(T.LPAREN)) {
+    if (prototypesDeclares.has(mot) && at(T.LPAREN)) {
       const sac = parseRuntimeQualifier();
       return {
         type: "VarDirective",
@@ -1700,7 +1700,7 @@ function parse(tokens, opts = {}) {
       const dn = lireDepart(n);
       if (dn !== null) departs.push({ name: n, value: dn });
     }
-    const type = typesDeclaratifs().has(mot) || prototypesDeclares.has(mot) ? { kind: "type", type: mot } : null;
+    const type = prototypesDeclares.has(mot) ? { kind: "type", type: mot } : null;
     const nu = { type: "VarDirective", names: noms, varType: type, line: tok.line };
     return departs.length ? { ...nu, initial: departs } : nu;
   }

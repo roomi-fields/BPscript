@@ -28,15 +28,21 @@ const ok = (cond, quoi) => { if (cond) p++; else e.push(quoi); };
 
 const lire = (source) => {
   try {
-    const r = compileToBPxAST(`${source}\n-----\nS -> C4\n`);
+    // ⛔ `types` EST INVOQUÉ EN TÊTE — pas de socle implicite (Romain, 2026-09-02) : les types de
+    // déclaration sont des objets de `lib/types.bpsl`, en portée quand ce fichier l'est.
+    const r = compileToBPxAST(`types\n${source}\n-----\nS -> C4\n`);
     return { erreurs: (r.errors || []).map((x) => String(x.message ?? x)), v: (r.ast?.vars || [])[0] };
   } catch (err) { return { erreurs: [String(err.message)], v: null }; }
 };
 
 const schema = LIBS.core?.schema || {};
-const TYPES = schema.declarationTypes || [];
+// Les types de déclaration : les objets de `types`, moins l'entrée qui porte le fichier lui-même.
+const TYPES = Object.entries(LIBS.types || {})
+  .filter(([k, v]) => k !== 'types' && v && typeof v === 'object' && !Array.isArray(v)).map(([k]) => k);
 const CONVENTIONS = schema.varConventions || [];
-ok(TYPES.length > 0, 'core.schema.declarationTypes doit être peuplé — sans lui le garde examine zéro');
+ok(TYPES.length > 0, 'les objets de `types` doivent être peuplés — sans eux le garde examine zéro');
+ok(['control', 'addresskey', 'destination', 'enum', 'flag', 'symbol'].every((t) => TYPES.includes(t)),
+   `les six types du socle doivent être des objets de 'types' — vus : ${JSON.stringify(TYPES)}`);
 ok(CONVENTIONS.length > 0, 'core.schema.varConventions doit être peuplé — sans lui le garde examine zéro');
 
 // ⛔ `flag` EST SORTI DE CETTE MATRICE LE 2026-08-22, ET IL EST LE SEUL. Deux décisions de Romain le
@@ -90,7 +96,8 @@ ok(lire('zorglubinvente truc (x:1)').erreurs.length > 0, "D. TÉMOIN — et refu
 // ⛔ Le compte se dérive de la donnée, il ne s'écrit pas : une primitive ajoutée l'augmente d'elle-même.
 // ⛔ LE COMPTE SUIT LA SORTIE DE `flag` : ses deux lignes quittent les volets A et B (donc
 // -2 × 2 = -4) et son volet propre en apporte QUATRE, plus le socle qui prouve l'exclusion.
-const ATTENDU = 2 + TYPES.length * 4 + CONVENTIONS.length * 2 + 2 - 4 + 4 + 1;
+// + 1 : l'assertion du socle — les six types de déclaration sont des objets de `types` (2026-09-02).
+const ATTENDU = 2 + TYPES.length * 4 + CONVENTIONS.length * 2 + 2 - 4 + 4 + 1 + 1;
 ok(p + e.length === ATTENDU, `le garde doit couvrir les ${TYPES.length} types et les ${CONVENTIONS.length} conventions — ${p + e.length} cas au lieu de ${ATTENDU}`);
 
 if (e.length) { console.error(`[primitives] ${e.length} ÉCHEC(S) :`); for (const x of e) console.error('  ✗ ' + x); process.exit(1); }

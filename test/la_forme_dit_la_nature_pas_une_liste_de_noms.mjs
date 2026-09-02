@@ -56,7 +56,9 @@ try {
   // ⛔ LA SOURCE TÉMOIN N'EMPLOIE AUCUN DES CINQ ANCIENS NOMS. C'est ce qui rend le cas
   // discriminant : une liste de noms ne pouvait pas connaître `cordes` ni `bourdon`.
   writeFileSync(join(bac, 'lib/temoin_forme.bpsl'),
-    'def temoin_forme (documented:true, section:controls)\n'
+    // Sans `section:controls` : une place de contrôles n'admet que des déclarations de contrôle, et le
+    // générateur le vérifie au fil de la lecture depuis le 2026-09-02. L'entrée vit à la racine.
+    'def temoin_forme (documented:true)\n'
     + 'def piece (cordes(mi, la, re), bourdon:do, args(un, deux))\n');
 
   const regenerer = () => {
@@ -64,7 +66,7 @@ try {
     const ligne = brut.split('\n').find((l) => l.startsWith('LIBS["temoin_forme"] ='));
     return ligne ? JSON.parse(ligne.replace('LIBS["temoin_forme"] = ', '').replace(/;\s*$/, '')) : null;
   };
-  const piece = (regenerer() || {}).controls?.piece;
+  const piece = (regenerer() || {}).piece;
   ok(piece && typeof piece === 'object',
      `SOCLE : l'entrée témoin n'est pas dans le paquet régénéré — tout ce qui suit mesurerait son `
      + `absence, pas la forme. Reçu : ${JSON.stringify(piece)}`);
@@ -97,8 +99,13 @@ try {
        `E. ⛔ ANCRE INTROUVABLE — le prédicat a changé de graphie, et l'injection mesurerait un `
        + `fichier qu'elle n'a pas modifié. Un garde se prouve sur la graphie que le code ÉCRIT.`);
     writeFileSync(chemin, texte.replace(ancre, 'const estUneSuite = (sac) => Boolean(false && sac'));
-    const casse = (regenerer() || {}).controls?.piece;
-    ok(!Array.isArray(casse?.cordes),
+    // ⚠️ DEPUIS LE 2026-09-02 LA MORSURE EST PLUS FORTE : chaque librairie construite entre au registre
+    // du compilateur au fil de la lecture, donc un `core` dont les suites sont devenues des objets
+    // fait PLANTER la lecture de la source suivante — le générateur ne rend plus de paquet du tout.
+    // Un plantage est une morsure, pas une absence de mesure.
+    let casse = null; let plante = false;
+    try { casse = (regenerer() || {}).piece; } catch { plante = true; }
+    ok(plante || !Array.isArray(casse?.cordes),
        `E. ⛔ LE PRÉDICAT NEUTRALISÉ NE CHANGE RIEN — l'injection ne mord pas, donc les volets B et D `
        + `ne prouvaient pas le prédicat. Une injection qui ne mord pas se suspecte elle-même. `
        + `Reçu : ${JSON.stringify(casse?.cordes)}`);

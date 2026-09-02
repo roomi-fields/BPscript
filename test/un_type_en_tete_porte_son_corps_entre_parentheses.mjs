@@ -43,13 +43,17 @@ const valeurDe = (v, cle) => (v?.settings?.pairs || []).find((p) => p.key === cl
 console.log('[type-en-tête] un type en tête porte son corps entre parenthèses');
 
 // ── 0. LA LISTE DES TYPES VIENT DE LA DONNÉE ────────────────────────────────────────────────
-const TYPES = LIBS.core?.schema?.declarationTypes || [];
-ok(Array.isArray(TYPES) && TYPES.length >= 7,
-  `0. les types déclaratifs se lisent dans la donnée — reçu ${JSON.stringify(TYPES)}`);
-// `object` n'y figure plus : il est SORTI du langage le 2026-09-02, `def` est le mot unique.
-for (const t of ['control', 'addresskey', 'native', 'destination', 'enum']) {
-  ok(TYPES.includes(t), `0. le type '${t}' doit être DÉCLARÉ dans la donnée (décision 2026-08-16)`);
+// ⛔ LES TYPES DU SOCLE SONT DES OBJETS DE `types`, PLUS UNE LISTE DE `core` — Romain, 2026-09-02.
+// `object` (sorti le 2026-09-02, `def` est le mot unique) et `native` (forme B : un geste natif est
+// un `control` portant `bpscript:false`) n'y figurent pas.
+const TYPES = Object.entries(LIBS.types || {})
+  .filter(([k, v]) => k !== 'types' && v && typeof v === 'object' && !Array.isArray(v)).map(([k]) => k);
+ok(TYPES.length >= 6, `0. les types déclaratifs se lisent dans 'types' — reçu ${JSON.stringify(TYPES)}`);
+for (const t of ['control', 'addresskey', 'destination', 'enum', 'flag', 'symbol']) {
+  ok(TYPES.includes(t), `0. le type '${t}' doit être un objet de 'types'`);
 }
+ok(!TYPES.includes('native') && !TYPES.includes('object'),
+   `0. 'native' et 'object' ne sont plus des types du socle — reçu ${JSON.stringify(TYPES)}`);
 
 // ── 1. CHAQUE TYPE PORTE SON CORPS, ET LE CORPS ARRIVE STRUCTURÉ ────────────────────────────
 for (const [ligne, nom, clesAttendues] of [
@@ -57,7 +61,8 @@ for (const [ligne, nom, clesAttendues] of [
   ['enum message(start, continue, stop)', 'message', ['start', 'continue', 'stop']],
   ['control sync(args:message, scope:flow)', 'sync', ['args', 'scope']],
   ['addresskey ch(scope:flow)', 'ch', ['scope']],
-  ['native srand(bp3:_srand)', 'srand', ['bp3']],
+  // Forme B (Romain, 2026-09-02) : un geste natif est un `control` qui porte `bpscript:false`.
+  ['control srand(bp3:_srand, bpscript:false)', 'srand', ['bp3', 'bpscript']],
   ['destination midi(resolvedBy:runtime-MIDI, version:1.0.0)', 'midi', ['resolvedBy', 'version']],
   // ⛔ `object racine(…)` A QUITTÉ CETTE TABLE LE 2026-09-02. La réserve de Romain du 2026-08-16
   // — `object racine (a:1)` et `def racine (a:1)` rendent le même contenu — a tranché : `object`
@@ -128,8 +133,9 @@ for (const [ligne, nom, clesAttendues] of [
   const inconnu = lire('lpf lpf1');
   ok(inconnu.erreurs.length >= 1 && /n'est pas un type/.test(inconnu.erreurs[0]),
     `4. un type NON DÉCLARÉ reste refusé en nommant les types — reçu ${inconnu.erreurs[0]?.slice(0, 90)}`);
-  ok(/control/.test(inconnu.erreurs[0] || ''),
-    '4. et le refus doit ÉNUMÉRER les nouveaux types — sinon il envoie l\'auteur chercher ailleurs');
+  // Depuis le 2026-09-02 les types sont des objets en portée : le refus nomme d'où ils viennent.
+  ok(/objet en portée/.test(inconnu.erreurs[0] || '') && /'types'/.test(inconnu.erreurs[0] || ''),
+    '4. et le refus doit dire qu\'un type est un objet en portée et nommer \'types\' — sinon il envoie l\'auteur chercher ailleurs');
   const sansNom = lire('enum');
   ok(sansNom.erreurs.length >= 1 && /doit nommer/.test(sansNom.erreurs[0]),
     `4. un type SEUL sur sa ligne ne déclare rien — reçu ${sansNom.erreurs[0]?.slice(0, 90)}`);

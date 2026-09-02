@@ -44,3 +44,12 @@ def tuning
 def octaves
 def sound
 def midi_default
+
+// Les types de déclaration du socle : ce qu'une librairie ou une scène écrit en tête d'une ligne
+// pour dire ce qu'elle déclare. Ils sont en portée quand ce fichier l'est.
+def control
+def addresskey
+def destination
+def enum
+def flag
+def symbol

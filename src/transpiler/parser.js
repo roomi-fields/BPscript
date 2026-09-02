@@ -109,22 +109,12 @@ function varConventions() {
   return _varConventions;
 }
 
-/**
- * LES MOTS QUI OUVRENT UNE DÉCLARATION PAR LE TYPE, et que rien d'autre ne dérive — `flag`,
- * `symbol`. Les CONVENTIONS et les MODULES en ouvrent une aussi, et se lisent là où ils sont déjà
- * déclarés : `varConventions` pour les unes, le catalogue `mod` pour les autres. Recopier ces deux
- * listes ici rouvrirait l'écart entre ce que le parseur accepte et ce que la donnée déclare.
- */
-let _typesDeclaratifs = null;
-function typesDeclaratifs() {
-  if (_typesDeclaratifs) return _typesDeclaratifs;
-  const c = ((loadLib('core') || {}).schema || {}).declarationTypes;
-  if (!Array.isArray(c) || c.length === 0) {
-    throw new Error("lib/core.json schema.declarationTypes est vide ou absent");
-  }
-  _typesDeclaratifs = new Set(c);
-  return _typesDeclaratifs;
-}
+// ⛔ IL N'Y A PLUS DE LISTE DES TYPES DE DÉCLARATION — décision de Romain, 2026-09-02 : les types du
+// socle (`control`, `addresskey`, `destination`, `enum`, `flag`, `symbol`) sont des objets déclarés
+// dans `lib/types.bpsl`, et ils ouvrent une déclaration quand ce fichier est EN PORTÉE — invoqué
+// par la scène, ou par une librairie qu'elle invoque. Aucun socle implicite : une scène qui
+// n'invoque rien et écrit `flag section:1` est refusée, et une scène qui redéclare `flag` obtient
+// ce qu'elle a écrit. Le registre qui décide est `prototypesDeclares`, rempli à la lecture.
 
 // ⛔ LE CATALOGUE DE MODULES EST SORTI — arbitrage de Romain, 2026-08-23 : « on sort `mod` et la
 // section correspondante est sortie/archivée. Idem pour `module.X` ». `lib/mod.json` est archivé,
@@ -904,11 +894,23 @@ function parse(tokens, opts = {}) {
           // ne couvre plus qu'un site. Il reste écrit parce qu'il garde une FORME — une entrée de
           // librairie qui porte un mot du langage — et non les deux cas qui l'ont fait naître.
           const reserves = new Set(((loadLib('core') || {}).schema || {}).reservedDirectives || []);
-          for (const [nom, valeur] of Object.entries(loadLib(dir.name) || {})) {
-            if (nom.startsWith('_') || !valeur || typeof valeur !== 'object' || Array.isArray(valeur)) continue;
-            if (reserves.has(nom)) continue;
-            prototypesDeclares.add(nom);
-          }
+          // ⛔ ET LA CHAÎNE `apporte` SE SUIT — « sa chaîne se résout transitivement », décision
+          // Romain 2026-08-20, mesurée fausse ici le 2026-09-02 : `sounds` invoque `types` en tête
+          // et `gamut x (a:1)` restait refusé sous `sounds`. Une scène qui invoque `audio` reçoit
+          // `types` par lui, sinon le socle de `types` n'atteindrait que qui le nomme.
+          const librairiesVues = new Set();
+          const apporterLesPrototypesDe = (nomLib) => {
+            if (!nomLib || librairiesVues.has(nomLib)) return;
+            librairiesVues.add(nomLib);
+            const lib = loadLib(nomLib) || {};
+            for (const [nom, valeur] of Object.entries(lib)) {
+              if (nom.startsWith('_') || !valeur || typeof valeur !== 'object' || Array.isArray(valeur)) continue;
+              if (reserves.has(nom)) continue;
+              prototypesDeclares.add(nom);
+            }
+            for (const a of Array.isArray(lib.apporte) ? lib.apporte : []) apporterLesPrototypesDe(a);
+          };
+          apporterLesPrototypesDe(dir.name);
         }
       } else if (atProductionBlock()) {
         // Le bloc `[@…]` en tête de scène est REFUSÉ depuis le 2026-08-10 : il est lu ici pour
@@ -2102,8 +2104,7 @@ function parse(tokens, opts = {}) {
         + `déclare par 'def ${peek(1).value} (…)', et un exemplaire par son type en tête `
         + `('${peek(1).value} <nom> (…)'). Un seul mot déclare : 'def'.`, tok);
     }
-    if (!typesDeclaratifs().has(mot) && !varConventions().has(mot)
-        && !prototypesDeclares.has(mot)) {
+    if (!varConventions().has(mot) && !prototypesDeclares.has(mot)) {
       // ⚠️ UN TYPE INCONNU SUIVI D'UN NOM SE REFUSE EN NOMMANT LES TYPES, sans quoi
       // `lpf lpf1` tombe dans « n'est déclaré par aucune librairie chargée » et envoie l'auteur
       // chercher une librairie au lieu de lui dire que le mot n'est pas un type. La condition est
@@ -2116,16 +2117,26 @@ function parse(tokens, opts = {}) {
       // et qui ont changé de message sans changer de couleur. Six scènes touchées, vues par le
       // garde du corpus et pas autrement. Une déclaration par le type, c'est UN type et UN nom, un
       // point final : tout ce qui déborde appartient à une autre lecture.
-      const finDeLigne = peek(2).type === T.NEWLINE || peek(2).type === T.EOF
-        || peek(2).type === T.COMMENT;
-      if (peek(1).type === T.IDENT && finDeLigne && !directiveDeclareeParLaLibrairie('core', mot)
+      // ⛔ ET LA FORME `<type> <nom>:<valeur>` OU `<type> <nom> (…)` REFUSE AUSSI — mesuré le
+      // 2026-09-02 quand le socle a cessé d'être implicite : `flag K1:0` sans `types` en portée
+      // passait ici en silence, se lisait comme un réglage de tête, et la scène rougissait plus
+      // loin sur « le drapeau 'K1' n'est pas déclaré » — un refus qui accuse l'usage alors que
+      // c'est la déclaration qui n'a pas été lue. Deux mots de suite, puis un deux-points collé ou
+      // la fin de ligne : c'est une déclaration par le type, et rien d'autre.
+      // ⚠️ PAS LA PARENTHÈSE : `terminal zz(duration:2)` est lu par le lecteur de terminal, plus bas,
+      // et `terminal` n'est ni un type ni une directive de librairie — l'y inclure l'avalait.
+      const apresLeNom = peek(2).type;
+      const formeDeDeclaration = apresLeNom === T.NEWLINE || apresLeNom === T.EOF
+        || apresLeNom === T.COMMENT || (apresLeNom === T.COLON && !peek(2).spaceBefore);
+      if (peek(1).type === T.IDENT && formeDeDeclaration && !directiveDeclareeParLaLibrairie('core', mot)
           && porteesDeclarees(mot) === null) {
         // ⚠️ CE REFUS ÉNUMÉRAIT LE CATALOGUE DE MODULES, et il l'a perdu avec lui : un refus qui
         // nomme une forme la ressuscite pour son lecteur. C'est le troisième domicile d'un mot
         // retiré, après le parseur et les librairies — et aucun garde ne compile un message.
-        throw new ParseError(`'${mot} ${peek(1).value}' : '${mot}' n'est pas un type. Un type en `
-          + `tête vient des conventions (${[...varConventions()].join(', ')}) ou des types de base `
-          + `(${[...typesDeclaratifs()].join(', ')}, in.<canal>).`, tok);
+        throw new ParseError(`'${mot} ${peek(1).value}' : '${mot}' n'est pas un type en portée. Un `
+          + `type en tête vient des conventions (${[...varConventions()].join(', ')}), de in.<canal>, `
+          + `ou d'un objet en portée — déclaré par la scène, ou apporté par une librairie invoquée en `
+          + `tête (le socle vit dans 'types').`, tok);
       }
       return null;
     }
@@ -2133,7 +2144,14 @@ function parse(tokens, opts = {}) {
     // `signal:0.5` affecte une valeur à un mot, ce n'est pas `signal grain:0.5`. On ne prend la
     // ligne que si un NOM suit, et on refuse en le nommant si le type est seul sur sa ligne.
     if (!ouvreUnNom(1)) {
+      // ⚠️ UN MOT SEUL SUR SA LIGNE PEUT ÊTRE UNE INVOCATION — `sound`, `engine`, `midi_default` sont
+      // à la fois le mot qui invoque une librairie et un objet en portée (le prototype de `types`, ou
+      // la racine du fichier). Depuis que la chaîne `apporte` se suit (2026-09-02), ces mots sont
+      // des prototypes dans presque toute scène ; la ligne nue reste ce qu'elle a toujours été, une
+      // invocation, et se lit plus bas. Le refus « doit nommer » ne vaut que pour un type qui
+      // n'invoque rien.
       if (peek(1).type === T.NEWLINE || peek(1).type === T.EOF) {
+        if (loadLib(mot) || catalogAxisKeys().has(mot)) return null;
         throw new ParseError(`'${mot}' doit nommer ce qu'il déclare — le type vient en tête, le `
           + `nom ensuite ('${mot} <nom>').`, tok);
       }
@@ -2218,7 +2236,7 @@ function parse(tokens, opts = {}) {
     // ⛔ ET UN PROTOTYPE DÉCLARÉ PAR LA SCÈNE OUVRE UNE DÉCLARATION COMME UN TYPE DU SOCLE — le
     // type en tête PORTE la dérivation, c'est le prototypal pur. Mesuré avant : zéro nom de
     // 'scales' croise le vocabulaire, donc ses onze prototypes n'ombragent aucun mot du langage.
-    if ((typesDeclaratifs().has(mot) || prototypesDeclares.has(mot)) && at(T.LPAREN)) {
+    if (prototypesDeclares.has(mot) && at(T.LPAREN)) {
       const sac = parseRuntimeQualifier();
       return { type: 'VarDirective', names: [premier], varType: { kind: 'type', type: mot },
                settings: sac, line: tok.line };
@@ -2279,8 +2297,7 @@ function parse(tokens, opts = {}) {
     // graphies du même mot, une seule qui dit ce qu'elle déclare.
     // Les conventions ne l'ont jamais perdu, nues ou avec valeur de départ — c'est ce qui rendait
     // l'écart invisible : la moitié des mots de tête marchait.
-    const type = (typesDeclaratifs().has(mot) || prototypesDeclares.has(mot))
-      ? { kind: 'type', type: mot } : null;
+    const type = prototypesDeclares.has(mot) ? { kind: 'type', type: mot } : null;
     const nu = { type: 'VarDirective', names: noms, varType: type, line: tok.line };
     return departs.length ? { ...nu, initial: departs } : nu;
   }

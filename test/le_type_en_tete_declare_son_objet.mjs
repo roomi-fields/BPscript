@@ -119,12 +119,13 @@ for (const [ligne, quoi, attendu] of REFUS) {
   // dur — « flag, symbol, in.<canal> » — et le 2026-08-19 elle est devenue FAUSSE sans que rien ne
   // la corrige : cinq types nouveaux sont entrés dans `core.json` et ce garde a rougi en accusant
   // le MESSAGE, qui avait raison. Un garde qui recopie une liste devient sa concurrente.
-  const TYPES_DECLARES = LIBS.core?.schema?.declarationTypes || [];
-  // ⛔ 8 → 7 LE 2026-09-02 : `object` SORT des types de déclaration — décision de Romain, « def et
-  // object disent exactement la même chose, on doit en supprimer un ; je préfère migrer object vers
-  // def ». La racine s'écrit désormais `def <nom> (…)`. Le plancher suit UN retrait décidé, diff à
-  // l'appui ; il ne baisse jamais parce qu'un extracteur a cessé de voir.
-  ok(TYPES_DECLARES.length >= 7,
+  // ⛔ LA LISTE A DISPARU LE 2026-09-02 : les types de déclaration sont des OBJETS de `types`
+  // (Romain : « ces objets ne devraient pas être dans types ? »), en portée quand ce fichier l'est.
+  // `object` est sorti (`def` est le mot unique) et `native` aussi (forme B : un geste natif est un
+  // `control` portant `bpscript:false`). Six types du socle ; le plancher suit ces deux retraits.
+  const TYPES_DECLARES = Object.entries(LIBS.types || {})
+    .filter(([k, v]) => k !== 'types' && v && typeof v === 'object' && !Array.isArray(v)).map(([k]) => k);
+  ok(['control', 'addresskey', 'destination', 'enum', 'flag', 'symbol'].every((t) => TYPES_DECLARES.includes(t)),
     `2. les types déclaratifs doivent se lire dans la donnée — reçu ${JSON.stringify(TYPES_DECLARES)}`);
   for (const [r, quoi] of [[rLpf, 'un mot hors catalogue'], [rZorglub, 'un mot inventé']]) {
     const m = msgs(r).join(' | ');
@@ -133,10 +134,12 @@ for (const [ligne, quoi, attendu] of REFUS) {
     ok(/signal, pitch, phase, logic/.test(m) && /in\.<canal>/.test(m) && !/adsr|lfo|ramp/.test(m),
       `2. le refus ${quoi} doit ÉNUMÉRER les conventions et le canal d'entrée, et NE PLUS nommer `
       + `les modules archivés — reçu : ${m.slice(0, 160)}`);
-    const manquants = TYPES_DECLARES.filter((t) => !m.includes(t));
-    ok(manquants.length === 0,
-      `2. le refus ${quoi} doit nommer CHAQUE type déclaré dans la donnée — manque(nt) `
-      + `${JSON.stringify(manquants)}. Reçu : ${m.slice(0, 200)}`);
+    // ⚠️ LE REFUS N'ÉNUMÈRE PLUS LES TYPES : ils sont des objets en portée (tout ce qu'une librairie
+    // invoquée apporte, des centaines de noms), et une liste ne dirait rien. Il nomme d'où ils
+    // viennent — un objet en portée, et le fichier qui porte le socle.
+    ok(/objet en portée/.test(m) && /'types'/.test(m),
+      `2. le refus ${quoi} doit dire qu'un type est un OBJET EN PORTÉE et nommer 'types' — `
+      + `reçu : ${m.slice(0, 200)}`);
   }
   ok(msgs(rLpf)[0] && msgs(rZorglub)[0]
      && msgs(rLpf)[0].replace(/lpf1?/g, '<x>') === msgs(rZorglub)[0].replace(/zorglub|\bx\b/g, '<x>'),

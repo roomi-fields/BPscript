@@ -65,10 +65,12 @@ declaration_typee = "flag"   , IDENT , ":" , INT
                                                   invoquee : interval q1, apres `types` *)
                   | TYPE_DECLARE , NOM_DECLARE , setting_bag ;
 
-(* TYPE_DECLARE — un type que la DONNEE declare : `core`, schema.declarationTypes. AUCUN NOM
-   N EST ECRIT ICI : une production est une prescription, et une liste ecrite a deux endroits en
-   fait un second domicile. Les branches ci-dessus lisent les types dont le corps a une forme
-   propre ; celle-ci lit ceux dont le corps est un sac. *)
+(* TYPE_DECLARE — un OBJET EN PORTEE : declare par la scene, ou apporte par une librairie invoquee
+   en tete, la chaine se suivant transitivement. Les types du socle — control, addresskey,
+   destination, enum, flag, symbol — sont des objets de `types` ; aucun n'est en portee sans
+   invocation. AUCUN NOM N EST ECRIT ICI : une production est une prescription, et une liste ecrite
+   a deux endroits en fait un second domicile. Les branches ci-dessus lisent les types dont le
+   corps a une forme propre ; celle-ci lit ceux dont le corps est un sac. *)
 TYPE_DECLARE = IDENT ;
 
 (* Le nom porte sa valeur de depart, COLLEE a son deux-points. Le sujet est le nom, jamais

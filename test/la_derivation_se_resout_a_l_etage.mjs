@@ -149,7 +149,11 @@ const compile = (src) => {
     // LA DÉRIVATION PORTEUSE : un prototype qui porte VRAIMENT un membre, et un exemplaire qui
     // ne l'écrit pas. Le membre choisi est absent de tout le reste, pour qu'aucun homonyme ne
     // brouille le compte.
-    const source = 'def temoin_derivation (documented:true, section:controls)\n'
+    // ⚠️ SANS `section:controls` : une entrée d'une place de contrôles doit être une déclaration de
+    // contrôle (args ET description), et le générateur le vérifie désormais AU FIL de la lecture,
+    // puisque chaque librairie construite entre au registre (2026-09-02). Le témoin porte ses
+    // entrées à la racine, comme `types`.
+    const source = 'def temoin_derivation (documented:true)\n'
       + 'def socle_temoin (marque_heritee:oui)\n'
       + 'socle_temoin exemplaire_temoin (bp3:none)\n';
     writeFileSync(join(bac, 'lib/temoin_derivation.bpsl'), source);
@@ -165,7 +169,7 @@ const compile = (src) => {
       return JSON.parse(ligne.replace('LIBS["temoin_derivation"] = ', '').replace(/;\s*$/, ''));
     };
     const avec = regenerer();
-    const entree = (lib) => lib && lib.controls && lib.controls.exemplaire_temoin;
+    const entree = (lib) => lib && lib.exemplaire_temoin;
     ok(entree(avec) && entree(avec).bp3 === 'none',
        `G. SOCLE : l'exemplaire témoin n'est pas dans le paquet régénéré — tout zéro qui suivrait `
        + `mesurerait la greffe manquée, pas le filtre. Reçu : ${JSON.stringify(avec)?.slice(0, 120)}`);
@@ -173,8 +177,7 @@ const compile = (src) => {
        `G. ⛔ LE PAQUET RECOPIE L'HÉRITAGE. Romain, 2026-08-29 : « dans les librairies, porter sinon `
        + `ça n'a aucun sens ». L'arbre grave, le paquet porte — un membre hérité n'a rien à faire `
        + `sur l'exemplaire publié. Reçu : ${JSON.stringify(entree(avec))}`);
-    ok(avec && avec.controls && avec.controls.socle_temoin
-       && avec.controls.socle_temoin.marque_heritee === 'oui',
+    ok(avec && avec.socle_temoin && avec.socle_temoin.marque_heritee === 'oui',
        `G. le PROTOTYPE a perdu son membre — il l'écrit dans sa source, le filtre n'a pas à le lui `
        + `retirer. Un filtre qui emporte l'écrit avec l'hérité coupe trop large.`);
 
