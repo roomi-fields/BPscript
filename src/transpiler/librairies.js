@@ -153,7 +153,7 @@ function sacEnObjet(sac, fichier = '?', declaration = '?') {
  * @param {string} fichier   le nom du fichier, pour les refus
  * @param {object} ast       l'arbre rendu par le compilateur
  */
-function construireLaLibrairie(nom, fichier, ast) {
+function construireLaLibrairie(nom, fichier, ast, documente) {
   const lib = { controls: {} };
   let sectionDuFichier = null;
   // ⛔ UNE LIBRAIRIE EN INVOQUE UNE AUTRE PAR UNE LIGNE NUE, ET C'EST `apporte` — décision Romain,
@@ -163,6 +163,12 @@ function construireLaLibrairie(nom, fichier, ast) {
     .filter((d) => d.name && !d.subkey)
     .map((d) => d.name);
   if (invoquees.length) lib.apporte = invoquees;
+  // ⛔ « DOCUMENTÉ » SE DIT EN COMMENTAIRE, JAMAIS DANS LA DONNÉE — décision de Romain, 2026-09-02 :
+  // un catalogue entre dans l'aide publiée s'il porte la ligne `// @documented`, la même graphie que
+  // les métadonnées de scène de kanopi. Ce n'est pas un membre de l'objet : c'est une information
+  // pour Atlas, et Atlas la lit dans la source. Le registre la PORTE encore, en booléen, pour qui lit
+  // le paquet dérivé — jusqu'à ce que le paquet sorte.
+  lib.documented = Boolean(documente);
   // Une déclaration s'écrit sous deux formes — le corps INDENTÉ rend `keys`, le corps entre
   // PARENTHÈSES rend `settings` — et les deux se ramènent à la MÊME structure `{clé: valeur}`.
   const clesDeLaDeclaration = (d) => {
@@ -221,6 +227,10 @@ function construireLaLibrairie(nom, fichier, ast) {
     for (const [cle, v] of Object.entries(d.keys)) {
       // `section` ROUTE, elle ne se publie JAMAIS — ni sur une entrée, ni sur le fichier.
       if (cle === 'section') { if (cible === lib) sectionDuFichier = valeurDeCle(v); continue; }
+      if (cle === 'documented' && cible === lib) {
+        throw new FauteDeLibrairie(`lib/${fichier} : 'documented' ne s'écrit plus dans le sac de la `
+          + `racine — un catalogue documenté porte la ligne '// @documented' en tête (Romain, 2026-09-02).`);
+      }
       const val = valeurDeCle(v);
       // ⛔ SUR LA DÉCLARATION DU FICHIER, UNE CLÉ HORS DES CHAMPS DE FICHIER QUI PORTE UN OBJET EST
       // UNE PLACE — la récursivité par la parenthèse, lue depuis le 2026-08-19.
@@ -282,7 +292,10 @@ export function chargerLesLibrairies(sources, compiler, registerLib) {
         refus.push(`lib/${s.fichier} NE COMPILE PAS : ${r.errors[0].message}`);
         continue;
       }
-      const lib = construireLaLibrairie(s.nom, s.fichier, r.ast);
+      // La ligne `// @documented` se lit dans le TEXTE de la source : c'est un commentaire, il ne
+      // traverse pas le compilateur, et c'est voulu — il ne fait pas partie de l'objet.
+      const documente = /^\s*\/\/\s*@documented\b/m.test(s.texte);
+      const lib = construireLaLibrairie(s.nom, s.fichier, r.ast, documente);
       construites[s.nom] = lib;
       registerLib(s.nom, lib);
     }

@@ -26,7 +26,8 @@
 // comme ancêtre de toutes les autres. Ce qui reste est le seul rôle prototypal réel — donner un
 // parent nommé à `interval maqam_sikah (…)`.
 
-def types (documented:true, resolves:types)
+// @documented
+def types (resolves:types)
 
 def scale (scope(scene))
 scale interval

@@ -42,7 +42,8 @@
 
 types
 
-def engine (documented:true, resolves:engine, resolvedBy:"BPx", name:engine, description:"Les clés que le MOTEUR DE DÉRIVATION consomme — ce qui gouverne comment la production se déroule, par opposition à ce qu'elle produit. Librairie d'EN-TÊTE, résolue par BPx.", version:1.0.0)
+// @documented
+def engine (resolves:engine, resolvedBy:"BPx", name:engine, description:"Les clés que le MOTEUR DE DÉRIVATION consomme — ce qui gouverne comment la production se déroule, par opposition à ce qu'elle produit. Librairie d'EN-TÊTE, résolue par BPx.", version:1.0.0)
 
 // ── Gestes natifs sans forme BPScript ──────────────────────────────────────────────────────
 control srand (bp3:_srand, bpscript:false, args(seed), description:"Geste NATIF : reamorce le generateur aleatoire EN COURS de derivation. ⚠️ BPScript PORTE CE GESTE, contrairement a ce que ce champ a affirme jusqu au 2026-08-13 : la re-semence en flux s ecrit ![seed:42] (nee le 2026-08-10, commit 750d457, qui lui a retire son arobase). Mesure : elle compile et atteint l arbre en InstantControl porteur de flux:true, distincte du reglage de scene seed:42. La prose disait ici que BPScript n exposait que la graine de scene, qui  n est pas le meme geste  -- c etait FAUX, et cette phrase est la raison pour laquelle ce mot est reste hors du vocabulaire. Le champ bpscript n est PAS touche : declarer un mot du langage est un arbitrage de Romain, jamais une consequence de ma mesure.", section:controls)

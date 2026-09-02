@@ -5,7 +5,8 @@
 // ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
 //    voyage pas jusqu'aux consommateurs, une clé si.
 
-def eval (documented:true, resolvedBy:runtime-codevoices, resolves:eval, name:eval, type:code, section:objects)
+// @documented
+def eval (resolvedBy:runtime-codevoices, resolves:eval, name:eval, type:code, section:objects)
 
 def strudel (description:"Motifs et échantillons, dans le navigateur.", parameters(bank(description:"La banque d'échantillons que la voix charge. Sans elle, une scène qui emploie des noms d'échantillons se joue en SILENCE — mesuré chez Kanopi : « banque inconnue → son MUET ».")))
 

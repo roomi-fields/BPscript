@@ -8,7 +8,8 @@
 // Les prototypes de ce catalogue vivent dans `types` — invoquée ci-dessous.
 types
 
-def alphabets (documented:true, resolvedBy:Kairos, resolves:alphabet)
+// @documented
+def alphabets (resolvedBy:Kairos, resolves:alphabet)
 
 alphabet western (description:"Western chromatic — 7 natural notes, 5 alteration levels", runtime:audio, tuning:western_12TET, octaves:western, diapason:440, resolvesPitch:true, alterations(bb:-2, b:-1, "":0, "#":1, "##":2), baseNote:A, baseRegister:"4", terminals(C(), D(), E(), F(), G(), A(), B()))
 

@@ -8,7 +8,8 @@
 // Les prototypes de ce catalogue vivent dans `types` — invoquée ci-dessous.
 types
 
-def tunings (documented:true, resolvedBy:Kairos, resolves:tuning)
+// @documented
+def tunings (resolvedBy:Kairos, resolves:tuning)
 
 tuning western_12TET (description:"Standard Western equal temperament", alphabet:western, temperament:12TET, degrees(0, 2, 4, 5, 7, 9, 11))
 

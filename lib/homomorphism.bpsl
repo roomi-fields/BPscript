@@ -5,7 +5,8 @@
 // ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
 //    voyage pas jusqu'aux consommateurs, une clé si.
 
-def homomorphism (documented:true, resolvedBy:Kairos, name:homomorphism, type:homomorphism, resolves:homomorphism, section:tables)
+// @documented
+def homomorphism (resolvedBy:Kairos, name:homomorphism, type:homomorphism, resolves:homomorphism, section:tables)
 
 def substitute (section:objects, description:"Applicateur universel d'homomorphisme : itère la portée active et substitue chaque symbole par son image dans la table plate (last-write-wins), identité si symbole absent. Image de l'ancien `applyImage` BPx, re-placé en résolution Kairos (décision 2026-07-17). C'est la seule fonction de la lib fournie : elle traite TOUS les homos en portée (multiplicité = empilement, homos différents = séquence).")
 

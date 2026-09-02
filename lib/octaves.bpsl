@@ -39,7 +39,8 @@
 // Les prototypes de ce catalogue vivent dans `types` — invoquée ci-dessous.
 types
 
-def octaves (documented:true, resolvedBy:"Kairos", resolves:octaves)
+// @documented
+def octaves (resolvedBy:"Kairos", resolves:octaves)
 
 octaves western (position:suffix, separator:"", registers("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"), default:"4")
 

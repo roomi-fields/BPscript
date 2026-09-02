@@ -153,7 +153,7 @@ const compile = (src) => {
     // contrôle (args ET description), et le générateur le vérifie désormais AU FIL de la lecture,
     // puisque chaque librairie construite entre au registre (2026-09-02). Le témoin porte ses
     // entrées à la racine, comme `types`.
-    const source = 'def temoin_derivation (documented:true)\n'
+    const source = '// @documented\ndef temoin_derivation\n'
       + 'def socle_temoin (marque_heritee:oui)\n'
       + 'socle_temoin exemplaire_temoin (bp3:none)\n';
     writeFileSync(join(bac, 'lib/temoin_derivation.bpsl'), source);

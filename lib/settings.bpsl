@@ -5,7 +5,8 @@
 // ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
 //    voyage pas jusqu'aux consommateurs, une clé si.
 
-def settings (documented:true, resolvedBy:BPx, resolves:settings, name:settings, description:"Default BP3 engine settings. Overridden by @ directives. Used to generate the settings string for bp3_load_settings().", version:"0.2.0", section:bp3_defaults)
+// @documented
+def settings (resolvedBy:BPx, resolves:settings, name:settings, description:"Default BP3 engine settings. Overridden by @ directives. Used to generate the settings string for bp3_load_settings().", version:"0.2.0", section:bp3_defaults)
 
 def Quantization (name:Quantization, value:"10", unit:ms, boolean:"0")
 

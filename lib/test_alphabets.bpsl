@@ -8,7 +8,7 @@
 // Les prototypes de ce catalogue vivent dans `types` — invoquée ci-dessous.
 types
 
-def test_alphabets (documented:false, resolvedBy:Kairos, resolves:alphabet)
+def test_alphabets (resolvedBy:Kairos, resolves:alphabet)
 
 // abc · Reproduction FIDELE du fichier natif `-al.abc`, lue en SOUMETTANT chaque candidat au
 // moteur plutot qu'en interpretant le format : une fleche `a --> a'` y declare DEUX TERMES, pas

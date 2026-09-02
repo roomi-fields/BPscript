@@ -20,7 +20,8 @@
 // Les prototypes de ce catalogue vivent dans `types` — invoquée ci-dessous.
 types
 
-def temperaments (documented:true, resolvedBy:Kairos, resolves:temperament)
+// @documented
+def temperaments (resolvedBy:Kairos, resolves:temperament)
 
 temperament 12TET (description:"Equal temperament, 12 divisions of the octave", period_ratio:2, divisions:12, ratios(1, 100c, 200c, 300c, 400c, 500c, 600c, 700c, 800c, 900c, 1000c, 1100c))
 

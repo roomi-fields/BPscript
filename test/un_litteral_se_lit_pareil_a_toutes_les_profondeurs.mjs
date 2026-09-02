@@ -42,7 +42,7 @@ const RACINE = new URL('..', import.meta.url).pathname;
 // portent les entrées, et la place `objects` porte un membre imbriqué. Les trois chemins que le
 // générateur emprunte, dans une seule source.
 const SOURCE = `// témoin du garde des littéraux — fabriqué, jamais lu par une scène
-def zz_temoin (documented:false, resolvedBy:zz, resolves:zz_temoin, section:objects)
+def zz_temoin (resolvedBy:zz, resolves:zz_temoin, section:objects)
 
 def surface (vrai:true, faux:false, nombre:12, mot:oui)
 

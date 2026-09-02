@@ -28,7 +28,8 @@
 
 types
 
-def time (documented:true, resolvedBy:Kronos, resolves:time, name:time, description:"Le temps qui S'ÉCOULE — le métronome de la scène. Librairie d'EN-TÊTE, résolue par KRONOS.", version:"1.0.0", section:subgrammar)
+// @documented
+def time (resolvedBy:Kronos, resolves:time, name:time, description:"Le temps qui S'ÉCOULE — le métronome de la scène. Librairie d'EN-TÊTE, résolue par KRONOS.", version:"1.0.0", section:subgrammar)
 
 def tempo (bp3:_mm, args("bpm"), unit:bpm, description:"Metronome absolu de la scene ou de la sous-grammaire, en BPM.", scope("subgrammar", "scene"), unicite:metronome)
 

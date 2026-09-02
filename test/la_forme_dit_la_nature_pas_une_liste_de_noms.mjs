@@ -60,7 +60,7 @@ try {
   writeFileSync(join(bac, 'lib/temoin_forme.bpsl'),
     // Sans `section:controls` : une place de contrôles n'admet que des déclarations de contrôle, et le
     // générateur le vérifie au fil de la lecture depuis le 2026-09-02. L'entrée vit à la racine.
-    'def temoin_forme (documented:true)\n'
+    '// @documented\ndef temoin_forme\n'
     + 'def piece (cordes(mi, la, re), bourdon:do, args(un, deux))\n');
 
   const regenerer = () => {

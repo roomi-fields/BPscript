@@ -29,7 +29,8 @@
 
 types
 
-def midi (documented:true, resolves:midi, resolvedBy:"runtime-MIDI", name:midi, description:"Contrôles spécifiques au transport MIDI — match EXACT LIBRAIRIES.md:172.", section:controls)
+// @documented
+def midi (resolves:midi, resolvedBy:"runtime-MIDI", name:midi, description:"Contrôles spécifiques au transport MIDI — match EXACT LIBRAIRIES.md:172.", section:controls)
 
 // ═══ LES CLES D ADRESSE ═══
 // OU VA L EVENEMENT, ou D OU VIENT celui qu un point d attente ecoute. Elles vivaient dans

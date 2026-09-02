@@ -39,7 +39,8 @@ variation
 eval
 midi_default
 
-def core (documented:true, resolves:core, name:core, description:"BPscript core — silences, prolongation, contrôles moteur, SOCLE des défauts de scène", version:"0.2.0", symbols(), section:defaults)
+// @documented
+def core (resolves:core, name:core, description:"BPscript core — silences, prolongation, contrôles moteur, SOCLE des défauts de scène", version:"0.2.0", symbols(), section:defaults)
 
 def components (alphabet:western, tuning:western_12TET, transport:audio, eval:js)
 
