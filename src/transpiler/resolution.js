@@ -54,8 +54,8 @@ import { sortieHeritee, alphabetHerite, octavesHerite, tuningHerite, evalHerite 
   from './actorResolver.js';
 import { parse, ParseError } from './parser.js';
 import { LIBS } from './libs-data.js';
-import { leSchema, lesDefauts } from './index-des-objets.js';
-import { universeControlNames, resolveActorAlphabet, nomsDeTerminaux, loadLib } from './libs.js';
+import { leSchema, lesDefauts, motsInvoques, familles } from './index-des-objets.js';
+import { universeControlNames, resolveActorAlphabet, nomsDeTerminaux, loadLib, leRegistre, versionDuRegistre } from './libs.js';
 import { expandAlphabetTerminals } from './actorResolver.js';
 import { resolveActorAlphabetSource } from './libs.js';
 import { describeVocabulary, groupeDUnicite } from './libs.js';
@@ -2083,7 +2083,10 @@ export function applySceneValues(ast, libCtx) {
 
 export function validateReferences(ast, libCtx = {}) {
   const errors = [];
-  const porteesPermises = chargerPorteesPermises();
+  // La table des places permises, sur les librairies que la scène invoque. Un réglage que deux
+  // d'entre elles déclarent n'y a pas de place nu — c'est `signalerAmbiguite`, plus bas, qui le
+  // refuse en nommant les préfixes ; préfixé, il est jugé à la place que SA librairie déclare.
+  const porteesPermises = chargerPorteesPermises(ast);
   // ⛔ LE VOCABULAIRE D'UNE SCÈNE EST CELUI QU'ELLE INVOQUE (Romain, 2026-08-08) : « invoquer
   // commande, systématiquement — si un mot est inconnu dans le corpus invoqué, alors erreur ».
   //
@@ -2410,7 +2413,7 @@ export function validateReferences(ast, libCtx = {}) {
         if (!sac || !Array.isArray(sac.pairs)) continue;
         for (const p of sac.pairs) {
           const cle = String(p.key).split('.')[0];
-          const permis = porteesPermises.get(cle);
+          const permis = porteesPermises.get(cle, p.lib);
           if (!permis || permis.includes(place)) continue;
           errors.push({
             message: `'${cle}' ne peut pas s'écrire ${NOM_DE_PLACE[place]} — `
@@ -2829,45 +2832,77 @@ export function splitCompoundTerminals(ast, libCtx) {
 
 
 
-export function chargerPorteesPermises() {
-  if (_porteesPermises) return _porteesPermises;
-  const m = new Map();
-  const w = (o) => {
+/**
+ * LA TABLE DES PORTÉES PERMISES SE CONSTRUIT SUR CE QUE LA SCÈNE INVOQUE — Romain, 2026-09-02/03 :
+ * « elle doit dépendre des librairies invoquées ». Elle lisait CINQ librairies par leur nom
+ * (`expression`, `midi`, `audio`, `transpo`, `engine`), quelle que soit la scène : un réglage déclaré
+ * ailleurs n'y entrait jamais, et un réglage d'une librairie que la scène n'invoquait pas y était.
+ *
+ * Ce qu'elle rend, pour une scène : chaque réglage déclaré par une librairie INVOQUÉE — directement
+ * ou par une librairie qui l'invoque — avec la portée qu'il déclare ; et chaque clé d'adresse, de
+ * même (elles ont quitté le socle le 2026-08-15 pour la librairie du canal qui les porte, et chacune
+ * déclare sa portée). Un réglage déclaré par DEUX librairies invoquées n'a PAS de portée nu — c'est
+ * l'ambiguïté que `validateReferences` refuse en nommant les préfixes, et l'auteur préfixe, comme un
+ * terminal par son acteur ; préfixé (`get(cle, lib)`), il est jugé à la portée que SA librairie
+ * déclare. SAUF quand les autres déclarent réaliser l'une (`implements:expression.volume`) : c'est
+ * le même mot, une interface et ses réalisations, et sa portée nue est celle de l'interface. Mesuré
+ * sur le corpus : `volume` est le seul mot dans ce cas, `audio` et `midi` réalisant `expression`.
+ *
+ * La table est mémorisée par ENSEMBLE de librairies invoquées, jamais par scène : deux scènes qui
+ * invoquent la même chose partagent la même table, et un registre qui bouge la périme. Sans scène,
+ * le registre entier fait portée — pour les outils qui décrivent le vocabulaire.
+ */
+export function chargerPorteesPermises(ast) {
+  const registre = leRegistre();
+  const version = versionDuRegistre();
+  if (_versionDesTables !== version) { _tablesDesPortees.clear(); _versionDesTables = version; }
+  const mots = ast ? motsInvoques(ast) : new Set(familles());
+  const cleEnsemble = [...mots].sort().join(' ');
+  if (_tablesDesPortees.has(cleEnsemble)) return _tablesDesPortees.get(cleEnsemble);
+
+  const declarations = new Map();   // réglage → [{ mot, scope, implemente }]
+  const noter = (mot, cle, scope, implemente) => {
+    if (!declarations.has(cle)) declarations.set(cle, []);
+    declarations.get(cle).push({ mot, scope, implemente: typeof implemente === 'string' ? implemente : null });
+  };
+  const marcher = (mot, o) => {
     for (const [k, v] of Object.entries(o || {})) {
-      if (!v || typeof v !== 'object') continue;
-      if ('args' in v && 'description' in v) { if (Array.isArray(v.scope)) m.set(k, v.scope); }
-      else w(v);
+      if (!v || typeof v !== 'object' || Array.isArray(v)) continue;
+      if ('args' in v && 'description' in v) { if (Array.isArray(v.scope)) noter(mot, k, v.scope, v.implements); }
+      else marcher(mot, v);
     }
   };
-  // ⛔ CINQ LIBRAIRIES NOMMÉES, ET C'EST UNE DETTE MESURÉE, PAS UN CHOIX — 2026-09-02. Lire le
-  // registre ENTIER ici change le langage, mesuré : le refus témoin « 'scaleshift' ne peut pas
-  // s'écrire en tête de scène » disparaissait (garde `une_declaration_apres_les_regles_refuse`), et
-  // la table gagnait vingt clés — les dix-huit modes de `variation`, `syncdelay`, `tempo` — dont la
-  // portée n'est lue nulle part aujourd'hui. `vel` est en outre déclaré DEUX fois (`expression.vel`,
-  // `settings.vel`), et une table à dernier-qui-parle n'a pas de règle pour ça. Qui l'emporte quand
-  // un mot est déclaré deux fois, et ce que vaut une portée déclarée hors de ces cinq, est une
-  // décision de langage remontée à Romain ; la liste reste jusqu'à son mot. `controls.json` a été
-  // SCINDÉ le 2026-08-10 en ces quatre-là, et les procédures moteur ont rejoint `engine`.
-  w(LIBS.expression);
-  w(LIBS.midi);
-  w(LIBS.audio);
-  w(LIBS.transpo);
-  w(LIBS.engine);
-  // ── UNE CLÉ D'ADRESSE PORTE SA PROPRE PORTÉE, comme tout le reste du vocabulaire ────────────
-  // Elles ont quitté le socle le 2026-08-15 (décision Romain : « dans midi ») pour la librairie du
-  // canal qui les porte. Leur portée les suit : elle vivait dans une liste unique du schéma
-  // (`channelParamsScope`), qui donnait la MÊME portée aux cinq et n'avait nulle part où en dire
-  // une autre. Chaque clé la déclare désormais elle-même, et ce code ne nomme aucune clé.
-  for (const lib of Object.values(LIBS)) {
-    const cles = lib?.schema?.addressKeys;
-    if (!cles || Array.isArray(cles) || typeof cles !== 'object') continue;
-    for (const [k, def] of Object.entries(cles)) {
-      if (k.startsWith('_') || !def || !Array.isArray(def.scope)) continue;
-      m.set(k, def.scope);
+  for (const [cle, lib] of Object.entries(registre)) {
+    if (!lib || typeof lib !== 'object' || cle.includes('/')) continue;
+    const mot = (typeof lib.resolves === 'string' && lib.resolves) || cle;
+    if (!mots.has(mot)) continue;
+    marcher(mot, lib);
+    const adresses = lib.schema && lib.schema.addressKeys;
+    if (adresses && !Array.isArray(adresses) && typeof adresses === 'object') {
+      for (const [k, def] of Object.entries(adresses)) {
+        if (k.startsWith('_') || !def || !Array.isArray(def.scope)) continue;
+        noter(mot, k, def.scope, null);
+      }
     }
   }
-  _porteesPermises = { get: (cle) => m.get(cle), has: (cle) => m.has(cle) };
-  return _porteesPermises;
+  const m = new Map();        // réglage → scope
+  const ambigus = new Map();  // réglage → [mots]
+  for (const [cle, decls] of declarations) {
+    if (decls.length === 1) { m.set(cle, decls[0].scope); continue; }
+    const interfaces = decls.filter((d) => !d.implemente);
+    const realisations = decls.filter((d) => d.implemente);
+    const uneInterface = interfaces.length === 1
+      && realisations.every((r) => r.implemente === `${interfaces[0].mot}.${cle}`);
+    if (uneInterface) { m.set(cle, interfaces[0].scope); continue; }
+    ambigus.set(cle, decls.map((d) => d.mot));
+  }
+  const table = {
+    // nu : la portée du mot s'il n'a qu'une déclaration (ou une interface) ; préfixé : celle de sa librairie
+    get: (cle, lib) => (lib ? (declarations.get(cle) || []).find((d) => d.mot === lib)?.scope : m.get(cle)),
+    has: (cle) => m.has(cle) || ambigus.has(cle),
+  };
+  _tablesDesPortees.set(cleEnsemble, table);
+  return table;
 }
 
 
@@ -3014,7 +3049,8 @@ const NOM_DE_PLACE = {
  * l'archivage de la librairie des modulations le 2026-08-22 : plus aucune clé ne l'alimente.
  * `pan` reste gouverné par sa déclaration de contrôle, qui porte `scene`.
  */
-let _porteesPermises = null;
+const _tablesDesPortees = new Map();   // ensemble de librairies invoquées → table
+let _versionDesTables = -1;
 
 /**
  * LE DERNIER COMPTE, pour le garde qui prouve que l'étage est BRANCHÉ et pas seulement présent.

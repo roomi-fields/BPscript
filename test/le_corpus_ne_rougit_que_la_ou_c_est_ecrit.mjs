@@ -61,11 +61,9 @@ const REGISTRE = [
   ['BPScript-tests/beatrix-dice.bps',   "n'est lisible ni comme un SAC", 'script(...) supprimé du langage (2026-07-26), témoin volontaire', 'kanopi', 'PERSONNE — refus voulu, état stable'],
   ['BPScript-tests/shapes-rhythm.bps',  "n'est lisible ni comme un SAC", 'script(...) supprimé du langage (2026-07-26), témoin volontaire', 'kanopi', 'PERSONNE — refus voulu, état stable'],
   // ── A-bis. SANS `core` NI ALPHABET, UN TERMINAL NON DÉCLARÉ EST REFUSÉ — Romain, 2026-09-02 ─────
-  // Le défaut d'alphabet est déclaré par `core` et n'est effectif que si `core` est invoqué ; ces deux
-  // scènes n'invoquent rien et jouent `C4`. Elles recevaient `western` d'un socle implicite, qui
-  // n'existe plus. Réécriture : une ligne `core` en tête. Préavis à kanopi le 2026-09-02 à 23:2x.
-  ['BPScript-tests/tryConsoleMaxTime.bps', 'aucun alphabet en portée', "sans `core` ni alphabet, un terminal non déclaré est refusé (Romain, 2026-09-02) — ligne `core` à ajouter", 'kanopi', 'kanopi — préavis du 2026-09-02'],
-  ['BPScript-tests/tryTimePatterns.bps',   'aucun alphabet en portée', "sans `core` ni alphabet, un terminal non déclaré est refusé (Romain, 2026-09-02) — ligne `core` à ajouter", 'kanopi', 'kanopi — préavis du 2026-09-02'],
+  // `tryConsoleMaxTime` et `tryTimePatterns` ont vécu ici une heure, le temps que kanopi leur donne
+  // leur ligne `core` (son arbre, 2026-09-03 00:1x). Le registre ne garde pas une entrée qui ne
+  // refuse plus : c'est ce garde qui l'a exigé en rougissant.
 
   // ── B. LA SCÈNE EST INCOMPLÈTE — un vrai défaut, chez son propriétaire ────────────────────
   // Les trois emploient un vocabulaire qu'elles ne DÉCLARENT pas : `dhadhatite_v2` écrit des bols

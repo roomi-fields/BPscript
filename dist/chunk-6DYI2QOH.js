@@ -5,17 +5,20 @@ import {
   famille,
   familles,
   groupeDUnicite,
+  leRegistre,
   leSchema,
   lesDefauts,
   loadLib,
   loadLibsFromDirectives,
+  motsInvoques,
   nomsDeTerminaux,
   objet,
   parse,
   resolveActorAlphabet,
   resolveActorAlphabetSource,
-  universeControlNames
-} from "./chunk-QJFBSGKP.js";
+  universeControlNames,
+  versionDuRegistre
+} from "./chunk-OHNHZE6Q.js";
 import {
   LexError,
   tokenize
@@ -1231,7 +1234,7 @@ function applySceneValues(ast, libCtx) {
 }
 function validateReferences(ast, libCtx = {}) {
   const errors = [];
-  const porteesPermises = chargerPorteesPermises();
+  const porteesPermises = chargerPorteesPermises(ast);
   const vocab = describeVocabulary([...ast.directives || [], ...ast.actors || []]);
   const controlNames = new Set(vocab.controls.map((c) => c.name));
   const registry = new Set(vocab.values.map((v) => v.name));
@@ -1367,7 +1370,7 @@ function validateReferences(ast, libCtx = {}) {
         if (!sac || !Array.isArray(sac.pairs)) continue;
         for (const p of sac.pairs) {
           const cle = String(p.key).split(".")[0];
-          const permis = porteesPermises.get(cle);
+          const permis = porteesPermises.get(cle, p.lib);
           if (!permis || permis.includes(place)) continue;
           errors.push({
             message: `'${cle}' ne peut pas s'\xE9crire ${NOM_DE_PLACE[place]} \u2014 ` + (permis.length === 1 ? `il ne vaut QUE ${NOM_DE_PLACE[permis[0]] ?? permis[0]}` : `il vaut ${permis.slice(0, -1).map((s) => NOM_DE_PLACE[s] ?? s).join(", ")} ou ${NOM_DE_PLACE[permis[permis.length - 1]] ?? permis[permis.length - 1]}`) + `. Le d\xE9placer l\xE0, ou employer un r\xE9glage qui vaut ici.`,
@@ -1561,32 +1564,65 @@ function splitCompoundTerminals(ast, libCtx) {
     }
   }
 }
-function chargerPorteesPermises() {
-  if (_porteesPermises) return _porteesPermises;
-  const m = /* @__PURE__ */ new Map();
-  const w = (o) => {
+function chargerPorteesPermises(ast) {
+  const registre = leRegistre();
+  const version = versionDuRegistre();
+  if (_versionDesTables !== version) {
+    _tablesDesPortees.clear();
+    _versionDesTables = version;
+  }
+  const mots = ast ? motsInvoques(ast) : new Set(familles());
+  const cleEnsemble = [...mots].sort().join(" ");
+  if (_tablesDesPortees.has(cleEnsemble)) return _tablesDesPortees.get(cleEnsemble);
+  const declarations = /* @__PURE__ */ new Map();
+  const noter = (mot, cle, scope, implemente) => {
+    if (!declarations.has(cle)) declarations.set(cle, []);
+    declarations.get(cle).push({ mot, scope, implemente: typeof implemente === "string" ? implemente : null });
+  };
+  const marcher = (mot, o) => {
     for (const [k, v] of Object.entries(o || {})) {
-      if (!v || typeof v !== "object") continue;
+      if (!v || typeof v !== "object" || Array.isArray(v)) continue;
       if ("args" in v && "description" in v) {
-        if (Array.isArray(v.scope)) m.set(k, v.scope);
-      } else w(v);
+        if (Array.isArray(v.scope)) noter(mot, k, v.scope, v.implements);
+      } else marcher(mot, v);
     }
   };
-  w(LIBS.expression);
-  w(LIBS.midi);
-  w(LIBS.audio);
-  w(LIBS.transpo);
-  w(LIBS.engine);
-  for (const lib of Object.values(LIBS)) {
-    const cles = lib?.schema?.addressKeys;
-    if (!cles || Array.isArray(cles) || typeof cles !== "object") continue;
-    for (const [k, def] of Object.entries(cles)) {
-      if (k.startsWith("_") || !def || !Array.isArray(def.scope)) continue;
-      m.set(k, def.scope);
+  for (const [cle, lib] of Object.entries(registre)) {
+    if (!lib || typeof lib !== "object" || cle.includes("/")) continue;
+    const mot = typeof lib.resolves === "string" && lib.resolves || cle;
+    if (!mots.has(mot)) continue;
+    marcher(mot, lib);
+    const adresses = lib.schema && lib.schema.addressKeys;
+    if (adresses && !Array.isArray(adresses) && typeof adresses === "object") {
+      for (const [k, def] of Object.entries(adresses)) {
+        if (k.startsWith("_") || !def || !Array.isArray(def.scope)) continue;
+        noter(mot, k, def.scope, null);
+      }
     }
   }
-  _porteesPermises = { get: (cle) => m.get(cle), has: (cle) => m.has(cle) };
-  return _porteesPermises;
+  const m = /* @__PURE__ */ new Map();
+  const ambigus = /* @__PURE__ */ new Map();
+  for (const [cle, decls] of declarations) {
+    if (decls.length === 1) {
+      m.set(cle, decls[0].scope);
+      continue;
+    }
+    const interfaces = decls.filter((d) => !d.implemente);
+    const realisations = decls.filter((d) => d.implemente);
+    const uneInterface = interfaces.length === 1 && realisations.every((r) => r.implemente === `${interfaces[0].mot}.${cle}`);
+    if (uneInterface) {
+      m.set(cle, interfaces[0].scope);
+      continue;
+    }
+    ambigus.set(cle, decls.map((d) => d.mot));
+  }
+  const table = {
+    // nu : la portée du mot s'il n'a qu'une déclaration (ou une interface) ; préfixé : celle de sa librairie
+    get: (cle, lib) => lib ? (declarations.get(cle) || []).find((d) => d.mot === lib)?.scope : m.get(cle),
+    has: (cle) => m.has(cle) || ambigus.has(cle)
+  };
+  _tablesDesPortees.set(cleEnsemble, table);
+  return table;
 }
 function singleCharAlphabetSet(libCtx) {
   const terms = libCtx && libCtx.alphabetTerminals || [];
@@ -1680,7 +1716,8 @@ var NOM_DE_PLACE = {
   symbol: "sur un \xE9l\xE9ment",
   flow: "dans le flux"
 };
-var _porteesPermises = null;
+var _tablesDesPortees = /* @__PURE__ */ new Map();
+var _versionDesTables = -1;
 var dernierCompte = null;
 function noterLePassage(compte) {
   dernierCompte = compte;

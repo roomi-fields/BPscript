@@ -36,13 +36,10 @@ const GRAPHIES = [
   { nom: "LIBS['<nom>'] en dur", motif: /\bLIBS\[\s*['"][A-Za-z_]+['"]\s*\]/ },
 ];
 
-// ⚠️ UNE EXEMPTION, DATÉE ET MOTIVÉE — la table des portées permises (`chargerPorteesPermises`,
-// resolution.js) lit encore CINQ librairies par leur nom. Lire le registre entier change le langage,
-// mesuré : le refus d'un réglage de flux écrit en tête de scène disparaissait, vingt clés entraient
-// dans la table, et `vel` est déclaré deux fois (`expression`, `settings`) sans règle pour trancher.
-// C'est une décision de langage, remontée à Romain le 2026-09-02 ; l'exemption tombe avec sa
-// décision. Elle ne couvre que la graphie `w(LIBS.<nom>)` de cette fonction, et rien d'autre.
-const EXEMPTE = (ligne) => /^\s*w\(LIBS\.[a-z]+\);\s*$/.test(ligne);
+// L'exemption qui vivait ici — la table des portées permises lisait cinq librairies par leur nom — est
+// TOMBÉE le 2026-09-03 avec la décision de Romain : la table se construit sur les librairies invoquées.
+// Plus aucune ligne n'est exemptée ; une exemption qui reviendrait se compte à zéro.
+const EXEMPTE = () => false;
 
 let lignesLues = 0;
 let exemptees = 0;
@@ -59,9 +56,8 @@ for (const f of FICHIERS) {
   });
 }
 ok(lignesLues > 5000, `SOCLE : ${lignesLues} ligne(s) de code lues — un périmètre qui fond ne prouve rien`);
-// L'exemption est COMPTÉE : cinq lignes, ni plus ni moins. Une sixième serait une dette neuve qui se
-// glisse sous une dette datée ; zéro dirait que la dette est payée et que ce texte ment.
-ok(exemptees === 5, `l'exemption couvre ${exemptees} ligne(s) — elle en attend 5 (la table des portées) ; une autre valeur dit que la dette a bougé sans que ce garde le sache`);
+// Plus aucune exemption : la dette de la table des portées est payée le 2026-09-03.
+ok(exemptees === 0, `l'exemption couvre ${exemptees} ligne(s) — elle doit en couvrir 0 depuis le 2026-09-03`);
 ok(coupables.length === 0,
    `${coupables.length} lecture(s) d'une table PAR LE NOM d'une librairie :\n       ${coupables.join('\n       ')}`);
 

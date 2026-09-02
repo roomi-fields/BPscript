@@ -6604,6 +6604,8 @@ function parse(tokens, opts = {}) {
 
 export {
   brancherLeCompilateur,
+  versionDuRegistre,
+  leRegistre,
   universeControlNames,
   loadLib,
   groupeDUnicite,
@@ -6618,6 +6620,7 @@ export {
   objets,
   leSchema,
   lesDefauts,
+  motsInvoques,
   ParseError,
   parse
 };
