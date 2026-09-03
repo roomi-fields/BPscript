@@ -2209,6 +2209,32 @@ et un champ n'existe que si sa notion s'applique.
 qui permet au moteur de rester vide de toute specificite : ajouter un filtre n'ajoute pas une ligne
 au moteur, il ajoute une entree a une librairie.
 
+### La declaration et le corps -- l'entete et son implementation
+
+**La declaration nomme, le fichier voisin porte le corps.** Un objet dont le comportement se calcule
+se declare dans le catalogue avec ce qu'il EST -- ses arguments, sa portee, ses parametres, sa
+description -- et son code vit dans un fichier a cote, qui porte SON NOM :
+
+```text
+lib/transpo.bpsl              control transpose (args(interval), params(...), ...)
+lib/transpo/transpose.ts      le corps, ecrit dans le langage de qui l'execute
+```
+
+Le nom du fichier dit l'objet ; le corps se rattache a lui, et voyage avec lui partout ou il est
+invoque. **Un objet et son corps ne vivent jamais dans deux catalogues** : ce qu'un composant sait
+calculer se dit par le mot, et le mot porte son code.
+
+**Le corps d'un prototype descend sur ses exemplaires.** Une famille dont toutes les entrees
+partagent un meme traitement le declare une fois, sur sa racine : chaque entree l'emporte avec elle.
+
+```text
+lib/homomorphism/homomorphism.ts     l'applicateur, ecrit une fois
+lib/homomorphism.bpsl                homomorphism dhati (sections(...))
+```
+
+**Qui execute le corps est declare, jamais devine** : la librairie nomme son resolveur, et c'est lui
+qui sait lire le langage dans lequel le corps est ecrit.
+
 **Une entree introuvable est nommee** : `alphabet.raga` repond « alphabet 'raga' introuvable dans
 le catalogue ». Rien ne se resout par defaut en silence.
 

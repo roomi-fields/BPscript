@@ -1,12 +1,42 @@
-# BPScript — Fonctions digitales (manipulations) — Design (DRAFT, à valider Romain)
+# BPScript — Les manipulations et leur corps — Design
 
-## Date : 2026-06-30 (MAJ 2026-07-02) · Statut : **RÉALISÉ** — lib digitale (transpose/keyxpand/rotate) implémentée, câblée côté Kairos, Hz prouvé e2e. Surface d'invocation multi-arguments **ratifiée** (Romain 2026-07-02 — forme A, §7) ; adaptation du parseur **en attente de cadencement architecte** (LANG-DIGITAL-INVOCATION).
+## Statut au 2026-09-03 : **une manipulation est un MOT du langage, et son corps se rattache à l'objet qui le porte** (arbitrage de Romain, 2026-09-03).
 
-> Spec partagée BPScript ↔ Kairos. **Mon côté (BPScript)** : la FORME de lib + le chargement +
-> l'authoring/typage. **Côté Kairos** : le runtime (transpilation/bac-à-sable/exécution) + l'API
-> de contexte (les types du SDK). La frontière est en §4. **Réalisé et câblé** (statut ci-dessus) ; reste l'adaptation du parseur à la surface ratifiée (§7).
-> Décision Romain (2026-06-30, via architecte [202]) : le comportement = **vrai code TS** évalué en
-> interne (pas un pattern déclaratif), déterministe, embarqué navigateur (TS→JS au load).
+> ⛔ CE DOCUMENT A CHANGÉ DE FORME, PAS DE SUJET. Il décrivait une librairie de fonctions
+> (`type:'digital'`, `objects:{transpose:{params, body}}`) à côté du contrôle qui la nommait. Romain
+> a tranché la question qu'elle posait — « pourquoi le code n'est pas exactement au même endroit que
+> la déclaration ? ou sinon, on doit faire un principe de fichiers d'en-têtes comme les .h et les
+> .c ? » : c'est la seconde forme. La déclaration nomme, le fichier voisin porte le corps.
+>
+> **LA FORME D'AUJOURD'HUI**, en deux fichiers, pour les quatre manipulations de hauteur :
+>
+> ```text
+> lib/transpo.bpsl            control transpose (args(interval), argType:interval, scope(…),
+>                                                rank:30, params(ratio(…), interval(…)), …)
+> lib/transpo/transpose.ts    const transpose: DigitalFn = (ctx) => { … }
+> ```
+>
+> Le nom du fichier dit l'objet ; le chargeur greffe le corps sur lui, à la racine de la librairie ou
+> dans n'importe quelle place, sans qu'aucune section soit nommée dans le code. Le corps voyage avec
+> le mot : la section `librairies` de l'arbre le joint partout où la scène écrit le contrôle.
+>
+> **UN PROTOTYPE PORTE LE CORPS DE SA FAMILLE.** L'applicateur d'homomorphisme est écrit une fois, sur
+> la racine, et chaque table l'emporte avec elle :
+>
+> ```text
+> lib/homomorphism/homomorphism.ts   l'applicateur
+> lib/homomorphism.bpsl              homomorphism dhati (sections(…))
+> ```
+>
+> **CE QUI A DISPARU** : la librairie `digital`, la famille `function`, et l'entrée
+> `homomorphism.substitute`. Une manipulation n'est pas une entrée à part : c'est le contrôle que la
+> scène écrit, et il porte `rank`, `params` et `body`.
+>
+> Ce qui suit décrit le SDK, le contrat avec Kairos et l'historique de la décision de 2026-06-30 —
+> tout cela reste vrai : le corps est du vrai code TS, typé à l'écriture, transpilé au chargement par
+> qui le résout, exécuté sur une copie.
+
+---
 
 ## 1. Concept — le jumeau DIGITAL de l'objet CV
 
@@ -23,7 +53,7 @@ La cartographie (PAS 1) a révélé une symétrie qu'on exploite ici : une fonct
 Source du jumeau analogique : `lib/mod.json` (`{type:'cv', objects:{adsr,lfo,ramp}}`), `docs/archive/CV.md` (⛔ archivé).
 Première fonction visée : `transpose` (décalage de N pas de grille) ; puis `register_shift` (décalage
 de N périodes/registres). `transpose`, `keyxpand`, `rotate` sont désormais des **libs digitales
-réalisées** (`lib/digital/*.ts` + `lib/digital.json`, captées dans `libs-data.js`). Côté Kairos, le
+réalisées** (`lib/transpo/*.ts` + `lib/transpo.bpsl`, captées dans `libs-data.js`). Côté Kairos, le
 repli hardcode `resolveTransposed` est **SUPPRIMÉ** (`resolver.ts:415-416`) et le chemin chaud applique
 la lib via `executerDigital` (`resoudre-hauteur.ts:184-195`, ordre rotate→keyxpand→transpose) ; Hz
 prouvé e2e (`rotate-keyxpand-e2e.test.ts`, `transpose-digital-e2e.test.ts`). `transpose` reste DÉCLARÉ
@@ -107,7 +137,7 @@ Pureté/déterminisme exigés (rejouable, embarquable, pas d'I/O ni d'aléatoire
 
 ## 5. Chargement — réutilise l'existant (zéro infra neuve)
 
-- La lib vit dans un fichier (ex. `lib/pitch.json` ou `lib/digital.json`), pré-bundlé dans
+- Le mot vit dans le catalogue qui le déclare (`lib/transpo.bpsl`) et son corps dans le fichier voisin qui porte son nom (`lib/transpo/transpose.ts`), pré-bundlé dans
   `src/transpiler/libs-data.js` (généré par `src/transpiler/libs-bundle.js`), auto-enregistré au load
   (`libs.js:21,58`).
 - Chargée par `@directive` via `loadLib(name, subkey)` (`libs.js:86-102`).
