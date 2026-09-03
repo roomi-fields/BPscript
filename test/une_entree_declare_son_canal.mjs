@@ -21,6 +21,7 @@
  * il compile TOUT le corpus et exige qu'aucune entrée émise, nulle part, ne porte un canal absent.
  * Un garde écrit pour la forme du jour laisserait entrer celle de demain.
  */
+import { canaux, clesDActeur, axesDeCatalogue } from '../src/transpiler/index-des-objets.js';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
 
@@ -40,7 +41,7 @@ const compile = (lignes) => {
 // ── SOCLE — les canaux viennent de la DONNÉE, jamais d'une liste écrite ici ───────────────────
 // Une liste recopiée resterait verte le jour où le catalogue en gagne ou en perd un, et ce garde
 // éprouverait alors un langage qui n'existe plus.
-const CANAUX = Object.entries(LIBS.core?.schema?.channels || {})
+const CANAUX = Object.entries(canaux())
   .filter(([, c]) => c && typeof c === 'object' && c.in === true)
   .map(([nom]) => nom).sort();
 ok(CANAUX.length >= 2,

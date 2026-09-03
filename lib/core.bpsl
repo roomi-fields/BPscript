@@ -5,28 +5,13 @@
 // ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
 //    voyage pas jusqu'aux consommateurs, une clé si.
 
-// schema · LES MOTS AVEC LESQUELS ON ECRIT LA STRUCTURE. Decision Romain, 2026-08-21 : le
-// vocabulaire se partage en trois — la GRAMMAIRE, qu un auteur ne peut jamais ombrer ; le
-// SOCLE, qui ne bouge pas ; les LIBRAIRIES, ombrables et dont l ombrage s annonce. Cette liste
-// porte la premiere categorie. Elle est un PLANCHER : ce qui n a pas su etre construit ne
-// compte pas comme une absence.
+// Le SCHEMA de core a ete DISSOUS le 2026-09-03 (arbitrage Romain, point 2 des cinq arbitrages) :
+// les mots de la grammaire vivent dans le schema de SYNTAXE (`schema-syntaxe/language.json`), les
+// clés d'acteur sont les membres types du prototype `actor`, les canaux les entrees du prototype
+// `destination`, les cles de crochet une portee `bracket` sur chaque controle, les axes de
+// catalogue se derivent (un prototype de `types` qui a des entrees dans une famille). Rien n'est en
+// portee sans invocation, sauf la syntaxe.
 //
-// COMMENT LES DIX ONT ETE ETABLIS — 19 candidats eprouves le 2026-08-24, tires de trois sources :
-// les comparaisons du parseur, le schema de syntaxe publie, et les cinq mots que la decision du
-// 2026-08-21 nomme. Chaque candidat passe une EPREUVE DE SUBSTITUTION A TROIS TEMOINS, la meme
-// ligne ecrite quatre fois : un nom FABRIQUE teste l existence et ne prouve rien sur la structure ;
-// un nom de CATALOGUE teste l invocation et passe en tete sans porter de structure ; une ENTREE de
-// catalogue invoque teste la STRUCTURE et elle seule — le langage la declare legale a la place d un
-// type, donc si le mot passe la ou une entree echoue, c est le langage qui le porte.
-// ⚠️ Un temoin a UN SEUL nom fabrique ne suffit pas : mesure du 2026-08-31, il rendait `core`
-// porteur de structure alors qu il est un catalogue, et laissait `init` indecidable. Et un releve
-// sur le CODE ne l etablit pas — il melange natures de noeud et mots du langage.
-// ⛔ CETTE METHODE VIT EN COMMENTAIRE, PLUS DANS LA DONNEE — decision de Romain, 2026-09-01 : une
-// librairie dit ce que le langage porte, la methode n a pas de lien avec elle et la rend illisible.
-// schema · LES MOTS QUI OUVRENT UNE DECLARATION PAR LE TYPE et que rien d autre ne derive. Les
-// CONVENTIONS (varConventions) et les MODULES (les modules) en ouvrent une aussi, et se lisent
-// la ou ils sont deja declares ; ces deux-la n ont pas d autre domicile. `flag` porte ses etats
-// entre parentheses, `symbol` ne porte aucun type.
 // Ce que ce catalogue APPORTE — chaque nom invoque une librairie, et sa chaîne se
 // résout transitivement. Décision Romain, 2026-08-20.
 expression
@@ -48,5 +33,4 @@ def values (diapason(range(16, 8000), unit:Hz, overriddenBy(tuning.diapason, alp
 
 def on_fail (section:settings, type:directive, values("skip", "retry", "fallback"), value:skip, description:"Gestion d'échec de dérivation")
 
-def schema (section:"", grammarWords(qualite:plancher, mots(actor, core, def, in, init, mode, out, seed, terminal)), catalogAxes(alphabet, tuning, octaves, scale, sound, eval, voice), deprecatedTransports(browser, webaudio), channels(audio(out:true, writable:true, params(gain:1)), midi(in:true, out:true, writable:true, params(ch:1)), osc(in:true, out:true, writable:true, params(host:"127.0.0.1", port:57120, addr:/kanopi)), keyboard(in:true, writable:true), dmx(out:true, writable:true, params(universe:0)), text(out:true, writable:false)), qualifierKeys(scan, weight, on_fail, meter, rotate, legato, staccato), reservedDirectives(core, eval, def, init, ins, transpose, scaleshift, chromashift, homomorphism, settings, filter, modulation, diapason, out), actorKeys(alphabet, tuning, octaves, out, eval), deprecatedActorKeys(sound, sounds, voice))
 

@@ -1,6 +1,6 @@
 import {
   SYNTAXE
-} from "./chunk-YT6XIK2B.js";
+} from "./chunk-4X227AGU.js";
 export {
   SYNTAXE
 };

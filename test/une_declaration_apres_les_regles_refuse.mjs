@@ -67,7 +67,9 @@ const FORME = {
   // Trois seulement ont besoin d'une écriture : nues, elles manquent leur nom ou leur valeur.
   // Le reste s'éprouve NU — et c'est voulu : une forme écrite à la main est une forme qu'on choisit.
   def: 'def k (vel:120)',
-  diapason: 'diapason:442',
+  // Les mots de la GRAMMAIRE entrés dans l'union le 2026-09-03 (le schéma de `core` est dissous,
+  // ils viennent du schéma de syntaxe) : nus, ils manqueraient leur nom.
+  actor: 'actor v', terminal: 'terminal zz voice.wobble', in: 'in.midi pedale',
   // Les contrôles de tête à valeur, entrés le 2026-09-02 : nus, ils manqueraient leur valeur.
   fadeout: 'fadeout:2', pan: 'pan:64', rate: 'rate:1', syncdelay: 'syncdelay:10', tempo: 'tempo:120',
   vel: 'vel:80', volume: 'volume:100', volumecontrol: 'volumecontrol:100', pancontrol: 'pancontrol:64',
@@ -80,13 +82,20 @@ const FORME = {
 //     table réservée d'`engine`, qui les DUPLIQUAIT ; ils sont des contrôles de portée règle ou
 //     flux, refusés en tête par leur portée, et l'union ne porte plus que les mots de portée scène.
 //     Les deux qui restent viennent de la liste de `core`.
-const CONTROLES_DE_PORTEE = new Set(['filter', 'scaleshift']);
+// ⛔ VIDE DEPUIS LE 2026-09-03 : `scaleshift` était réservé par la liste du schéma de `core`, qui
+// est dissoute. Un contrôle hors de sa portée est refusé par sa PORTÉE déclarée, comme les autres,
+// et il n'est plus un mot de tête. La famille reste nommée : le jour où un mot revient ici, il est
+// classé au lieu d'être éprouvé par défaut.
+const CONTROLES_DE_PORTEE = new Set([]);
 
 // (c) `mode` PASSE DANS LES DEUX POSITIONS, et c'est sa définition : il gouverne la sous-grammaire
 //     QUI SUIT. 67 scènes du corpus sur 263 en vivent. ⚠️ Il a quitté l'union le 2026-09-02 avec la
 //     table d'`engine` — sa portée est `subgrammar`, pas `scene` — donc cette famille est vide ici ;
 //     son passage dans les deux positions reste gardé par le corpus.
-const LEGITIME_APRES = new Set([]);
+const LEGITIME_APRES = new Set([
+  // `mode` ouvre un BLOC : il se pose en tête de sous-grammaire, donc après des règles.
+  'mode',
+]);
 
 // ⛔ ET CETTE TROISIÈME FAMILLE SE NOMME AUSSI. Mon premier jet la calculait comme « tout ce qui
 // n'est ni contrôle de portée ni `mode` » — donc un mot réservé NEUF y tombait tout seul, et le
@@ -97,9 +106,7 @@ const LEGITIME_APRES = new Set([]);
 // ⛔ `actor` SORTI LE 2026-09-02 : il est un objet du socle, déclaré dans `types` — « `def` et `init`
 // sont les deux mots racines » (Romain). Il quitte la liste réservée de `core`, donc l'union.
 const DECLARATIONS_DE_TETE = new Set([
-  'all_items', 'allitems', 'chromashift', 'core', 'def', 'diapason', 'eval',
-  'homomorphism', 'improvize', 'init', 'ins', 'items', 'maxitems', 'meter', 'modulation',
-  // ⛔ `scale` SORTI LE 2026-09-02, même cause qu'`alphabet` : c'est le prototype des gammes, fourni
+  'all_items', 'allitems', 'chromashift', 'core', 'def', 'improvize', 'init', 'ins', 'items', 'maxitems', 'meter', // ⛔ `scale` SORTI LE 2026-09-02, même cause qu'`alphabet` : c'est le prototype des gammes, fourni
   // par `types` (décision de Romain, « scale est le mot des gammes, gamut sort »), donc il quitte la
   // liste réservée de `core`. `scale.raga_bhairav` compile toujours — `catalogAxes` route l'invocation.
   'on_fail', 'out', 'qclock', 'quantization', 'randomize', 'rndtime', 'scan',
@@ -117,14 +124,17 @@ const DECLARATIONS_DE_TETE = new Set([
   // par les librairies invoquées. Un type fourni par une librairie n'appartient pas au socle, donc
   // le mot quitte `core.schema.reservedDirectives` — et l'exemption qui le nommait ici sort avec
   // lui. Une exemption qui ne désigne plus rien de vivant est un trou au nom de quelqu'un.
-  'seed', 'settings', 'timepatterns', 'transpose',
+  'seed', 'timepatterns', 'transpose',
   // ⛔ VINGT ET UN MOTS ENTRENT LE 2026-09-02, parce que l'union se lit désormais par la porte du
   // compilateur : tout contrôle de portée `scene` du registre est un mot de tête, quelle que soit
   // la librairie qui le porte — expression, midi, time, variation, engine. Ils passaient déjà en
   // tête avant ce jour ; seul l'instrument ne les comptait pas.
   'fadeout', 'keepcontrols', 'keepweights', 'letring', 'pan', 'pancontrol', 'pedalhold',
   'pedalrelease', 'rate', 'resetcontrols', 'resetnotes', 'resetweights', 'smooth', 'striated',
-  'strikeagain', 'sustain', 'syncdelay', 'tempo', 'vel', 'volume', 'volumecontrol', ]);
+  'strikeagain', 'sustain', 'syncdelay', 'tempo', 'vel', 'volume', 'volumecontrol',
+  // Les mots de la grammaire, entrés dans l'union avec la dissolution du schéma de `core`.
+  'actor', 'terminal', 'in',
+]);
 
 // ⛔ L'UNION SE LIT PAR LE CHARGEUR, PLUS PAR UN CHEMIN DU PAQUET. Depuis le 2026-09-02 la table
 // réservée d'`engine` est sortie : un mot de tête est un objet qui déclare `scope(scene)`, dans
@@ -257,8 +267,12 @@ ok(err(`${S}S -> C4\n-----\nT -> D4\n`).length === 0,
 // sont comptés comme le compilateur les compte. Mesuré à la frappe : 51 mots.
 // 51 → 49 le 2026-09-02 au soir : `scale` puis `actor` quittent la liste de `core` — deux types
 // fournis par `types`, deux décisions de Romain, aucune cécité d'instrument.
+// 49 → 46 le 2026-09-03 : le schéma de `core` est DISSOUS. Les mots de tête sont désormais la
+// grammaire (schéma de syntaxe) et les mots que les librairies invoquées déclarent à portée scène ;
+// `filter`, `modulation`, `homomorphism`, `settings`, `eval`, `diapason`, `scaleshift` en sortent —
+// ils sont des familles qu'on invoque, ou des contrôles jugés par leur portée.
 const RESERVEES = UNION.length;
-ok(RESERVEES >= 49, `4. le vocabulaire de directives doit être chargé — ${RESERVEES} mot(s)`);
+ok(RESERVEES >= 46, `4. le vocabulaire de directives doit être chargé — ${RESERVEES} mot(s)`);
 // Le seuil est passé de 24 à 22 le 2026-08-09, et le motif s'écrit ici plutôt que dans un commit :
 // `mm` est SORTIE du langage (Romain 2026-06-26, fermée le 2026-08-09), donc elle disparaît des
 // deux listes — une forme qui n'existe plus ne peut pas être éprouvée. C'est le seul abaissement

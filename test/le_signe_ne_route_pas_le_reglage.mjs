@@ -34,6 +34,7 @@
  *    grammaticalement possible par clé. Ce garde prouve l'invariant qui EN DÉCOULE : la même DONNÉE
  *    (la clé), quelle que soit sa POSITION d'attachement, produit toujours le MÊME type de nœud.
  */
+import { SYNTAXE } from '../src/transpiler/syntaxe-data.js';
 import assert from 'node:assert/strict';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
@@ -42,7 +43,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const QUALIFIER_KEYS = LIBS.core?.schema?.qualifierKeys || [];
+const QUALIFIER_KEYS = SYNTAXE.bracketRewrites?.mots || [];
 // Échantillon de contrôles RUNTIME déclarés (section non-'engine' de lib/controls.json), pris
 // dans les sous-groupes de transport — mêmes clés que le corpus (vel/pan connus de tous les
 // transports). Dérivé de la donnée, pas recopié : on prend les 3 premières clés numériques du

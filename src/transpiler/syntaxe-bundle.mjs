@@ -39,6 +39,30 @@ const porte = {
   _source: `BPscript/${SOURCE}`,
   syntaxWords: schema.syntaxWords,
   directiveValues: schema.directiveValues,
+  // ⛔ LES MOTS DE LA GRAMMAIRE — dissous du schéma de `core` le 2026-09-03 (Romain) : ce sont les
+  // mots avec lesquels on écrit la STRUCTURE, et ils appartiennent au langage, pas à une librairie.
+  // Décision du 2026-08-21 : le vocabulaire se partage en trois — la GRAMMAIRE, qu'un auteur ne peut
+  // jamais ombrer ; le SOCLE, qui ne bouge pas ; les LIBRAIRIES, ombrables et dont l'ombrage
+  // s'annonce. Cette liste porte la première catégorie, et elle est un PLANCHER : ce qui n'a pas su
+  // être construit ne compte pas comme une absence.
+  //
+  // COMMENT LES DIX ONT ÉTÉ ÉTABLIS — 19 candidats éprouvés le 2026-08-24, tirés de trois sources :
+  // les comparaisons du parseur, le schéma de syntaxe publié, et les cinq mots que la décision du
+  // 2026-08-21 nomme. Chaque candidat passe une EPREUVE DE SUBSTITUTION A TROIS TEMOINS, la même
+  // ligne écrite quatre fois : un nom FABRIQUÉ teste l'existence et ne prouve rien sur la structure ;
+  // un nom de CATALOGUE teste l'invocation et passe en tête sans porter de structure ; une ENTRÉE de
+  // catalogue invoquée teste la STRUCTURE et elle seule — le langage la déclare légale à la place
+  // d'un type, donc si le mot passe là où une entrée échoue, c'est le langage qui le porte.
+  // ⚠️ Un témoin à UN SEUL nom fabriqué ne suffit pas : mesure du 2026-08-31, il rendait `core`
+  // porteur de structure alors qu'il est un catalogue, et laissait `init` indécidable. Et un relevé
+  // sur le CODE ne l'établit pas — il mélange natures de nœud et mots du langage.
+  // ⛔ CETTE MÉTHODE VIT EN COMMENTAIRE, PLUS DANS LA DONNÉE — décision de Romain, 2026-09-01 : elle
+  // pesait 925 octets dans le paquet que tout consommateur reçoit, et n'a de lecteur qu'ici.
+  grammarWords: schema.grammarWords,
+  // Les pierres tombales de graphie — dissoutes du schéma de `core` le 2026-09-03. Elles disent ce
+  // qui REMPLACE un mot retiré, là où le refus générique n'apprendrait rien.
+  bracketRewrites: schema.bracketRewrites,
+  actorKeyRewrites: schema.actorKeyRewrites,
 };
 
 // ⛔ ET LE GÉNÉRATEUR REFUSE DE PRODUIRE UNE PORTE VIDE — exigence 2 d'Atlas. Un `?? {}` chez moi

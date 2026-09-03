@@ -8,8 +8,8 @@
  */
 
 import { T } from './tokenizer.js';
-import { leSchema, famille } from './index-des-objets.js';
-import { loadLib, directiveDeclareeParLaLibrairie, loadLibsFromDirectives, librairiesQuiDeclarent, versionDuRegistre } from './libs.js';
+import { famille, motReserve, axesDeCatalogue, clesDActeur, canaux } from './index-des-objets.js';
+import { loadLib, directiveDeclareeParLaLibrairie, loadLibsFromDirectives, librairiesQuiDeclarent, versionDuRegistre, placesDesLibrairies, leRegistre } from './libs.js';
 import { describeVocabulary } from './vocabulaire.js';
 import { BP3_OPERATORS } from './constants.js';
 // ⛔ LE SCHÉMA DE SYNTAXE N'EST PAS UNE LIBRAIRIE — il se lit par SA PROPRE PORTE, jamais par le
@@ -79,7 +79,6 @@ class ParseError extends Error {
  * `porteesDeclarees` : l'un dit les mots de tête du langage, l'autre les réglages qui déclarent où
  * ils s'écrivent ; une directive « déclarée par le socle » est l'un ou l'autre.
  */
-const motReserve = (nom) => ((leSchema() || {}).reservedDirectives || []).includes(nom);
 
 /**
  * ⛔ UNE TABLE DÉRIVÉE DU SCHÉMA SE MÉMORISE SOUS LA VERSION DU REGISTRE, jamais pour toujours.
@@ -98,15 +97,17 @@ const memoDuRegistre = (calcul) => {
   };
 };
 
+// ⛔ LES CLÉS D'UN ACTEUR SONT LES MEMBRES TYPÉS DU PROTOTYPE `actor` DE `types` — Romain,
+// 2026-09-03 : `def actor (alphabet alphabet, tuning tuning, octaves octaves, destination out, eval
+// eval)`. La liste `actorKeys` du schéma de `core` est dissoute ; les mots déprécies sont sortis
+// avec elle (un mot sorti se refuse comme un mot inventé). Sans `types` au registre, aucune clé.
 const actorKeysData = memoDuRegistre(() => {
-  // Sans objet `schema` au registre, aucune clé d'acteur n'est connue (cf. les axes).
-  const sch = leSchema();
-  if (!sch) return { valides: new Set(), perimees: new Set(), toutes: new Set() };
-  const valides = sch.actorKeys, perimees = sch.deprecatedActorKeys || [];
-  if (!Array.isArray(valides) || valides.length === 0) {
-    throw new Error("l'objet 'schema' ne déclare aucune clé d'acteur (actorKeys) — le parseur n'a plus de clés d'acteur");
-  }
-  return { valides: new Set(valides), perimees: new Set(perimees), toutes: new Set([...valides, ...perimees]) };
+  const valides = new Set(clesDActeur().keys());
+  // Les mots qu'un acteur a portés et qui n'en sont plus : pierre tombale de graphie du schéma de
+  // syntaxe, pour que le refus dise ce qui les remplace au lieu de les avaler en affectation.
+  const t = SYNTAXE.actorKeyRewrites;
+  const perimees = new Set(t && Array.isArray(t.mots) ? t.mots.filter((m) => !valides.has(m)) : []);
+  return { valides, perimees, toutes: new Set([...valides, ...perimees]) };
 });
 
 // ⛔ LES CONVENTIONS DE LECTURE NE SONT PLUS UNE LISTE — décision de Romain, 2026-09-02 : `signal`,
@@ -146,18 +147,10 @@ const actorKeysData = memoDuRegistre(() => {
  * ⚠️ Et le défaut était MUET : la déclaration semblait posée, la garde ne mordait pas, et j'ai
  * conclu « configuration sans effet » sur une mesure qui ne mesurait pas ce que je croyais.
  */
-const catalogAxisKeys = memoDuRegistre(() => {
-  // ⚠️ SANS `core` AU REGISTRE, IL N'Y A PAS D'AXE — et ce n'est pas une faute : aucun socle n'est
-  // implicite (Romain, 2026-09-02), et une librairie se lit avant que `core` soit chargé. La table
-  // vide se mémorise sous la version du registre, et se relit dès que `core` arrive.
-  const sch = leSchema();
-  if (!sch) return new Set();
-  const axes = sch.catalogAxes;
-  if (!Array.isArray(axes) || axes.length === 0) {
-    throw new Error("l'objet 'schema' ne déclare aucun axe de catalogue (catalogAxes) — le parseur n'a plus d'axes de catalogue");
-  }
-  return new Set(axes);
-});
+// ⛔ LES AXES SE DÉRIVENT (Romain, 2026-09-03) : un prototype racine de `types` qui a des entrées
+// dans une famille du registre. Sans `types` au registre, aucun axe — la table vide se mémorise
+// sous la version du registre, et se relit dès que la donnée arrive.
+const catalogAxisKeys = memoDuRegistre(() => new Set(axesDeCatalogue()));
 
 /**
  * Noms de canal de sortie PÉRIMÉS → rejetés fail-loud au parse (décision 2026-07-16, Romain :
@@ -166,7 +159,6 @@ const catalogAxisKeys = memoDuRegistre(() => {
  * Romain 2026-07-05). Mémoïsé. `browser`/`webaudio` = ancien modèle profils d'environnement
  * (routing.json, supprimé) ; le canal canonique {audio, midi, osc} s'écrit directement.
  */
-const deprecatedTransports = memoDuRegistre(() => new Set((leSchema() || {}).deprecatedTransports || []));
 
 /**
  * UN SEUL CATALOGUE des canaux, chacun portant les DIRECTIONS qu'il autorise (décision Romain
@@ -175,7 +167,9 @@ const deprecatedTransports = memoDuRegistre(() => new Set((leSchema() || {}).dep
  * sous le même mot `transport` selon l'endroit où on l'écrivait. Source unique = `lib/core.json`
  * schema.channels (donnée, pas un hardcode). Mémoïsé.
  */
-const channelCatalog = memoDuRegistre(() => (leSchema() || {}).channels || {});
+// Les canaux sont les entrées du prototype `destination` de `types` (Romain, 2026-09-03) : la liste
+// `channels` du schéma de `core` est dissoute, la donnée reste fermée et déclarée.
+const channelCatalog = memoDuRegistre(() => canaux());
 
 /**
  * LISTE POSITIVE FERMÉE des canaux de SORTIE (`out.<canal>` sur un @actor, ou le raccord
@@ -915,7 +909,13 @@ function parse(tokens, opts = {}) {
           // comme `alphabet`, `tuning`, `octaves` et `sound` avant lui — et le prototype `scale` de
           // `types` ouvre une déclaration. Ce refus ne couvre plus qu'un site, `settings`, et il
           // reste écrit parce qu'il garde une FORME, non les cas qui l'ont fait naître.
-          const reserves = new Set((leSchema() || {}).reservedDirectives || []);
+          // ⛔ CE QU'UNE ENTRÉE NE CONFISQUE PAS EST UNE PLACE, PAS UN MOT DU LANGAGE. La liste
+          // `reservedDirectives` du schéma de `core` tenait ce site ; dissoute (Romain, 2026-09-03),
+          // elle laisse la SEULE collision qu'elle couvrait : `core` porte une SECTION nommée
+          // `settings`, et une section n'est pas une entrée. Les places d'une librairie sont de la
+          // donnée — `placesDesLibrairies` les lit —, et les mots de la grammaire n'ont rien à faire
+          // ici : `actor` et `eval` sont des mots du langage ET des prototypes de `types`.
+          const placesDuRegistre = placesDesLibrairies(leRegistre());
           // ⛔ ET LA CHAÎNE `apporte` SE SUIT — « sa chaîne se résout transitivement », décision
           // Romain 2026-08-20, mesurée fausse ici le 2026-09-02 : `sounds` invoque `types` en tête
           // et `gamut x (a:1)` restait refusé sous `sounds`. Une scène qui invoque `audio` reçoit
@@ -925,9 +925,10 @@ function parse(tokens, opts = {}) {
             if (!nomLib || librairiesVues.has(nomLib)) return;
             librairiesVues.add(nomLib);
             const lib = loadLib(nomLib) || {};
+            const places = new Set((placesDuRegistre[nomLib] || []).filter((p) => p !== '_deduites'));
             for (const [nom, valeur] of Object.entries(lib)) {
               if (nom.startsWith('_') || !valeur || typeof valeur !== 'object' || Array.isArray(valeur)) continue;
-              if (reserves.has(nom)) continue;
+              if (places.has(nom)) continue;
               prototypesDeclares.add(nom);
               if (typeof valeur._derive === 'string' && valeur._derive) derivations.set(nom, valeur._derive);
             }
@@ -2080,7 +2081,9 @@ function parse(tokens, opts = {}) {
     // de BPx la refusait, le type publié de runtime-in la déclarait impossible, et son code
     // l'ignorait en silence — un `null` n'apparie aucun canal. La forme traversait trois frontières
     // pour mourir sans un mot à la quatrième.
-    if (mot === 'in' && peek(1).type === T.IDENT && !motReserve('in') && !libCtx.portees.has('in')) {
+    // `in` EST un mot de la grammaire (schéma de syntaxe) : c'est pour cela que ce refus existe et
+    // qu'il porte sa réécriture. Ce qui l'éteindrait est qu'une librairie invoquée déclare `in`.
+    if (mot === 'in' && peek(1).type === T.IDENT && !libCtx.portees.has('in')) {
       throw new ParseError(`'in ${peek(1).value}' est refusé — une entrée déclare son CANAL : `
         + `'in.<canal> ${peek(1).value}'. Les canaux d'entrée sont ${[...inChannels()].join(', ')}. `
         + `Sans lui, aucun runtime n'est adressé et rien ne déclenche.`, tok);
@@ -3549,16 +3552,9 @@ function parse(tokens, opts = {}) {
           tok,
         );
       }
-      // Noms de canal PÉRIMÉS (browser/webaudio — modèle profils d'environnement supprimé
-      // 2026-07-16) : REJET fail-loud, PAS de normalisation (Romain : on supprime).
-      if (properties.transport && deprecatedTransports().has(properties.transport.key)) {
-        throw new ParseError(
-          `acteur '${actorName}' : 'out.${properties.transport.key}' est un canal PÉRIMÉ `
-          + `(modèle profils d'environnement abandonné 2026-07-16). Écris 'out.audio' `
-          + `(canal canonique : audio/midi/osc).`,
-          tok,
-        );
-      }
+      // ⛔ LA LISTE DES CANAUX PÉRIMÉS EST SORTIE avec le schéma de `core` (Romain, 2026-09-03) :
+      // un canal retiré se refuse comme un canal inventé, par la liste positive ci-dessous
+      // (décision du 2026-08-15, « un mot sorti se refuse comme un mot inventé »).
       // LISTE POSITIVE FERMÉE de sortie (décision Romain 2026-08-04, catalogue unifié
       // `lib/core.json` schema.channels) : un canal qui ne porte pas la direction `out` est
       // REFUSÉ, et le refus NOMME la direction — ex. 'out.keyboard' répond « keyboard n'est
@@ -3702,9 +3698,9 @@ function parse(tokens, opts = {}) {
     // REJET fail-loud. Couvre les périmés browser/webaudio (hint dédié), l'ancien sucre ':sc'
     // (= transport+eval sc, ABOLI par l'addendum), :video, :foo…
     if (name === 'alphabet' && subkey && runtime && !outChannels().has(runtime)) {
-      const hint = deprecatedTransports().has(runtime)
-        ? ` '${runtime}' est un canal PÉRIMÉ (modèle profils d'environnement abandonné 2026-07-16) — écris 'alphabet.${subkey}:audio'.`
-        : runtime === 'sc'
+      // Un canal sorti se refuse comme un mot inventé (décision du 2026-08-15) : la liste des
+      // transports périmés est partie avec le schéma de `core` (2026-09-03).
+      const hint = runtime === 'sc'
           ? ` L'ancien sucre ':sc' (= transport+eval sc) est ABOLI — un eval se déclare sur un actor ('eval.<X>') ; le raccord de l'acteur implicite ne nomme qu'un canal.`
           : '';
       throw new ParseError(
@@ -4300,7 +4296,7 @@ function parse(tokens, opts = {}) {
           // `scale.raga_bhairav` se déclare bien en tête. Ma première écriture lui donnait le
           // message du réglage et lui retirait le sien. Un mot peut être les deux ; ce qui décide
           // est qu'il soit DÉCLARABLE, et la donnée le dit par `catalogAxes`.
-          const axes = new Set((leSchema() || {}).catalogAxes || []);
+          const axes = catalogAxisKeys();
           const porteesDuMot = libCtx.portees.get(dirNom) || null;
           if (porteesDuMot && !porteesDuMot.includes('scene') && !axes.has(dirNom)) {
             const PLACE = { subgrammar: 'en tête de sous-grammaire, dans la parenthèse du mode '

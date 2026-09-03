@@ -24,6 +24,7 @@
 // la bible n'a jamais écrit que `homomorphism.<table>`. Les tables ont rejoint
 // `lib/homomorphism.json` (clé `tables`), `lib/transcription.json` est SUPPRIMÉ, et les 13 scènes
 // de l'écosystème qui écrivaient l'ancien mot sont migrées. Ce garde suit le mot vivant.
+import { canaux, clesDActeur, axesDeCatalogue } from '../src/transpiler/index-des-objets.js';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
 import { CHAMPS_DE_FICHIER } from '../src/transpiler/libs-champs.js';
@@ -46,7 +47,7 @@ const compile = (directive) => {
 // ─── 1. SOCLE — les librairies sans catalogue existent et portent des entrées ────────────────
 // Piloté par la DONNÉE : le jour où une librairie sans catalogue s'ajoute, elle est couverte sans
 // qu'on touche ce fichier. Une liste écrite à la main ne garderait que les trois du ticket.
-const CATALOGUES = new Set(LIBS.core?.schema?.catalogAxes || []);
+const CATALOGUES = new Set(axesDeCatalogue());
 // ⚠️ CRITÈRE MIGRÉ le 2026-08-10 : `lib.domain` (retiré, remplacé par `resolvedBy` — mise en
 // conformité des librairies) faisait le tri entre « vraie librairie à contenu » et schéma/config.
 // `resolvedBy` joue le même rôle ici : un champ de fichier déclaré à la main, opt-in.

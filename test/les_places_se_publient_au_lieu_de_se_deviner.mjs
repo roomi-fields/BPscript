@@ -115,7 +115,10 @@ const nomsDePlaces = Object.entries(PLACES).filter(([k]) => k !== '_deduites');
 {
   const tousObjets = (v) => {
     const m = Object.keys(v).filter((k) => !k.startsWith('_'));
-    return m.length > 0 && m.every((k) => v[k] && typeof v[k] === 'object' && !Array.isArray(v[k]));
+    // Un membre TYPÉ (`{_derive:'alphabet'}`) a la forme d'une entrée sans en être une : un
+    // conteneur de places a des enfants qui portent quelque chose (Romain, 2026-09-03).
+    return m.length > 0 && m.every((k) => v[k] && typeof v[k] === 'object' && !Array.isArray(v[k]))
+      && m.some((k) => Object.keys(v[k]).some((x) => !x.startsWith('_')));
   };
   const parLaForme = new Set();
   for (const [lib, data] of Object.entries(LIBS)) {

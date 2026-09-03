@@ -20,6 +20,9 @@
 // CE QU'IL NE VÉRIFIE PAS : les listes du langage qui n'ont PAS de domicile dans la donnée. Elles
 // sont inventoriées plus bas, avec leur écart mesuré — ce garde les nomme au lieu de les couvrir.
 
+import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur
+import { SYNTAXE } from '../src/transpiler/syntaxe-data.js';
+import { canaux, clesDActeur, axesDeCatalogue } from '../src/transpiler/index-des-objets.js';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,7 +35,10 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const schema = LIBS?.core?.schema || {};
+// ⛔ LE SCHÉMA DE `core` EST DISSOUS (Romain, 2026-09-03) : les listes du langage vivent là où
+// elles décrivent quelque chose — la grammaire et la pierre tombale du crochet dans le schéma de
+// SYNTAXE, les canaux et les clés d'acteur sur leurs prototypes, les axes dérivés.
+const schema = { ...SYNTAXE, grammarWords: SYNTAXE.grammarWords?.mots, bracketRewrites: SYNTAXE.bracketRewrites?.mots, channels: Object.keys(canaux()), actorKeys: [...clesDActeur().keys()], catalogAxes: axesDeCatalogue() };
 const listes = Object.entries(schema).filter(([k, v]) => !k.startsWith('_') && Array.isArray(v) && v.length >= 2);
 
 // SOCLE — un schéma vide rendrait ce garde muet et vert.

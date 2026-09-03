@@ -29,9 +29,12 @@ for (const chan of ['audio', 'midi', 'osc']) {
 }
 
 // --- Noms PÉRIMÉS browser/webaudio → REJETÉS (pas normalisés) ---
-rejects('alphabet.western:browser\n-----\nS -> C', 'PÉRIMÉ', 'alphabet.western:browser');
-rejects('types\nactor v alphabet.western out.browser\n-----\nS -> v.C', 'PÉRIMÉ', 'out.browser');
-rejects('types\nactor v alphabet.western out.webaudio\n-----\nS -> v.C', 'PÉRIMÉ', 'out.webaudio');
+// ⛔ UN CANAL SORTI SE REFUSE COMME UN CANAL INVENTÉ — la liste `deprecatedTransports` est sortie
+// avec le schéma de `core` (Romain, 2026-09-03) ; le refus est celui de la liste positive fermée,
+// et il NOMME les canaux qui existent. Décision du 2026-08-15, appliquée ici.
+rejects('alphabet.western:browser\n-----\nS -> C', 'liste positive fermée', 'alphabet.western:browser');
+rejects('types\nactor v alphabet.western out.browser\n-----\nS -> v.C', "n'est pas une sortie", 'out.browser');
+rejects('types\nactor v alphabet.western out.webaudio\n-----\nS -> v.C', "n'est pas une sortie", 'out.webaudio');
 
 // --- LISTE POSITIVE FERMÉE (addendum ratifié Romain 2026-07-16 : « on n'autorise que les 3
 // qu'on connaît ») : tout suffixe ∉ {audio, midi, osc} → rejet, sur LES DEUX voies. ':sc'

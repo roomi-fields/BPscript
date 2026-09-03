@@ -61,12 +61,11 @@ for (const mot of ['note', 'channel']) {
 // Romain). Si elles revenaient dans `core`, les deux déclarations coexisteraient sans que rien ne
 // rougisse — l'union du registre les accepterait toutes les deux, et le domicile deviendrait une
 // question d'opinion. Ce volet exige le RETRAIT autant que l'ARRIVÉE.
-ok(LIBS.core.schema.addressKeys === undefined,
+ok(LIBS.core.schema === undefined,
    "0. le SOCLE ne doit plus porter de clé d'adresse — deux domiciles pour un mot, et l'union du "
    + 'registre le cacherait');
-ok(LIBS.core.schema.channelParamsScope === undefined,
-   "0. et la portée d'adresse ne doit plus vivre dans une liste unique du socle : chaque clé porte "
-   + 'la sienne');
+// Le schéma de `core` est DISSOUS depuis le 2026-09-03 : il n'y a plus de liste unique du socle,
+// et chaque clé porte sa portée chez le canal qui la déclare.
 const chezMidi = (LIBS.midi.schema || {}).addressKeys || {};
 for (const mot of ['ch', 'channel', 'device', 'note', 'port']) {
   ok(Array.isArray((chezMidi[mot] || {}).scope) && chezMidi[mot].scope.length > 0,
@@ -165,7 +164,7 @@ ok(juger('velocity', declarees), '4. (mord) un mot plausible non déclaré rougi
 
 // Le compte des vérifications EXÉCUTÉES, hors ce bilan lui-même : un garde qui refuse d'avoir
 // examiné zéro doit aussi refuser d'en avoir examiné dix-sept parce qu'une boucle s'est vidée.
-const TOTAL_ATTENDU = 31;
+const TOTAL_ATTENDU = 30;
 ok(passe + echecs.length === TOTAL_ATTENDU,
    `bilan : ${TOTAL_ATTENDU} vérifications attendues, ${passe + echecs.length} exécutées`);
 

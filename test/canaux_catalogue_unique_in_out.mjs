@@ -21,6 +21,7 @@
  * est déclaré EXPLICITEMENT sur les SIX canaux (jamais déduit d'une absence) — la forme se
  * reproduira : un canal peut exister dans l'architecture avant d'avoir sa graphie.
  */
+import { canaux, clesDActeur } from '../src/transpiler/index-des-objets.js';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
 import fs from 'node:fs';
@@ -94,7 +95,7 @@ function verifierDirection(canal, direction, channels, motDirection, graphie = '
 
 // ─── CHARGE LE CATALOGUE DEPUIS LA DONNÉE (pas une liste réécrite ici) ───────────────────────
 const core = CORE;
-const channels = core.schema.channels;
+const channels = canaux();
 
 // ─── TÉMOIN ANTI-RÉTRÉCISSEMENT : le catalogue doit couvrir les 5 canaux attendus par la tâche ─
 for (const canal of ['audio', 'midi', 'osc', 'keyboard', 'dmx', 'text']) {

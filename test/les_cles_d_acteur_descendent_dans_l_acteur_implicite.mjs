@@ -31,6 +31,7 @@
  *      contredisent REFUSENT ;
  *   D. TÉMOIN DES DEUX SENS — sans directive, la clé prend le défaut du socle et n'est pas vide.
  */
+import { clesDActeur } from '../src/transpiler/index-des-objets.js';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { loadLib } from '../src/transpiler/libs.js';
 
@@ -41,7 +42,8 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 // LA LISTE VIENT DE LA DONNÉE, JAMAIS D'ICI — `lib/core.json`, `schema.actorKeys`. Une sixième clé
 // déclarée demain est testée par ce garde sans qu'on y pense ; le socle du volet D échoue si la
 // liste maigrit.
-const CLES = (loadLib('core')?.schema?.actorKeys) || [];
+// Les clés d'un acteur sont les membres TYPÉS du prototype `actor` de `types` (Romain, 2026-09-03).
+const CLES = [...clesDActeur().keys()];
 
 const compiler = (src) => {
   try { return compileToBPxAST(src); } catch (e) { return { errors: [{ message: e.message }] }; }
@@ -70,7 +72,7 @@ const valeurDe = (props, champ) => {
 let cellules = 0;
 for (const cle of CLES) {
   const q = OU[cle];
-  ok(!!q, `A. la clé '${cle}' est déclarée dans lib/core.json mais ce garde ne sait pas où elle `
+  ok(!!q, `A. la clé '${cle}' est déclarée par le prototype d'acteur mais ce garde ne sait pas où elle `
         + `atterrit — une clé ajoutée sans son point de chute n'est pas mesurée, elle est ignorée.`);
   if (!q) continue;
   cellules++;
@@ -139,7 +141,7 @@ for (const cle of CLES) {
 
 // ── SOCLE — la matrice ne se vide pas en silence ───────────────────────────────────────────────
 ok(CLES.length >= 5 && cellules === CLES.length,
-   `SOCLE : ${cellules} clé(s) mesurée(s) sur ${CLES.length} déclarée(s) dans lib/core.json — sous `
+   `SOCLE : ${cellules} clé(s) mesurée(s) sur ${CLES.length} déclarée(s) par le prototype d'acteur — sous `
    + `cinq, ce n'est pas que le langage a maigri, c'est que le garde ne lit plus la liste.`);
 
 if (echecs.length) {

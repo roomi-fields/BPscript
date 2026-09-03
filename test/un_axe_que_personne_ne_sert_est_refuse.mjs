@@ -23,6 +23,7 @@
  * `core.schema.reservedDirectives` recense. `@out.midi` porte une sous-clé sans être une invocation
  * de librairie ; l'écrire en dur ici rouvrirait le défaut qu'on ferme.
  */
+import { canaux, clesDActeur, axesDeCatalogue, motsDeLaGrammaire, familles } from '../src/transpiler/index-des-objets.js';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
 import { CHAMPS_DE_FICHIER } from '../src/transpiler/libs-champs.js';
@@ -75,9 +76,11 @@ const compiler = (tete) => compileToBPxAST(`core\nalphabet.western\n${tete}\n---
 // ⚠️ SANS CE VOLET, un refus trop large casserait `out.midi` — une clé d'ACTEUR qui porte une
 // sous-clé sans être une invocation de librairie.
 {
-  const mots = LIBS.core?.schema?.reservedDirectives || [];
-  ok(Array.isArray(mots) && mots.length > 10,
-     `C. 'core.schema.reservedDirectives' doit vivre dans la DONNÉE — reçu ${JSON.stringify(mots).slice(0, 60)}.`);
+  // Les mots du langage vivent dans le schéma de SYNTAXE depuis la dissolution du schéma de `core`
+  // (Romain, 2026-09-03), et les mots de LIBRAIRIE sont les familles du registre.
+  const mots = [...motsDeLaGrammaire(), ...familles()];
+  ok(mots.length > 10,
+     `C. les mots du langage doivent vivre dans la DONNÉE — reçu ${JSON.stringify(mots).slice(0, 60)}.`);
   ok(mots.includes('out'),
      `C. 'out' doit être recensé parmi les mots du langage — sinon 'out.midi' tombe sous le refus.`);
 
@@ -92,9 +95,10 @@ const compiler = (tete) => compileToBPxAST(`core\nalphabet.western\n${tete}\n---
   // sans être servis par une librairie — `speed`, `alias`, `init`, `template`, `ins`, `transpose`,
   // `chromashift`, `out`. Les parcourir tous fait échouer toute liste plus courte que la donnée.
   const ALIAS_FICHIER = { alphabet: 'alphabets', tuning: 'tunings', scale: 'scales', sound: 'sounds' };
-  let epargnes = 0;
+  let epargnes = 0, examines = 0;
   for (const mot of mots) {
     if (LIBS[ALIAS_FICHIER[mot] || mot]) continue;         // servi par une librairie : autre cas
+    examines++;
     const msg = messages(compiler(`${mot}.zzz`));
     if (!msg) epargnes++;
     ok(!/aucune librairie ne sert/.test(msg),
@@ -108,8 +112,13 @@ const compiler = (tete) => compileToBPxAST(`core\nalphabet.western\n${tete}\n---
   // fermée, donc `out.zzz` porte désormais un message — et c'est le bon : il NOMME la direction,
   // jamais « aucune librairie ne sert », ce que le volet juste au-dessus vérifie mot pour mot.
   // Le seuil suit le fait ; il ne le précède pas.
-  ok(epargnes >= 4,
-     `C. ${epargnes} mots du langage épargnés seulement — sous ce seuil, le volet ne mesure plus la `
+  // ⚠️ LE TÉMOIN PORTE SUR CE QUI EST EXAMINÉ, PAS SUR CE QUI EST ÉPARGNÉ. Le seuil comptait les
+  // mots SANS message quand la liste réservée en portait quatorze ; depuis la dissolution du schéma
+  // de `core` (2026-09-03), les mots du langage sont la grammaire et les familles, et la plupart
+  // portent désormais un refus NOMMÉ — ce qui est mieux, et ferait baisser un compte d'épargnés.
+  // Ce qui doit rester vrai est que la boucle ait vu quelque chose.
+  ok(examines >= 4,
+     `C. ${examines} mots du langage examinés seulement — sous ce seuil, le volet ne mesure plus la `
      + `donnée mais un cas particulier.`);
 
   const alpha = compileToBPxAST('core\nalphabet.western\n-----\nS -> C4\n');

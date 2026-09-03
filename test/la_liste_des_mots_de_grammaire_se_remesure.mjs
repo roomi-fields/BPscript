@@ -29,6 +29,7 @@
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { readFileSync } from 'node:fs';
 import { LIBS } from '../src/transpiler/libs-data.js';
+import { SYNTAXE } from '../src/transpiler/syntaxe-data.js';
 
 let p = 0;
 const e = [];
@@ -88,8 +89,8 @@ console.log(`[mots de grammaire] ${CAS.length} candidats · ${structurels.length
 
 // ── B. LA DONNÉE PUBLIÉE DIT EXACTEMENT CE QUE L'ÉPREUVE MESURE ──────────────────────────────
 {
-  const g = LIBS.core?.schema?.grammarWords;
-  ok(g && typeof g === 'object', 'B. `core.schema.grammarWords` doit exister dans le paquet publié');
+  const g = SYNTAXE.grammarWords;
+  ok(g && typeof g === 'object', 'B. `grammarWords` doit exister dans la porte du schéma de syntaxe');
   const publies = [...(g?.mots || [])].sort();
   const enTrop = publies.filter((m) => !structurels.includes(m));
   const manquants = structurels.filter((m) => !publies.includes(m));
@@ -106,7 +107,7 @@ console.log(`[mots de grammaire] ${CAS.length} candidats · ${structurels.length
 // ⛔ UNE LISTE SANS SA QUALITÉ SE LIT COMME UN INVENTAIRE. Atlas a nommé ce risque avant la pose :
 // un lecteur qui reçoit dix mots sans savoir que c'est un PLANCHER conclut qu'il n'y en a que dix.
 {
-  const g = LIBS.core?.schema?.grammarWords || {};
+  const g = SYNTAXE.grammarWords || {};
   ok(g.qualite === 'plancher',
     `C. la liste doit publier sa QUALITÉ — reçu ${JSON.stringify(g.qualite)}. Neuf candidats sur `
     + `dix-neuf n'ont donné aucune ligne légitime ; sans ce mot, la liste se lit comme exhaustive.`);
@@ -119,13 +120,15 @@ console.log(`[mots de grammaire] ${CAS.length} candidats · ${structurels.length
   // n'est une preuve que si le périmètre de recherche est établi »* —, elle porte sur la SOURCE au
   // lieu du bundle. Faire simplement tomber ces deux volets aurait été ajuster l'assertion à ce qui
   // sort.
-  const source = readFileSync(new URL('../lib/core.bpsl', import.meta.url), 'utf8');
-  const entete = source.slice(0, source.indexOf('def schema'));
+  // La liste a QUITTÉ `core` le 2026-09-03 (le schéma est dissous) : elle vit dans le schéma de
+  // SYNTAXE, et sa méthode en commentaire du générateur de sa porte.
+  const source = readFileSync(new URL('../src/transpiler/syntaxe-bundle.mjs', import.meta.url), 'utf8');
+  const entete = source;
   ok(/EPREUVE DE SUBSTITUTION A TROIS TEMOINS/i.test(entete),
-    `C. et sa MÉTHODE — comment la liste a été établie, en COMMENTAIRE de lib/core.bpsl. Un relevé `
+    `C. et sa MÉTHODE — comment la liste a été établie, en COMMENTAIRE de src/transpiler/syntaxe-bundle.mjs. Un relevé `
     + `sur le code rend un mélange inutilisable ; qui veut la refaire doit savoir par quoi.`);
   ok(/19 candidats/i.test(entete),
-    `C. et son PÉRIMÈTRE — combien de candidats, tirés d'où, en COMMENTAIRE de lib/core.bpsl. Une `
+    `C. et son PÉRIMÈTRE — combien de candidats, tirés d'où, en COMMENTAIRE de src/transpiler/syntaxe-bundle.mjs. Une `
     + `absence n'est une preuve que si le périmètre de recherche est établi.`);
   ok(g.methode === undefined && g.perimetre === undefined,
     `C. et ils ne sont PLUS dans la donnée publiée — une librairie dit ce que le langage porte, `
@@ -137,7 +140,7 @@ console.log(`[mots de grammaire] ${CAS.length} candidats · ${structurels.length
 // câblé »). Le taire ferait mentir la liste dans un sens ou dans l'autre : l'omettre contredirait
 // l'épreuve, le publier sans le dire ferait protéger un mot retiré. La donnée porte les deux faits.
 {
-  const g = LIBS.core?.schema?.grammarWords || {};
+  const g = SYNTAXE.grammarWords || {};
   const sortis = g.sortisDuLangage || [];
   ok(Array.isArray(sortis),
     'D. la liste doit nommer ceux de ses mots qu\'une décision a retirés, même s\'ils sont encore lus');

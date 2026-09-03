@@ -21,6 +21,7 @@
  * ⚠️ COMPILER NE SUFFIT PAS, ET C'EST LA MOITIÉ QUI COMPTE : un doublon accepté puis mal résolu
  * serait vert ici et faux à l'arrivée. Chaque cas vérifie QUELLE valeur arrive dans l'arbre.
  */
+import { canaux, clesDActeur } from '../src/transpiler/index-des-objets.js';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
 
@@ -39,7 +40,7 @@ const acteur = (corps) => {
 };
 
 // ── SOCLE — les clés viennent de la DONNÉE, jamais d'une liste écrite ici ─────────────────────
-const CLES = LIBS.core.schema.actorKeys || [];
+const CLES = [...clesDActeur().keys()];
 ok(CLES.length >= 5,
    `SOCLE : ${CLES.length} clé(s) d'acteur lues dans la donnée, 5 au moins attendues.`);
 

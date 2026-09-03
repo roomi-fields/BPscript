@@ -18,7 +18,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { describeVocabulary } from '../src/transpiler/index.js';
-import { famille, leSchema } from '../src/transpiler/index-des-objets.js';
+import { famille, axesDeCatalogue } from '../src/transpiler/index-des-objets.js';
 import { registerLib, leRegistre } from '../src/transpiler/libs.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -33,7 +33,7 @@ const nonDocumentes = (mot) => { const f = famille(mot); return f ? f.entrees.fi
   const v = describeVocabulary();
   ok(JSON.stringify(v.voices) === JSON.stringify(documentes('voice')), `1. voices = famille 'voice' documentée — reçu ${v.voices.length} / ${documentes('voice').length}`);
   ok(JSON.stringify(v.functions) === JSON.stringify(documentes('function')), `1. functions = famille 'function' documentée — reçu ${v.functions.length} / ${documentes('function').length}`);
-  const axes = (leSchema() || {}).catalogAxes || [];
+  const axes = axesDeCatalogue();
   ok(axes.length >= 5, `1. au moins cinq axes de catalogue — reçu ${axes.length}`);
   ok(JSON.stringify(Object.keys(v.components)) === JSON.stringify(axes), `1. un axe = une clé de components, dans l'ordre du schéma — reçu ${JSON.stringify(Object.keys(v.components))}`);
   let exclus = 0;

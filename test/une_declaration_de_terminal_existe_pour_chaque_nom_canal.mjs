@@ -24,6 +24,7 @@
  * ⇒ **Élaguer le champ sans porter sa propriété ailleurs aurait retiré la seule chose qui empêchait
  * la panne silencieuse, en même temps que sa cause.**
  */
+import { canaux, clesDActeur } from '../src/transpiler/index-des-objets.js';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
 const CORE = LIBS.core;
@@ -43,7 +44,7 @@ const compile = (src) => compileToBPxAST(SOCLE + src);
 // d'acteur `out.text` le refuse depuis le 2026-08-04, la déclaration de terminal l'acceptait. Une
 // liste écrite à la main gardait l'incohérence — elle se DÉRIVE désormais de la donnée, et `text`
 // devient un cas de REFUS nommé plus bas, pas un cas absent.
-const CANAUX = Object.entries(CORE.schema.channels)
+const CANAUX = Object.entries(canaux())
   .filter(([, c]) => c && c.out && c.writable).map(([n]) => n);
 console.log(`[déclaration] ${CANAUX.length} canaux de sortie ÉCRIVABLES x la forme déclarée`);
 for (const canal of CANAUX) {

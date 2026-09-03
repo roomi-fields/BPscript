@@ -45,7 +45,7 @@ const compile = (src) => compileToBPxAST('core\n' + src + '\n-----\nS -> C4 D4')
 // plate, les mots du langage qu'aucune librairie ne déclare.
 const paires = [];
 for (const [lib, data] of Object.entries(LIBS)) {
-  const rd = (data.schema && data.schema.reservedDirectives) || [];
+  const rd = [];   // le schéma de `core` est dissous (2026-09-03) : plus de liste de mots réservés
   for (const d of (Array.isArray(rd) ? rd : [])) paires.push([lib, d]);
   for (const section of Object.values(data || {})) {
     if (!section || typeof section !== 'object' || Array.isArray(section)) continue;

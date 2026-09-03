@@ -26,6 +26,7 @@
  * `(shuffle:N)` à migrer — seule la forme NUE `[shuffle]` (sans deux-points) reste, et elle n'entre
  * pas dans cette matrice (qui porte sur les paires `clé:valeur`).
  */
+import { SYNTAXE } from '../src/transpiler/syntaxe-data.js';
 import assert from 'node:assert/strict';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
@@ -34,7 +35,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const QUALIFIER_KEYS = LIBS.core?.schema?.qualifierKeys || [];
+const QUALIFIER_KEYS = SYNTAXE.bracketRewrites?.mots || [];
 // ⚠️ SOURCE DÉPLACÉE le 2026-08-10 : la section `engine` de lib/controls.json (mode/scan/weight/
 // goto/rndtime…) a rejoint lib/engine.json (mise en conformité des librairies — une clé ne vit
 // que dans UNE librairie, seule lib/engine.json a pour destinataire BPx).

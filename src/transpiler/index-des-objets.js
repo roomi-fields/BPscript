@@ -31,6 +31,8 @@
  */
 import { leRegistre, versionDuRegistre, placesDesLibrairies } from './libs.js';
 import { entreesDe, CHAMPS_DU_PAQUET, CHAMPS_DE_FICHIER } from './libs-champs.js';
+// Le schéma de SYNTAXE — ce que le langage EST, par sa propre porte (décision Romain, 2026-08-20).
+import { SYNTAXE } from './syntaxe-data.js';
 
 /** Le mot d'une famille — ce qu'on invoque. Lu dans la donnée tant que le paquet la porte. */
 function motDe(cle, lib) {
@@ -224,8 +226,76 @@ function objetUnique(nom) {
   if (o.ambigu) throw new Error(`'${nom}' est déclaré par plusieurs librairies — ${o.ambigu.join(', ')} — et le compilateur ne peut pas choisir`);
   return o.membres;
 }
-/** Le schéma structurel — les membres de l'objet `schema` en portée du registre, ou `null` sans lui. */
-export function leSchema() { return objetUnique('schema'); }
+/**
+ * ⛔ LE SCHÉMA DE `core` EST DISSOUS — arbitrage de Romain, 2026-09-03 (point 2 des cinq
+ * arbitrages) : chaque champ vit sur l'objet qu'il décrit, ou se dérive. Rien n'est en portée sans
+ * invocation, sauf la syntaxe. Les quatre lectures ci-dessous remplacent `leSchema()`.
+ */
+
+/** Les mots de la GRAMMAIRE — la syntaxe, par sa propre porte ; jamais une librairie. */
+export function motsDeLaGrammaire() {
+  const g = SYNTAXE.grammarWords;
+  return new Set(g && Array.isArray(g.mots) ? g.mots : []);
+}
+
+/**
+ * Un mot RÉSERVÉ — un mot de la GRAMMAIRE, celui qu'un auteur ne peut jamais ombrer (décision du
+ * 2026-08-21 : la grammaire, le socle, les librairies ; seule la première est inombrable). La liste
+ * `reservedDirectives` du schéma de `core` mêlait ces mots-là et des mots de LIBRAIRIE (`transpose`,
+ * `homomorphism`, `settings`…) ; ces derniers sont des familles du registre, et une famille se
+ * reconnaît par `familles()`, jamais par une liste.
+ */
+export function motReserve(nom) {
+  return motsDeLaGrammaire().has(nom);
+}
+
+/**
+ * LES AXES DE CATALOGUE — un prototype racine de `types` qui DÉCLARE la portée `scene` : ses
+ * exemplaires s'invoquent en tête de scène, `alphabet.western`, `tuning.just`, `voice.wobble`.
+ * C'est ce que la portée dit, et rien d'autre ne le dit : `temperament` a 174 entrées et ne
+ * s'invoque pas directement (elle passe par un accordage), donc il ne déclare pas cette portée.
+ * La liste `catalogAxes` du schéma de `core` est dissoute là-dedans (Romain, 2026-09-03).
+ */
+export function axesDeCatalogue() {
+  const types = index().familles.get('types');
+  if (!types) return [];
+  return types.entrees
+    .filter((e) => !e.derive && Array.isArray(e.membres.scope) && e.membres.scope.includes('scene'))
+    .map((e) => e.nom);
+}
+
+/**
+ * LES CLÉS D'UN ACTEUR sont les membres TYPÉS du prototype `actor` de `types` (`alphabet alphabet`,
+ * `destination out`…) : nom → type. Vide sans `types` au registre.
+ */
+export function clesDActeur() {
+  const o = objet('types.actor');
+  const out = new Map();
+  if (!o || o.ambigu) return out;
+  for (const [k, v] of Object.entries(o.membres || {})) {
+    if (v && typeof v === 'object' && !Array.isArray(v) && typeof v._derive === 'string') out.set(k, v._derive);
+  }
+  return out;
+}
+
+/**
+ * LES CANAUX — les exemplaires du prototype `destination`, par nom : `{ audio: {out, writable,
+ * params}, midi: {…}, … }`. La liste est FERMÉE parce que la donnée la porte. Un exemplaire se
+ * reconnaît à son TYPE EN TÊTE (`destination midi (…)`), jamais à un nom de famille : il vit dans
+ * la famille de la librairie qui le déclare.
+ */
+export function canaux() {
+  const out = {};
+  for (const o of index().objets.values()) {
+    for (const e of o) {
+      if (e.derive !== 'destination') continue;
+      const m = {};
+      for (const [k, v] of Object.entries(e.membres || {})) if (!k.startsWith('_')) m[k] = v;
+      out[e.nom] = m;
+    }
+  }
+  return out;
+}
 /**
  * Les défauts de scène — les membres de l'objet `components` (alphabet, tuning, transport, eval),
  * s'il est EN PORTÉE de la scène : sa librairie invoquée, directement ou par une autre. Sans scène,

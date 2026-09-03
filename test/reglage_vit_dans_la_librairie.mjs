@@ -18,6 +18,7 @@
  * DEUX SENS (§injection) : une clé absente de `controls.json` fait mordre le garde ; une clé
  * présente le laisse muet.
  */
+import { SYNTAXE } from '../src/transpiler/syntaxe-data.js';
 import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur (2026-09-02)
 import { universeControlNames } from '../src/transpiler/libs.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
@@ -27,7 +28,7 @@ const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 // ─── 0. Témoin anti-rétrécissement — la liste source n'est pas vide ──────────────────────────
-const qualifierKeys = LIBS.core?.schema?.qualifierKeys;
+const qualifierKeys = SYNTAXE.bracketRewrites?.mots;
 // ⛔ LE MESSAGE DIT « une liste NON VIDE » ET LE SEUIL EN GARDE SIX. Même objet que deux autres de
 // mes bancs, à deux autres seuils — 7 et 7. Trois recopies du compte du jour, jamais accordées.
 ok(Array.isArray(qualifierKeys) && qualifierKeys.length > 0,

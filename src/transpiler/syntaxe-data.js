@@ -72,6 +72,41 @@ const SYNTAXE = {
     }
    ]
   }
+ },
+ "grammarWords": {
+  "description": "Les mots avec lesquels on écrit la STRUCTURE — la grammaire, qu'un auteur ne peut jamais ombrer. Un PLANCHER : ce qui n'a pas su être établi ne compte pas comme une absence. Dissous du schéma de `core` le 2026-09-03.",
+  "qualite": "plancher",
+  "mots": [
+   "actor",
+   "core",
+   "def",
+   "in",
+   "init",
+   "mode",
+   "out",
+   "seed",
+   "terminal"
+  ]
+ },
+ "bracketRewrites": {
+  "description": "Les réglages que le CROCHET a portés et qui s'écrivent en PARENTHÈSES depuis la décision du 2026-08-02. Le compilateur les comprend lui-même : écrits entre crochets, ils sont refusés AVEC leur réécriture, au lieu de tomber sur « clé inconnue ». Une pierre tombale de graphie, donc du LANGAGE — elle a quitté le schéma de `core` avec lui le 2026-09-03.",
+  "mots": [
+   "scan",
+   "weight",
+   "on_fail",
+   "meter",
+   "rotate",
+   "legato",
+   "staccato"
+  ]
+ },
+ "actorKeyRewrites": {
+  "description": "Les mots qu'un acteur a portés comme clés et qui n'en sont plus : `sound` et `sounds` (un prototype d'objet sonore vit en librairie), `voice` (une voix s'attache au terminal). Écrits sur un acteur, ils sont refusés AVEC ce qui les remplace, au lieu de tomber dans la lecture générique d'une affectation. Une pierre tombale de graphie, donc du LANGAGE — elle a quitté le schéma de `core` avec lui le 2026-09-03.",
+  "mots": [
+   "sound",
+   "sounds",
+   "voice"
+  ]
  }
 };
 

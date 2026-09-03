@@ -21,6 +21,8 @@
 import { chargerLesLibrairies, placesDesLibrairies } from './librairies.js';
 import { sourcesDeLibrairie } from './sources.js';
 import { CHAMPS_DE_FICHIER } from './libs-champs.js';
+// Le schéma de SYNTAXE — les mots de la grammaire, en portée sans invocation (Romain, 2026-09-03).
+import { SYNTAXE } from './syntaxe-data.js';
 
 /**
  * LE REGISTRE — ce que le compilateur sait des librairies, CONSTRUIT DEPUIS LEURS SOURCES.
@@ -535,35 +537,29 @@ function loadLibsFromDirectives(directives) {
     valueRegistryErrors: [],  // collisions de noms (réservés/contrôles) — remontées à l'émission
   };
 
-  // SOCLE core + SCHÉMA du langage — chargés en DONNÉE, plus aucune liste en dur (Romain
-  // 2026-07-05, prépare user libraries + partage du vocabulaire à Kanopi). core.schema
-  // déclare : `reservedDirectives` (mots de directive du langage, non-valeurs), `catalogAxes`
-  // (axes dont les valeurs sont des entrées de catalogue). core.defaults porte les
-  // valeurs/composants par défaut (cascade). Les CLÉS D'ADRESSE ont quitté le socle le
-  // 2026-08-15 : elles vivent chez le canal qui les porte, et se lisent en union du registre.
+  // SOCLE core — chargé en DONNÉE. `core.defaults` porte les valeurs/composants par défaut (la
+  // cascade). ⛔ LE SCHÉMA DE `core` EST DISSOUS (Romain, 2026-09-03) : les mots de la grammaire
+  // viennent du schéma de SYNTAXE, les clés de crochet sont une portée `bracket` sur chaque
+  // contrôle, les axes de catalogue se dérivent à la porte des objets, les canaux sont les entrées
+  // de `destination`, les clés d'acteur les membres typés d'`actor`.
   const coreLib = loadJsonFile('core') || {};
-  const schema = coreLib.schema || {};
-  // ⚠️ `reservedDirectives` N'A PLUS QU'UNE FORME : la liste plate de `core` — les mots du langage
-  // qu'aucune librairie ne déclare. La forme OBJET `{nom: {description, scope}}` qu'`engine` a
-  // portée du 2026-08-10 au 2026-09-02 est sortie avec sa table : chaque mot y est désormais un
-  // `control` qui déclare sa portée (Romain, 2026-09-02 : « le rangement ne type pas »).
-  const nomsReserves = (rd) => (Array.isArray(rd) ? rd : []);
   // ⛔ CE QUE LA SCÈNE ACCEPTE EST CE QU'ELLE INVOQUE — principe 1, Romain 2026-09-02 : l'invocation
   // met en portée ce qu'une librairie déclare, et rien d'autre n'est en portée. Les mots de tête,
   // les clés d'adresse et les portées se relèvent sur les librairies INVOQUÉES, chaîne `apporte`
   // comprise — plus bas, une fois la chaîne résolue. Cette ligne portait une UNION sur tout le
   // registre (« toujours résolues, quelle que soit l'invocation ») : c'est elle qui laissait
   // `tempo:120` passer en tête sans `time` ni `core`, et `ch:5` sans `midi`.
-  // Seuls les MOTS DU LANGAGE — la liste plate du schéma, qu'aucune librairie ne déclare — sont
-  // en portée sans invocation.
-  ctx.reservedDirectiveNames = new Set(nomsReserves(schema.reservedDirectives));
+  // Seuls les MOTS DE LA GRAMMAIRE — la syntaxe, qu'aucune librairie ne déclare — sont en portée
+  // sans invocation.
+  const grammaire = SYNTAXE.grammarWords;
+  ctx.reservedDirectiveNames = new Set(grammaire && Array.isArray(grammaire.mots) ? grammaire.mots : []);
   ctx.addressKeys = new Set();
   ctx.portees = new Map();   // mot → portées déclarées, sur les librairies invoquées
-  // Clés réservées de `[]` (docs/spec/LANGUAGE.md §« Clés reservees de [] ») : elles ne sont
-  // pas des contrôles de librairie, le compilateur les comprend lui-même. Toute autre clé
-  // dans `[]` est une erreur de compilation (ibid.) — cf. checkQualifierKey() du parser.
-  ctx.qualifierKeys = new Set(schema.qualifierKeys || []);
-  ctx.catalogAxes = Array.isArray(schema.catalogAxes) ? schema.catalogAxes.slice() : [];
+  // Les réglages que le CROCHET a portés et qui s'écrivent en parenthèses : le compilateur les
+  // comprend lui-même et les refuse AVEC leur réécriture. Pierre tombale de graphie, donc du
+  // LANGAGE — elle vit dans le schéma de syntaxe depuis la dissolution du schéma de `core`.
+  const tombale = SYNTAXE.bracketRewrites;
+  ctx.qualifierKeys = new Set(tombale && Array.isArray(tombale.mots) ? tombale.mots : []);
   ctx.defaultComponents = (coreLib.defaults && coreLib.defaults.components) || {};
 
   const mergeValueRegistry = (file, axis) => {

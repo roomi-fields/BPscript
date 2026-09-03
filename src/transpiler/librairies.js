@@ -345,9 +345,14 @@ export function chargerLesLibrairies(sources, compiler, registerLib) {
  * @param {object} registre  le registre, tel que `leRegistre()` le rend
  */
 export function placesDesLibrairies(registre) {
+  // ⚠️ UN MEMBRE TYPÉ N'EST PAS UNE ENTRÉE — `def actor (alphabet alphabet, …)` publie
+  // `{alphabet: {_derive:'alphabet'}, …}`, qui a la FORME d'un conteneur d'entrées. Un exemplaire
+  // vide ne porte que sa trace de dérivation : un conteneur de places a des enfants qui portent
+  // quelque chose (Romain, 2026-09-03, « le type en tête »).
   const tousObjets = (v) => {
     const m = Object.keys(v).filter((k) => !k.startsWith('_'));
-    return m.length > 0 && m.every((k) => v[k] && typeof v[k] === 'object' && !Array.isArray(v[k]));
+    return m.length > 0 && m.every((k) => v[k] && typeof v[k] === 'object' && !Array.isArray(v[k]))
+      && m.some((k) => Object.keys(v[k]).some((x) => !x.startsWith('_')));
   };
   const PLACES = {};
   const deduites = [];

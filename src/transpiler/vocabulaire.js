@@ -32,7 +32,7 @@
  *   syntaxWords: { [word:string]: {kind, description?, syntax?} }
  * }}
  */
-import { famille, leSchema } from './index-des-objets.js';
+import { famille, axesDeCatalogue } from './index-des-objets.js';
 import { loadLibsFromDirectives, leRegistre } from './libs.js';
 // ⛔ LE SCHÉMA DE SYNTAXE SE LIT PAR SA PROPRE PORTE — il a quitté `lib/` le 2026-08-21 (décision
 // Romain du 2026-08-20) : ce n'est pas une librairie, il porte ce que le LANGAGE EST, et sa porte
@@ -62,7 +62,7 @@ export function describeVocabulary(directives = []) {
   const ctx = loadLibsFromDirectives(allDirs);
   // Un axe de catalogue est une famille : ses entrées sont ce que la scène peut nommer après le point.
   const components = {};
-  for (const axis of ((leSchema() || {}).catalogAxes || [])) components[axis] = nomsDe(axis);
+  for (const axis of axesDeCatalogue()) components[axis] = nomsDe(axis);
   return {
     voices: nomsDe('voice'),
     keywords: [...ctx.reservedDirectiveNames],

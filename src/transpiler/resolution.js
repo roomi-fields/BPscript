@@ -54,7 +54,7 @@ import { sortieHeritee, alphabetHerite, octavesHerite, tuningHerite, evalHerite 
   from './actorResolver.js';
 import { parse, ParseError } from './parser.js';
 import { LIBS } from './libs-data.js';
-import { leSchema, lesDefauts, motsInvoques, familles } from './index-des-objets.js';
+import { lesDefauts, motsInvoques, familles, canaux, clesDActeur, motReserve } from './index-des-objets.js';
 import { universeControlNames, resolveActorAlphabet, nomsDeTerminaux, loadLib, leRegistre, versionDuRegistre, librairiesQuiDeclarent } from './libs.js';
 import { expandAlphabetTerminals } from './actorResolver.js';
 import { resolveActorAlphabetSource } from './libs.js';
@@ -659,7 +659,7 @@ const isCtxWildcardName = (s) => s === '?' || CTX_METAVAR_RE.test(s);
  * faute de terminal.
  */
 export function canalFautif(canal) {
-  const cat = (leSchema() || {}).channels || {};
+  const cat = canaux();
   const c = cat[canal];
   if (!c) return `le canal '${canal}' n'existe pas — les canaux sont ${Object.keys(cat).join(', ')}. `
     + `La liste est FERMÉE.`;
@@ -1586,7 +1586,7 @@ export function refuserAttenteNonDeclaree(ast) {
   // mot RETIRÉ du langage, dont la légende parle encore de direction. On aurait exempté une racine
   // morte. Le catalogue, lui, ne décrit que ce qui existe.
   const directions = new Set();
-  for (const canal of Object.values((leSchema() || {}).channels || {})) {
+  for (const canal of Object.values(canaux())) {
     if (!canal || typeof canal !== 'object') continue;
     for (const [cle, valeur] of Object.entries(canal)) {
       if (typeof valeur === 'boolean' && valeur === true && cle !== 'writable') directions.add(cle);
@@ -2226,7 +2226,7 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
   // LE CANAL D'UNE RÉALISATION EST LE NOM DE SA LIBRAIRIE, quand ce nom est un canal déclaré
   // (`midi.volume` → canal `midi`). Aucun nom n'est écrit ici : le catalogue des canaux et les
   // liens de réalisation sont tous deux de la donnée.
-  const canauxDeclares = new Set(Object.keys((leSchema() || {}).channels || {}));
+  const canauxDeclares = new Set(Object.keys(canaux()));
   const realisationsPar = {};      // nom nu → Set des canaux qui le réalisent
   for (const [face, reals] of Object.entries(libCtx.implementations || {})) {
     const nom = face.slice(face.indexOf('.') + 1);
@@ -2558,7 +2558,8 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
   const motsDeclares = () => new Set(
     Object.values(LIBS).map((l) => l && typeof l === 'object' ? l.resolves : null).filter(Boolean));
   const libExiste = (nom) => motsDeclares().has(nom);
-  const motsDuLangage = new Set((leSchema() || {}).reservedDirectives || []);
+  // Un mot réservé : la grammaire, ou le mot d'une famille du registre (le schéma est dissous).
+  const motsDuLangage = { has: (nom) => motReserve(nom) };
   // ⛔ LA TÊTE NUE ACCEPTAIT ENCORE LE NOM DE FICHIER, ET C'ÉTAIT LA DERNIÈRE BRÈCHE.
   //
   // Ce juge écartait les directives SANS sous-clé — `if (!d.subkey) continue` — donc `alphabets` seul
@@ -2833,10 +2834,10 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
   // de SORTIE se reconnaît à ce qu'elle est déclarée clé d'acteur (`schema.actorKeys`) et qu'elle
   // nomme une direction que les canaux portent (`schema.channels`) — deux listes de la donnée qui
   // se croisent. Ajouter une clé au langage se fait donc en librairie, sans une ligne de code.
-  const canaux = (leSchema() || {}).channels || {};
-  const directionsDeCanal = new Set(Object.values(canaux)
+  const lesCanaux = canaux();
+  const directionsDeCanal = new Set(Object.values(lesCanaux)
     .flatMap((c) => Object.entries(c || {}).filter(([, v]) => typeof v === 'boolean').map(([k]) => k)));
-  const clesDeSortie = new Set(((leSchema() || {}).actorKeys || [])
+  const clesDeSortie = new Set([...clesDActeur().keys()]
     .filter((k) => directionsDeCanal.has(k) && !catalogAxes.includes(k)));
   for (const def of ast.defs || []) {
     if (!def || def.kind !== 'terminal' || !def.keys) continue;

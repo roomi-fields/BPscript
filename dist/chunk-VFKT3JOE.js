@@ -1,16 +1,18 @@
 import {
   ParseError,
   brancherLeCompilateur,
+  canaux,
+  clesDActeur,
   describeVocabulary,
   famille,
   familles,
   groupeDUnicite,
   leRegistre,
-  leSchema,
   lesDefauts,
   librairiesQuiDeclarent,
   loadLib,
   loadLibsFromDirectives,
+  motReserve,
   motsInvoques,
   nomsDeTerminaux,
   objet,
@@ -19,14 +21,14 @@ import {
   resolveActorAlphabetSource,
   universeControlNames,
   versionDuRegistre
-} from "./chunk-FWUF5RGI.js";
+} from "./chunk-53OB3KTI.js";
 import {
   LexError,
   tokenize
 } from "./chunk-3Y64WDZ4.js";
 import {
   LIBS
-} from "./chunk-OJSEV4Y3.js";
+} from "./chunk-ELSLFDTP.js";
 
 // src/transpiler/actorResolver.js
 function expandAlphabetTerminals(alphabetLib, octavesOverride) {
@@ -601,7 +603,7 @@ var INLINE_FLIP_PALIER4 = true;
 var CTX_METAVAR_RE = /^\?\d+$/;
 var isCtxWildcardName = (s) => s === "?" || CTX_METAVAR_RE.test(s);
 function canalFautif(canal) {
-  const cat = (leSchema() || {}).channels || {};
+  const cat = canaux();
   const c = cat[canal];
   if (!c) return `le canal '${canal}' n'existe pas \u2014 les canaux sont ${Object.keys(cat).join(", ")}. La liste est FERM\xC9E.`;
   if (!c.out) return `'${canal}' n'est pas une sortie \u2014 un terminal sonne, il ne se lit pas. Les canaux de sortie sont ${Object.keys(cat).filter((k) => cat[k].out).join(", ")}.`;
@@ -991,7 +993,7 @@ function refuserAttenteNonDeclaree(ast) {
   for (const d of ast.declarations || []) if (d && d.name) connus.add(d.name);
   for (const a of ast.actors || []) if (a && a.name) connus.add(a.name);
   const directions = /* @__PURE__ */ new Set();
-  for (const canal of Object.values((leSchema() || {}).channels || {})) {
+  for (const canal of Object.values(canaux())) {
     if (!canal || typeof canal !== "object") continue;
     for (const [cle, valeur] of Object.entries(canal)) {
       if (typeof valeur === "boolean" && valeur === true && cle !== "writable") directions.add(cle);
@@ -1282,7 +1284,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
       col
     });
   };
-  const canauxDeclares = new Set(Object.keys((leSchema() || {}).channels || {}));
+  const canauxDeclares = new Set(Object.keys(canaux()));
   const realisationsPar = {};
   for (const [face, reals] of Object.entries(libCtx.implementations || {})) {
     const nom = face.slice(face.indexOf(".") + 1);
@@ -1442,7 +1444,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
     Object.values(LIBS).map((l) => l && typeof l === "object" ? l.resolves : null).filter(Boolean)
   );
   const libExiste = (nom) => motsDeclares().has(nom);
-  const motsDuLangage = new Set((leSchema() || {}).reservedDirectives || []);
+  const motsDuLangage = { has: (nom) => motReserve(nom) };
   for (const d of ast.directives || []) {
     if (!d || !d.name) continue;
     if (!d.subkey) {
@@ -1559,9 +1561,9 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
     const props = actor.properties || {};
     for (const axis of catalogAxes) if (props[axis]) checkComponent(axis, props[axis], actor.line);
   }
-  const canaux = (leSchema() || {}).channels || {};
-  const directionsDeCanal = new Set(Object.values(canaux).flatMap((c) => Object.entries(c || {}).filter(([, v]) => typeof v === "boolean").map(([k]) => k)));
-  const clesDeSortie = new Set(((leSchema() || {}).actorKeys || []).filter((k) => directionsDeCanal.has(k) && !catalogAxes.includes(k)));
+  const lesCanaux = canaux();
+  const directionsDeCanal = new Set(Object.values(lesCanaux).flatMap((c) => Object.entries(c || {}).filter(([, v]) => typeof v === "boolean").map(([k]) => k)));
+  const clesDeSortie = new Set([...clesDActeur().keys()].filter((k) => directionsDeCanal.has(k) && !catalogAxes.includes(k)));
   for (const def of ast.defs || []) {
     if (!def || def.kind !== "terminal" || !def.keys) continue;
     for (const [axe, ref] of Object.entries(def.keys)) {

@@ -18,6 +18,7 @@
  *  3. AUCUNE TABLE PAR DÉFAUT — sans table on écrit des adresses nues, et c'est EXPLICITE. Une
  *     identité implicite rendrait indistinguables « je n'ai pas de table » et « ma table ne fait rien ».
  */
+import { canaux, clesDActeur, axesDeCatalogue } from '../src/transpiler/index-des-objets.js';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 // L'étage de résolution — le module INTERNE, jamais la porte publiée : la surface expose le verdict,
 // pas les étages. Ce banc vit dans le dépôt, donc il y a accès.
@@ -55,7 +56,7 @@ const resoudre = (corps) => {
 // ─── 1. LA LISTE DES CANAUX D'ENTRÉE EST FERMÉE, ET DISTINCTE DE CELLE DES SORTIES ───────────
 // Les deux listes vivent désormais dans UN SEUL catalogue (schema.channels, décision 2026-08-04) :
 // chaque canal porte les directions qu'il autorise, dérivées ici comme avant la fusion.
-const CHANNELS = LIBS.core?.schema?.channels || {};
+const CHANNELS = canaux();
 const ENTREE = Object.keys(CHANNELS).filter((c) => CHANNELS[c]?.in);
 const SORTIE = Object.keys(CHANNELS).filter((c) => CHANNELS[c]?.out);
 ok(ENTREE.length === 3, `1. trois canaux d'entrée attendus (décision 2026-07-26) — reçu ${JSON.stringify(ENTREE)}`);

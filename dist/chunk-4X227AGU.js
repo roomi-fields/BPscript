@@ -69,6 +69,41 @@ var SYNTAXE = {
         }
       ]
     }
+  },
+  "grammarWords": {
+    "description": "Les mots avec lesquels on \xE9crit la STRUCTURE \u2014 la grammaire, qu'un auteur ne peut jamais ombrer. Un PLANCHER : ce qui n'a pas su \xEAtre \xE9tabli ne compte pas comme une absence. Dissous du sch\xE9ma de `core` le 2026-09-03.",
+    "qualite": "plancher",
+    "mots": [
+      "actor",
+      "core",
+      "def",
+      "in",
+      "init",
+      "mode",
+      "out",
+      "seed",
+      "terminal"
+    ]
+  },
+  "bracketRewrites": {
+    "description": "Les r\xE9glages que le CROCHET a port\xE9s et qui s'\xE9crivent en PARENTH\xC8SES depuis la d\xE9cision du 2026-08-02. Le compilateur les comprend lui-m\xEAme : \xE9crits entre crochets, ils sont refus\xE9s AVEC leur r\xE9\xE9criture, au lieu de tomber sur \xAB cl\xE9 inconnue \xBB. Une pierre tombale de graphie, donc du LANGAGE \u2014 elle a quitt\xE9 le sch\xE9ma de `core` avec lui le 2026-09-03.",
+    "mots": [
+      "scan",
+      "weight",
+      "on_fail",
+      "meter",
+      "rotate",
+      "legato",
+      "staccato"
+    ]
+  },
+  "actorKeyRewrites": {
+    "description": "Les mots qu'un acteur a port\xE9s comme cl\xE9s et qui n'en sont plus : `sound` et `sounds` (un prototype d'objet sonore vit en librairie), `voice` (une voix s'attache au terminal). \xC9crits sur un acteur, ils sont refus\xE9s AVEC ce qui les remplace, au lieu de tomber dans la lecture g\xE9n\xE9rique d'une affectation. Une pierre tombale de graphie, donc du LANGAGE \u2014 elle a quitt\xE9 le sch\xE9ma de `core` avec lui le 2026-09-03.",
+    "mots": [
+      "sound",
+      "sounds",
+      "voice"
+    ]
   }
 };
 
