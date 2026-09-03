@@ -213,10 +213,29 @@ function tokenize(source, opts = {}) {
       continue;
     }
     if (ch === "`") {
-      advance();
+      const ouvert = { line, col };
+      let n = 0;
+      while (peek() === "`") {
+        advance();
+        n++;
+      }
+      const cloture = "`".repeat(n);
       let code = "";
-      while (i < source.length && peek() !== "`") code += advance();
-      if (i < source.length) advance();
+      for (; ; ) {
+        if (i >= source.length) {
+          throw new LexError(
+            `A code block opened with ${n} backtick${n > 1 ? "s" : ""} at line ${ouvert.line}, column ${ouvert.col} is never closed \u2014 it swallows everything that follows. Close it with the same run of ${n} backtick${n > 1 ? "s" : ""}.`,
+            ouvert.line,
+            ouvert.col
+          );
+        }
+        if (peek() === "`" && source.startsWith(cloture, i) && source[i + n] !== "`") {
+          i += n;
+          col += n;
+          break;
+        }
+        code += advance();
+      }
       emit(T.BACKTICK, code);
       continue;
     }

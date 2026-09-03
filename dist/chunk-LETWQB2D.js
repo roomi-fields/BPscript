@@ -22,14 +22,14 @@ import {
   resolveActorAlphabetSource,
   universeControlNames,
   versionDuRegistre
-} from "./chunk-BKN62DXB.js";
+} from "./chunk-SV4VLYDK.js";
 import {
   LexError,
   tokenize
-} from "./chunk-3Y64WDZ4.js";
+} from "./chunk-HYO3M635.js";
 import {
   LIBS
-} from "./chunk-JDDB7MPT.js";
+} from "./chunk-BPWJHLKE.js";
 
 // src/transpiler/actorResolver.js
 function expandAlphabetTerminals(alphabetLib, octavesOverride) {
@@ -220,9 +220,9 @@ function verifierActeursReferences(ast, errors) {
       if (!el || typeof el !== "object") continue;
       if (el.actor && !declares.has(el.actor) && !vus.has(el.actor)) {
         vus.add(el.actor);
-        const connus = declares.size ? `Acteurs d\xE9clar\xE9s : ${[...declares].join(", ")}.` : "Cette sc\xE8ne ne d\xE9clare aucun acteur.";
+        const connus = declares.size ? `Declared actors: ${[...declares].join(", ")}.` : "This scene declares no actor.";
         errors.push({
-          message: `Acteur inconnu '${el.actor}' dans '${el.actor}.${el.name}' \u2014 un renvoi point\xE9 doit nommer un acteur d\xE9clar\xE9 par actor. ${connus}`,
+          message: `unknown actor '${el.actor}' in '${el.actor}.${el.name}' \u2014 a dotted reference must name an actor declared by actor. ${connus}`,
           line: el.line
         });
       }
@@ -370,7 +370,7 @@ function refuserEsclaveSansMaitre(ast) {
     if (maitres.has(e.name) || vus.has(e.name)) continue;
     vus.add(e.name);
     erreurs.push({
-      message: `'&${e.name}' rejoue un gabarit que rien ne capture \u2014 aucun '$${e.name}' dans cette sc\xE8ne. Le nom porte l'appariement entre le ma\xEEtre et l'esclave : sans ma\xEEtre, le rejeu n'a pas de choix \xE0 r\xE9p\xE9ter. \xC9crire '$${e.name}' l\xE0 o\xF9 le motif se capture.`,
+      message: `'&${e.name}' replays a template that nothing captures \u2014 no '$${e.name}' in this scene. The name is what pairs the master with the slave: with no master, the replay has no choice to repeat. Write '$${e.name}' where the pattern is captured.`,
       line: e.line
     });
   }
@@ -415,7 +415,7 @@ function applyDefaultActor(ast) {
   if ((ast.actors || []).length > 0) {
     if (alphaBinding) {
       errors.push({
-        message: `chevauchement d'acteurs : un binding de sortie sur l'alphabet (alphabet.${alphaBinding.subkey}:${alphaBinding.runtime}) d\xE9signe un acteur implicite, incompatible avec un 'actor' explicite \u2014 choisis l'un OU l'autre`,
+        message: `overlapping actors: an output binding on the alphabet (alphabet.${alphaBinding.subkey}:${alphaBinding.runtime}) names an implicit actor, which cannot coexist with an explicit 'actor' \u2014 keep one OR the other`,
         line: alphaBinding.line || 0
       });
     }
@@ -424,7 +424,7 @@ function applyDefaultActor(ast) {
   const sortie = sortieHeritee(ast);
   if (sortie.conflit) {
     errors.push({
-      message: `deux sorties pour la m\xEAme sc\xE8ne : 'out.${sortie.conflit.ecrite}' et le raccord 'alphabet.${sortie.conflit.alphabet}:${sortie.conflit.raccord}' d\xE9signent des canaux diff\xE9rents \u2014 les deux \xE9critures disent la M\xCAME chose, il faut n'en garder qu'une`,
+      message: `two outputs for the same scene: 'out.${sortie.conflit.ecrite}' and the binding 'alphabet.${sortie.conflit.alphabet}:${sortie.conflit.raccord}' name different channels \u2014 both spellings say the SAME thing, keep only one`,
       line: sortie.conflit.line
     });
   }
@@ -606,9 +606,9 @@ var isCtxWildcardName = (s) => s === "?" || CTX_METAVAR_RE.test(s);
 function canalFautif(canal) {
   const cat = canaux();
   const c = cat[canal];
-  if (!c) return `le canal '${canal}' n'existe pas \u2014 les canaux sont ${Object.keys(cat).join(", ")}. La liste est FERM\xC9E.`;
-  if (!c.out) return `'${canal}' n'est pas une sortie \u2014 un terminal sonne, il ne se lit pas. Les canaux de sortie sont ${Object.keys(cat).filter((k) => cat[k].out).join(", ")}.`;
-  if (!c.writable) return `'${canal}' est une DESTINATION de l'architecture, rout\xE9e comme les autres sorties, mais son \xC9CRITURE dans une sc\xE8ne attend encore son appareil d\xE9di\xE9.`;
+  if (!c) return `channel '${canal}' does not exist \u2014 the channels are ${Object.keys(cat).join(", ")}. The list is CLOSED.`;
+  if (!c.out) return `'${canal}' is not an output \u2014 a terminal sounds, it is not read. The output channels are ${Object.keys(cat).filter((k) => cat[k].out).join(", ")}.`;
+  if (!c.writable) return `'${canal}' is a DESTINATION of the architecture, routed like the other outputs, but WRITING it in a scene is still waiting for its dedicated device.`;
   return null;
 }
 function nomsDeclares(ast) {
@@ -650,7 +650,7 @@ function validateCallVocabulary(ast, known, declared, codeVoice, anyAlphabet) {
         seen.add(n.name);
         const auRegistre = universeControlNames().has(n.name);
         errors.push({
-          message: auRegistre ? `appel '${citer(n)}' : '${n.name}' est un contr\xF4le du registre, mais cette sc\xE8ne ne l'a pas import\xE9 \u2014 il a donc \xE9t\xE9 reclass\xE9 en TERMINAL SONNANT, c'est-\xE0-dire en note. D\xE9clarer le socle en t\xEAte de sc\xE8ne ('core')` : `appel '${citer(n)}' : '${n.name}' n'existe pas \u2014 ni contr\xF4le du registre, ni terminal des alphabets en port\xE9e, ni symbole d\xE9clar\xE9. Une fonction g\xE9n\xE9rique n'est pas du langage : chaque intention porte son nom ('[]' pour le moteur, '()' pour le runtime, en 'cl\xE9:valeur')`,
+          message: auRegistre ? `call '${citer(n)}': '${n.name}' is a control of the registry, but this scene has not invoked it \u2014 it was therefore reclassified as a SOUNDING TERMINAL, that is, a note. Invoke the base library at the top of the scene ('core')` : `call '${citer(n)}': '${n.name}' does not exist \u2014 neither a control of the registry, nor a terminal of the alphabets in scope, nor a declared symbol. A generic function is not part of the language: every intent carries its own name ('[]' for the engine, '()' for the runtime, as 'key:value')`,
           line: n.line
         });
       }
@@ -727,7 +727,7 @@ function validateTerminals(ast) {
         if (known.has(part) || declared.has(part) || seen.has(part)) continue;
         seen.add(part);
         errors.push({
-          message: `dans l'objet sonore compos\xE9 '|[\u2026]' : '${part}' n'est d\xE9clar\xE9 nulle part \u2014 absent des alphabets en port\xE9e`,
+          message: `in the compound sound object '|[\u2026]': '${part}' is declared nowhere \u2014 absent from the alphabets in scope`,
           line: el.line
         });
       }
@@ -739,7 +739,7 @@ function validateTerminals(ast) {
       const ligne = (ast.directives || []).find((d) => d && d.type === "Directive" && d.name === el.name && typeof d.runtime === "string");
       const cause = ligne && canalFautif(ligne.runtime);
       errors.push({
-        message: cause ? `'${el.name}:${ligne.runtime}' d\xE9clare un terminal, et ${cause} La d\xE9claration s'\xE9crit '<nom>:<canal>' \u2014 le terminal n'est pas en cause.` : !anyAlphabet ? `terminal '${el.name}' non d\xE9clar\xE9 \u2014 aucun alphabet en port\xE9e : invoquer 'core', qui d\xE9clare l'alphabet par d\xE9faut, ou d\xE9clarer un alphabet` : reste && reste !== el.name ? `terminal '${el.name}' non d\xE9clar\xE9 \u2014 segmentation bloqu\xE9e sur '${reste}', absent des alphabets en port\xE9e` : `terminal '${el.name}' non d\xE9clar\xE9 \u2014 absent des alphabets en port\xE9e`,
+        message: cause ? `'${el.name}:${ligne.runtime}' declares a terminal, and ${cause} The declaration is written '<name>:<channel>' \u2014 the terminal itself is not at fault.` : !anyAlphabet ? `terminal '${el.name}' undeclared \u2014 no alphabet in scope: invoke 'core', which declares the default alphabet, or declare an alphabet` : reste && reste !== el.name ? `terminal '${el.name}' undeclared \u2014 segmentation stopped at '${reste}', absent from the alphabets in scope` : `terminal '${el.name}' undeclared \u2014 absent from the alphabets in scope`,
         line: el.line
       });
     }
@@ -757,7 +757,7 @@ function validateTerminals(ast) {
     if (typeof s === "string" && s && s !== "*" && !codeVoice.has(s) && !known.has(s) && !declared.has(s) && !sujetsVus.has(s)) {
       sujetsVus.add(s);
       errors.push({
-        message: `sujet de r\xE9glage '${s}:\u2026' : '${s}' ne d\xE9signe aucun terminal \u2014 absent des alphabets en port\xE9e et des noms d\xE9clar\xE9s. Un sujet vise les terminaux de son nom ; '*' vise chaque terminal de la port\xE9e, et l'absence de sujet vise la port\xE9e enti\xE8re`,
+        message: `setting subject '${s}:\u2026': '${s}' names no terminal \u2014 absent from the alphabets in scope and from the declared names. A subject targets the terminals bearing its name; '*' targets every terminal in scope, and no subject targets the whole scope`,
         line: n.line
       });
     }
@@ -944,7 +944,7 @@ function annotateBackticks(ast) {
       if (!el || typeof el !== "object") continue;
       if (isBt(el) && el.payload && el.payload.interp === "auto") {
         errors.push({
-          message: `Backtick sans langage \u2014 il doit \xEAtre connu, jamais devin\xE9. Le langage vient de la place la plus proche qui le nomme : un TAG dans le bloc (\`js: \u2026\`), un ACTEUR qui qualifie le bloc par le point ('actor drums eval.<moteur>' puis \`drums.\`\u2026\`\`), une ligne 'eval.<moteur>' en t\xEAte de sc\xE8ne, ou le socle 'core' \u2014 qui porte 'js'. Aucun des quatre n'a r\xE9pondu : le catalogue 'core' n'expose pas 'defaults.components.eval'.`,
+          message: `Backtick with no language \u2014 it must be known, never guessed. The language comes from the nearest place that names it: a TAG inside the block (\`js: \u2026\`), an ACTOR qualifying the block with a dot ('actor drums eval.<engine>' then \`drums.\`\u2026\`\`), an 'eval.<engine>' line at the top of the scene, or the base library 'core' \u2014 which carries 'js'. None of the four answered: the 'core' catalog does not expose 'defaults.components.eval'.`,
           line: el.line
         });
       }
@@ -1011,7 +1011,7 @@ function refuserAttenteNonDeclaree(ast) {
     if (n.type === "Wait" && typeof n.name === "string" && !connus.has(n.name) && !directions.has(n.name) && !vus.has(n.name)) {
       vus.add(n.name);
       erreurs.push({
-        message: `'<!${n.name}' attend un signal que rien ne d\xE9clare \u2014 aucune entr\xE9e, variable, porte ni acteur de cette sc\xE8ne ne porte le nom '${n.name}'. Le d\xE9clarer : 'in.<canal> ${n.name}'. Sans d\xE9claration, une coquille fabrique une SECONDE attente que rien ne viendra satisfaire, et la d\xE9rivation s'arr\xEAte pour toujours sans un mot.`,
+        message: `'<!${n.name}' waits for a signal that nothing declares \u2014 no input, variable, gate or actor of this scene bears the name '${n.name}'. Declare it: 'in.<channel> ${n.name}'. Without a declaration, a typo builds a SECOND wait that nothing will ever satisfy, and the derivation stops forever without a word.`,
         line: n.line
       });
     }
@@ -1023,38 +1023,39 @@ function refuserNomsEnDouble(ast, libCtx) {
   const erreurs = [];
   const { terminaux } = terminauxEnPortee(ast);
   const creesParDeclaration = /* @__PURE__ */ new Map();
-  const noter = (nom, sorte, line) => {
+  const noter = (nom, cle, sorte, line) => {
     if (!nom || typeof nom !== "string") return;
     if (creesParDeclaration.has(nom)) {
       const p = creesParDeclaration.get(nom);
       erreurs.push({
-        message: `le nom '${nom}' est d\xE9j\xE0 pris : ${p.sorte} l'a d\xE9clar\xE9${p.line ? ` ligne ${p.line}` : ""}, et ${sorte} le red\xE9clare. Un nom ne d\xE9signe qu'UNE chose dans une sc\xE8ne \u2014 sinon, en le lisant dans une r\xE8gle, on ne sait plus de quoi on parle. Choisir un autre nom.`,
+        message: `the name '${nom}' is already taken: ${p.sorte} declared it${p.line ? ` on line ${p.line}` : ""}, and ${sorte} redeclares it. A name designates only ONE thing in a scene \u2014 otherwise, reading it in a rule, one no longer knows what it refers to. Choose another name.`,
         line
       });
       return;
     }
-    creesParDeclaration.set(nom, { sorte, line });
+    creesParDeclaration.set(nom, { cle, sorte, line });
     if (terminaux.has(nom)) {
       erreurs.push({
-        message: `'${nom}' est un TERMINAL de l'alphabet actif, et ${sorte} en fait un nom \u2014 une r\xE8gle qui \xE9crirait '${nom}' ne dirait plus si elle joue la note ou l'autre chose. Choisir un autre nom. Le refus tombe \xE0 la D\xC9CLARATION : le nom n'a pas besoin d'\xEAtre employ\xE9 pour que l'ambigu\xEFt\xE9 existe.`,
+        message: `'${nom}' is a TERMINAL of the active alphabet, and ${sorte} makes it a name \u2014 a rule writing '${nom}' would no longer say whether it plays the note or the other thing. Choose another name. The refusal falls at DECLARATION: the name need not be used for the ambiguity to exist.`,
         line
       });
     }
   };
-  for (const e of ast.inputs || []) noter(e?.name, "une entr\xE9e", e?.line);
+  for (const e of ast.inputs || []) noter(e?.name, "input", "an input", e?.line);
   for (const v of ast.vars || []) {
     const racine = v?.varType?.kind === "type" && v.varType.type === null;
-    const sorte = v?.varType?.kind === "flag" ? "un drapeau" : racine ? "une d\xE9finition" : "une variable de travail";
-    for (const n of v?.names || []) noter(n, sorte, v?.line);
+    const cle = v?.varType?.kind === "flag" ? "flag" : racine ? "definition" : "working-var";
+    const sorte = { flag: "a flag", definition: "a definition", "working-var": "a working variable" }[cle];
+    for (const n of v?.names || []) noter(n, cle, sorte, v?.line);
   }
-  for (const a of ast.actors || []) if (!a?.synthetic) noter(a?.name, "un acteur", a?.line);
-  for (const sc of ast.scenes || []) noter(sc?.name, "une sc\xE8ne", sc?.line);
+  for (const a of ast.actors || []) if (!a?.synthetic) noter(a?.name, "actor", "an actor", a?.line);
+  for (const sc of ast.scenes || []) noter(sc?.name, "scene", "a scene", sc?.line);
   for (const d of ast.defs || []) {
     if (d && d.type === "DefDirective" && d.kind !== "terminal") {
-      noter(d.name, "une d\xE9finition", d.line);
+      noter(d.name, "definition", "a definition", d.line);
     }
   }
-  const LEVEES = /* @__PURE__ */ new Set(["une variable de travail"]);
+  const LEVEES = /* @__PURE__ */ new Set(["working-var"]);
   const tetesVues = /* @__PURE__ */ new Set();
   for (const sg of ast.subgrammars || []) {
     for (const r of sg.rules || []) {
@@ -1065,9 +1066,9 @@ function refuserNomsEnDouble(ast, libCtx) {
         if (!nom || tetesVues.has(nom)) continue;
         tetesVues.add(nom);
         const declare = creesParDeclaration.get(nom);
-        if (declare && !LEVEES.has(declare.sorte)) {
+        if (declare && !LEVEES.has(declare.cle)) {
           erreurs.push({
-            message: `la r\xE8gle '${nom}' porte un nom d\xE9j\xE0 pris par ${declare.sorte} \u2014 en lisant '${nom}' dans une s\xE9quence, on ne sait plus de quoi on parle. Choisir un autre nom pour l'un des deux.`,
+            message: `rule '${nom}' bears a name already taken by ${declare.sorte} \u2014 reading '${nom}' in a sequence, one no longer knows what it refers to. Choose another name for one of the two.`,
             line: r.line
           });
         }
@@ -1093,27 +1094,27 @@ function refuserNomsEnDouble(ast, libCtx) {
   }
   for (const nom of drapeaux) {
     const declare = creesParDeclaration.get(nom);
-    if (declare && declare.sorte !== "un drapeau") {
+    if (declare && declare.cle !== "flag") {
       erreurs.push({
-        message: `le drapeau '${nom}' porte un nom d\xE9j\xE0 pris par ${declare.sorte}${declare.line ? ` ligne ${declare.line}` : ""} \u2014 un nom ne d\xE9signe qu'UNE chose dans une sc\xE8ne. Choisir un autre nom pour le drapeau.`
+        message: `flag '${nom}' bears a name already taken by ${declare.sorte}${declare.line ? ` on line ${declare.line}` : ""} \u2014 a name designates only ONE thing in a scene. Choose another name for the flag.`
       });
       continue;
     }
     if (tetesDeRegle.has(nom)) {
       erreurs.push({
-        message: `le drapeau '${nom}' porte le nom d'une R\xC8GLE de la grammaire${tetesDeRegle.get(nom) ? ` ligne ${tetesDeRegle.get(nom)}` : ""} \u2014 un nom ne d\xE9signe qu'UNE chose dans une sc\xE8ne. Choisir un autre nom pour le drapeau.`
+        message: `flag '${nom}' bears the name of a RULE of the grammar${tetesDeRegle.get(nom) ? ` on line ${tetesDeRegle.get(nom)}` : ""} \u2014 a name designates only ONE thing in a scene. Choose another name for the flag.`
       });
       continue;
     }
     if (terminaux.has(nom)) {
       erreurs.push({
-        message: `le drapeau '${nom}' porte le nom d'un TERMINAL de l'alphabet actif \u2014 un nom ne d\xE9signe qu'UNE chose dans une sc\xE8ne, et un drapeau ne porte qu'un nom de drapeau. Choisir un autre nom pour le drapeau.`
+        message: `flag '${nom}' bears the name of a TERMINAL of the active alphabet \u2014 a name designates only ONE thing in a scene, and a flag bears only a flag name. Choose another name for the flag.`
       });
       continue;
     }
     if (libCtx?.controlNames?.has(nom)) {
       erreurs.push({
-        message: `le drapeau '${nom}' porte le nom d'un R\xC9GLAGE du vocabulaire \u2014 le sac de drapeaux en ferait un drapeau sans un mot, et le r\xE9glage deviendrait inatteignable sous ce nom. Choisir un autre nom pour le drapeau.`
+        message: `flag '${nom}' bears the name of a SETTING of the vocabulary \u2014 the flag bag would silently turn it into a flag, and the setting would become unreachable under that name. Choose another name for the flag.`
       });
       continue;
     }
@@ -1132,15 +1133,15 @@ function applySceneValues(ast, libCtx) {
   };
   const checkDomain = (name, spec, v, line) => {
     if (Array.isArray(spec.range) && typeof v !== "number") {
-      errors.push({ message: `'${name}': '${v}' n'est pas un nombre (attendu : ${spec.range[0]}..${spec.range[1]}${spec.unit ? " " + spec.unit : ""})`, line });
+      errors.push({ message: `'${name}': '${v}' is not a number (expected: ${spec.range[0]}..${spec.range[1]}${spec.unit ? " " + spec.unit : ""})`, line });
       return false;
     }
     if (typeof v === "number" && Array.isArray(spec.range) && spec.range.length === 2 && (v < spec.range[0] || v > spec.range[1])) {
-      errors.push({ message: `'${name}': ${v} hors plage [${spec.range[0]}..${spec.range[1]}]${spec.unit ? " " + spec.unit : ""}`, line });
+      errors.push({ message: `'${name}': ${v} out of range [${spec.range[0]}..${spec.range[1]}]${spec.unit ? " " + spec.unit : ""}`, line });
       return false;
     }
     if (Array.isArray(spec.values) && !spec.values.includes(v)) {
-      errors.push({ message: `'${name}': valeur '${v}' inconnue (admises : ${spec.values.join(", ")})`, line });
+      errors.push({ message: `'${name}': unknown value '${v}' (allowed: ${spec.values.join(", ")})`, line });
       return false;
     }
     return true;
@@ -1150,7 +1151,7 @@ function applySceneValues(ast, libCtx) {
     const spec = registry[d.name];
     if (!spec) continue;
     if (d.value == null) {
-      errors.push({ message: `'${d.name}' attend une VALEUR (ex. @${d.name}:440) \u2014 pas un nom`, line: d.line });
+      errors.push({ message: `'${d.name}' expects a VALUE (e.g. @${d.name}:440) \u2014 not a name`, line: d.line });
       continue;
     }
     const valeur = versNombre(spec, d.value);
@@ -1196,7 +1197,7 @@ function applySceneValues(ast, libCtx) {
         if (propres && propres[k] !== void 0) continue;
         if (!registry[k]) {
           errors.push({
-            message: `'${axis}.${entree ?? "\u2026"}(${k}:\u2026)' : '${k}' n'est ni un param\xE8tre de '${entree ?? axis}' ni une valeur d\xE9clar\xE9e (socle @core ou librairie invoqu\xE9e)`,
+            message: `'${axis}.${entree ?? "\u2026"}(${k}:\u2026)': '${k}' is neither a parameter of '${entree ?? axis}' nor a declared value (base library @core or an invoked library)`,
             line: actor.line
           });
         }
@@ -1243,7 +1244,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
     const declarants = librairiesQuiDeclarent(cle);
     if (!declarants.length) return false;
     errors.push({
-      message: `'${cle}' n'est pas en port\xE9e : aucune librairie invoqu\xE9e ne le d\xE9clare \u2014 l'invoquer en t\xEAte (${declarants.map((l) => `'${l}'`).join(" ou ")}).`,
+      message: `'${cle}' is not in scope: no invoked library declares it \u2014 invoke it at the top (${declarants.map((l) => `'${l}'`).join(" or ")}).`,
       line,
       col
     });
@@ -1280,7 +1281,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
     vusAmbigus.add(key);
     const choix = prefixesDe(key);
     errors.push({
-      message: `'${key}' est d\xE9clar\xE9 par ${choix.length} librairies et ne peut pas s'\xE9crire NU \u2014 il ne dit pas de quel '${key}' on parle, et le destinataire du r\xE9glage en d\xE9pend. \xC9crire ${choix.map((c) => `'${c}:\u2026'`).join(" ou ")}.`,
+      message: `'${key}' is declared by ${choix.length} libraries and cannot be written BARE \u2014 it does not say which '${key}' is meant, and the recipient of the setting depends on it. Write ${choix.map((c) => `'${c}:\u2026'`).join(" or ")}.`,
       line,
       col
     });
@@ -1301,7 +1302,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
     if (orphelines.length === 0) return;
     vusSansRealisation.add(key);
     errors.push({
-      message: `'${key}' est un mot G\xC9N\xC9RIQUE : chaque sortie d\xE9clare comment elle le r\xE9alise, et ${orphelines.map((s) => `'${s}'`).join(" et ")} ne le r\xE9alise${orphelines.length > 1 ? "nt" : ""} pas. \xC9crit ici, il ne ferait rien. R\xE9alis\xE9 aujourd'hui par : ${[...canaux2].sort().map((c) => `'${c}.${key}'`).join(", ")}.`,
+      message: `'${key}' is a GENERIC word: every output declares how it implements it, and ${orphelines.map((s) => `'${s}'`).join(" and ")} do${orphelines.length > 1 ? "" : "es"} not. Written here, it would do nothing. Implemented today by: ${[...canaux2].sort().map((c) => `'${c}.${key}'`).join(", ")}.`,
       line,
       col
     });
@@ -1312,7 +1313,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
     if (typeof tag !== "string" || !tag || evaluateurs.has(tag) || tagsVus.has(tag)) return;
     tagsVus.add(tag);
     errors.push({
-      message: `'\`${tag}: \u2026\`' nomme un \xE9valuateur qui n'est pas d\xE9clar\xE9. Un tag de backtick d\xE9signe QUI ex\xE9cute le code, et la liste vit dans la librairie 'eval' : ${[...evaluateurs].sort().join(", ")}. Une coquille y cr\xE9erait un interpr\xE8te fant\xF4me, et la sc\xE8ne compilerait sans que le code parte nulle part.`,
+      message: `'\`${tag}: \u2026\`' names an evaluator that is not declared. A backtick tag says WHO runs the code, and the list lives in the 'eval' library: ${[...evaluateurs].sort().join(", ")}. A typo there would create a phantom interpreter, and the scene would compile while the code went nowhere.`,
       line,
       col
     });
@@ -1330,7 +1331,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
     }
     if (librairiesQuiDeclarent(key).length) return;
     const err = {
-      message: `attribut '(${key}${ecritNu ? "" : ":\u2026"})' inconnu \u2014 ni contr\xF4le, ni valeur de librairie, ni adresse`,
+      message: `unknown attribute '(${key}${ecritNu ? "" : ":\u2026"})' \u2014 neither a control, nor a library value, nor an address`,
       line,
       col
     };
@@ -1372,7 +1373,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
         }
         if (p.key === "mode") {
           errors.push({
-            message: `'(mode:\u2026)' n'a plus sa place dans une r\xE8gle : le mode vaut pour un BLOC et ne change pas en cours de tirage (d\xE9cision Romain 2026-08-08). L'\xE9crire 'mode:${p.value ?? "<valeur>"}' en t\xEAte de la sous-grammaire concern\xE9e \u2014 une ligne seule, avant ses r\xE8gles.`,
+            message: `'(mode:\u2026)' no longer belongs on a rule: the mode holds for a BLOCK and does not change mid-derivation. Write it 'mode:${p.value ?? "<value>"}' at the top of the sub-grammar concerned \u2014 on a line of its own, before its rules.`,
             line: p.line,
             col: p.col
           });
@@ -1392,7 +1393,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
           }
           if (permis.includes(place)) continue;
           errors.push({
-            message: `'${cle}' ne peut pas s'\xE9crire ${NOM_DE_PLACE[place]} \u2014 ` + (permis.length === 1 ? `il ne vaut QUE ${NOM_DE_PLACE[permis[0]] ?? permis[0]}` : `il vaut ${permis.slice(0, -1).map((s) => NOM_DE_PLACE[s] ?? s).join(", ")} ou ${NOM_DE_PLACE[permis[permis.length - 1]] ?? permis[permis.length - 1]}`) + `. Le d\xE9placer l\xE0, ou employer un r\xE9glage qui vaut ici.`,
+            message: `'${cle}' cannot be written ${NOM_DE_PLACE[place]} \u2014 ` + (permis.length === 1 ? `it holds ONLY ${NOM_DE_PLACE[permis[0]] ?? permis[0]}` : `it holds ${permis.slice(0, -1).map((s) => NOM_DE_PLACE[s] ?? s).join(", ")} or ${NOM_DE_PLACE[permis[permis.length - 1]] ?? permis[permis.length - 1]}`) + `. Move it there, or use a setting that holds here.`,
             line: p.line ?? node.line,
             col: p.col
           });
@@ -1415,7 +1416,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
       }
       if (permis.includes(place)) return;
       errors.push({
-        message: `'${cle}' ne peut pas s'\xE9crire ${NOM_DE_PLACE[place]} \u2014 ` + (permis.length === 1 ? `il ne vaut QUE ${NOM_DE_PLACE[permis[0]] ?? permis[0]}` : `il vaut ${permis.slice(0, -1).map((x) => NOM_DE_PLACE[x] ?? x).join(", ")} ou ${NOM_DE_PLACE[permis[permis.length - 1]] ?? permis[permis.length - 1]}`) + `. Le d\xE9placer l\xE0, ou employer un r\xE9glage qui vaut ici.`,
+        message: `'${cle}' cannot be written ${NOM_DE_PLACE[place]} \u2014 ` + (permis.length === 1 ? `it holds ONLY ${NOM_DE_PLACE[permis[0]] ?? permis[0]}` : `it holds ${permis.slice(0, -1).map((x) => NOM_DE_PLACE[x] ?? x).join(", ")} or ${NOM_DE_PLACE[permis[permis.length - 1]] ?? permis[permis.length - 1]}`) + `. Move it there, or use a setting that holds here.`,
         line
       });
     };
@@ -1439,7 +1440,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
     if (!name) return;
     if (componentExists(axis, name)) return;
     if (axis === "alphabet" && resolveActorAlphabet(name, ast.directives)) return;
-    errors.push({ message: `${axis} '${name}' introuvable dans le catalogue (r\xE9f\xE9rence inexistante)`, line });
+    errors.push({ message: `${axis} '${name}' not found in the catalog (reference does not exist)`, line });
   };
   const motsDeclares = () => new Set(
     Object.values(LIBS).map((l) => l && typeof l === "object" ? l.resolves : null).filter(Boolean)
@@ -1453,7 +1454,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
       const motNu = fichierNu && typeof fichierNu === "object" ? fichierNu.resolves : null;
       if (motNu && motNu !== d.name) {
         errors.push({
-          message: `'${d.name}' : '${d.name}' est le NOM DU FICHIER, pas le mot qui l'invoque. Ecrire '${motNu}'. Une librairie s'invoque par le mot qu'elle DECLARE (decision Romain, 2026-08-17) : le nom logique se separe du nom physique, et un fichier se renomme sans qu'aucune scene change.`,
+          message: `'${d.name}': '${d.name}' is the FILE NAME, not the word that invokes it. Write '${motNu}'. A library is invoked by the word it DECLARES: the logical name is separate from the physical one, and a file can be renamed without any scene changing.`,
           line: d.line
         });
       }
@@ -1465,7 +1466,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
         if (clesDActeur().has(d.name)) continue;
         const forme = formeDuMot(d.name);
         errors.push({
-          message: `'${d.name}.${d.subkey}' : '${d.name}' est un mot du LANGAGE, il ne se qualifie pas par un point` + (forme ? ` \u2014 il s'\xE9crit '${forme}'.` : ".") + ` Une ligne qu'aucune donn\xE9e ne sert est lue, \xE9crite dans l'arbre, et sans effet.`,
+          message: `'${d.name}.${d.subkey}': '${d.name}' is a word of the LANGUAGE, it is not qualified by a dot` + (forme ? ` \u2014 it is written '${forme}'.` : ".") + ` A line that no data serves is read, written into the tree, and has no effect.`,
           line: d.line
         });
         continue;
@@ -1473,14 +1474,14 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
       const fichier = LIBS[d.name];
       const motAEcrire = fichier && typeof fichier === "object" ? fichier.resolves : null;
       errors.push({
-        message: motAEcrire ? `'${d.name}.${d.subkey}' : '${d.name}' est le NOM DU FICHIER, pas le mot qui l'invoque. Ecrire '${motAEcrire}.${d.subkey}'. Une librairie s'invoque par le mot qu'elle DECLARE (decision Romain, 2026-08-17) : le nom logique se separe du nom physique, et un fichier se renomme sans qu'aucune scene change.` : `'${d.name}.${d.subkey}' : aucune librairie ne sert l'axe '${d.name}'. Une invocation dont l'axe n'est porte par aucune donnee ne charge RIEN, et rien ne distingue ce silence d'une scene qui n'a pas declare.`,
+        message: motAEcrire ? `'${d.name}.${d.subkey}': '${d.name}' is the FILE NAME, not the word that invokes it. Write '${motAEcrire}.${d.subkey}'. A library is invoked by the word it DECLARES: the logical name is separate from the physical one, and a file can be renamed without any scene changing.` : `'${d.name}.${d.subkey}': no library serves the axis '${d.name}'. An invocation whose axis no data carries loads NOTHING, and nothing tells that silence apart from a scene that declared nothing.`,
         line: d.line
       });
       continue;
     }
     if (loadLib(d.name, d.subkey)) continue;
     errors.push({
-      message: `'${d.name}.${d.subkey}' : l'entr\xE9e '${d.subkey}' n'existe pas dans la librairie '${d.name}'. Une invocation qui ne r\xE9sout rien est indistinguable, c\xF4t\xE9 consommateur, d'une sc\xE8ne qui n'a rien d\xE9clar\xE9 \u2014 elle ne peut donc pas \xEAtre accept\xE9e en silence.`,
+      message: `'${d.name}.${d.subkey}': entry '${d.subkey}' does not exist in library '${d.name}'. An invocation that resolves to nothing is indistinguishable, on the consumer side, from a scene that declared nothing \u2014 it therefore cannot be accepted silently.`,
       line: d.line
     });
   }
@@ -1493,7 +1494,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
       // et le message envoyait l'auteur « ajouter la table dans la librairie 'mapping' », c'est-à-dire
       // dans un fichier supprimé. Le refus est le domicile où l'auteur apprend la règle : il dit
       // désormais ce qui EST, à savoir qu'aucune librairie ne déclare de table.
-      message: `'in ${e.name} \u2026 mapping.${e.mapping}' : la table '${e.mapping}' n'est d\xE9clar\xE9e par aucune librairie charg\xE9e \u2014 aucune n'en porte aujourd'hui. Une entr\xE9e qui invoque une table inexistante croirait traduire et ne traduirait rien. \xC9crire l'entr\xE9e seule et employer des adresses nues ('<!${e.name}.60').`,
+      message: `'in ${e.name} \u2026 mapping.${e.mapping}': table '${e.mapping}' is declared by no loaded library \u2014 none carries one today. An input invoking a table that does not exist would believe it translates and would translate nothing. Write the input alone and use bare addresses ('<!${e.name}.60').`,
       line: e.line
     });
   }
@@ -1504,12 +1505,12 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
     }
     const declareAilleurs = librairiesQuiDeclarent(d.name).length > 0;
     if (d.value != null && d.value !== true && !registry.has(d.name) && !reserved.has(d.name) && !declareAilleurs) {
-      errors.push({ message: `valeur '${d.name}:\u2026' inconnue \u2014 non d\xE9clar\xE9e par une librairie charg\xE9e`, line: d.line });
+      errors.push({ message: `unknown value '${d.name}:\u2026' \u2014 not declared by any loaded library`, line: d.line });
       continue;
     }
     if (d.subkey == null && d.runtime != null && !registry.has(d.name) && !reserved.has(d.name) && !declareAilleurs) {
       errors.push({
-        message: `'${d.name}:${d.runtime}' : '${d.name}' n'est d\xE9clar\xE9 par aucune librairie charg\xE9e. Une ligne de t\xEAte qu'aucune donn\xE9e ne porte ne r\xE8gle rien \u2014 elle serait lue, \xE9crite dans l'arbre, et sans effet.`,
+        message: `'${d.name}:${d.runtime}': '${d.name}' is declared by no loaded library. A top-of-scene line that no data carries settles nothing \u2014 it would be read, written into the tree, and have no effect.`,
         line: d.line
       });
       continue;
@@ -1517,7 +1518,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
     if (d.type && d.type !== "Directive") continue;
     if (d.value == null && !d.subkey && !d.runtime && !registry.has(d.name) && !reserved.has(d.name) && !loadLib(d.name) && !declareAilleurs) {
       errors.push({
-        message: `'${d.name}' n'est d\xE9clar\xE9 par aucune librairie charg\xE9e \u2014 un mot de t\xEAte vient d'une librairie invoqu\xE9e, jamais de nulle part. Invoquer la librairie qui le porte, ou retirer la ligne.`,
+        message: `'${d.name}' is declared by no loaded library \u2014 a top-of-scene word comes from an invoked library, never from nowhere. Invoke the library that carries it, or remove the line.`,
         line: d.line
       });
     }
@@ -1544,7 +1545,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
       if (vus2.length < 2) continue;
       const mots = [...new Set(vus2.map((v) => v.mot))];
       errors.push({
-        message: `'${groupe}' est r\xE9gl\xE9 ${vus2.length} fois (${mots.map((m) => `'${m}'`).join(", ")}) \u2014 il ne se r\xE8gle qu'une fois par sc\xE8ne. ` + (mots.length > 1 ? `Ces mots r\xE8glent LA M\xCAME CHOSE : en garder un seul.` : `Retirer les occurrences en trop.`) + ` Le moteur natif refuse la grammaire enti\xE8re dans ce cas.`,
+        message: `'${groupe}' is set ${vus2.length} times (${mots.map((m) => `'${m}'`).join(", ")}) \u2014 it is set only once per scene. ` + (mots.length > 1 ? `These words set THE SAME THING: keep only one.` : `Remove the extra occurrences.`) + ` The native engine rejects the whole grammar in this case.`,
         line: vus2[vus2.length - 1].line
       });
     }
@@ -1561,7 +1562,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
     if (!alphaName || !tuningName) return;
     const ta = tuningAlphabet(tuningName);
     if (ta && ta !== alphaName) {
-      errors.push({ message: `alphabet '${alphaName}' incoh\xE9rent avec l'accordage '${tuningName}' (qui appartient \xE0 l'alphabet '${ta}') \u2014 un accordage ne se combine qu'avec son alphabet`, line: line || 0 });
+      errors.push({ message: `alphabet '${alphaName}' is inconsistent with tuning '${tuningName}' (which belongs to alphabet '${ta}') \u2014 a tuning combines only with its own alphabet`, line: line || 0 });
     }
   };
   checkCoherence(sceneComp("alphabet"), sceneComp("tuning"), 0);
@@ -1583,7 +1584,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
       }
       if (!clesDeSortie.has(axe)) continue;
       const cause = canalFautif(ref.value);
-      if (cause) errors.push({ message: `terminal '${def.name}' : ${cause}`, line: def.line });
+      if (cause) errors.push({ message: `terminal '${def.name}': ${cause}`, line: def.line });
     }
   }
   return errors;
@@ -1743,12 +1744,12 @@ var PORTEE_DU_PORTEUR = {
   TemplateSlave: "symbol"
 };
 var NOM_DE_PLACE = {
-  scene: "en t\xEAte de sc\xE8ne",
-  subgrammar: "en t\xEAte de sous-grammaire, dans la parenth\xE8se du mode (`mode:<mode>(<r\xE9glage>)`)",
-  rule: "sur une r\xE8gle",
-  group: "sur un groupe",
-  symbol: "sur un \xE9l\xE9ment",
-  flow: "dans le flux"
+  scene: "at the top of a scene",
+  subgrammar: "at the top of a sub-grammar, inside the mode parentheses (`mode:<mode>(<setting>)`)",
+  rule: "on a rule",
+  group: "on a group",
+  symbol: "on an element",
+  flow: "in the flow"
 };
 var _tablesDesPortees = /* @__PURE__ */ new Map();
 var _versionDesTables = -1;
@@ -1818,7 +1819,7 @@ function validateControls(ast, controls, qualifies = {}) {
       const v = String(p.value);
       if (!def.values.includes(v)) {
         errors.push({
-          message: `valeur '${p.value}' interdite pour le contr\xF4le '${p.key}' (autoris\xE9es : ${def.values.join(", ")})`,
+          message: `value '${p.value}' is not allowed for control '${p.key}' (allowed: ${def.values.join(", ")})`,
           ...where
         });
       }
@@ -1828,7 +1829,7 @@ function validateControls(ast, controls, qualifies = {}) {
       const [min, max] = def.range;
       if (p.value < min || p.value > max) {
         errors.push({
-          message: `valeur ${p.value} hors plage pour le contr\xF4le '${p.key}' (${min}..${max})`,
+          message: `value ${p.value} is out of range for control '${p.key}' (${min}..${max})`,
           ...where
         });
       }
