@@ -35,7 +35,7 @@ const membres = (ligne) => {
   try { r = compileToBPxAST(`${TETE}${ligne}\n-----\nS -> C4\n`); }
   catch (e) { return { erreurs: ['JETÉ : ' + String(e.message)], cles: null }; }
   const erreurs = (r.errors || []).map((e) => String(e.message ?? e));
-  // ⛔ `def f (…)` est un objet RACINE dans `vars` depuis le 2026-09-02 — `def` est le mot unique,
+  // ⛔ `def f(…)` est un objet RACINE dans `vars` depuis le 2026-09-02 — `def` est le mot unique,
   // `object` est sorti. Le sac se lit là, ou dans `defs` pour les autres corps.
   const noeud = (r.ast?.vars || []).find((d) => d.varType?.kind === 'type' && d.varType.type === null)
     || (r.ast?.defs || [])[0];
@@ -64,7 +64,7 @@ console.log('[membre-mot] un membre est un mot, et la virgule seule le sépare')
     ['ratios(1, 2, 3)', ['1', '2', '3']],              // TÉMOIN — le nombre nu ne régresse pas
     ['ratios(a, b)', ['a', 'b']],                      // TÉMOIN — le nom ne régresse pas
   ]) {
-    const r = membres(`def f (${ecrit})`);
+    const r = membres(`def f(${ecrit})`);
     ok(r.erreurs.length === 0, `A. '${ecrit}' doit compiler — ${r.erreurs[0]}`);
     ok(JSON.stringify(r.cles) === JSON.stringify(attendu),
       `A. '${ecrit}' doit rendre ${JSON.stringify(attendu)} — reçu ${JSON.stringify(r.cles)}. `
@@ -72,7 +72,7 @@ console.log('[membre-mot] un membre est un mot, et la virgule seule le sépare')
       + `doit recoller ce qui se touche, comme une valeur le fait.`);
   }
   // ⛔ ET LE TEXTE NE SE RECOLLE À RIEN : il porte son délimiteur, donc il est complet.
-  const t = membres('def f (registers("0", "1"))');
+  const t = membres('def f(registers("0", "1"))');
   ok(JSON.stringify(t.cles) === JSON.stringify(['0', '1']),
     `A. un membre TEXTE reste entier et seul — reçu ${JSON.stringify(t.cles)}`);
 }
@@ -82,10 +82,10 @@ console.log('[membre-mot] un membre est un mot, et la virgule seule le sépare')
 // revenait par la parenthèse qui existe pour la remplacer.
 {
   for (const [ecrit, reecrit] of [
-    ['def f (scope(symbol group))', 'symbol, group'],
-    ['def f (ratios(1 2 3))', '1, 2'],
-    ['def f (args(pivot factor))', 'pivot, factor'],
-    ['def f (ratios(100 c))', '100, c'],
+    ['def f(scope(symbol group))', 'symbol, group'],
+    ['def f(ratios(1 2 3))', '1, 2'],
+    ['def f(args(pivot factor))', 'pivot, factor'],
+    ['def f(ratios(100 c))', '100, c'],
   ]) {
     const r = membres(ecrit);
     ok(r.erreurs.length >= 1,
@@ -96,7 +96,7 @@ console.log('[membre-mot] un membre est un mot, et la virgule seule le sépare')
   }
   // ⛔ TÉMOIN NON NUL — la virgule, elle, sépare. Sans lui, un lecteur qui refuserait TOUTE
   // parenthèse imbriquée passerait ce volet en triomphe.
-  const v = membres('def f (scope(symbol, group))');
+  const v = membres('def f(scope(symbol, group))');
   ok(v.erreurs.length === 0 && JSON.stringify(v.cles) === JSON.stringify(['symbol', 'group']),
     `B-témoin. la virgule doit séparer — reçu ${JSON.stringify(v.cles)} · ${v.erreurs[0] || ''}`);
 }
@@ -114,22 +114,22 @@ console.log('[membre-mot] un membre est un mot, et la virgule seule le sépare')
     // ⛔ LA BARRE A QUITTÉ CETTE LISTE — décision Romain 2026-08-20 : un rapport EST un objet, donc
     // un membre. Son volet est RETOURNÉ en B-ter. Les six autres signes restent refusés : ce volet
     // garde la QUALITÉ du refus, et cette qualité vaut toujours pour eux.
-    ['def f (r(a+b))', '+'], ['def f (r(a!b))', '!'],
-    ['def f (r(a=b))', '='], ['def f (r(a*b))', '*'], ['def f (r(a<b))', '<'],
-    ['def f (r(a[b]))', '['],
+    ['def f(r(a+b))', '+'], ['def f(r(a!b))', '!'],
+    ['def f(r(a=b))', '='], ['def f(r(a*b))', '*'], ['def f(r(a<b))', '<'],
+    ['def f(r(a[b]))', '['],
   ]) {
     const r = membres(ecrit);
     ok(r.erreurs.length >= 1, `B-bis. '${ecrit}' doit être refusé`);
     const msg = r.erreurs[0] || '';
     ok(msg.includes(`'${signe}'`),
       `B-bis. le refus de '${ecrit}' doit NOMMER le signe '${signe}' — reçu : ${msg.slice(0, 130)}`);
-    ok(!/separes par une espace/.test(msg),
+    ok(!/separated by a space/.test(msg),
       `B-bis. et NE PAS accuser une espace que la source ne porte pas — '${ecrit}' n'en a aucune. `
       + `Reçu : ${msg.slice(0, 130)}`);
   }
   // ⛔ TÉMOIN NON NUL — le vrai cas d'espace garde son message, sinon la correction l'a mangé.
-  const e = membres('def f (r(a b))');
-  ok(/separes par une espace/.test(e.erreurs[0] || ''),
+  const e = membres('def f(r(a b))');
+  ok(/separated by a space/.test(e.erreurs[0] || ''),
     `B-bis-témoin. une VRAIE espace doit garder son message — reçu : ${(e.erreurs[0] || '').slice(0, 120)}`);
 }
 
@@ -138,12 +138,12 @@ console.log('[membre-mot] un membre est un mot, et la virgule seule le sépare')
 // ne l'est plus : « une énumération contient tous types d'objets, et un rapport en est un ». Le
 // RETOURNER plutôt que le supprimer garde le sujet — la barre reste éprouvée, dans l'autre sens.
 {
-  const r = membres('def f (ratios(1, 256/243, 9/8, 32/27))');
+  const r = membres('def f(ratios(1, 256/243, 9/8, 32/27))');
   ok(r.erreurs.length === 0, `B-ter. la forme de la décision doit PASSER — reçu ${JSON.stringify(r.erreurs)}`);
   ok(JSON.stringify(r.cles) === JSON.stringify(['1', '256/243', '9/8', '32/27']),
     `B-ter. et rendre QUATRE membres, pas sept — reçu ${JSON.stringify(r.cles)}`);
   // ⚠️ ET LA RÈGLE DE L'ESPACE TIENT : c'est le COLLAGE qui fait le membre, pas le signe.
-  ok(membres('def f (r(a / b))').erreurs.length >= 1,
+  ok(membres('def f(r(a / b))').erreurs.length >= 1,
     "B-ter. une barre ESPACÉE reste refusée — l'espace sépare, il ne recolle pas");
 }
 
@@ -211,7 +211,7 @@ console.log('[membre-mot] un membre est un mot, et la virgule seule le sépare')
   ok(sain.length === 0, 'D-témoin. et n\'accuser NI la liste recollée NI des lettres légitimes');
 }
 
-ok(passe >= 50, `le garde doit avoir EXAMINÉ, pas seulement tourné (${passe} assertions)`);
+ok(passe >= 50, `le garde doit avoir EXAMINÉ, pas seulement tourné(${passe} assertions)`);
 
 if (echecs.length) {
   console.error(`[membre-mot] ${echecs.length} ÉCHEC(S) :`);

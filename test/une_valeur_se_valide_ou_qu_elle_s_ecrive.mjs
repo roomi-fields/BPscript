@@ -44,9 +44,9 @@ const erreursDe = (src) => {
   try { return compileToBPxAST(src).errors ?? []; } catch (e) { return [{ message: e.message }]; }
 };
 const horsPlage = (src) =>
-  erreursDe(src).filter((e) => /hors plage pour le contrôle/.test(String(e.message)));
+  erreursDe(src).filter((e) => /is out of range for control/.test(String(e.message)));
 const horsPortee = (src) =>
-  erreursDe(src).filter((e) => /ne peut pas s'écrire/.test(String(e.message)));
+  erreursDe(src).filter((e) => /cannot be written/.test(String(e.message)));
 
 // ── A1. LA MÊME VALEUR, LES DEUX PLACES, LE MÊME VERDICT ────────────────────────────────────
 // La matrice est le point : un mot qui s'écrit à deux places doit être jugé pareil aux deux, et

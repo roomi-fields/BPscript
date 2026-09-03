@@ -64,7 +64,10 @@ const sceneIn = (canal) => `in.${canal} x\nmode:ord\n-----\nS -> C4`;
 // Mot que porte le message quand un canal EST une direction mais reste fermé à l'écriture —
 // DISTINCT de `motDirection` ('n'est pas une sortie'/'n'est pas une entrée'), qui nommerait une
 // direction absente et serait donc FAUX pour un canal comme `text` (il a la direction).
-const MOT_ECRITURE_FERMEE = 'ÉCRITURE';
+// Regex plutôt que sous-chaîne : la graphie scène/acteur dit « its WRITE from a scene », la
+// graphie terminal dit « WRITING it in a scene » — deux formes du même verbe, à distinguer de
+// « written » (autre mot) qui traîne dans le premier refus concaténé sur la graphie terminal.
+const RE_ECRITURE_FERMEE = /WRIT(E\b|ING\b)/;
 
 /**
  * Vérifie une direction (`out`/`in`) pour un canal. Trois issues possibles, lues depuis
@@ -85,11 +88,11 @@ function verifierDirection(canal, direction, channels, motDirection, graphie = '
     ok((r.errors || []).length === 0, `'${label}' doit être ACCEPTÉ — reçu : ${msg.slice(0, 200)}`);
   } else if (porteDirection && !ecrivable) {
     ok((r.errors || []).length > 0, `'${label}' doit être REFUSÉ (écriture fermée) — reçu ACCEPTÉ`);
-    ok(!msg.includes(motDirection), `'${label}' refusé mais dit encore « ${motDirection} » — FAUX, ce canal PORTE la direction (défaut du 2026-08-04) — reçu : ${msg.slice(0, 200)}`);
-    ok(msg.toUpperCase().includes(MOT_ECRITURE_FERMEE), `'${label}' refusé mais le message ne NOMME pas l'écriture fermée — reçu : ${msg.slice(0, 200)}`);
+    ok(!msg.includes(motDirection), `'${label}' refusé mais dit encore « ${motDirection} » — FAUX, ce canal PORTE la direction(défaut du 2026-08-04) — reçu : ${msg.slice(0, 200)}`);
+    ok(RE_ECRITURE_FERMEE.test(msg.toUpperCase()), `'${label}' refusé mais le message ne NOMME pas l'écriture fermée — reçu : ${msg.slice(0, 200)}`);
   } else {
     ok((r.errors || []).length > 0, `'${label}' doit être REFUSÉ — reçu ACCEPTÉ`);
-    ok(msg.includes(motDirection), `'${label}' refusé mais le message ne NOMME pas la direction ('${motDirection}') — reçu : ${msg.slice(0, 200)}`);
+    ok(msg.includes(motDirection), `'${label}' refusé mais le message ne NOMME pas la direction('${motDirection}') — reçu : ${msg.slice(0, 200)}`);
   }
 }
 
@@ -116,9 +119,9 @@ ok(!!(channels.text && channels.text.writable === false), "'text' doit rester NO
 // ─── MATRICE : CHAQUE CANAL DU CATALOGUE × {out, in} ─────────────────────────────────────────
 for (const canal of Object.keys(channels)) {
   for (const graphie of Object.keys(GRAPHIES_OUT)) {
-    verifierDirection(canal, 'out', channels, "n'est pas une sortie", graphie);
+    verifierDirection(canal, 'out', channels, "is not an output", graphie);
   }
-  verifierDirection(canal, 'in', channels, "n'est pas une entrée");
+  verifierDirection(canal, 'in', channels, "is not an input");
 }
 
 // ─── HORS CATALOGUE : la liste reste FERMÉE ──────────────────────────────────────────────────
@@ -134,14 +137,14 @@ for (const canal of Object.keys(channels)) {
     // direction est ÉCRITE, donc un nom inconnu se refuse par elle. Sur `<nom>:<canal>` la direction
     // n'est écrite nulle part : le refus doit d'abord dire que le canal N'EXISTE PAS, sans quoi il
     // reprocherait une direction à un mot qui n'est pas un canal du tout.
-    const attendu = graphie === 'terminal' ? "n'existe pas" : "n'est pas une sortie";
+    const attendu = graphie === 'terminal' ? "does not exist" : "is not an output";
     ok(msg.includes(attendu),
       `'out.inconnu' (graphie ${graphie}) refusé mais sans dire « ${attendu} » — reçu : ${msg.slice(0, 200)}`);
   }
   // ⛔ LE REFUS DOIT DIRE LA MÊME CHOSE DES DEUX CÔTÉS, à l'attribution d'acteur près. Sans cette
   // comparaison, une graphie peut refuser pour une raison et l'autre pour une autre, et les deux
   // volets ci-dessus resteraient verts.
-  const noyau = (m) => m.replace(/^acteur '[^']*' : /, '').replace(/ at line \d+:\d+/, '').trim();
+  const noyau = (m) => m.replace(/^actor '[^']*': /, '').replace(/ at line \d+:\d+/, '').trim();
   ok(noyau(messages.acteur) === noyau(messages.scene),
     `les deux graphies de 'out.inconnu' doivent refuser par le MÊME message — acteur : `
     + `« ${noyau(messages.acteur).slice(0, 90)} » · scène : « ${noyau(messages.scene).slice(0, 90)} »`);
@@ -149,9 +152,9 @@ for (const canal of Object.keys(channels)) {
   // n'ont qu'un refus de DIRECTION ; celle-ci sépare « ce canal n'existe pas » de « il n'a pas cette
   // direction », parce qu'un nom inventé y ressemble à une faute de frappe sur un réglage. Deux
   // causes distinctes valent mieux qu'un message unique — c'est la leçon du suffixe et de l'arobase.
-  ok(/n'existe pas/.test(messages.terminal),
+  ok(/does not exist/.test(messages.terminal),
     `'zz:inconnu' doit dire que le CANAL n'existe pas — reçu : ${messages.terminal.slice(0, 120)}`);
-  ok(!/terminal 'zz' non déclaré/.test(messages.terminal),
+  ok(!/terminal 'zz' undeclared/.test(messages.terminal),
     `'zz:inconnu' accuse encore le TERMINAL alors que la faute est sur le CANAL — c'est le défaut `
     + `réparé le 2026-08-19 (reçu : ${messages.terminal.slice(0, 120)})`);
 }
@@ -164,7 +167,7 @@ ok(!channels.dmx || !channels.dmx.in, "'dmx' ne doit PAS porter la direction 'in
 // `text` porte désormais `out:true` (il EST routé comme les autres sorties) ET `writable:false`
 // (son point d'écriture — son appareil dédié — n'existe pas encore). Les deux propriétés sont
 // SÉPARÉES : le catalogue ne confond plus « n'a pas de direction » et « n'est pas écrivable ».
-ok(!!channels.text, "'text' doit être présent dans le catalogue (donnée d'affichage)");
+ok(!!channels.text, "'text' doit être présent dans le catalogue(donnée d'affichage)");
 ok(!!(channels.text && channels.text.out), "'text' DOIT porter 'out' — il est routé comme les autres sorties");
 ok(!channels.text || !channels.text.in, "'text' ne doit PAS porter 'in' — aucune direction d'entrée");
 ok(!!(channels.text && channels.text.writable === false), "'text' doit porter 'writable:false' EXPLICITEMENT (pas déduit d'une absence)");
@@ -182,7 +185,7 @@ for (const canal of Object.keys(channels)) {
     const r = compile(scene);
     const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
     ok((r.errors || []).length > 0, `cas neuf : '${direction}.${canal}' (writable:false) doit être REFUSÉ`);
-    ok(!msg.includes(`n'est pas une ${direction === 'out' ? 'sortie' : 'entrée'}`),
+    ok(!msg.includes(`is not an ${direction === 'out' ? 'output' : 'input'}`),
       `cas neuf : '${direction}.${canal}' refusé mais le message dit encore une direction absente — FAUX — reçu : ${msg.slice(0, 200)}`);
   }
 }

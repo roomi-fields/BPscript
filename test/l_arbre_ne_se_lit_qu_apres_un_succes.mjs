@@ -49,7 +49,7 @@ for (const [quoi, src] of REFUS) {
   const r = compile(src);
   ok(!r.jete,
     `1. un refus de ${quoi} doit remplir le canal d'erreurs, PAS jeter — un jet traverse la façade `
-    + `et devient un plantage chez le consommateur (reçu : ${r.jete})`);
+    + `et devient un plantage chez le consommateur(reçu : ${r.jete})`);
   ok(r.e >= 1,
     `1. un refus de ${quoi} doit poser au moins UNE erreur — sans elle, le seul signe du refus `
     + `serait l'absence d'arbre, et la décision du 2026-08-19 interdit d'en décider ainsi`);

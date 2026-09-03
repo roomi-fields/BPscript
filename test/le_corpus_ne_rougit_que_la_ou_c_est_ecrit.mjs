@@ -55,11 +55,11 @@ const REGISTRE = [
   // donc aucun compte ne bougeait — mais elles avaient changé de CAUSE, exactement le mode d'échec
   // que ce registre vise. Le refus disait « 'script' n'existe pas » ; il dit maintenant pourquoi la
   // construction elle-même n'est lisible d'aucune façon, ce qui est plus précis : `script(MIDI
-  // program 5)` n'est ni un sac (son contenu n'est pas fait de paires) ni un appel (aucune
+  // program 5)` n'est ni un sac(son contenu n'est pas fait de paires) ni un appel (aucune
   // définition ne porte ce nom). Le fait n'a pas bougé : la forme reste supprimée du langage.
-  ['BPScript-tests/alan-dice.bps',      "n'est lisible ni comme un SAC", 'script(...) supprimé du langage (2026-07-26), témoin volontaire', 'kanopi', 'PERSONNE — refus voulu, état stable'],
-  ['BPScript-tests/beatrix-dice.bps',   "n'est lisible ni comme un SAC", 'script(...) supprimé du langage (2026-07-26), témoin volontaire', 'kanopi', 'PERSONNE — refus voulu, état stable'],
-  ['BPScript-tests/shapes-rhythm.bps',  "n'est lisible ni comme un SAC", 'script(...) supprimé du langage (2026-07-26), témoin volontaire', 'kanopi', 'PERSONNE — refus voulu, état stable'],
+  ['BPScript-tests/alan-dice.bps',      "readable neither as a SETTING BAG", 'script(...) supprimé du langage(2026-07-26), témoin volontaire', 'kanopi', 'PERSONNE — refus voulu, état stable'],
+  ['BPScript-tests/beatrix-dice.bps',   "readable neither as a SETTING BAG", 'script(...) supprimé du langage(2026-07-26), témoin volontaire', 'kanopi', 'PERSONNE — refus voulu, état stable'],
+  ['BPScript-tests/shapes-rhythm.bps',  "readable neither as a SETTING BAG", 'script(...) supprimé du langage(2026-07-26), témoin volontaire', 'kanopi', 'PERSONNE — refus voulu, état stable'],
   // ── A-bis. SANS `core` NI ALPHABET, UN TERMINAL NON DÉCLARÉ EST REFUSÉ — Romain, 2026-09-02 ─────
   // `tryConsoleMaxTime` et `tryTimePatterns` ont vécu ici une heure, le temps que kanopi leur donne
   // leur ligne `core` (son arbre, 2026-09-03 00:1x). Le registre ne garde pas une entrée qui ne
@@ -97,8 +97,8 @@ const REGISTRE = [
   // kanopi previenu avec la liste exacte, a repondu « frappe » et les inscrit en forme-a-venir
   // chez lui dans le meme mouvement. Sa prediction — exactement deux rouges neufs, tous deux sur
   // ce message — est VERIFIEE.
-  ['cv/cv-backtick.bps',                  "attribut '(cutoff:…)' inconnu", 'ecrit une cible de branchement dont la librairie est archivee le 2026-08-22', 'kanopi', 'son proprietaire — inscrite en forme-a-venir chez lui'],
-  ['code-voices/cv-curve-js.bps',         "attribut '(cutoff:…)' inconnu", 'ecrit une cible de branchement dont la librairie est archivee le 2026-08-22', 'kanopi', 'son proprietaire — inscrite en forme-a-venir chez lui'],
+  ['cv/cv-backtick.bps',                  "unknown attribute '(cutoff:…)'", 'ecrit une cible de branchement dont la librairie est archivee le 2026-08-22', 'kanopi', 'son proprietaire — inscrite en forme-a-venir chez lui'],
+  ['code-voices/cv-curve-js.bps',         "unknown attribute '(cutoff:…)'", 'ecrit une cible de branchement dont la librairie est archivee le 2026-08-22', 'kanopi', 'son proprietaire — inscrite en forme-a-venir chez lui'],
   // ⚠️ LES SIX SCÈNES DE PROVENANCE PERSONNELLE N'ONT JAMAIS TENU UNE LIGNE ICI. Je les ai
   //    inscrites le 2026-08-19 en retirant `mine` du langage (Romain : « SI, mine SORT ! »), et
   //    Kanopi les avait SUPPRIMÉES avant que mon garde ne tourne — sa consigne était du même
@@ -110,11 +110,11 @@ const REGISTRE = [
   //    le même jour (arbitrage Romain). La cause inscrite est donc devenue fausse, et le
   //    cliquet l'a vu : un retard qui garde une cause périmée fait passer un défaut pour un
   //    autre, et son compte reste juste pendant que sa raison ment.
-  ['BPScript-tests/trySrand.bps',         'non déclaré', 'terminaux nus sans convention de notes déclarée — kanopi a migré le crochet, la cause d origine ressort', 'kanopi', 'ROMAIN — arbitrage BPS-40 : un alphabet PLUS des notes déclarées. Inscrite AUSSI au garde de kanopi depuis le 2026-07-29 : c\'est LE cas qui a révélé le défaut de forme, inventoriée des deux côtés sans que ni l\'un ni l\'autre le sache'],
+  ['BPScript-tests/trySrand.bps',         'undeclared', 'terminaux nus sans convention de notes déclarée — kanopi a migré le crochet, la cause d origine ressort', 'kanopi', 'ROMAIN — arbitrage BPS-40 : un alphabet PLUS des notes déclarées. Inscrite AUSSI au garde de kanopi depuis le 2026-07-29 : c\'est LE cas qui a révélé le défaut de forme, inventoriée des deux côtés sans que ni l\'un ni l\'autre le sache'],
   // ⚠️ CAUSE RESSERRÉE le 2026-08-19, ET C'EST LE CLIQUET QUI L'A VU. `var` masquait la cause
   // d'origine ; kanopi a migré, et la scène refuse de nouveau pour ce qu'elle est — des objets
   // sonores nus sans convention de notes déclarée. Le compte n'a pas bougé, la raison si.
-  ['BPScript-tests/tryCsoundObjects.bps', 'non déclaré', 'objets sonores nus sans convention de notes déclarée', 'kanopi', 'kanopi — il instruit après l ouverture de def'],
+  ['BPScript-tests/tryCsoundObjects.bps', 'undeclared', 'objets sonores nus sans convention de notes déclarée', 'kanopi', 'kanopi — il instruit après l ouverture de def'],
   // ⛔ QUINZE SCÈNES SONT ENTRÉES ICI LE 2026-09-02 ET EN SONT SORTIES LE SOIR MÊME. Plus de socle
   // implicite (Romain) : elles déclaraient un drapeau, un symbole ou un acteur sans invoquer `core`
   // ni `types`. kanopi, prévenu à chaque frappe avec la liste, a écrit `core` en tête des quinze
@@ -194,7 +194,7 @@ for (const [nom, msgs] of refus) {
 for (const [nom, fragment, raison, , quiAttend] of REGISTRE) {
   const msgs = refus.get(nom);
   ok(!!msgs,
-     `B. ${nom} ne refuse PLUS (motif inscrit : ${raison}). C'est peut-être une bonne nouvelle — `
+     `B. ${nom} ne refuse PLUS(motif inscrit : ${raison}). C'est peut-être une bonne nouvelle — `
      + `mais l'entrée doit sortir du registre À LA MAIN, sinon ce garde certifie un état qui `
      + `n'existe plus. Un cliquet qui ne se desserre jamais est un mensonge daté.`);
   if (!msgs) continue;
@@ -233,6 +233,6 @@ for (const [nom, , raison, , quiAttend] of REGISTRE) {
   }
 }
 console.log(`✅ le corpus ne rougit que là où c'est écrit — ${scenes} scène(s) compilées, `
-          + `${refus.size} refus, toutes inscrites au registre (${REGISTRE.length} entrées datées), `
+          + `${refus.size} refus, toutes inscrites au registre(${REGISTRE.length} entrées datées), `
           + `chacune vérifiée sur SA cause et non sur son seul nombre. `
           + `${passe} vérification(s) passée(s).`);

@@ -110,7 +110,7 @@ const PLACES = [
 // Ce qui les sépare est le MARQUEUR : le verbe par lequel le message passe du constat au conseil.
 // Le garde ne juge que ce qui SUIT un marqueur — c'est exactement l'espace du défaut, une
 // réécriture donnée par un refus.
-const MARQUEURS = /(déclarer|écrire|écris|s'écrit|écrit|remplace|employer|utiliser|pour [A-ZÀ-Ý]|exemple|à la place)[^']{0,60}$/i;
+const MARQUEURS = /(declares?|invoke[sd]?|writes?|replaces?|use[sd]?|for [A-Z]|example|instead)[^']{0,60}$/i;
 
 // ⛔ ET UN MESSAGE QUI CONTRASTE DEUX FORMES EN CITE UNE MORTE JUSTE APRES LA VIVANTE :
 // « 'out.<canal>' remplace 'transport.<canal>' ». Prendre toutes les citations qui suivent un
@@ -169,7 +169,7 @@ for (const [quoi, src] of REFUS) {
       // « compile-t-il » mais « le compilateur le CONNAÎT-il » : un mot sorti du langage se refuse
       // par « SORTI », « n'existe plus » ou « déclaré par aucune librairie », un mot vivant se
       // refuse sur ses ARGUMENTS. C'est la distinction que le refus lui-même écrit.
-      const MORT = /(est SORTI|n'existe plus|est SUPPRIMÉE?|déclaré par aucune librairie|n'est pas un type)/i;
+      const MORT = /(has LEFT the language|no longer exists|has been REMOVED|removed|is declared by no loaded library|is not a type in scope)/i;
       const motNu = /^[\wà-ÿ-]+$/i.test(f);
       const vivante = motNu
         ? !essais.every((e) => e.length > 0 && MORT.test(e[0]))
@@ -229,7 +229,7 @@ function messagesEcrits(chemin) {
     if (jet) {
       while (i < texte.length && prof > 0) {
         if (texte[i] === '(') prof++;
-        else if (texte[i] === ')') prof--;
+        else if(texte[i] === ')') prof--;
         i++;
       }
       out.push(texte.slice(m.index + m[0].length, i - 1));
@@ -266,7 +266,7 @@ for (const chemin of SOURCES) {
       if (!instanciable(f)) { nonInstanciables.push(`${chemin.split('/').pop()} → « ${forme} »`); continue; }
       examinees++;
       const essais = PLACES.map((place) => compile(place(f)));
-      const MORT = /(est SORTI|n'existe plus|est SUPPRIMÉE?|déclaré par aucune librairie|n'est pas un type)/i;
+      const MORT = /(has LEFT the language|no longer exists|has been REMOVED|removed|is declared by no loaded library|is not a type in scope)/i;
       // ⛔ UN REFUS DE RESOLUTION ATTESTE LA FORME. « sound 'x' introuvable dans le catalogue » ne
       // dit pas que `sound.<nom>` est morte : il dit que l entree nommee n existe pas — donc que la
       // forme a ete LUE. Mon gabarit remplace `<nom>` par un nom qui n est dans aucun catalogue ;
@@ -281,7 +281,7 @@ for (const chemin of SOURCES) {
       // l'ENTREE qui est fausse, et elle l'est parce que MON GABARIT a instancie `<X>` avec un nom
       // de son. Un gabarit a valeur unique sert deux sens ; sans cette distinction le garde
       // condamne une forme vivante a cause de son propre exemple.
-      const RESOLUTION = /(introuvable dans le catalogue|référence inexistante|La liste est FERMÉE)/i;
+      const RESOLUTION = /(not found in the catalog|does not exist|The list is CLOSED)/i;
       const motNu = /^[\wà-ÿ-]+$/i.test(f);
       const vivante = motNu
         ? !essais.every((e) => e.length > 0 && MORT.test(e[0]))

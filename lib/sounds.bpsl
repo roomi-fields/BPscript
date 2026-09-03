@@ -1,18 +1,8 @@
-// LA LIBRAIRIE « sounds » — écrite dans le langage qu'elle sert.
-// Le bundle en rend la MÊME donnée, champ par champ. Les consommateurs ne voient aucun
-// changement — c'est l'AUTHORING qui change, pas la donnée.
-//
-// ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
-//    voyage pas jusqu'aux consommateurs, une clé si.
-//
-// ⛔ LE CORPS SE DÉLIMITE PAR LA PARENTHÈSE. Décision Romain, 2026-08-19 : « je m'oppose
-//    formellement à toute forme de parsing en fonction de l'indentation ». Un fichier reformaté
-//    ne change pas de sens.
-
-// Les prototypes de ce catalogue vivent dans `types` — invoquée ci-dessous.
 types
 
 // @documented
-def sounds (resolvedBy:"BPx", resolves:sound, name:sounds)
+def sounds(resolvedBy:"BPx", resolves:sound, name:sounds)
 
-sound tabla_perc (description:"Percussions de tabla — bols de bayan (grave) et de dayan (aigu). Prototype AUX DÉFAUTS MOTEUR : il ne surcharge aucune propriété métrique. Invoqué par dhati, dhin et leurs jumelles (6 scènes du corpus). Le nom vient du corpus, pas d'un catalogue externe.")
+sound tabla_perc(
+  description:"Percussions de tabla — bols de bayan (grave) et de dayan (aigu). Prototype AUX DÉFAUTS MOTEUR : il ne surcharge aucune propriété métrique. Invoqué par dhati, dhin et leurs jumelles (6 scènes du corpus). Le nom vient du corpus, pas d'un catalogue externe."
+)

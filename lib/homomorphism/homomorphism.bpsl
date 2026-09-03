@@ -1,3 +1,10 @@
+def homomorphism(
+  resolvedBy:Kairos,
+  name:homomorphism,
+  type:homomorphism,
+  resolves:homomorphism,
+  section:tables
+) ``ts:
 // Corps du PROTOTYPE `homomorphism` — l'applicateur, AUTHORING F1 (vrai .ts TYPÉ contre le SDK Kairos).
 // Source de vérité : ce fichier. Le chargeur le greffe sur le prototype de la famille, dont CHAQUE
 // table hérite (Romain, 2026-09-03) : la section de l'arbre joint donc l'applicateur avec la table
@@ -26,3 +33,4 @@ const substitute: HomomorphismFn = (ctx) => {
 };
 
 export default substitute;
+``

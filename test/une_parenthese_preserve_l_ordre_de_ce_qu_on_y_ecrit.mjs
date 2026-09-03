@@ -40,14 +40,14 @@ console.log('[ordre] une parenthèse préserve l\'ordre de ce qu\'on y écrit');
 {
   const pairs = (src) => {
     const r = compileToBPxAST(`core\nalphabet.western\n${src}\n-----\nS -> C4\n`);
-    ok((r.errors || []).length === 0, `A. '${src}' doit compiler (reçu : ${(r.errors || [])[0]?.message})`);
-    // `def x (…)` est un objet RACINE depuis le 2026-09-02 : il vit dans `vars`, pas dans `defs`.
+    ok((r.errors || []).length === 0, `A. '${src}' doit compiler(reçu : ${(r.errors || [])[0]?.message})`);
+    // `def x(…)` est un objet RACINE depuis le 2026-09-02 : il vit dans `vars`, pas dans `defs`.
     return (((r.ast?.vars || []).find((v) => v.varType?.kind === 'type' && v.varType.type === null)
              || (r.ast?.defs || [])[0])?.settings?.pairs || [])
       .find((p) => p.key === 'registers')?.value?.pairs?.map((p) => p.key);
   };
-  const droit = pairs('def x (registers(mandra, madhya, taar))');
-  const envers = pairs('def x (registers(taar, madhya, mandra))');
+  const droit = pairs('def x(registers(mandra, madhya, taar))');
+  const envers = pairs('def x(registers(taar, madhya, mandra))');
   ok(JSON.stringify(droit) === JSON.stringify(['mandra', 'madhya', 'taar']),
     `A. la suite écrite doit ressortir telle quelle — reçu ${JSON.stringify(droit)}`);
   ok(JSON.stringify(envers) === JSON.stringify(['taar', 'madhya', 'mandra']),
@@ -130,7 +130,7 @@ for (const fichier of sources) {
   // Une déclaration à corps parenthésé, sur une ligne : `def <nom> (…)` ou `<type> <nom> (…)`.
   //
   // ⛔ CE MOTIF NE LISAIT QUE `def`, ET LA BASCULE DES CATALOGUES L'A RENDU AVEUGLE SANS UN MOT.
-  // Le 2026-09-01, 204 entrées sont passées de `def western (…)` à `alphabet western (…)` : ce
+  // Le 2026-09-01, 204 entrées sont passées de `def western(…)` à `alphabet western(…)` : ce
   // garde est resté VERT en examinant **388 assertions de moins**, sur six catalogues entiers.
   // ⚠️ RIEN ICI N'A ROUGI — c'est la référence d'assertions du portillon qui l'a vu, et elle seule.
   // « Une entrée retirée d'une librairie en emporte des centaines sans un mot » : c'est le même
@@ -138,7 +138,24 @@ for (const fichier of sources) {
   // couverture le jour où la graphie change, et il le fait en vert.
   // ⚠️ ET LE NOM D'UNE ENTRÉE PORTE UN TIRET — `bp3_Bohlen-Pierce`. `\w` ne le capture pas : neuf
   // tempéraments sortaient du balayage par ce seul caractère.
-  for (const m of texte.matchAll(/^(?:def|[a-z][\w-]*) ([\w-]+) \((.*)\)\s*$/gm)) {
+  // ⛔ ET UNE DÉCLARATION SE PLIE DÉSORMAIS SUR PLUSIEURS LIGNES (Romain, 2026-09-03). Ce motif
+  // exigeait une ligne entière — `(.*)\)\s*$` — et rendait ZÉRO liste examinée dès que les
+  // librairies ont été indentées : le garde tournait en vert sans rien mesurer, et c'est son propre
+  // compteur de couverture qui l'a dit. On déplie donc AVANT d'apparier, comme le fait la mise en
+  // forme : joindre les lignes tant que les parenthèses restent ouvertes.
+  const deplie = (() => {
+    const out = [];
+    let acc = null, prof = 0;
+    for (const l of texte.split('\n')) {
+      const nu = l.replace(/"(?:[^"]|"")*"/g, '""').replace(/\/\/.*$/, '');
+      for (const c of nu) { if (c === '(') prof++; else if (c === ')') prof--; }
+      if (acc === null) { if (prof > 0) acc = l.trimEnd(); else out.push(l); }
+      else { acc += ' ' + l.trim(); if (prof <= 0) { out.push(acc); acc = null; prof = 0; } }
+    }
+    if (acc !== null) out.push(acc);
+    return out.join('\n');
+  })();
+  for (const m of deplie.matchAll(/^(?:def|[a-z][\w-]*) ([\w-]+)\((.*)\)\s*$/gm)) {
     const [, nomDecl, corps] = m;
     const publiee = nomDecl === nomLib ? LIBS[nomLib] : trouver(LIBS[nomLib], nomDecl);
     if (!publiee) { echecs.push(`B. ${nomLib}.${nomDecl} : déclaré dans la source, introuvable dans la donnée publiée`); continue; }
@@ -179,7 +196,7 @@ for (const fichier of sources) {
 }
 
 // ⛔ UN GARDE COMPTE CE QU'IL A EXAMINÉ, ET REFUSE D'AVOIR EXAMINÉ ZÉRO.
-ok(listes >= 18, `B. le garde doit avoir examiné des listes publiées, pas seulement tourné (${listes} vue(s))`);
+ok(listes >= 18, `B. le garde doit avoir examiné des listes publiées, pas seulement tourné(${listes} vue(s))`);
 // ⛔ ET IL REFUSE DE N'AVOIR VU QUE DES SUITES DÉJÀ TRIÉES : sur celles-là, un lecteur qui TRIE
 // passerait tout le volet B sans se distinguer d'un lecteur correct.
 ok(ordreNonTrivial >= 1,

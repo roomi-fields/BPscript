@@ -29,7 +29,7 @@ console.log('--- 1. `voice.<nom>` sur un acteur REFUSE, et le refus dit où la v
 {
   const e = erreurs('core\nactor lead  alphabet.western voice.wobble out.audio\n-----\nS -> C4\n');
   check(e.length > 0, 'voice.wobble sur un acteur doit être REFUSÉ');
-  check(e.some((m) => /voix s'attache au TERMINAL/.test(m)),
+  check(e.some((m) => /attaches to the TERMINAL/.test(m)),
         'le refus doit nommer la relève, pas dire « flèche attendue » : ' + e.join(' | ').slice(0, 120));
 }
 
@@ -39,8 +39,8 @@ console.log('--- 2. TOUTE clé hors liste refuse — liste blanche, pas liste no
 // une clé que PERSONNE n'a jamais écrite — une faute de frappe.
 {
   const e = erreurs('core\nactor lead  alphabt.western\n-----\nS -> C4\n');
-  check(e.length > 0, "une clé inconnue (faute de frappe) doit REFUSER, pas finir le bloc en silence");
-  check(e.some((m) => /n'est pas une clé d'acteur/.test(m)), 'le refus la nomme : ' + e.join(' | ').slice(0, 100));
+  check(e.length > 0, "une clé inconnue(faute de frappe) doit REFUSER, pas finir le bloc en silence");
+  check(e.some((m) => /is not an actor key/.test(m)), 'le refus la nomme : ' + e.join(' | ').slice(0, 100));
 }
 
 console.log('--- 3. LES CINQ CLÉS VIVANTES passent — la moitié qui doit se taire ---');

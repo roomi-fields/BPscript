@@ -173,7 +173,7 @@ ok(catalogues.length >= 20,
       { cwd: bac, encoding: 'utf8' });
     sortie = r;
     // La FORME attendue : une clé du def de fichier, jamais une ligne de commentaire.
-    porte = /^def zz_temoin \(.*\bdocumented:no\b/m.test(r);
+    porte = /^def zz_temoin\(.*\bdocumented:no\b/m.test(r);   // collé (Romain, 2026-09-03)
   } catch (x) { sortie = `EXCEPTION ${x.message}`.slice(0, 200); }
   finally { rmSync(bac, { recursive: true, force: true }); }
   ok(porte,

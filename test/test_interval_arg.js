@@ -89,13 +89,13 @@ assert('multi-pair s\'arrête à la virgule', ivlValue(HEAD + '-----\nS -> C4(iv
 
 // ── 4. Malformé → CRIE en nommant la faute (L26, pas de repli) ──
 section('Malformé — le compilateur crie');
-assert('non-nombre foo', /Intervalle malforme/.test(throwsOn(HEAD + '-----\nTr -> (ivl:foo)') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:foo)'));
-assert('dénominateur manquant 3/', /denominateur/.test(throwsOn(HEAD + '-----\nTr -> (ivl:3/)') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:3/)'));
-assert('unité inconnue 3x', /unite inconnue/.test(throwsOn(HEAD + '-----\nTr -> (ivl:3x)') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:3x)'));
-assert('fraction négative -3/2', /fraction ne se note pas negative/.test(throwsOn(HEAD + '-----\nTr -> (ivl:-3/2)') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:-3/2)'));
+assert('non-nombre foo', /Malformed interval/.test(throwsOn(HEAD + '-----\nTr -> (ivl:foo)') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:foo)'));
+assert('dénominateur manquant 3/', /denominator/.test(throwsOn(HEAD + '-----\nTr -> (ivl:3/)') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:3/)'));
+assert('unité inconnue 3x', /unknown unit/.test(throwsOn(HEAD + '-----\nTr -> (ivl:3x)') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:3x)'));
+assert('fraction négative -3/2', /is not written negative/.test(throwsOn(HEAD + '-----\nTr -> (ivl:-3/2)') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:-3/2)'));
 // Guillemets : la forme canonique est NUE — le message nomme les guillemets, PAS les formats (msg [379])
-assert('guillemets "700c" → nomme les guillemets', /entre guillemets/.test(throwsOn(HEAD + '-----\nTr -> (ivl:"700c")') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:"700c")'));
-assert('guillemets → suggère la forme nue', /forme NUE '700c'/.test(throwsOn(HEAD + '-----\nTr -> (ivl:"700c")') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:"700c")'));
+assert('guillemets "700c" → nomme les guillemets', /in quotes/.test(throwsOn(HEAD + '-----\nTr -> (ivl:"700c")') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:"700c")'));
+assert('guillemets → suggère la forme nue', /BARE form '700c'/.test(throwsOn(HEAD + '-----\nTr -> (ivl:"700c")') || ''), throwsOn(HEAD + '-----\nTr -> (ivl:"700c")'));
 
 // ── 5. ACTIVATION en prod : transpose EST interval-typé (décision 2026-07-11) ──
 // `controls` SUPPRIMÉ le 2026-08-10 (Romain) : `transpose` vit dans `lib/transpo.json`,

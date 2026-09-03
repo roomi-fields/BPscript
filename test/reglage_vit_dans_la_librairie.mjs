@@ -32,16 +32,16 @@ const qualifierKeys = SYNTAXE.bracketRewrites?.mots;
 // ⛔ LE MESSAGE DIT « une liste NON VIDE » ET LE SEUIL EN GARDE SIX. Même objet que deux autres de
 // mes bancs, à deux autres seuils — 7 et 7. Trois recopies du compte du jour, jamais accordées.
 ok(Array.isArray(qualifierKeys) && qualifierKeys.length > 0,
-   `0. lib/core.json → schema.qualifierKeys est VIDE (reçu ${JSON.stringify(qualifierKeys)})`);
+   `0. lib/core.json → schema.qualifierKeys est VIDE(reçu ${JSON.stringify(qualifierKeys)})`);
 
 // ─── 1. TOUTE clé de réglage vit dans lib/controls.json ──────────────────────────────────────
 const noms = universeControlNames();
 for (const cle of qualifierKeys || []) {
   ok(noms.has(cle),
-     `1. '${cle}' est un réglage RÉSERVÉ (lib/core.json schema.qualifierKeys) mais `
+     `1. '${cle}' est un réglage RÉSERVÉ(lib/core.json schema.qualifierKeys) mais `
      + `lib/controls.json ne le déclare NULLE PART — le parseur route par 'controlNames' `
      + `(libs.js), pas seulement par 'qualifierKeys' : une clé absente de controls.json `
-     + `est refusée dans certaines positions (ex. '!(${cle}:…)' dans le flux)`);
+     + `est refusée dans certaines positions(ex. '!(${cle}:…)' dans le flux)`);
 }
 
 // ─── 2. Injection — la logique de comparaison MORD sur une clé absente, et se TAIT sur une

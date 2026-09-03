@@ -91,7 +91,7 @@ ok(destinataireDe(`${TETE}S -> C4(expression.vel:100)\n`, 'vel') === 'runtime-au
 
 // ─── 4bis. UNE SURCHARGE VIDE N'EST PAS UNE SURCHARGE ────────────────────────────────────────
 // ⚠️ CE VOLET COMBLE UNE MORSURE MANQUANTE, trouvée en injectant : le volet 6 éprouvait ce cas sur
-// le JUGE seul, et l'accusé passait donc au vert avec un test de présence (`'resolvedBy' in def`)
+// le JUGE seul, et l'accusé passait donc au vert avec un test de présence(`'resolvedBy' in def`)
 // au lieu d'un test de VALEUR. Une entrée qui porte une chaîne vide effacerait alors le défaut du
 // fichier, et le contrôle arriverait en aval SANS destinataire — un trou silencieux, exactement ce
 // que la surcharge existe pour éviter.

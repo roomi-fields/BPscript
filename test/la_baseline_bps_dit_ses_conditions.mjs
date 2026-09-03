@@ -62,7 +62,7 @@ ok(typeof c.empreinte === 'string' && /^[0-9a-f]{32}$/.test(c.empreinte),
 // ── 2. L'ASSIETTE EST CELLE QUE LE PROPRIÉTAIRE A SCELLÉE ───────────────────────────────────
 // On ne la reconstruit pas et on ne la suppose pas : on la relit chez lui et on confronte.
 if (!fs.existsSync(SCELLE_NATIF)) {
-  ok(false, `2. le scellé natif est introuvable (${path.relative(RACINE, SCELLE_NATIF)}) — sans lui `
+  ok(false, `2. le scellé natif est introuvable(${path.relative(RACINE, SCELLE_NATIF)}) — sans lui `
     + `l'assiette de cette baseline n'est confrontable à rien`);
 } else {
   const scelle = JSON.parse(fs.readFileSync(SCELLE_NATIF, 'utf8'));

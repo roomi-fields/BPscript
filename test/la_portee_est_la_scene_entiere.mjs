@@ -66,7 +66,7 @@ const A_TRAVERS_LES_BLOCS = [
 ];
 for (const [quoi, src] of A_TRAVERS_LES_BLOCS) {
   ok(err(src).length === 0,
-    `2. ${quoi} déclarée avant le premier bloc vaut APRÈS le séparateur (reçu : ${err(src)[0] ?? ''})`);
+    `2. ${quoi} déclarée avant le premier bloc vaut APRÈS le séparateur(reçu : ${err(src)[0] ?? ''})`);
 }
 // Et une TÊTE de règle traverse aussi — c'est ce qui fait de deux sous-grammaires deux PASSES.
 // ⚠️ CE TÉMOIN A ÉTÉ RÉÉCRIT : mon premier jet passait par `err()`, qui préfixe déjà
@@ -110,7 +110,7 @@ ok(DECLARATIONS.length === 3, `4. les TROIS déclarations doivent être éprouv�
 ok(A_TRAVERS_LES_BLOCS.length >= 3, '4. la matrice des traversées ne s\'est pas vidée');
 // TÉMOIN — le garde doit savoir MORDRE : un nom JAMAIS déclaré reste refusé, séparateur ou pas.
 ok(err('S -> C4\n-----\nT -> zzz\nS -> T').length >= 1,
-  '4. TÉMOIN — un nom jamais déclaré reste refusé après un séparateur (sinon ce fichier ne prouve rien)');
+  '4. TÉMOIN — un nom jamais déclaré reste refusé après un séparateur(sinon ce fichier ne prouve rien)');
 
 if (echecs.length) {
   console.error(`[portée unique] ${echecs.length} ÉCHEC(S) :`);

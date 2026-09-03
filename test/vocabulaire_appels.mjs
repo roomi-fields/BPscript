@@ -3,7 +3,7 @@
  * GARDE DU VOCABULAIRE DES APPELS `nom(…)` — et acte de décès de `script(…)`.
  *
  * POURQUOI CE GARDE EXISTE. `script(…)` était une FONCTION GÉNÉRIQUE : un seul mot qui portait
- * n'importe quelle intention (changer d'instrument, envoyer un CC, attendre une note, faire un
+ * n'importe quelle intention(changer d'instrument, envoyer un CC, attendre une note, faire un
  * bip). Romain, 2026-07-26 : « en BPScript on n'est pas censés avoir de _script qui est une
  * fonction générique. On a remplacé par crochets == instruction moteur et parenthèses ==
  * instruction runtime » — « ce sont des erreurs GRAVES ». Une fonction générique dans un langage,
@@ -17,9 +17,9 @@
  * une ligne retirée d'un JSON.
  *
  * PAS DE LISTE EN DUR : `script` tombe parce qu'il n'est plus DANS LA DONNÉE. Le garde vérifie
- * l'absence dans l'autorité (§1), le refus à la compilation (§2), l'absence de faux positif (§3),
- * et qu'AUCUN APPELANT VIVANT ne subsiste dans le corpus (§4) — « vivant » = qui passe encore.
- * Les 4 familles sans nom (Beep, Tick cycle, MIDI send Continue, wait for) restent écrites dans
+ * l'absence dans l'autorité (§1), le refus à la compilation(§2), l'absence de faux positif(§3),
+ * et qu'AUCUN APPELANT VIVANT ne subsiste dans le corpus(§4) — « vivant » = qui passe encore.
+ * Les 4 familles sans nom(Beep, Tick cycle, MIDI send Continue, wait for) restent écrites dans
  * les scènes et DOIVENT échouer : c'est l'intention, en attendant l'arbitrage de nommage.
  */
 import { readFileSync, readdirSync } from 'node:fs';
@@ -40,17 +40,17 @@ const erreursDe = (src) => {
 
 // ─── §1. L'autorité ne déclare plus `script` ────────────────────────────────────────────────
 ok(!universeControlNames().has('script'),
-   "§1 'script' est encore déclaré dans l'univers des contrôles (lib/controls.json + bundle)");
+   "§1 'script' est encore déclaré dans l'univers des contrôles(lib/controls.json + bundle)");
 ok(universeControlNames().has('ins') && universeControlNames().has('cc') && universeControlNames().has('chan'),
-   '§1 les contrôles nommés qui remplacent script (ins, cc, chan) doivent exister');
+   '§1 les contrôles nommés qui remplacent script(ins, cc, chan) doivent exister');
 
 // ─── §2. Un appel hors vocabulaire est REFUSÉ, et le message CITE le texte écrit ─────────────
 // ⚠️ L'EXIGENCE A ÉTÉ REFORMULÉE LE 2026-08-08, PAS AFFAIBLIE — et la raison est structurelle.
 // Ce volet exigeait que le refus cite l'écriture ENTIÈRE, parce que TOUT `nom(…)` était alors lu
 // comme un appel et refusé d'un bloc. Depuis que la bascule se décide sur le NOM et non sur la clé
 // (`LANGUAGE.md` §« quatre rôles »), deux constructions différentes se cachent sous la même allure :
-//   · `script(MIDI program 5)` n'est lisible NI comme un sac (son contenu n'est pas fait de paires)
-//     NI comme un appel (aucune définition ne porte ce nom) → un seul refus, qui cite tout ;
+//   · `script(MIDI program 5)` n'est lisible NI comme un sac(son contenu n'est pas fait de paires)
+//     NI comme un appel(aucune définition ne porte ce nom) → un seul refus, qui cite tout ;
 //   · `script(Beep)` EST un sac bien formé — une clé nue — posé sur un élément `script` : deux
 //     choses inconnues, donc DEUX refus, chacun nommant la sienne.
 // Exiger « cite l'écriture entière » sur le second réclamerait un message qui ment sur ce qui a été
@@ -72,9 +72,9 @@ for (const [appel, ce_que_c_est, aNommer] of [
 ok(erreursDe(scene('-----\nS -> {C4 script(Beep)} D4')).some((m) => m.includes('script')),
    '§2 un nom hors vocabulaire NICHÉ dans un groupe doit être refusé lui aussi');
 
-// Sans alphabet de notes en portée (scène à gates), le vocabulaire reste vérifié.
+// Sans alphabet de notes en portée(scène à gates), le vocabulaire reste vérifié.
 ok(erreursDe('core\na:midi\nmode:ord\n-----\nS -> a script(Beep) a\n').some((m) => m.includes('script')),
-   "§2 un nom hors vocabulaire doit être refusé même SANS alphabet de notes (scène à gates)");
+   "§2 un nom hors vocabulaire doit être refusé même SANS alphabet de notes(scène à gates)");
 
 // ─── §2bis. LE TÉMOIN DE BPx — refermé À LA SOURCE le 2026-07-26 ─────────────────────────────
 // Constat `hub/constats/2026-07-26-controle-non-declare-degenere-en-note.md` (bpx [790]) : sans
@@ -93,14 +93,14 @@ ok(erreursDe('core\na:midi\nmode:ord\n-----\nS -> a script(Beep) a\n').some((m) 
     // Deux chemins, deux messages, et c'est correct : AVEC import, le parseur reconnaît le nom
     // et refuse la GRAPHIE ; SANS import, le nom n'est pas un contrôle pour cette scène et c'est
     // la garde de vocabulaire qui refuse. Ce qui compte est qu'aucun des deux ne laisse passer.
-    ok(errs.some((m) => /n'existe pas|forme d'appel|pas importé/.test(m)),
+    ok(errs.some((m) => /does not exist|call form|not imported/.test(m)),
        `§2bis témoin bpx (${nom}) : le refus doit être motivé — reçu : ${errs.join(' | ')}`);
   }
   // Et l'écriture qui la remplace passe, elle, dans les deux régimes.
   ok(erreursDe('core\nalphabet.western:midi\nmode:ord\n-----\nS -> !(vel:80) C4 D4\n').length === 0,
      '§2bis la nouvelle écriture !(vel:80) doit rester acceptée');
   ok(erreursDe('core\nalphabet.western:midi\nmode:ord\n-----\nS -> C4 D4 (vel:80)\n').length === 0,
-     '§2bis la contenance (vel:80) doit rester acceptée');
+     '§2bis la contenance(vel:80) doit rester acceptée');
 }
 
 // ─── §2ter. LES TROIS DÉRIVES D'ÉCRITURE ne peuvent pas revenir ──────────────────────────────
@@ -113,7 +113,7 @@ for (const [forme, quoi] of [
   ['-----\nS -> keymap(C3,C3,C5,C5) C4', "forme d'appel à plusieurs valeurs"],
   ['-----\nS -> !(cc:98,45) C4', 'liste positionnelle après le deux-points, sac runtime'],
   ['-----\nS -> ![goto:3, 0] C4', 'liste positionnelle après le deux-points, sac moteur'],
-  ['-----\nS -> !(keyxpand:(B3, -1)) C4', 'valeur-groupe entre parenthèses (superseded)'],
+  ['-----\nS -> !(keyxpand:(B3, -1)) C4', 'valeur-groupe entre parenthèses(superseded)'],
 ]) {
   ok(erreursDe(`core\nalphabet.western:midi\nmode:ord\n-----\n${forme}\n`).length > 0,
      `§2ter ${quoi} : '${forme.replace('-----\nS -> ', '').replace(' C4', '')}' doit être refusé`);
@@ -162,7 +162,7 @@ for (const forme of [
 }
 
 // ─── §2quinquies. LE SAC DIT QUI REÇOIT ──────────────────────────────────────────────────────
-// Crochets = moteur, parenthèses = runtime : un CONTRÔLE (déclaré dans `lib/controls.json`) ne
+// Crochets = moteur, parenthèses = runtime : un CONTRÔLE(déclaré dans `lib/controls.json`) ne
 // vit pas dans les deux. La déclaration arbitre, JAMAIS le nombre — mesuré au corpus, la majorité
 // se trompait pour deux contrôles sur cinq. Décision `hub/decisions/2026-06-14-locus-perf-controls.md`.
 //
@@ -171,7 +171,7 @@ for (const forme of [
 // n'est plus « un réglage mal signé », il n'est plus un mot. Son refus est vérifié à sa propre
 // section (§2quinquies ter), avec la relève que le message doit nommer.
 // ⚠️ `tempx` SORTAIT de cette règle depuis le 2026-08-02 (LANGUAGE.md:773-800) : c'était un RÉGLAGE
-// réservé du langage (`core.schema.qualifierKeys`), pas un contrôle au sens de cette section —
+// réservé du langage(`core.schema.qualifierKeys`), pas un contrôle au sens de cette section —
 // « un signe, une nature » le fait toujours atterrir en parenthèses, même s'il est AUSSI déclaré
 // dans la section `engine` de `controls.json`. Cf. §2quinquies (légitimes) plus bas.
 // ⚠️ `rotate`/`legato`/`staccato` SORTENT de cette règle aussi depuis le 2026-08-06, même
@@ -182,7 +182,7 @@ for (const forme of [
 // en-parentheses.md`, qui dit « TOUT réglage s'écrit entre parenthèses, MOTEUR COMPRIS » et
 // « le signe n'adresse rien : le domaine de la clé le fait ». Un réglage moteur en parenthèses
 // est désormais la forme NORMALE — et c'est celle du moteur natif, mesurée : `_rndtime(50)`
-// posé dans le flux (`-da.checkNoteOff`).
+// posé dans le flux(`-da.checkNoteOff`).
 // L'autre sens RESTE refusé et garde toute sa raison d'être : un réglage de RUNTIME écrit entre
 // crochets n'a nulle part où aller, le crochet ne portant plus que ce qui gouverne la dérivation.
 for (const [forme, quoi] of [
@@ -194,7 +194,7 @@ for (const [forme, quoi] of [
      `§2quinquies ${quoi} : '${forme.replace('-----\nS -> ', '')}' doit être refusé`);
 }
 // Ce qui reste légitime — dont le `rotate`/`legato` de SÉQUENCE, désormais des RÉGLAGES réservés
-// (parenthèses, `!(…)` dans le flux) et non plus des contrôles du sac moteur (à ne pas confondre
+// (parenthèses, `!(…)` dans le flux) et non plus des contrôles du sac moteur(à ne pas confondre
 // avec l'ancien rotate de hauteur, renommé `scaleshift` le 2026-07-11).
 for (const forme of [
   '-----\nS -> {C4, D4}:2',
@@ -205,7 +205,7 @@ for (const forme of [
   ok(e.length === 0, `§2quinquies '${forme}' doit rester accepté — reçu : ${e.join(' | ')}`);
 }
 
-// ─── §2quinquies bis. UN SIGNE, UNE NATURE — le RÉGLAGE réservé change de sac (2026-08-02) ──
+// ─── §2quinquies bis. UN SIGNE, UNE NATURE — le RÉGLAGE réservé change de sac(2026-08-02) ──
 // Décision Romain 2026-08-02 (LANGUAGE.md:773-800) : `mode`/`scan`/`weight`/`on_fail`/`tempx`/
 // `meter` sont des RÉGLAGES, pas des contrôles — ils décrivent une propriété PRODUITE, et
 // s'écrivent désormais en PARENTHÈSES dans TOUS les cas, `tempx` compris (bien que ce dernier
@@ -213,7 +213,7 @@ for (const forme of [
 // classe plus, sa nature de réglage l'emporte). Le crochet ne garde que trois emplois : garde,
 // affectation de drapeau, rang de gabarit.
 for (const [forme, quoi] of [
-  // ⚠️ `mode` A CHANGÉ DE STATUT le 2026-08-08 : il n'est plus une clé de sac du tout (décision
+  // ⚠️ `mode` A CHANGÉ DE STATUT le 2026-08-08 : il n'est plus une clé de sac du tout(décision
   // Romain). Il reste refusé entre crochets — mais désormais parce qu'il ne s'écrit NULLE PART
   // dans une règle, et non parce qu'il faudrait des parenthèses. `scan` prend sa place ici :
   // c'est un réglage qui, lui, s'écrit bien entre parenthèses, ce que ce cas mesure.
@@ -225,7 +225,7 @@ for (const [forme, quoi] of [
 ]) {
   const e = erreursDe(`core\nalphabet.western:midi\nmode:ord\n-----\n${forme}\n`);
   ok(e.length > 0, `§2quinquies bis ${quoi} : '${forme.replace('-----\nS -> ', '')}' doit être refusé`);
-  ok(e.some((m) => /est un réglage, il s'écrit entre PARENTHÈSES/.test(m)),
+  ok(e.some((m) => /is a setting, it is written in PARENTHESES/.test(m)),
      `§2quinquies bis ${quoi} : le message doit donner la forme du jour — reçu : ${e.join(' | ')}`);
 }
 for (const forme of [
@@ -237,7 +237,7 @@ for (const forme of [
 }
 
 // ─── §2quinquies ter. UN MOT SUPPRIMÉ REFUSE, ET NOMME SA RELÈVE ────────────────────────────
-// `tempx` est SUPPRIMÉ (décision Romain 2026-08-06). Le retirer de la librairie ne suffisait
+// `tempx` est SUPPRIMÉ(décision Romain 2026-08-06). Le retirer de la librairie ne suffisait
 // PAS : une clé inconnue entre parenthèses est portée OPAQUEMENT jusqu'au runtime, donc
 // `(tempx:2)` aurait été accepté et n'aurait plus atteint personne — un doublon bruyant devenu
 // réglage MUET. Il refuse donc dans les DEUX signes, et le message donne l'écriture vivante.
@@ -267,7 +267,7 @@ for (const forme of ['-----\nS -> C4 [tempx:2]', '-----\nS -> C4 (tempx:2)', '--
 // la rallumer  parce qu elle a l air independante  aurait fabrique un rouge de plus sans sujet.
 
 // ─── §2septies. LE SAC ÉCRIT AVEC DES ESPACES — la forme que nul crible ne voit ─────────────
-// Constat bpx [806]. `(vel:50 pan:7)` est FAUX (deux ÉLÉMENTS d'un sac) et `(keyxpand:B3 -1)` est
+// Constat bpx [806]. `(vel:50 pan:7)` est FAUX(deux ÉLÉMENTS d'un sac) et `(keyxpand:B3 -1)` est
 // JUSTE (deux PARTIES d'une valeur) : les CARACTÈRES sont les mêmes. Seul le REGISTRE tranche —
 // combien de parties le contrôle attend-il. C'est la plus dangereuse des formes fautives, parce
 // qu'elle charge parfois sans erreur et peut vivre longtemps sans que rien ne la signale.
@@ -330,7 +330,7 @@ for (const [sucre, deplie] of [
 // ─── §2nonies. LES QUATRE FAMILLES NOMMÉES ──────────────────────────────────────────────────
 // `script(…)` portait plusieurs intentions sans nom. Quatre d'entre elles en ont un depuis le
 // 2026-07-26 : mute, unmute, panic, sync. Aucune n'est un cas neuf — treize contrôles sans
-// argument existaient déjà au registre (velcont, retro, volumecont…), et la forme pointée passe
+// argument existaient déjà au registre(velcont, retro, volumecont…), et la forme pointée passe
 // par le chemin générique des références.
 for (const forme of [
   '!(mute) C4', '!(unmute) C4', '!(panic) C4',

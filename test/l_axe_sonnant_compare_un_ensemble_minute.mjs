@@ -89,7 +89,7 @@ verifier(juger('accord', REF.concat([j('C4', 0, 1)])).status === DIFF,
 verifier(juger('repete', [j('C4', 0, 1), j('C4', 0, 1), j('D4', 0, 1)]).status === ISO,
   'multiplicités respectées : ISO');
 verifier(juger('repete', [j('C4', 0, 1), j('D4', 0, 1), j('D4', 0, 1)]).status === DIFF,
-  'MÊMES éléments, multiplicités différentes (2×C4+D4 contre C4+2×D4) : DIFF — c est un MULTIensemble');
+  'MÊMES éléments, multiplicités différentes(2×C4+D4 contre C4+2×D4) : DIFF — c est un MULTIensemble');
 verifier(juger('repete', [j('C4', 0, 1), j('D4', 0, 1)]).status === DIFF,
   'un doublon perdu : DIFF');
 

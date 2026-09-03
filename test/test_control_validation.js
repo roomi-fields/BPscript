@@ -16,7 +16,7 @@ function errs(src) { return compileToBPxAST(HEAD + src).errors || []; }
 // 1. Valeur hors-liste (enum) → erreur ciblée sur 'wave'
 {
   const e = errs('S -> C4 (wave:triangle123, vel:100, filterQ:8)\n');
-  check(e.length === 1, '1 erreur attendue (seul wave invalide), obtenu ' + e.length + ' :: ' + JSON.stringify(e));
+  check(e.length === 1, '1 erreur attendue(seul wave invalide), obtenu ' + e.length + ' :: ' + JSON.stringify(e));
   check(e[0] && /wave/.test(e[0].message), 'erreur mentionne wave');
   check(e[0] && /triangle123/.test(e[0].message), 'erreur cite la valeur fautive');
   check(e[0] && typeof e[0].line === 'number', 'erreur porte une ligne');

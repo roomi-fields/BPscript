@@ -119,7 +119,7 @@ const blocsBpscript = (texte) => {
 // Un refus de RÉSOLUTION (l'entrée n'existe pas dans une librairie, le nom ne désigne rien) n'est
 // PAS une faute de forme : un exemple de doc nomme des choses qui ne vivent pas dans la scène
 // minimale qu'on lui fabrique. On ne garde que ce qui est refusé pour sa FORME.
-const REFUS_DE_RESOLUTION = /ne désigne rien|n'existe pas|introuvable|non déclaré|jamais posé/;
+const REFUS_DE_RESOLUTION = /does not exist|not found|undeclared|is not declared|is declared by no loaded library|is not in scope|declared nowhere|unknown attribute|never set/;
 
 // RÉFÉRENCE — resserrée le 2026-08-05 (dev, palier « `var` porte son type jusqu'à l'arbre »).
 // `Scene.vars` porte désormais la directive ENTIÈRE (`VarDirective`, `AST.md:119-150`) et le
@@ -352,7 +352,7 @@ for (const p of SPECS) {
     // le 2026-08-17 : aucune ligne declarative ne commence par lui, donc le contexte etait TOUJOURS
     // vide et les quatre regles du point d attente tombaient sur « attend un signal que rien ne
     // declare ». Un filtre qui ne matche rien ressemble exactement a un bloc sans declaration.
-    // La liste suit les mots vivants : les cinq types en tete (2026-08-16) et les mots de structure.
+    // La liste suit les mots vivants : les cinq types en tete(2026-08-16) et les mots de structure.
     if (/^(actor|def|alphabet|tuning|octaves|symbol|flag|signal|pitch|phase|logic|in\.)/.test(ligne)) {
       let seule = false;
       try { seule = (compileToBPxAST(`core\n${ligne}\n-----\nS -> C4\n`).errors || []).length === 0; }
@@ -396,12 +396,12 @@ for (const [ligne] of RETARD_REGLES) {
 // mêmes blocs en contiennent 156 que NI l'un NI l'autre ne regarde, parce qu'elles n'ont ni la
 // forme `@mot ` d'une des huit directives listées, ni la forme `Nom ->` d'une règle simple. En
 // sont dehors : `@def`, `@actor`, `@alphabet`, `@init`, `@module`, et toute règle dont la TÊTE est
-// un MOTIF (contexte `(C4) D4 ->`, joker `?1 D4 ->`, ancre `#C4 D4 ->`, garde `[stage==1] S ->`).
+// un MOTIF(contexte `(C4) D4 ->`, joker `?1 D4 ->`, ancre `#C4 D4 ->`, garde `[stage==1] S ->`).
 // Répondre « il ne reste rien » sur ces deux volets aurait été un compte juste sur une moitié.
 //
 // ⚠️ ET SURTOUT : LIGNE PAR LIGNE EST LA MAUVAISE UNITÉ. Une ligne de la bible se lit dans son
 // bloc — un `@var` deux lignes plus haut, un `@alphabet` en tête. Les deux volets d'au-dessus
-// reconstituent ce contexte à la main, et ce bricolage EST une source de faux refus (mesuré : sept
+// reconstituent ce contexte à la main, et ce bricolage EST une source de faux refus(mesuré : sept
 // exemples tombaient sur « attribut inconnu » faute du `@var` qui les précédait). Le bloc entier
 // n'a pas ce problème : c'est l'unité que l'auteur a écrite et que le lecteur recopie.
 //
@@ -424,10 +424,10 @@ for (const [ligne] of RETARD_REGLES) {
 // SUBSTITUTION compilent (contexte, joker, dièse). Quatre exemples d'aide sortent pour la même
 // raison, plus bas. Ce sont les cliquets qui l'ont EXIGÉ en rougissant.
 // RESSERRÉ le 2026-08-07 (3e fois) : la ligne `S -> C4 (rndtime:100) D4 E4` de la bible
-// COMPILE — un sac séparé au MILIEU d'une règle est un réglage posé dans le flux (tranché par
+// COMPILE — un sac séparé au MILIEU d'une règle est un réglage posé dans le flux(tranché par
 // Romain, « les règles et l'antécédent sont clairs »). Elle sort des DEUX cliquets.
 // RESSERRÉ le 2026-08-07 (4e fois) : les TROIS encadrés que la bible n'écrivait pas comme des
-// scènes sont corrigés (Romain : « il faut les corriger ») — un alphabet par encadré, le nom
+// scènes sont corrigés(Romain : « il faut les corriger ») — un alphabet par encadré, le nom
 // employé y est défini, et la forme à deux alphabets passe par '@actor'. Plus le rang du
 // bloc `@alphabet.western`, decale par la scission du premier.
 const RETARD_BLOCS = new Map([
@@ -445,10 +445,10 @@ const RETARD_BLOCS = new Map([
   //     édition de la bible au lieu d'une fois par scission.
 
   // ⚠️ LA DIRECTIVE EST RATTRAPÉE, LE BLOC NON — et la cause a changé de nature.
-  //     `@homomorphism.dhati` charge désormais sa table (renommage du 2026-08-07). Ce qui
+  //     `@homomorphism.dhati` charge désormais sa table(renommage du 2026-08-07). Ce qui
   //     reste est la ligne `S -> $N14 dhati &N14` : le NOM DE LA TABLE se pose entre le
   //     gabarit maître et son esclave, et le contrôle du vocabulaire le prend pour un
-  //     terminal. La bible le décrit (« son nom se pose entre les deux ») ; le parseur ne
+  //     terminal. La bible le décrit(« son nom se pose entre les deux ») ; le parseur ne
   //     range pas encore ce nom parmi les symboles légitimes du flux. Dette suivante.
 
   // ⚠️ L'OBJET SONORE COMPOSÉ EST RATTRAPÉ — `|[C4 E4 G4]` compile, et une faute DEDANS crie.
@@ -468,7 +468,7 @@ const RETARD_BLOCS = new Map([
   //    est le seul cas de la journée où un retard s'est refermé au lieu de s'expliquer.
   //    Il montrait `@striated` et `@smooth` l'un sous l'autre — deux illustrations indépendantes
   //    dans un même bloc — et la règle d'unicité, entrée la veille, le refusait à juste titre : le
-  //    natif partage un compteur entre ces deux mots (`NotFoundNatureTime`, CompileGrammar.c:1545)
+  //    natif partage un compteur entre ces deux mots(`NotFoundNatureTime`, CompileGrammar.c:1545)
   //    et rejette la grammaire entière.
   //    Romain a autorisé la réécriture : DEUX SCÈNES à règle IDENTIQUE, seul le mode changeant, et
   //    la production mesurée en regard. Elles compilent, donc rien à inscrire ici — c'est la
@@ -481,7 +481,7 @@ const RETARD_BLOCS = new Map([
   //    façon dont le sujet était pensé. Le jour où FaustX ouvre, la loi se réécrit sur son porteur.
   //    ⛔ SORTI SUR L'EXIGENCE DU CLIQUET, qui a rougi dans la minute où la bible a changé.
   // SORTIS DU CLIQUET LE 2026-08-23 — les deux BLOCS portaient `lpf1.cutoff`, l'instance de module
-  // et un de ses ports. `mod` est archivé (décision de Romain) et l'architecte a validé leur
+  // et un de ses ports. `mod` est archivé(décision de Romain) et l'architecte a validé leur
   // remplacement par `attack`, un contrôle vivant qu'`audio` déclare et que `core` apporte.
   // ⛔ LE CLIQUET L'A EXIGÉ : ils ne refusent plus avec leur cause parce que la cause a quitté la
   // bible. Un retard gardé « au cas où » compterait un retard qui n'existe plus.
@@ -493,7 +493,7 @@ const RETARD_BLOCS = new Map([
   //      implicite — cause DÉJÀ écrite douze lignes plus haut, tranchée par Romain le 2026-08-07.
   //    · `@def sombre lpf1 >> vca1` est un CÂBLAGE : il bute désormais sur `>>`, que rien ne lit
   //      au niveau des règles. ⛔ Il n'attend PAS un palier de `@def` — il attend la revue du
-  //      patching avec FaustX (règle de Romain, 2026-08-08 : tout ce qui touche modules/patching
+  //      patching avec FaustX(règle de Romain, 2026-08-08 : tout ce qui touche modules/patching
   //      va au backlog). L'y laisser sous une cause de `@def` le ferait rattraper par erreur.
   // ⚠️ DEUX BLOCS, DEUX CAUSES DISTINCTES (2026-08-09) :
   //  · `@alphabet.western #3` bute sur `@def accent(x)`, la TRANSFORMATION PARAMETREE — un corps
@@ -531,7 +531,7 @@ const RETARD_BLOCS = new Map([
   //    refus rend desormais la graphie ecrite. Le motif suit ce que le code ECRIT ; ce n est pas une
   //    assertion ajustee a ce qui sort, c est la meme cause dite par le bon bout, et le cliquet a
   //    rougi des la reparation — ce qui est son travail.
-  ['Motif -> C4 D4 E4 #0', /attribut '\(E4\)' inconnu/],
+  ['Motif -> C4 D4 E4 #0', /unknown attribute '\(E4\)'/],
   // RÉVISÉ 2026-08-08 : le bloc porte `(tempx:…)`, un mot RETIRÉ du langage. Le refus le nomme
   // maintenant au lieu de buter sur la barre de fraction de sa valeur.
 ]);
@@ -556,7 +556,7 @@ for (const p of SPECS) {
       // FAUX REFUS : un bloc qui déclare ses propres `@actor` tombait alors sur « chevauchement
       // d'acteurs » — un défaut de MON INSTRUMENT, inscrit au cliquet comme s'il venait de la
       // bible. Le socle donne l'alphabet, il ne choisit pas la sortie.
-      // L'ENVELOPPE, dite ici : un bloc qui pose déjà son socle (`@core`, `@alphabet`) est pris
+      // L'ENVELOPPE, dite ici : un bloc qui pose déjà son socle(`@core`, `@alphabet`) est pris
       // tel quel ; sinon on lui donne le minimum dérivable. Un bloc sans flèche reçoit un point de
       // départ pour rester mesurable. Rien de plus — un contexte inventé masquerait de vrais refus.
       // ⚠️ LES DEUX MORCEAUX DU SOCLE SE POSENT SÉPARÉMENT, et les confondre fabriquait un second
@@ -570,7 +570,7 @@ for (const p of SPECS) {
       // ⛔ LE SOCLE EST UNE SEULE PARTIE DÉCLARATIVE, SUIVIE D'UN SEUL DÉLIMITEUR. Il en posait
       // deux — `core`, `-----`, puis `alphabet.western`, `-----` — ce qui plaçait l'alphabet APRÈS
       // des règles et fabriquait 57 faux refus imputés à la bible. Les deux morceaux se posent
-      // toujours séparément (un bloc peut porter l'un sans l'autre), mais le délimiteur, lui, est
+      // toujours séparément(un bloc peut porter l'un sans l'autre), mais le délimiteur, lui, est
       // unique et ne se pose que si le bloc n'a pas déjà le sien.
       const aDelimiteur = /^-----/m.test(src);
       const socle = (aCore ? '' : 'core\n') + (aAlphabet ? '' : 'alphabet.western\n');
@@ -612,7 +612,7 @@ for (const [cle] of RETARD_BLOCS) {
 }
 
 // ─── 2bis. LA RÉFÉRENCE NE PEUT QUE DESCENDRE, ET À LA MAIN ──────────────────────────────────
-// Le cliquet ne descend jamais tout seul : si le parser rattrape une forme (ou si la ligne
+// Le cliquet ne descend jamais tout seul : si le parser rattrape une forme(ou si la ligne
 // disparaît de la doc), BASELINE_RATTRAPAGE doit être resserrée dans le MÊME commit — sinon ce
 // garde reste vert par accident et n'empêche plus rien de remonter discrètement derrière lui.
 for (const [ligne] of BASELINE_RATTRAPAGE) {
@@ -641,7 +641,7 @@ for (const [ligne] of BASELINE_RATTRAPAGE) {
 // c'est nommer la directive, pas exhiber une ligne recopiable.
 //
 // ⚠️ CETTE LISTE A CHANGÉ DE SENS le 2026-07-27 au soir, et il faut le dire : `@alias` en est SORTI
-// (il est revenu au langage) et `@map` y est ENTRÉ (il est abandonné). Ce n'est pas une hésitation
+// (il est revenu au langage) et `@map` y est ENTRÉ(il est abandonné). Ce n'est pas une hésitation
 // de ma part — c'est un arbitrage de Romain sur un argument absent de tous les inventaires : une
 // directive ne se débranche pas, la coupure de câblage si. La liste est le REGISTRE de l'état courant, pas une
 // mémoire des mouvements ; ce qui est mort y figure, ce qui vit n'y figure pas.
@@ -671,7 +671,7 @@ const MORTES = [
   [/^[ \t]*label\s+[A-Za-z_]/m, "'label' — SUPPRIMÉE le 2026-07-28 avec le suffixe qu'elle déclarait", 'exemptable'],
   [/@(?:map|alias)\s+[^\n|]*(->|<->|<-)/,
    "la flèche employée comme CÂBLAGE — elle ne se cite jamais, même au passé pour expliquer sa "
-   + "disparition : nommer la fonction en français ('un contrôleur règle le tempo pendant que ça "
+   + "disparition : nommer la fonction en français('un contrôleur règle le tempo pendant que ça "
    + "joue'), jamais par sa graphie", 'absolue'],
 ];
 // Les lignes qui PARLENT de la disparition sont légitimes pour les formes 'exemptable' — elles
@@ -796,11 +796,11 @@ const envelopperAide = (texte) => {
 };
 
 // Causes NOMMÉES — chaque entrée de BASELINE_RATTRAPAGE_AIDE en porte une, jamais un motif vague.
-const CAUSE_SPEED_SUPPRIME = /a été supprimé \(décision 2026-06-26\)/; // [speed:N] retiré, pas migré
-const CAUSE_WEIGHT_PARENTHESES = /'weight' est un réglage, il s'écrit entre PARENTHÈSES/; // même famille que le geste 1 de ce lot
+const CAUSE_SPEED_SUPPRIME = /has been removed/; // [speed:N] retiré, pas migré
+const CAUSE_WEIGHT_PARENTHESES = /'weight' is a setting, it is written in PARENTHESES/; // même famille que le geste 1 de ce lot
 const CAUSE_AROBASE_OBLIGATOIRE = /sans arobase n'existe plus/; // le cas SIGNALÉ : gate/trigger/cv nus
 const CAUSE_DOLLAR_MACRO_MORTE = /Expected IDENT, got DOLLAR/; // `$lfo(...) = ...` : ancienne forme de CV/macro, `$` n'est plus qu'un gabarit de template
-const CAUSE_MUTATION_MID_RHS_BUG = /écrit APRÈS des règles/; // ⚠️ PAS un défaut de doc : `S -> C4 [count+1] S` seul échoue déjà (mesuré hors enveloppe) — bug parser à signaler, pas à corriger ici
+const CAUSE_MUTATION_MID_RHS_BUG = /is written AFTER rules/; // ⚠️ PAS un défaut de doc : `S -> C4 [count+1] S` seul échoue déjà (mesuré hors enveloppe) — bug parser à signaler, pas à corriger ici
 const CAUSE_ENVELOPPE_PROSE_LBRACKET = /Expected arrow \(-> <- <>\), got LBRACKET/; // limite d'enveloppe : prose+code sur une ligne
 const CAUSE_ENVELOPPE_PROSE_LPAREN = /Expected IDENT, got INT/; // limite d'enveloppe : plusieurs illustrations indépendantes bout à bout
 // ⛔ TROIS ENTREES SORTENT LE 2026-08-19 : `gate`, `trigger` et `cv` ne sont plus des mots de
@@ -866,12 +866,12 @@ if (echecs.length) {
 } else {
   console.log(`✅ les documents enseignent des formes vivantes — ${passe} vérification(s) passée(s) : `
             + `${blocs} BLOC(S) que la bible déclare BPScript compilés ENTIERS, dont `
-            + `${retardBlocsRetrouve.size} au retard inventorié (${blocs - retardBlocsRetrouve.size} `
+            + `${retardBlocsRetrouve.size} au retard inventorié(${blocs - retardBlocsRetrouve.size} `
             + `passent), `
             + `${regles} RÈGLE(S) des specs compilées dont ${retardRetrouve.size} en retard `
             + `inventorié (le parser rattrape la bible), `
             + `${exemples} exemple(s) compilé(s) dans ${SPECS.length} spec(s), ${vusEnEchecConnu.size}/`
-            + `${BASELINE_RATTRAPAGE.size} rattrapage(s) connu(s) retrouvés PILE (chantier def/init/`
+            + `${BASELINE_RATTRAPAGE.size} rattrapage(s) connu(s) retrouvés PILE(chantier def/init/`
             + `patch du 2026-08-03), et ${croisements} croisement(s) ${TOUS.length} document(s) × `
             + `${MORTES.length} forme(s) morte(s) — ET ${exemplesAide} exemple(s) d'aide compilés dans `
             + `${AIDE_FICHIERS.length} fichier(s), ${vusEnEchecConnuAide.size}/${BASELINE_RATTRAPAGE_AIDE.size} `

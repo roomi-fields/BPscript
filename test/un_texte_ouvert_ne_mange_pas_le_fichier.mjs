@@ -66,7 +66,7 @@ const lire = (corps) => {
 // ── C. LES BORNES — ce que ce refus ne doit PAS avoir emporté ────────────────────────────────
 {
   // ⛔ UN TEXTE SUR PLUSIEURS LIGNES EST LÉGITIME. Poser le refus à la fin de LIGNE le tuerait.
-  const multi = compileToBPxAST('core\ndef w (d:"une\nphrase sur deux lignes")\n\n-----\nS -> C4\n', {});
+  const multi = compileToBPxAST('core\ndef w(d:"une\nphrase sur deux lignes")\n\n-----\nS -> C4\n', {});
   ok(!(multi.errors || []).length,
      `C. un texte sur DEUX LIGNES doit rester vivant — c'est pourquoi le refus se pose à la fin du `
    + `FICHIER : ${String((multi.errors || [])[0]?.message || '').slice(0, 70)}`);
@@ -89,7 +89,7 @@ const lire = (corps) => {
   ok(!(dbl.errors || []).length, `C. un DOUBLE prime accolé dans un nom doit rester vivant.`);
 
   // La chaîne VIDE se ferme sur un guillemet suivi d'autre chose — huit emplois dans la donnée.
-  const vide = compileToBPxAST('core\ndef w (separator:"")\n\n-----\nS -> C4\n', {});
+  const vide = compileToBPxAST('core\ndef w(separator:"")\n\n-----\nS -> C4\n', {});
   ok(!(vide.errors || []).length, `C. la chaîne VIDE doit rester vivante — huit emplois dans lib/.`);
 }
 

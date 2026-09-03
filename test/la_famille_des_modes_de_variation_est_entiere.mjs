@@ -91,7 +91,7 @@ for (const p of PARAMETRES) for (const m of MODES) {
   if (m === 'cont') {
     ok(SORTIES.has(d.resolvedBy),
        `2. '${n}' est déclaré dans lib/${d.lib}.json, dont le destinataire est `
-       + `'${d.resolvedBy}' — un mode CONTINU part à une SORTIE, sans exception (arbitrage Romain, `
+       + `'${d.resolvedBy}' — un mode CONTINU part à une SORTIE, sans exception(arbitrage Romain, `
        + `2026-08-13) : il exige des messages intermédiaires pendant la note, et ni le moteur ni le `
        + `résolveur d'arbre ne sonnent.`);
   } else {
@@ -106,7 +106,7 @@ ok(!SORTIES.has('BPx') && !SORTIES.has('Kairos'),
    "2. TÉMOIN : ni 'BPx' ni 'Kairos' ne comptent comme une sortie — sans quoi ce volet validerait "
    + "le rangement que Romain vient d'écarter");
 ok(LIBS.variation?.resolvedBy === 'Kairos',
-   `2. lib/variation.json doit déclarer Kairos comme destinataire (déclaré : ${LIBS.variation?.resolvedBy})`);
+   `2. lib/variation.json doit déclarer Kairos comme destinataire(déclaré : ${LIBS.variation?.resolvedBy})`);
 
 // ─── 3. CHAQUE MOT S'ÉCRIT — dans le flux ET sur un symbole ──────────────────────────────────
 for (const p of PARAMETRES) for (const m of MODES) {

@@ -119,7 +119,7 @@ ok(Array.isArray(LIBS?.engine?.engine?.scan?.values) && LIBS.engine.engine.scan.
 
   // LA SURFACE RESTE FERMÉE — sans ce témoin, retirer le renommage pourrait rouvrir `mm`.
   ok(err('mm:120\n-----\nS -> C4').length >= 1,
-     `TÉMOIN — 'mm:120' reste REFUSÉ en surface (sortie du langage le 2026-06-26) : le nom de `
+     `TÉMOIN — 'mm:120' reste REFUSÉ en surface(sortie du langage le 2026-06-26) : le nom de `
      + `l'arbre a changé, pas ce qu'un auteur a le droit d'écrire`);
 }
 
@@ -141,7 +141,7 @@ ok(Array.isArray(LIBS?.engine?.engine?.scan?.values) && LIBS.engine.engine.scan.
     registerLib('engine', modifie);
 
     ok(err('-----\nS -> C4 (scan:nord)').length === 0,
-       `INJECTION — '(scan:nord)' doit désormais PASSER (valeur ajoutée par la donnée injectée) ; `
+       `INJECTION — '(scan:nord)' doit désormais PASSER(valeur ajoutée par la donnée injectée) ; `
        + `reçu : ${JSON.stringify(err('-----\nS -> C4 (scan:nord)'))}`);
     ok(err('-----\nS -> C4 (scan:left)').length >= 1,
        `INJECTION — '(scan:left)' doit désormais être REFUSÉ ('left' n'est plus dans l'énumération `
@@ -164,7 +164,7 @@ ok(Array.isArray(LIBS?.engine?.engine?.scan?.values) && LIBS.engine.engine.scan.
 // ────────────────────────────────────────────────────────────────────────────
 {
   ok(err('duration:16\n-----\nS -> C4').length >= 1,
-     `'duration:16' doit rester REFUSÉ ('duration' n'est déclarée par aucune librairie) — `
+     `'duration:16' doit rester REFUSÉ('duration' n'est déclarée par aucune librairie) — `
      + `la forme dédiée en dur a été retirée, pas le refus`);
 }
 

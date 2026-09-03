@@ -128,7 +128,7 @@ for (const { lib, nom, def } of grandeurs) {
   for (const [motif, attendue] of CONNUES) {
     if (!motif.test(ou)) continue;
     ok(typeof def.unit === 'string' && def.unit.length > 0,
-       `1. '${lib}.${nom}' NOMME une unité (« ${(ou.match(motif) || [])[0]} ») dans son argument ou sa `
+       `1. '${lib}.${nom}' NOMME une unité(« ${(ou.match(motif) || [])[0]} ») dans son argument ou sa `
        + `description, et son champ \`unit\` est vide. Un consommateur qui interroge le champ lit `
        + `« aucune unité » et affiche un nombre nu — l'information est là, et elle est ENTERRÉE. `
        + `Attendu quelque chose comme « ${attendue} ».`);
@@ -158,7 +158,7 @@ for (const nom of COMPTAGE) {
     ok(/degrees|keys/i.test((x.def.args || []).join(' ')),
        `3. '${nom}' est inscrit comme comptage, et son argument ne compte plus rien — reçu args(${(x.def.args || []).join(', ')})`);
     ok(!(typeof x.def.unit === 'string' && x.def.unit),
-       `3. ⛔ '${nom}' porte une unité (${JSON.stringify(x.def.unit)}), et la décision de Romain du `
+       `3. ⛔ '${nom}' porte une unité(${JSON.stringify(x.def.unit)}), et la décision de Romain du `
        + `2026-08-22 dit l'inverse : « le degré et la touche N'ENTRENT PAS — un degré d'alphabet est `
        + `un RANG, pas une grandeur ». Son champ d'unité doit rester VIDE, et c'est \`args(`
        + `${(x.def.args || []).join(', ')})\` qui porte l'information.`);

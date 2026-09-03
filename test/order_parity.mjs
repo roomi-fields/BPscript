@@ -131,7 +131,7 @@ function refuserReglagesBP2(fichier) {
   throw new Error(
     `[ordre] réglages au format BP2 positionnel : ${fichier}\n`
     + `   Ce banc ne les convertit plus. La carte champ → ligne qu'il portait rendait un temps de\n`
-    + `   calcul de 0 ou 1 seconde sur 9 des 22 fichiers de ce format (item BPS-24), ce qui coupe la\n`
+    + `   calcul de 0 ou 1 seconde sur 9 des 22 fichiers de ce format(item BPS-24), ce qui coupe la\n`
     + `   production sans que rien ne le signale. La carte juste appartient à bp3-engine.\n`
     + `   Attendu : un fichier de réglages au format JSON.`,
   );
@@ -228,7 +228,7 @@ function buildEngineArgs(name, prodFile, { allowExcluded = false } = {}) {
     derives.set(tmpSe, {
       source: file,
       transformations: [
-        'lu tel quel (JSON)',
+        'lu tel quel(JSON)',
         'ShowGraphic=0', 'DisplayItems=1',
         ...Object.entries(gd?.se_overrides || {}).filter(([k]) => k !== '_comment').map(([k, v]) => `${k}=${v} (se_overrides du catalogue)`),
       ],
@@ -339,7 +339,7 @@ function nativeOrder(name, opts = {}) {
   // Garde anti-démesure : une dérivation non terminante (Improvize, livecode2) peut écrire
   // des centaines de Mo avant le timeout — jamais un oracle, et readFileSync exploserait.
   const sz = fs.statSync(prodFile).size;
-  if (sz > 50 * 1024 * 1024) { try { fs.unlinkSync(prodFile); } catch {} return { error: `production démesurée (${(sz / 1048576).toFixed(0)} Mo — dérivation non terminante)` }; }
+  if (sz > 50 * 1024 * 1024) { try { fs.unlinkSync(prodFile); } catch {} return { error: `production démesurée(${(sz / 1048576).toFixed(0)} Mo — dérivation non terminante)` }; }
   const canonical = fs.readFileSync(prodFile, 'utf8').trim();
   return { canonical, tokens: tokenizeOrder(canonical) };
 }
@@ -373,7 +373,7 @@ function oracleFige(name) {
   // seule espèce. La bascule sur `s3_native`, elle, tombe sur un corpus MIXTE — 22 pris par
   // `-o`, 33 par `--tokensout`. On refuse donc les seconds au lieu de les comparer de travers :
   // une comparaison entre deux mesures d'espèces différentes rougit toujours, et pour rien.
-  if (j.mode === 'midi') return { incomparable: 'oracle midi (--tokensout) — ce banc lit la voie texte' };
+  if (j.mode === 'midi') return { incomparable: 'oracle midi(--tokensout) — ce banc lit la voie texte' };
   const tokens = j.tokens.map((t) => t[0]);
   return { tokens, mode: j.mode ?? null };
 }
@@ -400,7 +400,7 @@ function writeTextOracle(name, tokens) {
   if (fs.existsSync(file)) {
     try {
       const prev = JSON.parse(fs.readFileSync(file, 'utf8'));
-      if (prev.mode === 'midi') return 'ORACLE MIDI en place (non touché)';
+      if (prev.mode === 'midi') return 'ORACLE MIDI en place(non touché)';
       if (JSON.stringify(prev.tokens) === JSON.stringify(newToks)) {
         // ⛔ L'IDEMPOTENCE PORTAIT SUR LES JETONS ET PAS SUR LES CONDITIONS, et c'est un trou.
         // Un instantané dont la mesure vient d'être CONFIRMÉE sur un binaire neuf continuait de
@@ -418,9 +418,9 @@ function writeTextOracle(name, tokens) {
         // lecteur croirait sur parole la moitié la plus pessimiste. Mon garde l'a attrapé — il
         // exige que le compte des blocs égale le compte des non-qualifiés.
         if (neuf.engineVersion && neuf.engineMd5 && neuf.command) delete neuf.conditions_de_mesure;
-        if (JSON.stringify(neuf) === JSON.stringify(prev)) return `inchangé — frais confirmé (${newToks.length} jetons)`;
+        if (JSON.stringify(neuf) === JSON.stringify(prev)) return `inchangé — frais confirmé(${newToks.length} jetons)`;
         fs.writeFileSync(file, JSON.stringify(neuf, null, 2));
-        return `mesure inchangée (${newToks.length} jetons) — CONDITIONS rafraîchies (binaire ${neuf.engineMd5?.slice(0, 8)})`;
+        return `mesure inchangée(${newToks.length} jetons) — CONDITIONS rafraîchies (binaire ${neuf.engineMd5?.slice(0, 8)})`;
       }
     } catch { /* illisible → réécrit */ }
   }

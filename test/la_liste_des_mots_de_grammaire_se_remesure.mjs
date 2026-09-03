@@ -41,7 +41,7 @@ const ok = (cond, quoi) => { if (cond) p++; else e.push(quoi); };
 const CAS = [
   ['def', 'def a C4'],
   ['actor', 'actor a alphabet.western'],
-  ['object', 'object zz (x:1)'],
+  ['object', 'object zz(x:1)'],
   ['var', 'var a'],
   ['in', 'in.midi pedale'],
   ['out', 'out.midi'],
@@ -85,7 +85,7 @@ ok(structurels.length > 0,
   `A. SOCLE : l'épreuve doit trouver au moins un mot structurel, sinon elle ne mesure plus rien. `
   + `Socle cassé sur : ${socleCasse.join(', ')}`);
 console.log(`[mots de grammaire] ${CAS.length} candidats · ${structurels.length} structurels · `
-  + `${socleCasse.length} sans ligne légitime (${socleCasse.join(' ')})`);
+  + `${socleCasse.length} sans ligne légitime(${socleCasse.join(' ')})`);
 
 // ── B. LA DONNÉE PUBLIÉE DIT EXACTEMENT CE QUE L'ÉPREUVE MESURE ──────────────────────────────
 {

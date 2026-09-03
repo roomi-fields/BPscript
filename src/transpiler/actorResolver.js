@@ -496,11 +496,11 @@ function verifierActeursReferences(ast, errors) {
       if (el.actor && !declares.has(el.actor) && !vus.has(el.actor)) {
         vus.add(el.actor);
         const connus = declares.size
-          ? `Acteurs déclarés : ${[...declares].join(', ')}.`
-          : "Cette scène ne déclare aucun acteur.";
+          ? `Declared actors: ${[...declares].join(', ')}.`
+          : "This scene declares no actor.";
         errors.push({
-          message: `Acteur inconnu '${el.actor}' dans '${el.actor}.${el.name}'`
-            + ` — un renvoi pointé doit nommer un acteur déclaré par actor. ${connus}`,
+          message: `unknown actor '${el.actor}' in '${el.actor}.${el.name}'`
+            + ` — a dotted reference must name an actor declared by actor. ${connus}`,
           line: el.line,
         });
       }

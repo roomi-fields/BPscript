@@ -32,7 +32,7 @@ const REFUS = [
   ['refus de SENS — alphabet inconnu', 'core\nalphabet.zorglubinvente\n-----\nS -> C4\n'],
   ['refus de SENS — état de drapeau inconnu', 'flag section(a:1)\n-----\nS -> A\n[section==zz] A -> C4\n'],
   ['refus de SENS — entrée absente du catalogue', 'core\ntuning.zorglubinvente\n-----\nS -> C4\n'],
-  ['refus de SENS — mot que rien ne déclare', 'zorglubinvente truc (x:1)\n-----\nS -> C4\n'],
+  ['refus de SENS — mot que rien ne déclare', 'zorglubinvente truc(x:1)\n-----\nS -> C4\n'],
   ['refus de FORME — parenthèse jamais fermée', 'core\n-----\nS -> ((\n'],
   ['refus de FORME — règle avant le délimiteur', 'flag section(a:1)\nS -> C4\n'],
 ];
@@ -45,8 +45,8 @@ for (const [quoi, src] of REFUS) {
 // ── B. ⛔ ET UN SUCCÈS EN LIVRE UN — sans quoi le volet A serait tenu par le vide ─────────────────
 const SUCCES = [
   ['une scène juste', 'core\nalphabet.western\n-----\nS -> C4\n'],
-  ['une librairie', 'def x (a:1)\n'],
-  ['un prototype et son exemplaire', 'def a (x)\na b (x:1)\n'],
+  ['une librairie', 'def x(a:1)\n'],
+  ['un prototype et son exemplaire', 'def a(x)\na b(x:1)\n'],
 ];
 for (const [quoi, src] of SUCCES) {
   const r = c(src);

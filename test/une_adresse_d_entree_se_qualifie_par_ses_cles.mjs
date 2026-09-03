@@ -47,7 +47,7 @@ const erreursDe = (src) => {
   try { return compileToBPxAST(src).errors ?? []; } catch (e) { return [{ message: e.message }]; }
 };
 const refusDAttribut = (src) =>
-  erreursDe(src).filter((e) => /attribut '\(.*?:…\)' inconnu/.test(String(e.message)));
+  erreursDe(src).filter((e) => /unknown attribute '\(.*?:…\)'/.test(String(e.message)));
 
 // ─── 0. SOCLE — les clés d'adresse sont une donnée, et les deux mots y sont ──────────────────
 clearRegistry();
@@ -115,7 +115,7 @@ for (const [quoi, cle] of [
 // erreur restante était le refus générique d'une valeur inconnue, qui ne dit pas la même chose.
 for (const cle of ['ch', 'channel', 'device', 'note', 'port']) {
   const m = erreursDe(`core\n${cle}:5\n-----\nS -> C4\n`).map((e) => String(e.message)).join(' | ');
-  ok(/ne peut pas s'écrire en tête de scène/.test(m),
+  ok(/cannot be written at the top of a scene/.test(m),
      `2bis. '${cle}' écrit en TÊTE DE SCÈNE doit être refusé au nom de sa portée déclarée — reçu : `
      + `${m.slice(0, 120)}`);
 }

@@ -56,7 +56,7 @@ for (const [quoi, decl] of [
   const r = compiler(decl);
   ok(!r.ok, `B. ${quoi} doit être REFUSÉE — 'flag <nom>:<entier>' est la seule forme depuis le `
     + `2026-08-22. Reçu : ${r.ok ? 'ACCEPTÉE' : ''}`);
-  ok(/porte sa valeur initiale/.test(r.err),
+  ok(/carries its initial value/.test(r.err),
      `B. et le refus de ${quoi} doit NOMMER la forme attendue — un refus muet laisse chercher la `
      + `faute dans la ligne au lieu de la donner. Reçu : ${r.err.slice(0, 90)}`);
 }
@@ -83,7 +83,7 @@ for (const [quoi, decl] of [
 {
   const r = compiler('flag steps:zero');
   ok(!r.ok, 'D. une valeur NON ENTIÈRE doit être refusée');
-  ok(/valeur initiale est un ENTIER/.test(r.err),
+  ok(/the initial value is an INTEGER/.test(r.err),
      `D. et le refus doit NOMMER ce qui est attendu, plus la forme des états nommés — sans ça `
      + `l'auteur ne sait pas laquelle des deux écritures il visait. Reçu : ${r.err}`);
 }

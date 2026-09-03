@@ -44,7 +44,7 @@ function productions(texte) {
     const cloture = /^```/.test(l);
     if (cloture) {
       if (dans) { blocs.push(courant.join('\n')); courant = []; dans = false; }
-      else if (/^```ebnf\s*$/.test(l)) dans = true;
+      else if(/^```ebnf\s*$/.test(l)) dans = true;
       continue;
     }
     if (dans) courant.push(l);
@@ -138,10 +138,10 @@ descendre(AXIOME);
 const INACCESSIBLES_CONNUS = new Map([
   ['STRING', "mesuré le 2026-08-06, cause RÉVISÉE le même jour. Le lexème n'était référencé par "
     + "aucune production parce que la seule écriture qui le portait, `@library.<moteur> \"<banque>\"`, "
-    + "n'était pas décrite. Cette directive a depuis été SUPPRIMÉE du langage (décision Romain : la "
+    + "n'était pas décrite. Cette directive a depuis été SUPPRIMÉE du langage(décision Romain : la "
     + "banque est un paramètre intrinsèque du moteur, `eval.strudel(bank:…)`), donc ce trou-là est "
     + "refermé — mais le lexème reste orphelin, pour une AUTRE raison : le parseur accepte encore "
-    + "une valeur entre guillemets dans une paire de propriété (parser.js:2629) et la production "
+    + "une valeur entre guillemets dans une paire de propriété(parser.js:2629) et la production "
     + "`value` de la grammaire ne prévoit que INT, FLOAT et IDENT. ⚠️ Une entrée de registre dont "
     + "la CAUSE change n'est pas la même dette : la réécrire vaut mieux que la laisser dire une "
     + "raison périmée."],

@@ -109,6 +109,6 @@ dire(compile('alphabet.western').errors.length === 0, 'alphabet.western doit res
 dire(compile('out.midi(ch:1)').errors.length === 0, 'out.midi(ch:1) doit rester ACCEPTÉ');
 
 console.log(echecs === 0
-  ? `✅ le préfixe par la librairie ne contourne aucun refus (${paires.length} paires × identité du refus, + 8 témoins)`
+  ? `✅ le préfixe par la librairie ne contourne aucun refus(${paires.length} paires × identité du refus, + 8 témoins)`
   : `❌ ${echecs} échec(s)`);
 process.exit(echecs === 0 ? 0 : 1);

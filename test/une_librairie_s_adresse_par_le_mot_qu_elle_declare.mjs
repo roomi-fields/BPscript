@@ -37,7 +37,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-/** fichier → mot qu'il déclare (null s'il n'en déclare aucun). */
+/** fichier → mot qu'il déclare(null s'il n'en déclare aucun). */
 const motDuFichier = (f) => (LIBS[f] && typeof LIBS[f] === 'object' ? LIBS[f].resolves : null) || null;
 
 /** mot → tous les fichiers qui le déclarent. */

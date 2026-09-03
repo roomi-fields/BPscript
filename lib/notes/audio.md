@@ -1,0 +1,66 @@
+# Notes — librairie `audio`
+
+Ce que `lib/audio.bpsl` ne montre pas : la cause d'une valeur, l'histoire d'une forme, la
+borne d'une mesure. La source porte ce qui EST, cette note porte le reste.
+
+## types
+
+LA LIBRAIRIE DES CONTRÔLES DE SORTIE AUDIO — écrite dans le langage qu'elle sert.
+Convertie depuis lib/audio.json le 2026-08-13. Le bundle en rend la MÊME donnée : les
+consommateurs ne voient aucun changement, c'est l'AUTHORING qui change.
+
+⚠️ LA DOCUMENTATION EST UN COMMENTAIRE, plus une clé `_xxx_doc` dans la donnée. C'est le geste
+   du langage — un commentaire ne voyage pas jusqu'aux consommateurs, une clé si.
+SCISSION — Née le 2026-08-10 de la scission de controls.json (Romain : « controls.json doit être
+divisé », une librairie = un destinataire, LIBRAIRIES.md:213). Porte le groupe 'audio' ORIGINEL,
+verbatim.
+SCOPE — OU CE CONTROLE A LE DROIT D ETRE ECRIT — une LISTE, jamais une valeur seule. Vocabulaire
+FERME de six mots, arrete par Romain le 2026-08-08 : scene, subgrammar, rule, group, symbol,
+flow. L accrochage dans l arbre DIT deja la portee ; cette declaration ne sert donc pas a
+localiser un reglage mais a REFUSER celui qui est mal place — sans elle on lit n importe quoi n
+importe ou sans pouvoir le dire (c est ce qui a rendu un poids muet pendant quatre jours).
+symbol couvre TOUT element du flux, pas seulement une note : un silence, une prolongation, un
+joker et les deux membres d un gabarit portent aussi un sac (mesure : 10 porteurs dans l arbre).
+flow = le sac pose avec ! ; ce n est pas une portee au sens de LANGUAGE.md (c est un etat
+courant, par voix) mais la validation doit pouvoir dire qu un poids n a rien a y faire. L
+ABSENCE DE CE CHAMP EST UNE FAUTE, gardee : 57 des 65 controles n en portaient aucun, et une
+absence qui voudrait dire  partout  rendrait toute validation impossible. ⚠️ IL N Y A QU UN SEUL
+AXE. Un axe  portee d EFFET  distinct de la portee d ECRITURE etait prevu ; il reposait
+entierement sur mode — ecrit sur une regle, gouvernant le bloc. Mesure du 2026-08-08 : cette
+forme n existe ni au moteur d origine, ni dans une seule des 274 scenes, et l arbre ne l
+appliquait nulle part. Romain l a supprimee. L axe tombe avec elle.
+
+## wave
+
+Audio (Web Audio) specific controls — groupe renommé webaudio→audio (canon 2026-07-16)
+
+## filter
+
+filter · DEFAULT — DEFAUT CORRIGE le 2026-08-08. Il valait 0, HORS de sa propre plage [20,20000]
+— meme defaut que celui d ins, trouve par le meme produit croise. 0 Hz ne veut rien dire pour
+une coupure passe-bas : ce serait tout couper. Le defaut retenu est la BORNE HAUTE, qui veut
+dire ce que l absence de reglage doit vouloir dire — un filtre TRANSPARENT, au-dessus de l
+audible. ⚠️ Contrairement a ins, ce controle n a AUCUN antecedent dans le moteur d origine (Web
+Audio) : la valeur n est donc pas mesuree mais RAISONNEE, et elle se corrige si quelqu un mesure
+mieux.
+
+## volume
+
+VOLUME · LA REALISATION AUDIO DE L INTERFACE GENERIQUE. `expression.volume` est le mot que
+l auteur ecrit ; celui-ci est ce que la sortie audio en fait — le gain d ACTEUR, un etage
+permanent entre les voix d un acteur et le maitre. Grandeur : un gain LINEAIRE, unite ratio.
+Mesure de runtime-audio, rendu par rendu hors-ligne a travers son vrai adaptateur.
+
+⛔ LA PLAGE EST 0..127, ET C EST DELIBERE malgre un gain qui vit en ratio. La forme nue
+`!(volume:90)` resout vers l INTERFACE, dont la plage est 0..127 ; une realisation declaree
+0..1 rendrait `volume:90` HORS PLAGE des qu un acteur sort en audio. La conversion vers le
+ratio appartient au runtime et n a pas a se lire dans la librairie.
+
+⚠️ ET SA LOI DE CONVERSION EST RAISONNEE, PAS MESUREE — runtime-audio le dit lui-meme : aucun
+oracle natif n existe pour cette courbe, le moteur d origine sort `_volume` sur le controleur 7
+et c est un synthe EXTERNE qui fabrique le son. Elle vaut (v/127) au carre, convention General
+MIDI. Le mot repose la-dessus, et la librairie ne le cache pas.
+
+AUCUNE VALEUR PAR DEFAUT, comme l interface et pour sa raison : les defauts vivent dans la
+librairie d environnement de chaque sortie.
+

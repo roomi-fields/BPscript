@@ -55,7 +55,7 @@ function fichiersDeCode(dir, out = []) {
     if (e === 'node_modules' || e === '.git' || e === 'dist' || e === 'lib') continue;
     const p = path.join(dir, e);
     if (statSync(p).isDirectory()) fichiersDeCode(p, out);
-    else if (/\.(m?js|ts)$/.test(e) && !/\.d\.ts$/.test(e)) out.push(p);
+    else if(/\.(m?js|ts)$/.test(e) && !/\.d\.ts$/.test(e)) out.push(p);
   }
   return out;
 }

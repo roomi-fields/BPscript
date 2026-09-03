@@ -59,7 +59,7 @@ const resoudre = (corps) => {
 const CHANNELS = canaux();
 const ENTREE = Object.keys(CHANNELS).filter((c) => CHANNELS[c]?.in);
 const SORTIE = Object.keys(CHANNELS).filter((c) => CHANNELS[c]?.out);
-ok(ENTREE.length === 3, `1. trois canaux d'entrée attendus (décision 2026-07-26) — reçu ${JSON.stringify(ENTREE)}`);
+ok(ENTREE.length === 3, `1. trois canaux d'entrée attendus(décision 2026-07-26) — reçu ${JSON.stringify(ENTREE)}`);
 for (const c of ['midi', 'osc', 'keyboard']) {
   ok(ENTREE.includes(c), `1. '${c}' doit être un canal d'ENTRÉE`);
 }
@@ -107,7 +107,7 @@ for (const [corps, quoi, mot] of [
   // inconnue » le contient aussi. Prouvé par injection le 2026-07-27 — en désactivant la branche
   // dédiée, la garde restait VERTE. On exige donc ce que la contrainte a de PROPRE : dire qu'il
   // n'y a rien à résoudre en entrée, et renvoyer vers la table.
-  ['in.midi x alphabet.sargam\nmode:ord\n-----\nS -> C4', 'un ALPHABET sur une entrée', 'rien'],
+  ['in.midi x alphabet.sargam\nmode:ord\n-----\nS -> C4', 'un ALPHABET sur une entrée', 'nothing'],
   ['in.audio x\nmode:ord\n-----\nS -> C4', 'un canal de SORTIE employé en entrée', 'audio'],
   ['in.bluetooth x\nmode:ord\n-----\nS -> C4', 'un canal inventé', 'bluetooth'],
   ['in.midi x octaves.western\nmode:ord\n-----\nS -> C4', 'une propriété étrangère', 'octaves'],
@@ -116,18 +116,18 @@ for (const [corps, quoi, mot] of [
   // c'est le CANAL qui engage, et le rôle qui peut manquer. `in.midi` seul est désormais la
   // forme incomplète, et son refus doit renvoyer au rôle — c'est exactement ce que la version
   // précédente mesurait sur `var` nu, sur l'autre moitié de la ligne.
-  ['in.midi\nmode:ord\n-----\nS -> C4', 'un canal sans son rôle', 'RÔLE'],
+  ['in.midi\nmode:ord\n-----\nS -> C4', 'un canal sans son rôle', 'ROLE'],
 ]) {
   const r = compile(corps);
   const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
   ok((r.errors || []).length > 0, `3. ${quoi} doit être REFUSÉ`);
-  ok(msg.includes(mot), `3. et le refus doit NOMMER la faute ('${mot}') — reçu : ${msg.slice(0, 120)}`);
+  ok(msg.includes(mot), `3. et le refus doit NOMMER la faute('${mot}') — reçu : ${msg.slice(0, 120)}`);
 }
 // Le refus de l'alphabet doit dire POURQUOI, pas seulement refuser.
 {
   const msg = (compile('in.midi x alphabet.sargam\nmode:ord\n-----\nS -> C4').errors || [])
     .map((e) => e.message || e).join(' | ');
-  ok(msg.includes('AUCUN alphabet') && msg.includes('DISCRET') && msg.includes('mapping'),
+  ok(msg.includes('NO alphabet') && msg.includes('DISCRETE') && msg.includes('mapping'),
      `3. le refus de l'alphabet doit expliquer qu'il n'y a RIEN à résoudre en entrée et renvoyer `
      + `vers la table — reçu : ${msg.slice(0, 160)}`);
 }

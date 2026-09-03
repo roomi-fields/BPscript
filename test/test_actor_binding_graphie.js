@@ -83,7 +83,7 @@ console.log('\n=== CUTOVER : l\'ancienne forme d\'entité en `:` CRIE désormais
   let msg = '';
   try { parse(tokenize('core\nactor voice out:browser\n-----\nS -> sa\n')); }
   catch (e) { msg = e.message; }
-  assert('le message pointe le canon `out.<nom>`', msg.includes("out.<nom>"), msg);
+  assert('le message pointe le canon `out.<nom>`', msg.includes("out.<name>"), msg);
 }
 
 console.log('\n=== `transport` NE MARCHE PLUS sur un acteur, `.` comme `:` ===');
@@ -110,7 +110,7 @@ console.log('\n=== `transport` NE MARCHE PLUS sur un acteur, `.` comme `:` ===')
   let msg = '';
   try { parse(tokenize('core\nactor voice transport.audio\n-----\nS -> sa\n')); }
   catch (e) { msg = e.message; }
-  assert('le refus enseigne la clé vivante `out.<canal>`', msg.includes('out.<canal>'), msg);
+  assert('le refus enseigne la clé vivante `out.<canal>`', msg.includes('out.<channel>'), msg);
   assert('et il n\'ÉCRIT PAS le mot sorti', !msg.includes('transport'), msg);
 }
 

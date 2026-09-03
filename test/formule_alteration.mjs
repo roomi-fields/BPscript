@@ -9,7 +9,7 @@
  *   ratio       = temperament.ratios[gridStep] * period_ratio ** octaveShift
  *
  * Ce banc PROUVE que la DATA bpscript (lib/*.json) suffit à la formule et donne les bonnes valeurs —
- * il n'EST PAS le résolveur (rôle Kairos, PORTER≠RÉSOUDRE) : c'est un oracle de référence + un garde
+ * il n'EST PAS le résolveur(rôle Kairos, PORTER≠RÉSOUDRE) : c'est un oracle de référence + un garde
  * anti-régression sur la grille. La résolution hz réelle (et sa preuve e2e) vit chez Kairos.
  */
 import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur (2026-09-02)

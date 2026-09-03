@@ -73,7 +73,7 @@ const restaurer = () => { clearRegistry(); registerAll(LIBS); };
   const { ctx } = charger(interfaceLib(), implementationLib(null));
   ok(!!ctx && !!ctx.controlsQualified['zzface.zzvolume'] && !!ctx.controlsQualified['zzmidi.zzvolume'],
      '0. SOCLE : les deux fixtures doivent être chargées et qualifiées — sinon les volets suivants '
-     + "ne mesurent rien (un garde qui n'a rien examiné se croit vert)");
+     + "ne mesurent rien(un garde qui n'a rien examiné se croit vert)");
 }
 
 // ── 1. SANS `implements`, LA RÈGLE NE CHANGE PAS — deux homonymes restent ambigus ──────────────

@@ -70,9 +70,9 @@ const AMBIGUES = [
 ];
 const PROPRIETES = [
   ['est refusée', (r) => r.length >= 1],
-  ['le refus NOMME le conflit (un terminal de l\'alphabet)', (r) => r.some((m) => /TERMINAL de l'alphabet actif/.test(m))],
+  ['le refus NOMME le conflit(un terminal de l\'alphabet)', (r) => r.some((m) => /TERMINAL de l'alphabet actif/.test(m))],
   ['le refus dit que l\'ambiguïté est de LECTURE', (r) => r.some((m) => /ne dirait plus si elle joue la note/.test(m))],
-  ['le refus propose la SORTIE (changer de nom)', (r) => r.some((m) => /Choisir un autre nom/.test(m))],
+  ['le refus propose la SORTIE(changer de nom)', (r) => r.some((m) => /Choisir un autre nom/.test(m))],
   ['le refus dit qu\'il tombe à la DÉCLARATION', (r) => r.some((m) => /DÉCLARATION/.test(m))],
 ];
 console.log(`[macro homonyme] ${AMBIGUES.length} situations × ${PROPRIETES.length} propriétés`);
@@ -92,7 +92,7 @@ const LEGITIMES = [
   // légitime : c'était la description de ma zone aveugle, pas d'une règle. Depuis la cascade
   // core, une scène qui se tait hérite de `western`, donc `G4` y est une note et la règle mord.
   // Ce qui reste légitime, c'est la hauteur OPAQUE — et elle, elle est testée ci-dessous.
-  ['hauteur OPAQUE invoquée : l\'alphabet est ABSENT pour de vrai (loi 35)',
+  ['hauteur OPAQUE invoquée : l\'alphabet est ABSENT pour de vrai(loi 35)',
    'core\nmine.perso.gamme\nmacro G4 saw >> audio\n-----\nS -> C4 D4'],
 ];
 for (const [nom, src] of LEGITIMES) ok(refus(src).length === 0, `LÉGITIME ${nom} — doit passer`);
@@ -115,7 +115,7 @@ const COUVERTES_AILLEURS = [
 ];
 for (const [nom, src] of COUVERTES_AILLEURS) {
   ok(refus(src).length >= 1,
-    `${nom} — désormais REFUSÉ par la règle générale (l'était pas quand seule la macro comptait)`);
+    `${nom} — désormais REFUSÉ par la règle générale(l'était pas quand seule la macro comptait)`);
 }
 
 if (echecs.length) {

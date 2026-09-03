@@ -42,13 +42,13 @@ const RACINE = new URL('..', import.meta.url).pathname;
 // portent les entrées, et la place `objects` porte un membre imbriqué. Les trois chemins que le
 // générateur emprunte, dans une seule source.
 const SOURCE = `// témoin du garde des littéraux — fabriqué, jamais lu par une scène
-def zz_temoin (resolvedBy:zz, resolves:zz_temoin, section:objects)
+def zz_temoin(resolvedBy:zz, resolves:zz_temoin, section:objects)
 
-def surface (vrai:true, faux:false, nombre:12, mot:oui)
+def surface(vrai:true, faux:false, nombre:12, mot:oui)
 
-def profond (place(dedans(vrai:true, faux:false, nombre:12, mot:oui)))
+def profond(place(dedans(vrai:true, faux:false, nombre:12, mot:oui)))
 
-def suites (surface(a, b), place(dedans(profonde(a, b))))
+def suites(surface(a, b), place(dedans(profonde(a, b))))
 `;
 
 const bac = mkdtempSync(join(tmpdir(), 'zz-litteral-'));

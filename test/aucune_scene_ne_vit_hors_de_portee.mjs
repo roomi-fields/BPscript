@@ -77,7 +77,7 @@ const reel = [];
 for (const [ou, racine] of RACINES) for (const s of scenesSous(racine)) reel.push({ ou, chemin: s });
 
 // ── SOCLE : un garde qui n'examine rien ne prouve rien ────────────────────────
-ok(reel.length > 0, 'SOCLE — au moins une scène doit exister (sinon ce garde ne prouve rien)');
+ok(reel.length > 0, 'SOCLE — au moins une scène doit exister(sinon ce garde ne prouve rien)');
 for (const [ou, racine] of RACINES) {
   ok(scenesSous(racine).length > 0, `SOCLE — ${ou} (${racine}) doit contenir des scènes`);
 }
@@ -111,7 +111,7 @@ for (const d of HORS_PORTEE_ASSUME) {
 }
 
 // ── TÉMOIN ANTI-RÉTRÉCISSEMENT ───────────────────────────────────────────────
-ok(RACINES.length >= 2, 'TÉMOIN — la portée couvre TOUJOURS les deux côtés (bibliothèque ET dépôt)');
+ok(RACINES.length >= 2, 'TÉMOIN — la portée couvre TOUJOURS les deux côtés(bibliothèque ET dépôt)');
 ok(HORS_PORTEE_ASSUME.every((d) => d.depuis && d.pourquoi && d.pourquoi.length > 40),
   'TÉMOIN — chaque dérogation porte sa date ET son motif écrit');
 
@@ -121,5 +121,5 @@ if (echecs.length) {
   process.exit(1);
 }
 console.log(`[portée des scènes] ${reel.length} scène(s) existent · ${verifie.size} vérifiée(s) · `
-  + `${[...derogees.values()].reduce((a, b) => a + b, 0)} hors portée ASSUMÉE (${HORS_PORTEE_ASSUME.length} motifs)`);
+  + `${[...derogees.values()].reduce((a, b) => a + b, 0)} hors portée ASSUMÉE(${HORS_PORTEE_ASSUME.length} motifs)`);
 console.log(`[portée des scènes] ${passe} PASS / 0 FAIL — ${passe} assertion(s)`);

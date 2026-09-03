@@ -139,14 +139,14 @@ const noms = (r, i = 0) => ((r.ast?.subgrammars?.[i]?.rules?.[0]?.rhs) || []).ma
   // Le refus NOMME LE RESTE, pas le mot — « Can't make sense of "a" » sur le natif.
   for (const [nom, reste] of [['dhaXY', 'XY'], ['dhagenaZ', 'Z']]) {
     const msg = messages(compiler(`S -> ${nom}\n`));
-    ok(new RegExp(`segmentation bloquée sur '${reste}'`).test(msg),
+    ok(new RegExp(`segmentation stopped at '${reste}'`).test(msg),
        `D-témoin. '${nom}' doit REFUSER en nommant le reste '${reste}'. Reçu : ${msg.slice(0, 110)}. `
        + `Nommer le mot entier envoie chercher un terminal qui n'a jamais eu à exister.`);
   }
 
   // Un nom qu'AUCUN préfixe n'entame refuse sans parler de segmentation.
-  ok(/absent des alphabets en portée/.test(messages(compiler('S -> zzz\n')))
-     && !/segmentation bloquée/.test(messages(compiler('S -> zzz\n'))),
+  ok(/absent from the alphabets in scope/.test(messages(compiler('S -> zzz\n')))
+     && !/segmentation stopped/.test(messages(compiler('S -> zzz\n'))),
      `D-témoin. 'zzz' n'entame aucun terminal : le refus reste celui d'un terminal inconnu, sans `
      + `invoquer une segmentation qui n'a rien commencé.`);
 }
@@ -266,7 +266,7 @@ const noms = (r, i = 0) => ((r.ast?.subgrammars?.[i]?.rules?.[0]?.rhs) || []).ma
   // ⚠️ ET LA MOITIÉ QUI EMPÊCHE DE « RÉPARER » EN JETANT L'INFORMATION : le refus doit toujours
   // nommer le reste. Sortir le champ de l'arbre sans le conserver ailleurs rendrait ce volet vert
   // et le message muet.
-  ok(/segmentation bloquée sur 'XY'/.test(messages(compiler('S -> dhaXY\n'))),
+  ok(/segmentation stopped at 'XY'/.test(messages(compiler('S -> dhaXY\n'))),
      `G. le refus nomme toujours le reste alors que l'arbre n'en porte rien — sinon l'information a `
      + `été jetée au lieu d'être déplacée.`);
 }

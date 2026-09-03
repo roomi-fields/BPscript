@@ -61,13 +61,13 @@ for (const [nom, arg] of [['vel', '120'], ['chan', '3'], ['transpose', '2'], ['r
     '_transpose : le refus nomme « chromashift », la clé qui DÉCLARE ce geste natif');
   verifier(!/!\(transpose:…\)/.test(m),
     "_transpose : le refus ne propose SURTOUT PAS « transpose », qui est un autre geste");
-  verifier(/AUTRE geste/.test(m),
+  verifier(/DIFFERENT gesture/.test(m),
     "_transpose : et il DIT que la clé de même nom en désigne un autre — sans quoi la mise en garde manque");
 }
 {
   // Le complément : un nom que personne n'a renommé se rend tel quel, sans mise en garde parasite.
   const m = refuse('S -> _vel(120) C4').map((e) => e.message).join(' ');
-  verifier(/!\(vel:/.test(m) && !/AUTRE geste/.test(m),
+  verifier(/!\(vel:/.test(m) && !/DIFFERENT gesture/.test(m),
     '_vel : rendu tel quel, et AUCUNE mise en garde de renommage là où il n\'y en a pas');
 }
 
@@ -78,7 +78,7 @@ for (const [nom, val] of [['vel', '120'], ['chan', '3'], ['rndvel', '20']]) {
 }
 verifier(refuse('S -> !(xyzzy:1) C4').length > 0,
   "!(xyzzy:1) est REFUSÉ : un contrôle non déclaré ne compile pas, forme du langage comprise");
-verifier(refuse('S -> !(xyzzy:1) C4').some((e) => /inconnu/.test(e.message)),
+verifier(refuse('S -> !(xyzzy:1) C4').some((e) => /unknown/.test(e.message)),
   'et son refus dit que le nom est inconnu');
 
 // ── LE COMPLÉMENT — LA PROLONGATION N'EST PAS TOUCHÉE ─────────────────────────────────────────
@@ -100,7 +100,7 @@ verifier(compile('S -> C4 _ _ _ D4').errors.length === 0, 'trois prolongations d
   const D = '/home/romi/dev/bp/kanopi/packages/library/scenes/BPScript-tests';
   let scenes = [];
   try { scenes = readdirSync(D).filter((f) => f.endsWith('.bps')); } catch { /* corpus absent */ }
-  verifier(scenes.length > 100, `le corpus de scènes est lisible (${scenes.length} scènes)`);
+  verifier(scenes.length > 100, `le corpus de scènes est lisible(${scenes.length} scènes)`);
   const fautives = [];
   for (const f of scenes) {
     // Le commentaire cite légitimement la graphie native (« ordre natif : … ») : on ne lit que le CODE.

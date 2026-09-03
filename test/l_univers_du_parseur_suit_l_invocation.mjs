@@ -30,7 +30,7 @@ let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const erreurs = (src) => { try { return (compileToBPxAST(src, {}).errors || []).map((e) => String(e.message)); } catch (e) { return ['PLANTAGE ' + e.message]; } };
-const refuseEnNommant = (msgs, mot, lib) => msgs.some((m) => new RegExp(`'${mot}' n'est pas en portée.*'${lib}'`).test(m));
+const refuseEnNommant = (msgs, mot, lib) => msgs.some((m) => new RegExp(`'${mot}' is not in scope.*'${lib}'`).test(m));
 
 // ── 1. LA MATRICE : place × (sans | avec) ──────────────────────────────────────────────────────
 const CAS = [
@@ -72,17 +72,17 @@ for (const [place, mot, lib, sans, avec, avecCore] of CAS) {
   const avec = erreurs('core\n-----\nS -> C4 [goto:2]\nS -> D4\n');
   ok(avec.length === 0, `2. '[goto:2]' avec core est accepté — reçu ${JSON.stringify(avec)}`);
   const modeSans = erreurs('alphabet.western\n-----\nmode:random(striated)\nS -> C4\n');
-  ok(modeSans.some((m) => /striated.*aucune librairie invoquée.*'engine'/.test(m)),
+  ok(modeSans.some((m) => /striated.*is not declared by any invoked library.*'engine'/.test(m)),
      `2. 'mode:random(striated)' sans 'engine' est refusé en nommant 'engine' — reçu ${JSON.stringify(modeSans)}`);
 }
 
 // ── 3. UN MOT QUE PERSONNE NE DÉCLARE reste inconnu, sans déclarant inventé ────────────────────
 {
   const tete = erreurs('core\nzzinconnu:3\n-----\nS -> C4\n');
-  ok(tete.length > 0 && !tete.some((m) => /n'est pas en portée/.test(m)),
+  ok(tete.length > 0 && !tete.some((m) => /is not in scope/.test(m)),
      `3. 'zzinconnu:3' en tête est refusé comme INCONNU, jamais comme hors portée — reçu ${JSON.stringify(tete)}`);
   const sac = erreurs('core\n-----\nS -> C4(zzinconnu:3)\n');
-  ok(sac.length > 0 && !sac.some((m) => /n'est pas en portée/.test(m)),
+  ok(sac.length > 0 && !sac.some((m) => /is not in scope/.test(m)),
      `3. '(zzinconnu:3)' est refusé comme INCONNU, jamais comme hors portée — reçu ${JSON.stringify(sac)}`);
 }
 
@@ -115,7 +115,7 @@ for (const [place, mot, lib, sans, avec, avecCore] of CAS) {
   ok(univers.length === 1 && univers[0] === 'universeControlNames',
      `5. le chargeur ne garde qu'UN vocabulaire du registre, pour les outils qui le décrivent — reçu ${JSON.stringify(univers)}`);
   ok(/for \(const dir of aCharger\) \{\s*\n\s*const lib = dir && dir\.name \? loadJsonFile\(dir\.name\) : null;/.test(libs),
-     '5. les mots de tête et les clés d\'adresse se relèvent sur les librairies INVOQUÉES (aCharger), pas sur le registre');
+     '5. les mots de tête et les clés d\'adresse se relèvent sur les librairies INVOQUÉES(aCharger), pas sur le registre');
 }
 
 ok(passe >= 30, `SOCLE : ${passe} vérifications — la matrice s'est vidée`);

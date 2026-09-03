@@ -43,16 +43,16 @@ const arbreDe = (src) => {
 // ─── 0. TÉMOIN — l'absence se dit `null`, pas un tableau vide ────────────────────────────────
 {
   const t = arbreDe(`${TETE}\n-----\nS -> C4\n`);
-  ok(t.e.length === 0, `0. la scène sans init doit compiler (${t.e[0]?.message})`);
+  ok(t.e.length === 0, `0. la scène sans init doit compiler(${t.e[0]?.message})`);
   ok(t.ast.init === null,
      `0. sans init, l'arbre porte null — pas un tableau vide, sinon « la scène n'en a pas » et `
-     + `« elle en a un vide » deviennent indistinguables (reçu ${JSON.stringify(t.ast.init)})`);
+     + `« elle en a un vide » deviennent indistinguables(reçu ${JSON.stringify(t.ast.init)})`);
 }
 
 // ─── 1. LE CODE LANCÉ UNE FOIS ATTEINT L'ARBRE ───────────────────────────────────────────────
 {
   const t = arbreDe(`${TETE}init\n  \`js: setup()\`\n\n-----\nS -> C4\n`);
-  ok(t.e.length === 0, `1. init avec du code doit compiler (${t.e[0]?.message})`);
+  ok(t.e.length === 0, `1. init avec du code doit compiler(${t.e[0]?.message})`);
   ok(Array.isArray(t.ast?.init) && t.ast.init.length === 1,
      `1. l'arbre doit porter UNE entrée (reçu ${JSON.stringify(t.ast?.init)})`);
   const c = t.ast?.init?.[0];
@@ -64,10 +64,10 @@ const arbreDe = (src) => {
 // ─── 2. LES VALEURS DE DÉPART AUSSI ──────────────────────────────────────────────────────────
 {
   const t = arbreDe(`${TETE}init\n  !(vel:100)\n\n-----\nS -> C4\n`);
-  ok(t.e.length === 0, `2. init avec une valeur doit compiler (${t.e[0]?.message})`);
+  ok(t.e.length === 0, `2. init avec une valeur doit compiler(${t.e[0]?.message})`);
   const v = t.ast?.init?.[0];
   ok(v?.type === 'SettingBag' && v.pairs?.[0]?.key === 'vel' && v.pairs[0].value === 100,
-     `2. la valeur de départ doit atteindre l'arbre avec sa clé et sa valeur (reçu ${JSON.stringify(v)})`);
+     `2. la valeur de départ doit atteindre l'arbre avec sa clé et sa valeur(reçu ${JSON.stringify(v)})`);
 }
 
 // ─── 3. LES DEUX ENSEMBLE, DANS L'ORDRE ÉCRIT ────────────────────────────────────────────────
@@ -75,10 +75,10 @@ const arbreDe = (src) => {
 // départ compte — poser une valeur avant ou après avoir lancé le code n'est pas la même chose.
 {
   const t = arbreDe(`${TETE}init\n  !(vel:100)\n  \`js: setup()\`\n\n-----\nS -> C4\n`);
-  ok(t.e.length === 0, `3. les deux ensemble doivent compiler (${t.e[0]?.message})`);
+  ok(t.e.length === 0, `3. les deux ensemble doivent compiler(${t.e[0]?.message})`);
   ok(t.ast?.init?.length === 2
      && t.ast.init[0].type === 'SettingBag' && t.ast.init[1].type === 'BacktickOrphan',
-     `3. l'ordre ÉCRIT doit être conservé — valeur puis code ici (reçu `
+     `3. l'ordre ÉCRIT doit être conservé — valeur puis code ici(reçu `
      + `${JSON.stringify((t.ast?.init || []).map((x) => x.type))})`);
 }
 
@@ -110,7 +110,7 @@ const arbreDe = (src) => {
 // Et un tag inconnu reste refusé, comme partout : la liste des évaluateurs vaut ici aussi.
 {
   const t = arbreDe(`${TETE}init\n  \`zz: setup()\`\n\n-----\nS -> C4\n`);
-  ok(t.e.some((x) => /évaluateur qui n'est pas déclaré/.test(String(x.message))),
+  ok(t.e.some((x) => /an evaluator that is not declared/.test(String(x.message))),
      "5. un tag INCONNU doit être refusé dans init comme ailleurs — le contrôle des évaluateurs "
      + "ne s'arrête pas à la porte de cette directive");
 }

@@ -87,7 +87,7 @@ for (const [fichier, axe] of [['voices', 'voice']]) {
 
 // ── LES TROIS ADMIS DOIVENT RESTER SANS AXE — sinon leur dérogation n'a plus lieu d'être ─────────
 for (const [nom, raison] of ADMIS) {
-  ok(!AXES.has(nom), `'${nom}' est admis comme nom de fichier (${raison}) — mais un axe le porte maintenant : le brancher dessus et le retirer d'ADMIS`);
+  ok(!AXES.has(nom), `'${nom}' est admis comme nom de fichier(${raison}) — mais un axe le porte maintenant : le brancher dessus et le retirer d'ADMIS`);
 }
 
 const ATTENDU = 1 + 1 + 3 + ADMIS.size;   // un couple fichier/axe depuis la sortie de `digital`

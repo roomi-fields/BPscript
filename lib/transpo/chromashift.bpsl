@@ -1,3 +1,20 @@
+control chromashift(
+  bp3:_transpose,
+  args(keys),
+  value:0,
+  description:"Chromatic transposition on the 12-key grid — shift N chromatic keys (semitones), rename to target key + its tuning. Image of BP3 _transpose (Romain decision 2026-07-17). Distinct from scaleshift (diatonic degrees) and transpose (real, name preserved).",
+  scope(symbol, group, rule, flow, scene),
+  transportGroup:transpo,
+  rank:10,
+  params(
+    n(
+      from:value,
+      coerce:raw,
+      default:0,
+      description:"Nombre de clés chromatiques (demi-tons) de décalage sur la grille 12 (peut être négatif ; wrap à l'octave)."
+    )
+  )
+) ``ts:
 // Corps de la MANIPULATION `chromashift` — AUTHORING F1 (vrai .ts TYPÉ contre le SDK Kairos).
 // Source de vérité : ce fichier. Le chargeur le greffe sur le CONTRÔLE `chromashift` de `transpo`, qui
 // porte le mot — arbitrage de Romain, 2026-09-03 : le corps se rattache à l'objet qui le nomme.
@@ -21,3 +38,4 @@ const chromashift: DigitalFn = (ctx) => {
 };
 
 export default chromashift;
+``

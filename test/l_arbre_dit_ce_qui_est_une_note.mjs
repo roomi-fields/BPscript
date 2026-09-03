@@ -93,7 +93,7 @@ const compiler = (src) => compileToBPxAST(src);
 {
   const r = compiler('core\nmine.perso.gamme\n-----\nS -> C4');
   ok(r.ast?.noteTerminals === undefined,
-    `1. hauteur OPAQUE : le champ doit être ABSENT, pas vide (reçu ${JSON.stringify(r.ast?.noteTerminals)})`);
+    `1. hauteur OPAQUE : le champ doit être ABSENT, pas vide(reçu ${JSON.stringify(r.ast?.noteTerminals)})`);
   ok(r.ast?.alphabetTerminals === undefined, '1. hauteur OPAQUE : alphabetTerminals ABSENT aussi');
 }
 {
@@ -102,13 +102,13 @@ const compiler = (src) => compileToBPxAST(src);
   // pas une note. Absent dirait « hors de portée », ce qui n'est plus vrai.
   const r = compiler('core\nactor viz  eval.hydra\n-----\nS -> voix\nvoix -> viz.`osc(4).out()`');
   ok(Array.isArray(r.ast?.noteTerminals) && r.ast.noteTerminals.length === 0,
-    `1. VOIX-CODE pure : liste VIDE — l'alphabet hérité est en portée, et un bloc de code n'est pas une note (reçu ${JSON.stringify(r.ast?.noteTerminals)})`);
+    `1. VOIX-CODE pure : liste VIDE — l'alphabet hérité est en portée, et un bloc de code n'est pas une note(reçu ${JSON.stringify(r.ast?.noteTerminals)})`);
 }
 {
   // Un alphabet est en portée et la scène n'écrit aucune note : c'est un FAIT, donc une liste vide.
   const r = compiler('core\nalphabet.western\nsymbol travail\n-----\nS -> travail');
   ok(Array.isArray(r.ast?.noteTerminals) && r.ast.noteTerminals.length === 0,
-    `1. alphabet en portée mais aucune note écrite : liste VIDE, pas absente (reçu ${JSON.stringify(r.ast?.noteTerminals)})`);
+    `1. alphabet en portée mais aucune note écrite : liste VIDE, pas absente(reçu ${JSON.stringify(r.ast?.noteTerminals)})`);
   ok(Array.isArray(r.ast?.alphabetTerminals),
     '1. les DEUX champs suivent la même règle absent/vide — sinon l\'un mentirait pendant que l\'autre dit vrai');
 }
@@ -141,7 +141,7 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
   ok((r.ast?.[attendu] || []).includes(premiereNote),
     `2. ${nom} : '${premiereNote}' doit être dans ${attendu} (reçu notes=${JSON.stringify(r.ast?.noteTerminals)} alpha=${JSON.stringify(r.ast?.alphabetTerminals)})`);
   ok(!(r.ast?.[autre] || []).includes(premiereNote),
-    `2. ${nom} : '${premiereNote}' ne doit PAS être dans ${autre} — les fondre est interdit (décision 2026-07-28)`);
+    `2. ${nom} : '${premiereNote}' ne doit PAS être dans ${autre} — les fondre est interdit(décision 2026-07-28)`);
   ok(!(r.ast?.noteTerminals || []).includes('motif') && !(r.ast?.alphabetTerminals || []).includes('motif'),
     `2. ${nom} : 'motif' n'est ni une note ni un terminal d'alphabet`);
 }
@@ -191,7 +191,7 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
     .filter(([, o]) => !!o.resolvesPitch !== !!o.tuning);
   ok(divergents.length === 0,
     '2bis. les deux critères coïncident depuis que shakuhachi a son ancre — si un alphabet redivergeait, '
-    + `il faudrait le DIRE ici plutôt que de le laisser passer (divergents : ${divergents.map(([n]) => n).join(' ')})`);
+    + `il faudrait le DIRE ici plutôt que de le laisser passer(divergents : ${divergents.map(([n]) => n).join(' ')})`);
   // ⚠️ ET LA COÏNCIDENCE REND LE TEST FACILE À TROMPER : tant que les deux critères désignent le même
   // ensemble, un code qui lirait l'accordage passerait tous les témoins ci-dessus. On construit donc
   // le cas discriminant à la volée — un alphabet qui a un accordage et déclare NE PAS résoudre —
@@ -213,7 +213,7 @@ for (const [nom, premiereNote, resoutUneHauteur] of ALPHABETS) {
     LIBS['alphabets'][nom] = { ...LIBS['alphabets'][nom], resolvesPitch: sauvegarde };
     ok((r.ast?.alphabetTerminals || []).includes('C') && !(r.ast?.noteTerminals || []).includes('C'),
       "2bis. LE CODE SUIT LA DÉCLARATION, PAS L'ACCORDAGE : western privé de resolvesPitch se déclasse, "
-      + `bien qu'il garde son accordage (reçu notes=${JSON.stringify(r.ast?.noteTerminals)} `
+      + `bien qu'il garde son accordage(reçu notes=${JSON.stringify(r.ast?.noteTerminals)} `
       + `alpha=${JSON.stringify(r.ast?.alphabetTerminals)}) — sans ce cas, un code lisant l'accordage passerait tout`);
     ok((temoin.errors || []).length > 0,
       '2bis. TÉMOIN D\'INSTRUMENT — une librairie inexistante doit être refusée, sinon la mesure ci-dessus ne prouve rien');
@@ -289,10 +289,10 @@ for (const fichier of ['alphabets', 'test_alphabets']) {
   // librairies, remplace 'domain') — sinon la chaîne 'Kairos' est lue comme une entrée d'alphabet
   // sans resolvesPitch, et le garde crie sur un champ de MÉTADONNÉE, pas sur une vraie entrée.
   const entrees = Object.keys(j).filter((k) => estUneEntree(j, k));
-  ok(entrees.length > 0, `3bis. ${fichier} doit contenir des entrées (socle : un catalogue vide ne prouve rien)`);
+  ok(entrees.length > 0, `3bis. ${fichier} doit contenir des entrées(socle : un catalogue vide ne prouve rien)`);
   const sansChamp = entrees.filter((n) => typeof j[n].resolvesPitch !== 'boolean');
   ok(sansChamp.length === 0,
-    `3bis. ${fichier} : TOUTE entrée déclare resolvesPitch — sans lui le code devine (manquant : ${sansChamp.join(' ')})`);
+    `3bis. ${fichier} : TOUTE entrée déclare resolvesPitch — sans lui le code devine(manquant : ${sansChamp.join(' ')})`);
 }
 {
   const j = LIBS.alphabets;   // le BUNDLE, jamais un chemin de fichier
@@ -333,14 +333,14 @@ for (const fichier of ['alphabets', 'test_alphabets']) {
     "3bis. une table de registres HOMONYME existe et n'est pas branchée — le nommer dans un "
     + `commentaire ne la branche pas : ${nonBranches.join(' ')}`);
   ok(tables.length > 0 && resolvent.some((n) => !!j[n].octaves),
-    '3bis. TÉMOIN — des tables existent ET au moins un alphabet en pointe une (sinon ce bloc ne mesure rien)');
+    '3bis. TÉMOIN — des tables existent ET au moins un alphabet en pointe une(sinon ce bloc ne mesure rien)');
 }
 {
   // Deux vocabulaires dans la même scène : chacun dans son champ, aucun mélange.
   const r = compiler('core\nactor perc\n  alphabet.tabla\n  out.audio\n'
     + 'actor n\n  alphabet.western\n  out.audio\n-----\nmotif -> dha C4\nS -> motif');
   ok((r.ast?.noteTerminals || []).join() === 'C4' && (r.ast?.alphabetTerminals || []).join() === 'dha',
-    `3bis. deux vocabulaires : chacun dans son champ (reçu notes=${JSON.stringify(r.ast?.noteTerminals)} alpha=${JSON.stringify(r.ast?.alphabetTerminals)})`);
+    `3bis. deux vocabulaires : chacun dans son champ(reçu notes=${JSON.stringify(r.ast?.noteTerminals)} alpha=${JSON.stringify(r.ast?.alphabetTerminals)})`);
 }
 
 // ── 4. SOCLE ET ANTI-RÉTRÉCISSEMENT ─────────────────────────────────────────────────────────

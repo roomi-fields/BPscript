@@ -47,7 +47,7 @@ const FORMES = [
     quoi: 'devine un `-se.` en cherchant le nom dans un texte — c’est le mécanisme que la table remplace' },
   { nom: 'recopie de la convention de notes dans le catalogue',
     motif: /note_convention/,
-    quoi: "lit `note_convention` — le champ SUPPRIMÉ de grammars.json le 2026-08-11, la table le porte (107 contre 97, zéro désaccord)" },
+    quoi: "lit `note_convention` — le champ SUPPRIMÉ de grammars.json le 2026-08-11, la table le porte(107 contre 97, zéro désaccord)" },
   { nom: 'reniflage d’un alphabet dans un texte',
     motif: /match\s*\(\s*\/\s*-(?:al|ho)\\?\./,
     quoi: 'devine un `-al.`/`-ho.` en cherchant le nom dans un texte — même mécanisme' },

@@ -54,7 +54,8 @@ let _versionIndexee = -1;
 
 /**
  * L'index de tous les objets de toutes les librairies — reconstruit quand le registre change,
- * jamais recopié. Chaque objet porte : nom, famille, derive, membres, place, chaine, documented.
+ * jamais recopié. Chaque objet porte : nom, famille, derive, membres, place, chaine, librairie,
+ * documented.
  *
  * ⛔ IL SE MÉMORISE SOUS LA VERSION DU REGISTRE, ET UNE AUTRE VERSION LE PÉRIME. Le compilateur lit
  * cet index à chaque compilation — dont celles des sources de librairie PENDANT le chargement du
@@ -78,7 +79,11 @@ function index() {
   };
   const PLACES = placesDesLibrairies(LIBS);
   const familleDe = (mot) => {
-    if (!familles.has(mot)) familles.set(mot, { nom: mot, membres: {}, entrees: [], contributeurs: [] });
+    // ⛔ UNE FAMILLE PUBLIE SES PLACES — posé le 2026-09-03 sur la mesure d'atlas. Une place VIDE
+    //   était INVISIBLE : `core.symbols` existe, ne contient aucune entrée, et la porte n'en disait
+    //   rien alors que le bundle le portait par sa structure. Ranger les objets PAR place ne peut pas
+    //   rendre une place sans objet — c'est ce que `PLACES` sait et que la porte taisait.
+    if (!familles.has(mot)) familles.set(mot, { nom: mot, membres: {}, entrees: [], places: [], contributeurs: [] });
     return familles.get(mot);
   };
   for (const [cle, lib] of Object.entries(LIBS)) {
@@ -93,7 +98,7 @@ function index() {
       const o = {
         nom: cle.slice(barre + 1), famille: mot, derive: null,
         membres: membresDe(lib, CHAMPS_DE_FICHIER), place: null, chaine: [mot, cle.slice(barre + 1)],
-        documented: Boolean(lib.documented),
+        librairie: cle, documented: Boolean(lib.documented),
       };
       fam.entrees.push(o);
       poser(o);
@@ -103,6 +108,7 @@ function index() {
     const places = new Set((PLACES[cle] || []).filter((p) => p !== '_deduites'));
     const fam = familleDe(mot);
     fam.contributeurs.push(cle);
+    for (const place of places) if (!fam.places.includes(place)) fam.places.push(place);
     // Les membres propres de la racine : les champs de sommet qui ne sont ni une entrée, ni une place,
     // ni un champ du paquet. Le premier contributeur écrit, les suivants complètent sans écraser.
     for (const [k, v] of Object.entries(lib)) {
@@ -117,7 +123,17 @@ function index() {
     const entree = (nom, brut, place) => {
       const o = {
         nom, famille: mot, derive: typeof brut._derive === 'string' ? brut._derive : null,
-        membres: membresDe(brut), place, chaine: [mot, nom], documented: Boolean(lib.documented),
+        membres: membresDe(brut), place, chaine: [mot, nom],
+        // ⛔ D'OÙ VIENT CET OBJET — champ posé le 2026-09-03 sur la mesure de bp3-frontend. Deux
+        // catalogues servent la famille `alphabet` : `alphabets` (16) et `test_alphabets` (8). La
+        // porte les aplatissait en 24 objets INDISCERNABLES, quand le bundle les séparait par ses
+        // sections. Ce n'était pas un choix : une information que le paquet portait avait disparu.
+        // ⚠️ ET SÛREMENT PAS `documented` À SA PLACE : il vaut `false` sur les alphabets de test et
+        // `true` ailleurs, donc il COÏNCIDE aujourd'hui — mais il dit « ce catalogue est documenté »,
+        // pas « il vient d'ici ». Un champ qui coïncide n'est pas un champ qui signifie ; le jour où
+        // un alphabet de test serait documenté, un garde bâti dessus deviendrait faux sans rougir.
+        // bp3-frontend a refusé de s'en servir, et il avait raison.
+        librairie: cle, documented: Boolean(lib.documented),
       };
       fam.entrees.push(o);
       poser(o);
@@ -194,7 +210,7 @@ export function familles() {
 export function famille(mot) {
   const f = index().familles.get(mot);
   if (!f) return null;
-  return { nom: f.nom, membres: { ...f.membres }, entrees: f.entrees.map(copie) };
+  return { nom: f.nom, membres: { ...f.membres }, places: [...f.places], entrees: f.entrees.map(copie) };
 }
 
 /**

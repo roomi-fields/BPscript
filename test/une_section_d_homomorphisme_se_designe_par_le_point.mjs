@@ -72,7 +72,7 @@ for (const [quoi, flux] of JUSTES) {
   ok(droit.length === 2, `2. les deux sections arrivent dans l'arbre (reçu ${JSON.stringify(droit)})`);
   ok(JSON.stringify(droit) !== JSON.stringify(inverse),
     `2. L'ORDRE EST SIGNIFIANT — '* TR' et 'TR *' ne peuvent pas rendre le même arbre. Le natif `
-    + `écrit les deux dans la même grammaire (-gr.checkHomo). Reçu : ${JSON.stringify(droit)} et `
+    + `écrit les deux dans la même grammaire(-gr.checkHomo). Reçu : ${JSON.stringify(droit)} et `
     + `${JSON.stringify(inverse)}`);
 }
 

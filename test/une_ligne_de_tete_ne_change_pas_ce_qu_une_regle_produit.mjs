@@ -108,7 +108,7 @@ for (const [quoi, rhs, notes] of ACCORDS) {
      `B. ${quoi} — l'accord est IMBRIQUÉ au lieu d'être à plat : ${membres.map((m) => m?.type).join('+')}. `
      + `'C4!E4!G4' rend trois co-attaques à plat ; la forme chargée doit rendre la même chose.`);
   ok(!membres.some((m) => m && m.args !== undefined),
-     `B. ${quoi} — une co-attaque porte encore un APPEL (champ 'args') : `
+     `B. ${quoi} — une co-attaque porte encore un APPEL(champ 'args') : `
      + `${JSON.stringify(membres.map((m) => m?.args).filter(Boolean))}. Le sac d'une note est un `
      + `réglage, jamais un argument d'appel.`);
 }

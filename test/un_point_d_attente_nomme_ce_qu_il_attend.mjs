@@ -39,7 +39,7 @@ const erreursDe = (src) => {
   try { return compileToBPxAST(src).errors ?? []; } catch (e) { return [{ message: e.message }]; }
 };
 const refus = (src) =>
-  erreursDe(src).filter((e) => /attend un signal que rien ne déclare/.test(String(e.message)));
+  erreursDe(src).filter((e) => /waits for a signal that nothing declares/.test(String(e.message)));
 
 // ── 1. LES TROIS GRAPHIES DU POINT D'ATTENTE, NON DÉCLARÉES, SONT REFUSÉES ──────────────────
 // La matrice est le point : une seule règle doit valoir pour les trois, sinon la graphie décide
@@ -114,7 +114,7 @@ for (const [quoi, src] of [
   ['un rôle',      `${T}in.midi sync1\n-----\nS -> C4 <! sync1 D4\n`],
   ['une direction', 'core\n-----\nS -> C4 <! in.midi(note:60)\n'],
 ]) {
-  const m = erreursDe(src).filter((e) => /rien ne s'intercale/.test(String(e.message)));
+  const m = erreursDe(src).filter((e) => /nothing comes between/.test(String(e.message)));
   ok(m.length > 0, `4ter. l'espace après '<!' devant ${quoi} doit être REFUSÉ`);
 }
 

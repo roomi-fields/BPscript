@@ -230,7 +230,7 @@ export function renommer(source, avant, apres) {
  */
 const CHRONOMETRES = /^(derivation[A-Za-z]*Ms|[a-z][A-Za-z]*TimeMs|elapsed[A-Za-z]*|timestamp[A-Za-z]*)$/;
 /**
- * L'identifiant généré d'un bloc de code — EXCLUSION NOMMÉE, arbitrée par Romain (2026-07-28).
+ * L'identifiant généré d'un bloc de code — EXCLUSION NOMMÉE, arbitrée par Romain(2026-07-28).
  *
  * Il encode COMMENT le langage a été connu : `BTauto0` quand il restait à résoudre, `BTstrudel0`
  * quand il est déclaré. Migrer une voix de code vers le tag le fait donc changer — parce qu'un
@@ -245,7 +245,7 @@ const CHRONOMETRES = /^(derivation[A-Za-z]*Ms|[a-z][A-Za-z]*TimeMs|elapsed[A-Za-
 /**
  * ⚠️ NEUTRALISÉ PAR SA FORME, JAMAIS PAR SA CLÉ. L'identifiant vit sous la clé `token` — la MÊME
  * que celle qui porte les notes. Écarter la clé rouvrirait exactement le trou que Kanopi a trouvé
- * ce soir (un comparateur aveugle aux hauteurs). On ne neutralise donc que les VALEURS de la forme
+ * ce soir(un comparateur aveugle aux hauteurs). On ne neutralise donc que les VALEURS de la forme
  * `BT<langage><rang>`, qui ne peuvent être qu'un identifiant généré de bloc de code.
  */
 const NOM_GENERE_DE_CODE = /^BT[A-Za-z]*\d+$/;
@@ -308,7 +308,7 @@ export function production(source) {
 }
 
 /**
- * L'AMALGAME acteur / tête de règle — la migration des voix de code (Romain, 2026-07-28).
+ * L'AMALGAME acteur / tête de règle — la migration des voix de code(Romain, 2026-07-28).
  *
  * ⚠️ CE QUE C'EST, ET POURQUOI C'EST UNE ERREUR : écrire une règle dont la tête porte le nom d'un
  * acteur fait que le code du membre droit tire son langage DU NOM DE LA RÈGLE. Romain :
@@ -349,7 +349,7 @@ function migrerAmalgame(source, ast, suffixe) {
   for (const nom of tetes) {
     const moteur = moteurDe[nom];
     // 1. LE TAG D'ABORD, tant que la tête porte encore le nom : c'est lui qui identifie les lignes
-    //    concernées. Seuls les backticks SANS tag sont touchés (`langage: …` est déjà explicite).
+    //    concernées. Seuls les backticks SANS tag sont touchés(`langage: …` est déjà explicite).
     if (moteur) {
       migre = migre.replace(
         new RegExp(`(^${nom}\\s*->[^\n]*?)\`(?![A-Za-z_][A-Za-z0-9_]*\\s*:)`, 'gm'),
@@ -413,7 +413,7 @@ export function migrerSource(source, suffixe = '_r') {
     // extrait en lecture seule), puis vérifier chaque résultat avec le compilateur courant.
     // ⚠️ LE DISCRIMINANT EST « L'APRÈS PRODUIT-IL ? », ET C'EST UNE CORRECTION D'AUTOCRITIQUE.
     // J'avais d'abord classé sur « les erreurs d'avant contiennent-elles une collision ? ». En
-    // injectant l'excuse universelle (`if (true)`) dans ce test, RIEN N'A ROUGI : la condition
+    // injectant l'excuse universelle(`if (true)`) dans ce test, RIEN N'A ROUGI : la condition
     // était VRAIE chaque fois qu'on l'atteignait — on n'arrive ici qu'avec une collision, donc
     // avec son message. Un discriminant vacant a exactement la tête d'un discriminant.
     // Le seul critère qui SÉPARE quelque chose est celui-ci : si l'APRÈS produit là où l'AVANT
@@ -424,12 +424,12 @@ export function migrerSource(source, suffixe = '_r') {
     const apresEssai = production(migreEssai);
     if (!apresEssai.erreur) {
       return { ok: false, referenceIndisponible: true,
-        motif: `RÉFÉRENCE INDISPONIBLE — l'état d'avant ne produit rien (${avant.erreur}) là où `
+        motif: `RÉFÉRENCE INDISPONIBLE — l'état d'avant ne produit rien(${avant.erreur}) là où `
              + `l'état migré produit : c'est le défaut réparé qui empêche la comparaison, pas le `
              + `renommage. Comparer ici ne prouverait rien. Mesurer en rejouant l'outil sur le `
              + `compilateur où l'AVANT était valide, puis revérifier avec le compilateur courant.` };
     }
-    return { ok: false, motif: `production INVÉRIFIABLE avant ET après migration (${avant.erreur}) — on ne renomme pas ce qu'on ne sait pas comparer` };
+    return { ok: false, motif: `production INVÉRIFIABLE avant ET après migration(${avant.erreur}) — on ne renomme pas ce qu'on ne sait pas comparer` };
   }
   let migre = amalgame ? amalgame.source : source;
   const renommages = amalgame ? [...amalgame.gestes] : [];
@@ -465,7 +465,7 @@ export function migrerSource(source, suffixe = '_r') {
   const codeIdentique = JSON.stringify(avantC) === JSON.stringify(apresC);
   let avertissement = null;
   if (!codeIdentique && memeCodeAuBordPres) {
-    avertissement = 'le code des blocs est TRIMÉ par la pose du tag (saut de ligne d\'ouverture et '
+    avertissement = 'le code des blocs est TRIMÉ par la pose du tag(saut de ligne d\'ouverture et '
       + 'de fermeture) — asymétrie du langage, inerte pour js/p5/csound, remontée à Romain';
   } else if (!codeIdentique) {
     return { ok: false, renommages,
@@ -537,7 +537,7 @@ if (estPrincipal) {
     if (ecrire) writeFileSync(f, r.source);
   }
   console.log(`\n${fichiers.length} scène(s) · ${migres} à migrer (production vérifiée identique)`
-    + ` · ${inchanges} sans collision · ${horsSujet} qui ne compilent pas (hors sujet)`
+    + ` · ${inchanges} sans collision · ${horsSujet} qui ne compilent pas(hors sujet)`
     + ` · ${sansReference} SANS RÉFÉRENCE · ${refuses} REFUSÉE(S)`);
   console.log(ecrire ? 'Écriture effectuée sur les scènes vérifiées.'
     : 'Essai à blanc : RIEN n\'a été écrit. Relancer avec --ecrire pour appliquer.');

@@ -43,7 +43,7 @@ const compile = (rhs) => compileToBPxAST(`core\nalphabet.western:midi\n\n-----\n
 // et ils suffisent : la propriété mesurée est la LECTURE du sac, pas le nom de la clé.
 for (const forme of ['rotate:2', 'legato:20', 'staccato:96', 'rndtime:50']) {
   const { ast, errors } = compile(`C4 !(${forme}) D4`);
-  ok(errors.length === 0, `1. '!(${forme})' dans le flux (sans @controls) doit compiler — reçu : ${errors.map((e) => e.message).join(' | ')}`);
+  ok(errors.length === 0, `1. '!(${forme})' dans le flux(sans @controls) doit compiler — reçu : ${errors.map((e) => e.message).join(' | ')}`);
   if (errors.length === 0) {
     const noeud = ast.subgrammars[0].rules[0].rhs.find((e) => e.type === 'InstantControl');
     ok(noeud?.qualifier?.type === 'SettingBag', `1. '!(${forme})' doit produire un InstantControl { qualifier: SettingBag }`);
@@ -68,7 +68,7 @@ for (const forme of ['rotate:2', 'legato:20', 'staccato:96', 'rndtime:50']) {
   }
 }
 {
-  // Non-régression : l'entier collé continue de marcher (c'est lui qui marchait déjà).
+  // Non-régression : l'entier collé continue de marcher(c'est lui qui marchait déjà).
   // ⚠️ COBAYE CHANGÉ le 2026-08-08 : ce cas mesure qu'un réglage réservé COLLÉ à une note est lu
   // sans invoquer la librairie. Il employait le POIDS, qui n'a désormais plus le droit d'être là
   // (il gouverne une règle). `staccato` porte la même propriété et vaut sur un élément.

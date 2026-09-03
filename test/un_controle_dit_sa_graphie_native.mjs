@@ -220,7 +220,7 @@ for (const nom of interfacesVues) {
 // ⛔ LA FORME `_` + NOM A ÉTÉ RELÂCHÉE — Romain, 2026-08-21. Elle n'était pas une règle du langage :
 // c'était l'empreinte de la SEULE table contre laquelle ce garde avait été écrit. Romain rappelle
 // que lier un mot BPScript sans tiret bas à une commande native qui en porte un est résolu depuis
-// toujours — `def chan (bp3:_chan, …)`. LE CHAMP PORTE LE NOM NATIF, QUEL QU'IL SOIT : `_chan` comme
+// toujours — `def chan(bp3:_chan, …)`. LE CHAMP PORTE LE NOM NATIF, QUEL QU'IL SOIT : `_chan` comme
 // `MIDIsyncDelay`. Il n'y a pas deux espèces de cible, il y a un moteur et deux lieux d'écriture.
 // Ce qui reste tenu ici est ce qui protégeait vraiment : un nom bien formé, jamais du vide ni une
 // phrase. Ce que le moteur porte réellement se prouve aux volets 3 et 5, contre ses deux tables.
@@ -240,7 +240,7 @@ for (const { nom, def, ou } of controles) {
      `2bis. '${nom}' (${ou}) porte une VALEUR d'image sans nommer l'image — une valeur sans cible `
      + `n'a nulle part où s'écrire`);
   ok(!Array.isArray(def.args) || def.args.length === 0,
-     `2bis. '${nom}' (${ou}) prend un argument (${(def.args || []).join(', ')}) ET déclare une valeur `
+     `2bis. '${nom}' (${ou}) prend un argument(${(def.args || []).join(', ')}) ET déclare une valeur `
      + `d'image (${def.bp3value}) — sa valeur native est son ARGUMENT, la figer ici l'écraserait`);
 }
 
@@ -327,7 +327,7 @@ for (const { nom, def, ou } of controles) {
     if (!flux) { ok(true, `5. (table du flux absente) '${nom}' non départagé`); continue; }
     ok(estReglage || flux.has(def.bp3),
        `5. '${nom}' (${ou}) déclare l'image '${def.bp3}', qui n'existe NI dans les mots du flux `
-       + `(${flux.size}) NI dans le gabarit de réglages (${reglages.size}) — une image inventée fait `
+       + `(${flux.size}) NI dans le gabarit de réglages(${reglages.size}) — une image inventée fait `
        + `autorité chez tous mes lecteurs, et les deux lieux d'écriture l'ignoreraient en silence`);
   }
   ok(declarees >= 55,

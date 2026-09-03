@@ -44,7 +44,7 @@ function enumerer(nom, deriverAvant) {
 
 // ── LA FAUTE EXISTE — une grammaire À CHOIX rend deux énumérations selon l'ordre ───────────────
 const A_CHOIX = ['tryflags2', 'tryflags3'].filter((n) => dispo.has(n));
-verifier(A_CHOIX.length > 0, 'au moins une grammaire à choix est disponible (sinon la preuve ne se fait pas)');
+verifier(A_CHOIX.length > 0, 'au moins une grammaire à choix est disponible(sinon la preuve ne se fait pas)');
 let auMoinsUneDivergence = false;
 for (const nom of A_CHOIX) {
   const avant = enumerer(nom, false);

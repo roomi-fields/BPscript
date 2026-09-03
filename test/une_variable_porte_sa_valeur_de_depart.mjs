@@ -52,9 +52,9 @@ const refuse = (ligne) => Boolean(varsDe(ligne).erreur);
   const v = varsDe('signal grain');
   ok(!v.erreur && !('initial' in v),
      '0. SOCLE : une variable sans valeur de départ ne doit porter AUCUN champ `initial` — tout '
-     + `l'aval lit \`vars\` depuis toujours (reçu ${JSON.stringify(v)})`);
+     + `l'aval lit \`vars\` depuis toujours(reçu ${JSON.stringify(v)})`);
   ok(v.varType?.convention === 'signal',
-     `0. SOCLE : le type doit rester lu (reçu ${JSON.stringify(v.varType)})`);
+     `0. SOCLE : le type doit rester lu(reçu ${JSON.stringify(v.varType)})`);
 }
 
 // ─── 1. LES QUATRE FAMILLES DE `var` ACCEPTENT UNE VALEUR ───────────────────────────────────

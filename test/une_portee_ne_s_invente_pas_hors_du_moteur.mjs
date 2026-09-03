@@ -71,7 +71,7 @@ const err = (src) => {
       vues++;
       ok(!cible.scope.includes('scene'),
          `1. '${nomSection}.destru' déclare encore la portée 'scene' — INVENTÉE, aucune branche du `
-         + `moteur ne la porte (CompileGrammar.c:1528 = sous-grammaire, Encode.c:408 = règle)`);
+         + `moteur ne la porte(CompileGrammar.c:1528 = sous-grammaire, Encode.c:408 = règle)`);
       ok(JSON.stringify(cible.scope) === JSON.stringify(ATTENDU),
          `1. '${nomSection}.destru' doit déclarer ${JSON.stringify(ATTENDU)} — reçu `
          + `${JSON.stringify(cible.scope)}`);
@@ -79,14 +79,14 @@ const err = (src) => {
   }
   ok(vues >= 1, `1. la déclaration de 'destru' doit être éprouvée — ${vues} vue(s)`);
   ok(!LIB?.schema?.reservedDirectives,
-     "1. `engine` ne porte plus de table réservée — chaque mot est un contrôle qui déclare sa portée (2026-09-02)");
+     "1. `engine` ne porte plus de table réservée — chaque mot est un contrôle qui déclare sa portée(2026-09-02)");
 }
 
 // ── 2. LA SURFACE — chaque graphie est acceptée là où la portée la met, refusée ailleurs ─────
 {
   ok(err('destru\n-----\nS -> C4').length >= 1,
      "2. 'destru' en tête de scène doit être REFUSÉ — la portée 'scene' n'existe pas au moteur");
-  ok(err('destru\n-----\nS -> C4').some((m) => /sous-grammaire|règle/.test(m)),
+  ok(err('destru\n-----\nS -> C4').some((m) => /sub-grammar|rule/.test(m)),
      `2. et le refus doit dire OÙ le mot vaut ; reçu : ${err('destru\n-----\nS -> C4')[0]}`);
   ok(err('mode:ord(destru)\n-----\nS -> C4').length === 0,
      `2. 'mode:ord(destru)' doit PASSER — portée 'subgrammar', armée par CompileGrammar.c:1528`);
@@ -165,7 +165,7 @@ const err = (src) => {
 ok(err('-----\nS -> C4 [zorglub]').length >= 1,
    "4. TÉMOIN — le crochet REFUSE désormais un mot qui n'est ni un réglage de règle ni un drapeau "
    + "déclaré. C'est CE FAIT qui rend '[destru] passe' probant : il ne passe plus par tolérance.");
-ok(err('-----\nS -> C4 [zorglub]').some((m) => /n'est pas déclaré/.test(m)),
+ok(err('-----\nS -> C4 [zorglub]').some((m) => /is not declared/.test(m)),
    '4. et son refus NOMME le drapeau manquant — un refus muet laisserait croire que la graphie est '
    + 'fautive alors que c\'est la déclaration qui manque');
 ok(err('flag zorglub:0\n-----\nS -> C4 [zorglub]').length === 0,
@@ -187,7 +187,7 @@ ok(err('flag zorglub:0\n-----\nS -> C4 [zorglub]').length === 0,
 // témoin : il ne garde pas un acquis, il DATE un état et exige qu'on revienne le relire.
 {
   const e = err('mode:ord(zorglub)\n-----\nS -> C4');
-  ok(e.length >= 1 && e.some((m) => /aucune librairie/.test(m)),
+  ok(e.length >= 1 && e.some((m) => /not declared by any invoked library/.test(m)),
      `4. TÉMOIN — un modificateur de sous-grammaire inconnu est REFUSÉ, en nommant la cause ; `
      + `reçu : ${JSON.stringify(e)}`);
   // ⚠️ CE TÉMOIN PORTAIT `tempo`, QUI A CESSÉ DE CONVENIR le 2026-08-18 : le métronome a gagné la
@@ -195,7 +195,7 @@ ok(err('flag zorglub:0\n-----\nS -> C4 [zorglub]').length === 0,
   // mais hors portée » doit nommer un mot que la donnée tient HORS de la sous-grammaire ;
   // `quantization` est déclaré `["scene"]` et le reste.
   const horsPortee = err('mode:ord(quantization:60)\n-----\nS -> C4');
-  ok(horsPortee.some((m) => /portée déclarée/.test(m)),
+  ok(horsPortee.some((m) => /does not apply to a sub-grammar/.test(m)),
      `4. TÉMOIN — un mot DÉCLARÉ mais hors portée est refusé en NOMMANT sa portée : la section 2 `
      + `mesure donc bien quelque chose ; reçu : ${JSON.stringify(horsPortee)}`);
 }

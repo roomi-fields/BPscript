@@ -7,7 +7,7 @@
  * les trois.
  *
  * ⛔ CE N'EST PAS UN ASSOUPLISSEMENT DE « JAMAIS DEVINÉ ». Un langage DÉCLARÉ est connu. Ce qui a
- * mis cinq semaines, c'est que la décision existait (2026-07-14, « pas d'eval spécifié ⇒ producteur
+ * mis cinq semaines, c'est que la décision existait(2026-07-14, « pas d'eval spécifié ⇒ producteur
  * par défaut = js ») et que le défaut n'avait jamais été posé — le refus construit à sa place était
  * le SYMPTÔME de son absence, pas une protection.
  *
@@ -121,7 +121,7 @@ console.log('[backtick-cascade] le langage vient de la place la plus proche qui 
     + `${JSON.stringify(LIBS.core?.defaults?.components)}`);
 }
 
-ok(passe >= 14, `le garde doit avoir EXAMINÉ, pas seulement tourné (${passe} assertions)`);
+ok(passe >= 14, `le garde doit avoir EXAMINÉ, pas seulement tourné(${passe} assertions)`);
 
 if (echecs.length) {
   console.error(`[backtick-cascade] ${echecs.length} ÉCHEC(S) :`);

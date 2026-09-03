@@ -35,7 +35,7 @@ S -> sitar.sa`);
   out.audio
 -----
 S -> sitar.sa`);
-  check(res.errors.length === 0, 'résolution sans erreur (défaut) : ' + JSON.stringify(res.errors));
+  check(res.errors.length === 0, 'résolution sans erreur(défaut) : ' + JSON.stringify(res.errors));
   const syms = res.actorTable.sitar.symbols;
   // ⚠️ Le séparateur du saptak est le SOULIGNÉ, pas l'espace. Ce test attendait « madhya sa »
   // (avec une espace) — la forme d'avant la décision de Romain sur TAAR-TOK (commit 189128b) :
@@ -54,7 +54,7 @@ S -> sitar.sa`);
   out.audio
 -----
 S -> sitar.sa`);
-  check(res.errors.length === 0, 'résolution sans erreur (surcharge) : ' + JSON.stringify(res.errors));
+  check(res.errors.length === 0, 'résolution sans erreur(surcharge) : ' + JSON.stringify(res.errors));
   const syms = res.actorTable.sitar.symbols;
   check(syms.some((s) => s.includes('sa_^^')), 'surcharge arrows : "sa_^^" présent, symboles=' + JSON.stringify(syms.slice(0, 4)));
   check(!syms.includes('madhya_sa'), 'surcharge arrows : plus de marqueur saptak "madhya_sa"');

@@ -1,3 +1,19 @@
+control scaleshift(
+  args(degrees),
+  value:0,
+  description:"Scalar (diatonic) transposition — shift N degrees in the alphabet. (scaleshift:2) : Sa->Ga, etc. Preserves degrees, not intervals (in unequal scales). Formerly rotate-HAUTEUR; distinct from the ![rotate] STRUCTURE control.",
+  scope(symbol, group, rule, flow),
+  transportGroup:transpo,
+  rank:10,
+  params(
+    n(
+      from:value,
+      coerce:raw,
+      default:0,
+      description:"Nombre de degrés de décalage dans l'alphabet (peut être négatif ; report de registre aux bornes)."
+    )
+  )
+) ``ts:
 // Corps de la MANIPULATION `scaleshift` — AUTHORING F1 (vrai .ts TYPÉ contre le SDK Kairos).
 // Source de vérité : ce fichier. Le chargeur le greffe sur le CONTRÔLE `scaleshift` de `transpo`, qui
 // porte le mot — arbitrage de Romain, 2026-09-03 : le corps se rattache à l'objet qui le nomme.
@@ -27,3 +43,4 @@ const scaleshift: DigitalFn = (ctx) => {
 };
 
 export default scaleshift;
+``

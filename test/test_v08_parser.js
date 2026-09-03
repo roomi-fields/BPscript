@@ -240,9 +240,9 @@ S -> A
 templates
 [1] /1 ?????`);
   } catch (e) { refuse = true; message = e.message; }
-  assert('templates est REFUSÉ (plus aucun alias survivant)', refuse);
+  assert('templates est REFUSÉ(plus aucun alias survivant)', refuse);
   // Le message doit NOMMER la migration : un « attendu template » ressemblerait à une coquille.
-  assert('le refus nomme la forme de remplacement', /template'? \(singulier\)/.test(message));
+  assert('le refus nomme la forme de remplacement', /template'? \(singular\)/.test(message));
 }
 
 {
@@ -288,7 +288,7 @@ S -> A`);
   assert('2nd subject=Sa', sa2.subject === 'Sa');
   assert('2nd target=drum_kick', sa2.target.name === 'drum_kick');
   // Pas de duplication sur l'ActorDirective (décision PM 1).
-  assert('ActorDirective sans soundAssignments (PM décision 1)', !ast.actors[0].soundAssignments);
+  assert('ActorDirective sans soundAssignments(PM décision 1)', !ast.actors[0].soundAssignments);
 }
 
 // ============================================================
@@ -313,7 +313,7 @@ actor x
 S -> A`);
   } catch (e) { msg = e.message; }
   assert('sound.X sur un acteur est REFUSE', msg !== '');
-  assert("le refus nomme la cause, pas « fleche attendue »", /n'est pas une cle d'acteur|n'est pas une clé d'acteur/.test(msg));
+  assert("le refus nomme la cause, pas « fleche attendue »", /is not an actor key/.test(msg));
 }
 
 // ============================================================
@@ -510,7 +510,7 @@ section('sound sur un acteur — LES DEUX GRAPHIES REFUSENT');
   try { parseSource(`core\nactor t sound.tabla_perc alphabet.tabla out.midi(ch:1)\n-----\nS -> A`); }
   catch (e) { msg = e.message; }
   assert('sound.tabla_perc (point) → REJET aussi', msg !== '');
-  assert('le refus nomme la cause', /cl[eé] d'acteur/.test(msg));
+  assert('le refus nomme la cause', /actor key/.test(msg));
 }
 
 // ============================================================
@@ -521,7 +521,7 @@ section('* dans flux RHS ≠ affectation');
 
 {
   // Le `*` n'est valide en sujet d'affectation que dans un body actor/alphabet.
-  // Dans un RHS de règle, `*` n'a pas de sens (testons qu'on ne crashe pas).
+  // Dans un RHS de règle, `*` n'a pas de sens(testons qu'on ne crashe pas).
   // Note : le tokenizer émet T.STAR ; le parser RHS ne le traite pas (skip).
   try {
     const ast = parseSource(`core
@@ -591,7 +591,7 @@ C -> B4 C5`;
 //     2026-07-13, RESOLVER-CASCADE-ALPHABET) — cf. test_actor_cascade_alphabet.js.
 // ============================================================
 
-section('Actor sans alphabet (parser : properties vide, cascade en aval)');
+section('Actor sans alphabet(parser : properties vide, cascade en aval)');
 
 {
   const ast = parseSource(`core
@@ -600,7 +600,7 @@ actor empty
 S -> A`);
   // Parse OK ; l'actorResolver remplira l'alphabet par cascade (pas d'erreur).
   assert('parses (resolver fills alphabet by cascade)', ast.actors[0].name === 'empty');
-  assert('properties empty au PARSE (avant cascade)', Object.keys(ast.actors[0].properties).length === 0);
+  assert('properties empty au PARSE(avant cascade)', Object.keys(ast.actors[0].properties).length === 0);
 }
 
 // ============================================================
@@ -774,9 +774,9 @@ section('F1 — parseControl : +N dans args + token invalide -> ParseError');
   }
   // Le résultat peut être : une erreur dans compiled.errors, ou une ParseError catchée,
   // mais jamais un gel du process.
-  assert('!(pitchbend:invalid) ne gèle pas (résultat défini)',
+  assert('!(pitchbend:invalid) ne gèle pas(résultat défini)',
     compiled !== undefined || caughtError !== null,
-    'compileBPS a gelé (undefined sans exception)');
+    'compileBPS a gelé(undefined sans exception)');
 }
 
 // ============================================================

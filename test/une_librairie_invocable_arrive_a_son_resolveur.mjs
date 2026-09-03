@@ -46,7 +46,7 @@ const { cat, axes } = await catalogueDuPont();
 
 // LA PORTÉE — toute librairie qui déclare un axe est offerte au résolveur.
 const declarantes = Object.entries(LIBS).filter(([n, f]) => !axes.has(n) && f && typeof f === 'object' && f.resolves);
-verifier(declarantes.length > 0, 'au moins une librairie hors-axe déclare l\'axe qu\'elle alimente (sinon ce garde ne mesure rien)');
+verifier(declarantes.length > 0, 'au moins une librairie hors-axe déclare l\'axe qu\'elle alimente(sinon ce garde ne mesure rien)');
 for (const [nom] of declarantes) {
   verifier(cat[nom] !== undefined, `la librairie « ${nom} », qui déclare résoudre « ${LIBS[nom].resolves} », arrive au catalogue`);
 }
@@ -55,7 +55,7 @@ for (const [nom] of declarantes) {
 // offrir : le refus « fichier introuvable » devient « champ resolves ABSENT », donc un défaut de
 // FORME imputé à une librairie qui n'a jamais prétendu appartenir à cette fabrique.
 const muettes = Object.entries(LIBS).filter(([n, f]) => !axes.has(n) && f && typeof f === 'object' && !f.resolves);
-verifier(muettes.length > 0, 'au moins une librairie ne déclare aucun axe (sinon le complément ne mesure rien)');
+verifier(muettes.length > 0, 'au moins une librairie ne déclare aucun axe(sinon le complément ne mesure rien)');
 for (const [nom] of muettes) {
   verifier(cat[nom] === undefined, `la librairie « ${nom} », qui ne déclare aucun axe, reste hors du catalogue de hauteur`);
 }

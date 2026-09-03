@@ -26,7 +26,7 @@ const TETE = 'core\nalphabet.western\n';
 const valeur = (ligne) => {
   const r = compileToBPxAST(`${TETE}${ligne}\n-----\nS -> C4\n`);
   return { erreurs: (r.errors || []).map((e) => String(e.message ?? e)),
-           // ⛔ `def f (…)` — un nom et un sac — est un objet RACINE depuis le 2026-09-02, et il vit
+           // ⛔ `def f(…)` — un nom et un sac — est un objet RACINE depuis le 2026-09-02, et il vit
            // dans `vars`, pas dans `defs` : `def` est le mot unique, `object` est sorti.
            v: (((r.ast?.vars || []).find((d) => d.varType?.kind === 'type' && d.varType.type === null)
                || (r.ast?.defs || [])[0])?.settings?.pairs || [])[0]?.value };
@@ -49,7 +49,7 @@ console.log('[étiquette] l\'étiquette d\'un backtick se lit là où il est éc
 // CE VOLET NE DISPARAÎT PAS, IL CHANGE DE SUJET : `txt` doit désormais se lire comme n'importe
 // quelle autre étiquette. Le jour où un lecteur lui redonnerait un traitement à part, il rougit.
 {
-  const t = valeur('def f (x:`txt: une phrase, avec virgule`)');
+  const t = valeur('def f(x:`txt: une phrase, avec virgule`)');
   ok(t.erreurs.length === 0, `A. la forme doit compiler — ${t.erreurs[0]}`);
   ok(t.v?.type === 'BacktickInline' && t.v?.tag === 'txt',
     `A. ⛔ 'txt' n'a plus de traitement à part : il nomme un langage comme 'js' ou 'sc'. Reçu `
@@ -63,22 +63,22 @@ console.log('[étiquette] l\'étiquette d\'un backtick se lit là où il est éc
 
 // ── B. TOUTE AUTRE ÉTIQUETTE NOMME UN LANGAGE — la valeur porte le CODE et son interprète ───
 {
-  const j = valeur('def f (x:`js: a+1`)');
+  const j = valeur('def f(x:`js: a+1`)');
   ok(j.erreurs.length === 0, `B. un backtick étiqueté doit compiler dans une valeur — ${j.erreurs[0]}`);
   ok(j.v?.type === 'BacktickInline' && j.v?.tag === 'js' && j.v?.code === 'a+1',
     `B. et porter son CODE et son ÉTIQUETTE, jamais un texte où les deux sont collés — reçu `
     + `${JSON.stringify(j.v)}`);
-  const sc = valeur('def f (x:`sc: a+1`)');
+  const sc = valeur('def f(x:`sc: a+1`)');
   ok(sc.v?.tag === 'sc', `B. l'étiquette lue est celle qui est écrite — reçu ${JSON.stringify(sc.v)}`);
 }
 
 // ── C. TÉMOINS — les autres natures de valeur ne bougent pas ────────────────────────────────
 // Sans eux, un lecteur qui happerait toute valeur passerait A et B en triomphe.
 {
-  ok(valeur('def f (x:"abc")').v === 'abc', 'C. TÉMOIN — un texte entre guillemets reste son texte');
-  ok(valeur('def f (x:0)').v === 0, 'C. TÉMOIN — un nombre reste un nombre');
-  ok(valeur('def f (x:abc)').v === 'abc', 'C. TÉMOIN — un nom reste son nom');
-  ok(valeur('def f (x:"")').v === '', 'C. TÉMOIN — le texte vide reste une valeur');
+  ok(valeur('def f(x:"abc")').v === 'abc', 'C. TÉMOIN — un texte entre guillemets reste son texte');
+  ok(valeur('def f(x:0)').v === 0, 'C. TÉMOIN — un nombre reste un nombre');
+  ok(valeur('def f(x:abc)').v === 'abc', 'C. TÉMOIN — un nom reste son nom');
+  ok(valeur('def f(x:"")').v === '', 'C. TÉMOIN — le texte vide reste une valeur');
 }
 
 // ── D. ⛔ ET AUCUNE VALEUR PUBLIÉE NE PORTE `txt:` — L'ANTI-RETOUR DE LA GRAPHIE ANNULÉE ─────
@@ -105,7 +105,7 @@ console.log('[étiquette] l\'étiquette d\'un backtick se lit là où il est éc
   ok(faux.length === 1, 'D-témoin. le critère doit reconnaître une étiquette collée quand il en voit une');
 }
 
-ok(passe >= 12, `le garde doit avoir EXAMINÉ, pas seulement tourné (${passe} assertions)`);
+ok(passe >= 12, `le garde doit avoir EXAMINÉ, pas seulement tourné(${passe} assertions)`);
 
 if (echecs.length) {
   console.error(`[étiquette] ${echecs.length} ÉCHEC(S) :`);

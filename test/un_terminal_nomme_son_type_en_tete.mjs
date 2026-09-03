@@ -99,7 +99,7 @@ ok(compiler('def cadence sa re ga pa').def?.kind === 'structure',
 {
   const r = compiler('terminal cadence(sa re ga pa)');
   ok(!r.ok, 'D. une suite de termes sous `terminal` doit être REFUSÉE');
-  ok(/se déclare par ses CLÉS/.test(r.err),
+  ok(/is declared by its KEYS/.test(r.err),
      `D. et le refus doit NOMMER les clés attendues ET la forme qui convient — un refus muet ferait `
      + `chercher une faute de syntaxe. Reçu : ${r.err}`);
 }
@@ -107,7 +107,7 @@ ok(compiler('def cadence sa re ga pa').def?.kind === 'structure',
 // ── E. UNE PARENTHÈSE OUVERTE SE REFERME ───────────────────────────────────────────────────
 {
   const r = compiler('terminal ka(voice.bayan_muted');
-  ok(!r.ok && /n'est pas refermé/.test(r.err),
+  ok(!r.ok && /is not closed/.test(r.err),
      `E. une parenthèse non refermée est refusée EN NOMMANT ce qui manque. Reçu : ${r.err}`);
 }
 
@@ -126,7 +126,7 @@ ok(compiler('def cadence sa re ga pa').def?.kind === 'structure',
 // C'est cette assertion qui empêche de réparer la graphie qui s'était montrée en laissant les trois.
 {
   const GRAPHIES_CHEMIN = [
-    ['parenthésée',      'terminal ka (voice.objects.wobble)'],
+    ['parenthésée',      'terminal ka(voice.objects.wobble)'],
     ['sans parenthèse',  'terminal ka voice.objects.wobble'],
     ['par def',          'def ka voice.objects.wobble'],
     ['en bloc indenté',  'def ka\n  voice.objects.wobble'],
@@ -137,14 +137,14 @@ ok(compiler('def cadence sa re ga pa').def?.kind === 'structure',
     examinees += 1;
     const r = compiler(forme);
     ok(!r.ok, `A-chemin. la graphie ${quoi} du niveau interne est REFUSÉE`);
-    ok(/DEUX niveaux/.test(r.err),
-       `A-chemin. et le refus nomme le CHEMIN, pas la ponctuation (${quoi}) — reçu : ${r.err.slice(0, 90)}`);
-    ok(/objects/.test(r.err), `A-chemin. et il cite le niveau fautif (${quoi})`);
+    ok(/TWO levels/.test(r.err),
+       `A-chemin. et le refus nomme le CHEMIN, pas la ponctuation(${quoi}) — reçu : ${r.err.slice(0, 90)}`);
+    ok(/objects/.test(r.err), `A-chemin. et il cite le niveau fautif(${quoi})`);
     textes.add(r.err.replace(/ at line \d+:\d+$/, ''));
   }
   ok(examinees === 4, `A-chemin. les 4 graphies ont été examinées (${examinees})`);
   ok(textes.size === 1,
-     `A-chemin. les QUATRE rendent le MÊME texte — un seul mécanisme, une seule phrase (vu ${textes.size})`);
+     `A-chemin. les QUATRE rendent le MÊME texte — un seul mécanisme, une seule phrase(vu ${textes.size})`);
 
   // ⛔ ET LE POINT ESPACÉ N'EST PAS CE CAS — le témoin qui borne la condition.
   // Ma condition exige un point COLLÉ (`!spaceBefore`). Sans ce volet, la retirer ne faisait rougir
@@ -157,13 +157,13 @@ ok(compiler('def cadence sa re ga pa').def?.kind === 'structure',
   ]) {
     const r = compiler(forme);
     ok(!r.ok, `A-chemin. le point ${quoi} reste REFUSÉ — il l'était déjà`);
-    ok(!/DEUX niveaux/.test(r.err),
-       `A-chemin. et il NE porte PAS le refus du chemin (${quoi}) : ma condition exige un point `
+    ok(!/TWO levels/.test(r.err),
+       `A-chemin. et il NE porte PAS le refus du chemin(${quoi}) : ma condition exige un point `
        + `COLLÉ, et ce volet est ce qui le prouve — reçu : ${r.err.slice(0, 70)}`);
   }
   // LE CONTRÔLE NÉGATIF — couper trop large est l'autre façon d'échouer.
-  for (const forme of ['terminal ka (voice.bayan_muted)', 'def ka voice.wobble',
-                       'terminal ka (tuning.western_just, octaves.western)', 'def ka  hz:440']) {
+  for (const forme of ['terminal ka(voice.bayan_muted)', 'def ka voice.wobble',
+                       'terminal ka(tuning.western_just, octaves.western)', 'def ka  hz:440']) {
     ok(compiler(forme).ok, `A-chemin. « ${forme} » passe toujours`);
   }
 }

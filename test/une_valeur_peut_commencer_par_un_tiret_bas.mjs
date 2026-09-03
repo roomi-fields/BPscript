@@ -30,7 +30,7 @@ console.log('[tiret-bas] une valeur peut commencer par un tiret bas');
 // Réparer l'endroit où le défaut s'est montré (le sac d'un type en tête) aurait laissé les cinq
 // autres. Elles sont écrites une par une, et le garde rougit si l'une d'elles se referme.
 for (const [ou, src] of [
-  ['un sac de définition',            `${TETE}def x (bp3:_srand)\n-----\nS -> C4`],
+  ['un sac de définition',            `${TETE}def x(bp3:_srand)\n-----\nS -> C4`],
   // Forme B (Romain, 2026-09-02) : un geste natif est un `control` qui porte `bpscript:false`.
   ['un sac de type en tête',          `${TETE}control srand(bp3:_srand, bpscript:false)\n-----\nS -> C4`],
   ['un sac du flux',                  `${TETE}-----\nS -> C4(vel:_srand)`],
@@ -46,7 +46,7 @@ for (const [ou, src] of [
 // ⛔ TÉMOIN NON NUL — la même écriture SANS le tiret bas passe déjà. Sans lui, un lecteur cassé
 // pour toutes les valeurs rendrait le volet A rouge pour une raison qui n'est pas celle-ci.
 for (const [ou, src] of [
-  ['un sac de définition',            `${TETE}def x (bp3:srand)\n-----\nS -> C4`],
+  ['un sac de définition',            `${TETE}def x(bp3:srand)\n-----\nS -> C4`],
   ['la valeur de départ d\'une convention', `${TETE}signal grain:x\n-----\nS -> C4`],
 ]) {
   ok(erreursDe(src).length === 0, `A-témoin. la même valeur SANS tiret bas doit passer dans ${ou}`);
@@ -93,7 +93,7 @@ const rhsDe = (flux) => {
     + 'termes, à cet endroit seulement.');
 }
 
-ok(passe >= 13, `le garde doit avoir EXAMINÉ, pas seulement tourné (${passe} assertions)`);
+ok(passe >= 13, `le garde doit avoir EXAMINÉ, pas seulement tourné(${passe} assertions)`);
 
 if (echecs.length) {
   console.error(`[tiret-bas] ${echecs.length} ÉCHEC(S) :`);

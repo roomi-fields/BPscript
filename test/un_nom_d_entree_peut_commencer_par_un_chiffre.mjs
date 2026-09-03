@@ -86,20 +86,20 @@ const compiler = (tete) => {
 // celui qui a mordu ; la matrice croise les places avec les noms de la donnée.
 {
   const PLACES = [
-    ['def',              (n) => `def ${n} (x:1)`],
+    ['def',              (n) => `def ${n}(x:1)`],
     // ⛔ LA LIGNE `object` EST SORTIE LE 2026-09-02 AVEC LE MOT — décision de Romain, `def` est le mot
     // unique. La place qu'elle éprouvait — un nom chiffré en tête de déclaration de racine — est
     // désormais celle de la ligne `def` juste au-dessus : ce n'est plus deux points, c'est un seul.
     ['symbol seul',      (n) => `symbol ${n}`],
     ['symbol, 2e nom',   (n) => `symbol a12, ${n}`],
     ['symbol, 1er nom',  (n) => `symbol ${n}, a12`],
-    ['valeur',           (n) => `def w (t:${n})`],
-    ['clé texte',        (n) => `def w ("${n}":1)`],
+    ['valeur',           (n) => `def w(t:${n})`],
+    ['clé texte',        (n) => `def w("${n}":1)`],
   ];
   for (const [place, forme] of PLACES) {
     for (const n of ['12TET', '22shruti', '53TET', '24TET']) {
       const msg = messages(compiler(forme(n)));
-      ok(msg === '', `C. « ${forme(n)} » doit compiler (${place}) : ${msg.slice(0, 70)}`);
+      ok(msg === '', `C. « ${forme(n)} » doit compiler(${place}) : ${msg.slice(0, 70)}`);
     }
   }
 }
@@ -115,7 +115,7 @@ const compiler = (tete) => {
        `C2. « ${tete} » doit être REFUSÉ (${place}) — un nombre pur n'est pas un nom.`);
   }
   const msg = messages(compiler('symbol a, 12'));
-  ok(/au moins une lettre/.test(msg),
+  ok(/carries at least one letter/.test(msg),
      `C2. le refus doit NOMMER la clause — reçu : ${msg.slice(0, 90)}. Un « Expected IDENT » `
      + `envoie corriger une graphie au lieu de dire la règle.`);
 }
@@ -160,7 +160,7 @@ const compiler = (tete) => {
   ok(!/Expected/.test(msg),
      `D-bis. 'ragas-tunings.X' doit etre LU, pas casser a l'analyse. Reçu : ${msg.slice(0, 100)}. `
      + `Un refus syntaxique sur un nom valide envoie l'auteur corriger ce qui est juste.`);
-  ok(/aucune librairie ne sert l'axe 'ragas-tunings'/.test(msg),
+  ok(/no library serves the axis 'ragas-tunings'/.test(msg),
      `D-bis. le refus doit nommer l'axe ENTIER, tiret compris — reçu : ${msg.slice(0, 100)}. `
      + `S'il nomme 'ragas' seul, le tiret a coupe le nom.`);
 }
@@ -195,16 +195,16 @@ ok(passe >= 30, `SOCLE : ${passe} vérifications seulement — la matrice s'est 
   const refuseAvecCritere = ['_ab', '12', '#a', '-ab', '"ab"', '$a'];
   for (const n of refuseAvecCritere) {
     const msg = messages(compileToBPxAST(`def ${n} (x:1)`));
-    ok(/UN NOM COMMENCE PAR UNE LETTRE/.test(msg) && /12TET/.test(msg),
+    ok(/A NAME STARTS WITH A LETTER/.test(msg) && /12TET/.test(msg),
        `H. 'def ${n}' doit REFUSER en disant ce qui fait un nom — reçu : ${msg.slice(0, 120) || 'aucune erreur'}`);
-    ok(/Reçu :/.test(msg),
+    ok(/Received:/.test(msg),
        `H. et le refus doit citer LE SIGNE reçu, sinon l'auteur ne sait pas lequel de ses caractères `
        + `est en cause — reçu : ${msg.slice(0, 120)}`);
   }
   // ⚠️ LA TRONCATURE : le nom lu, le signe qui l'a arrêté, tous deux nommés.
   for (const [n, lu, signe] of [['ab_', 'ab', '_'], ['a.b', 'a', '.'], ['a$', 'a', '$']]) {
     const msg = messages(compileToBPxAST(`def ${n} (x:1)`));
-    ok(new RegExp(`le nom lu s'arrête à '${lu.replace('$', '\\$')}'`).test(msg),
+    ok(new RegExp(`the name read stops at '${lu.replace('$', '\\$')}'`).test(msg),
        `H. 'def ${n}' doit DIRE que le nom s'arrête à '${lu}' — reçu : ${msg.slice(0, 140)}`);
     ok(msg.includes(JSON.stringify(signe)),
        `H. et NOMMER le signe ${JSON.stringify(signe)} qui l'a arrêté — reçu : ${msg.slice(0, 140)}`);
@@ -212,7 +212,7 @@ ok(passe >= 30, `SOCLE : ${passe} vérifications seulement — la matrice s'est 
   // ⛔ ET LE COMPLÉMENT : un nom LÉGITIME ne déclenche aucun de ces deux messages. Sans lui, un refus
   // universel rendrait tout ce volet vert.
   for (const n of ['ab', 'a_b', '12a', 'a#', 'a-b', 'ab-', '12TET', 'bp3_Bohlen-Pierce']) {
-    const msg = messages(compileToBPxAST(`def ${n} (x:1)`));
+    const msg = messages(compileToBPxAST(`def ${n}(x:1)`));
     ok(msg === '', `H. 'def ${n}' est un nom LÉGITIME et doit compiler — reçu : ${msg.slice(0, 100)}`);
   }
 }

@@ -61,15 +61,15 @@ for (const canal of CANAUX) {
 // revient ici, du côté du refus. Trois causes distinctes, et le refus doit dire LAQUELLE : le
 // canal n'existe pas · il existe mais ne sort pas · il sort mais ne s'écrit pas encore.
 for (const [canal, motif, pourquoi] of [
-  ['zorglub',  /n'existe pas/,          "le canal n'existe pas"],
-  ['keyboard', /n'est pas une sortie/,  'le canal existe mais ne porte que l\'entrée'],
-  ['text',     /ÉCRITURE/,              "le canal sort, mais son écriture attend son appareil"],
+  ['zorglub',  /does not exist/,        "le canal n'existe pas"],
+  ['keyboard', /is not an output/,      'le canal existe mais ne porte que l\'entrée'],
+  ['text',     /WRITING/,               "le canal sort, mais son écriture attend son appareil"],
 ]) {
   const r = compile(`zz:${canal}\n-----\nS -> zz`);
   const msg = (r.errors || []).map((e) => e.message).join(' | ');
   ok((r.errors || []).length > 0, `1bis. 'zz:${canal}' doit être REFUSÉ — ${pourquoi}`);
   ok(motif.test(msg), `1bis. 'zz:${canal}' — le refus doit dire QUE ${pourquoi} (reçu : ${msg.slice(0, 110)})`);
-  ok(!/terminal 'zz' non déclaré/.test(msg),
+  ok(!/terminal 'zz' undeclared/.test(msg),
      `1bis. 'zz:${canal}' accuse le TERMINAL alors que la faute est sur le CANAL — c'est le défaut `
      + `réparé le 2026-08-19 (reçu : ${msg.slice(0, 110)})`);
 }

@@ -46,7 +46,7 @@ const DETECTION = [
 console.log(`[outil migration] détection : ${DETECTION.length} cas`);
 for (const [nom, src, attendu] of DETECTION) {
   const { ast } = resoudreSource(src);
-  ok(!!ast, `${nom} — la scène d'essai doit PARSER (elle est REFUSÉE à la résolution : c'est le sujet)`);
+  ok(!!ast, `${nom} — la scène d'essai doit PARSER(elle est REFUSÉE à la résolution : c'est le sujet)`);
   ok(ast ? collisions(ast).size === attendu : false,
     `${nom} — doit trouver ${attendu} collision(s), pas ${ast ? collisions(ast).size : '?'}`);
 }
@@ -244,7 +244,7 @@ const SCENE_A_MIGRER = 'core\nalphabet.western\n-----\nS -> A B\nA -> C4 D4\nB -
   const h2 = production('core\nalphabet.western\n-----\nS -> C7 C4');
   ok(h1.jetons !== h2.jetons, '3ter. remplacer E2 par C7 doit se VOIR — le juge ne choisit plus ses champs');
   const h3 = production('core\nalphabet.western\n-----\nS -> E2 C4');
-  ok(h1.jetons === h3.jetons, '3ter. et deux dérivations identiques restent identiques (pas de bruit)');
+  ok(h1.jetons === h3.jetons, '3ter. et deux dérivations identiques restent identiques(pas de bruit)');
 }
 {
   // De bout en bout : une scène dont la tête heurte une note, ET qui contient une altération.
@@ -287,7 +287,7 @@ console.log('\n=== §3quater. l\'amalgame acteur / tête de règle ===');
   const r = migrerSource(AMALGAME);
   ok(r.ok === false && r.referenceIndisponible === true,
     '3quater. l\'outil NOMME son empêchement — l\'avant ne produit rien parce qu\'il porte le défaut '
-    + `que la migration répare (reçu ${JSON.stringify({ ok: r.ok, motif: (r.motif || '').slice(0, 60) })})`);
+    + `que la migration répare(reçu ${JSON.stringify({ ok: r.ok, motif: (r.motif || '').slice(0, 60) })})`);
   // ET SA RÉÉCRITURE EST JUSTE — on la rejoue telle que l'outil la construit (migration_noms.mjs).
   const reecrit = AMALGAME.split('\n').map((l) => (l.trimStart().startsWith('actor')
     ? l
@@ -346,7 +346,7 @@ console.log('\n=== §3quater. l\'amalgame acteur / tête de règle ===');
 }
 {
   // ⚠️ LE POINT QUE L'ARCHITECTE A DEMANDÉ DE SOIGNER, dans les DEUX SENS. L'identifiant généré du
-  // bloc de code change à la migration (il encode COMMENT le langage a été connu) et Romain l'a
+  // bloc de code change à la migration(il encode COMMENT le langage a été connu) et Romain l'a
   // écarté. Il est neutralisé PAR SA FORME — jamais par sa clé, qui est la même que celle portant
   // les notes. L'écarter par la clé rouvrirait le trou que Kanopi a trouvé le 2026-07-28.
   const { production } = await import('./migration_noms.mjs');
@@ -370,7 +370,7 @@ ok(DETECTION.length >= 6 && VOISINS.length >= 10 && BACKTICKS.length >= 6,
   // Et que l'outil sait encore VOIR : sans ce témoin, une régression qui viderait la détection
   // rendrait « aucune collision partout » et tout ce fichier passerait au vert.
   const { ast } = compileToBPxAST('core\nalphabet.western\n-----\nG4 -> C4');
-  ok(terminauxActifs(ast).size > 100, '4. l\'alphabet occidental doit rendre ses terminaux (témoin d\'instrument)');
+  ok(terminauxActifs(ast).size > 100, '4. l\'alphabet occidental doit rendre ses terminaux(témoin d\'instrument)');
 }
 
 if (echecs.length) {

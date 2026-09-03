@@ -39,32 +39,32 @@ const paires = (decl) => {
 
 // ── 1. le parseur lit le type en tête ──────────────────────────────────────────────────────────
 {
-  const r = paires('def truc (alphabet alphabet, tuning tuning)');
+  const r = paires('def truc(alphabet alphabet, tuning tuning)');
   ok(r.erreurs.length === 0, `1. 'alphabet alphabet, tuning tuning' compile — reçu ${JSON.stringify(r.erreurs)}`);
   ok(r.paires && r.paires.length === 2 && r.paires[0].key === 'alphabet' && r.paires[0].type === 'alphabet' && r.paires[1].key === 'tuning' && r.paires[1].type === 'tuning',
      `1. deux membres typés — reçu ${JSON.stringify(r.paires)}`);
-  const c = paires('def truc (scope(scene), sound terminals())');
+  const c = paires('def truc(scope(scene), sound terminals())');
   ok(c.erreurs.length === 0 && c.paires && c.paires[1] && c.paires[1].key === 'terminals' && c.paires[1].type === 'sound' && c.paires[1].value && c.paires[1].value.type === 'SettingBag' && c.paires[1].value.pairs.length === 0,
      `1. 'sound terminals()' : une collection typée vide — reçu ${JSON.stringify(c.paires)} ${JSON.stringify(c.erreurs)}`);
-  const p = paires('def truc (sound terminals(dha, ta))');
+  const p = paires('def truc(sound terminals(dha, ta))');
   ok(p.erreurs.length === 0 && p.paires && p.paires[0].type === 'sound' && p.paires[0].value.pairs.length === 2,
      `1. 'sound terminals(dha, ta)' : une collection typée avec ses éléments — reçu ${JSON.stringify(p.paires)} ${JSON.stringify(p.erreurs)}`);
 }
 
 // ── 2. un mot nu reste une valeur ─────────────────────────────────────────────────────────────
 {
-  const r = paires('def truc (scope(scene, rule), octaves:western)');
+  const r = paires('def truc(scope(scene, rule), octaves:western)');
   ok(r.erreurs.length === 0 && r.paires[0].key === 'scope' && !('type' in r.paires[0]) && r.paires[0].value.pairs.map((x) => x.key).join(',') === 'scene,rule',
      `2. 'scope(scene, rule)' reste une valeur, sans type — reçu ${JSON.stringify(r.paires)}`);
 }
 
 // ── 2bis. les trois bornes : une virgule oubliée ne devient jamais un membre typé en silence ───
 {
-  const pasUnType = paires('def truc (zzpasuntype nom)');
-  ok(pasUnType.erreurs.some((m) => /virgule/.test(m)),
+  const pasUnType = paires('def truc(zzpasuntype nom)');
+  ok(pasUnType.erreurs.some((m) => /comma/.test(m)),
      `2bis. 'zzpasuntype nom' — le premier mot n'est pas un type en portée : refusé en nommant la virgule — reçu ${JSON.stringify(pasUnType.erreurs)}`);
-  const imbrique = paires('def truc (scope(symbol group))');
-  ok(imbrique.erreurs.some((m) => /virgule/.test(m)),
+  const imbrique = paires('def truc(scope(symbol group))');
+  ok(imbrique.erreurs.some((m) => /comma/.test(m)),
      `2bis. 'scope(symbol group)' — dans un sac IMBRIQUÉ, même un type en tête ne déclare rien : refusé en nommant la virgule — reçu ${JSON.stringify(imbrique.erreurs)}`);
 }
 

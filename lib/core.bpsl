@@ -1,19 +1,3 @@
-// LA LIBRAIRIE « core » — écrite dans le langage qu'elle sert.
-// Convertie depuis le JSON : le bundle en rend la MÊME donnée, champ par champ. Les
-// consommateurs ne voient aucun changement — c'est l'AUTHORING qui change, pas la donnée.
-//
-// ⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
-//    voyage pas jusqu'aux consommateurs, une clé si.
-
-// Le SCHEMA de core a ete DISSOUS le 2026-09-03 (arbitrage Romain, point 2 des cinq arbitrages) :
-// les mots de la grammaire vivent dans le schema de SYNTAXE (`schema-syntaxe/language.json`), les
-// clés d'acteur sont les membres types du prototype `actor`, les canaux les entrees du prototype
-// `destination`, les cles de crochet une portee `bracket` sur chaque controle, les axes de
-// catalogue se derivent (un prototype de `types` qui a des entrees dans une famille). Rien n'est en
-// portee sans invocation, sauf la syntaxe.
-//
-// Ce que ce catalogue APPORTE — chaque nom invoque une librairie, et sa chaîne se
-// résout transitivement. Décision Romain, 2026-08-20.
 expression
 midi
 audio
@@ -25,12 +9,30 @@ eval
 midi_default
 
 // @documented
-def core (resolves:core, name:core, description:"BPscript core — silences, prolongation, contrôles moteur, SOCLE des défauts de scène", version:"0.2.0", symbols(), section:defaults)
+def core(
+  resolves:core,
+  name:core,
+  description:"BPscript core — silences, prolongation, contrôles moteur, SOCLE des défauts de scène",
+  version:"0.2.0",
+  symbols(),
+  section:defaults
+)
 
-def components (alphabet:western, tuning:western_12TET, transport:audio, eval:js)
+def components(alphabet:western, tuning:western_12TET, transport:audio, eval:js)
 
-def values (diapason(range(16, 8000), unit:Hz, overriddenBy(tuning.diapason, alphabet.diapason), description:"Hauteur de référence (Hz). Le défaut vient du champ `diapason` de l'ALPHABET EFFECTIF (acteur ?? scène `alphabet.X` ?? alphabet par défaut `core`, `components.alphabet`) — l'ancre est une propriété du système de notes, pas de l'accordage (cf. SCENE_DEFAULTS_CASCADE.md). Surchargeable par `diapason:N` en tête de scène, ou `(diapason:N)` sur une occurrence. Si l'alphabet n'est pas résolu, la valeur reste ABSENTE (l'aval résout)."))
+def values(
+  diapason(
+    range(16, 8000),
+    unit:Hz,
+    overriddenBy(tuning.diapason, alphabet.diapason),
+    description:"Hauteur de référence (Hz). Le défaut vient du champ `diapason` de l'ALPHABET EFFECTIF (acteur ?? scène `alphabet.X` ?? alphabet par défaut `core`, `components.alphabet`) — l'ancre est une propriété du système de notes, pas de l'accordage (cf. SCENE_DEFAULTS_CASCADE.md). Surchargeable par `diapason:N` en tête de scène, ou `(diapason:N)` sur une occurrence. Si l'alphabet n'est pas résolu, la valeur reste ABSENTE (l'aval résout)."
+  )
+)
 
-def on_fail (section:settings, type:directive, values("skip", "retry", "fallback"), value:skip, description:"Gestion d'échec de dérivation")
-
-
+def on_fail(
+  section:settings,
+  type:directive,
+  values("skip", "retry", "fallback"),
+  value:skip,
+  description:"Gestion d'échec de dérivation"
+)

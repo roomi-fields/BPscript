@@ -28,7 +28,7 @@ const compiler = (src) => { const r = compileToBPxAST(src, {}); return { ok: !!r
 // ── 1. un réglage invoqué est jugé à sa place ───────────────────────────────────────────────────
 {
   const r = compiler('core\nscaleshift\n-----\nS -> C4\n');
-  ok(!r.ok && r.msgs.some((m) => /ne peut pas s'écrire en tête de scène/.test(m)),
+  ok(!r.ok && r.msgs.some((m) => /cannot be written at the top of a scene/.test(m)),
      `1. 'scaleshift' en tête de scène est refusé à sa place — reçu ${JSON.stringify(r.msgs)}`);
   const ok1 = compiler('core\n-----\nS -> C4(scaleshift:2)\n');
   ok(ok1.ok, `1. 'scaleshift' sur un élément passe — reçu ${JSON.stringify(ok1.msgs)}`);
@@ -51,13 +51,13 @@ const compiler = (src) => { const r = compileToBPxAST(src, {}); return { ok: !!r
   registerLib('zzlibB', { ...gabarit(['scene']), resolves: 'zzlibB' });
   try {
     const deux = compiler('core\nzzlibA\nzzlibB\n-----\nS -> C4(zzduo:1)\n');
-    ok(!deux.ok && deux.msgs.some((m) => /zzduo.*déclaré par 2 librairies.*'zzlibA\.zzduo:…'.*'zzlibB\.zzduo:…'/.test(m)),
+    ok(!deux.ok && deux.msgs.some((m) => /zzduo.*is declared by 2 libraries.*'zzlibA\.zzduo:…'.*'zzlibB\.zzduo:…'/.test(m)),
        `3. 'zzduo' déclaré par deux librairies invoquées est REFUSÉ nu, en nommant les deux formes préfixées — reçu ${JSON.stringify(deux.msgs)}`);
     const prefixe = compiler('core\nzzlibA\nzzlibB\n-----\nS -> C4(zzlibA.zzduo:1)\n');
     ok(prefixe.ok, `3. préfixé, 'zzlibA.zzduo' passe à la place que zzlibA déclare — reçu ${JSON.stringify(prefixe.msgs)}`);
     const horsPlace = compiler('core\nzzlibA\nzzlibB\n-----\nS -> C4(zzlibB.zzduo:1)\n');
-    ok(!horsPlace.ok && horsPlace.msgs.some((m) => /zzduo.*ne peut pas s'écrire/.test(m)),
-       `3. préfixé, 'zzlibB.zzduo' est jugé à la place que zzlibB déclare (scène seule) — reçu ${JSON.stringify(horsPlace.msgs)}`);
+    ok(!horsPlace.ok && horsPlace.msgs.some((m) => /zzduo.*cannot be written/.test(m)),
+       `3. préfixé, 'zzlibB.zzduo' est jugé à la place que zzlibB déclare(scène seule) — reçu ${JSON.stringify(horsPlace.msgs)}`);
     const une = compiler('core\nzzlibA\n-----\nS -> C4(zzduo:1)\n');
     ok(une.ok, `4. une seule des deux invoquée : 'zzduo' passe — reçu ${JSON.stringify(une.msgs)}`);
     const t = chargerPorteesPermises(compileToBPxAST('core\nzzlibA\nzzlibB\n-----\nS -> C4\n', {}).ast);

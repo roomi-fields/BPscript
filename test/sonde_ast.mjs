@@ -128,4 +128,4 @@ for (const nom of noms) {
 console.log('\nBilan :');
 console.log(`  AST identiques (chercher en AVAL)     ${tally.identiques}`);
 console.log(`  AST divergents (chercher au FRONTAL)  ${tally.frontal}`);
-console.log(`  non comparables (une voie indisponible) ${tally.indisponible}`);
+console.log(`  non comparables(une voie indisponible) ${tally.indisponible}`);

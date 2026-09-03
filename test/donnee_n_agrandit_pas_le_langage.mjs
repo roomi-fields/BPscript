@@ -10,7 +10,7 @@
  * POURQUOI C'EST UNE FAILLE DE FRONTIÈRE et pas un bug de chargeur (architecte, 2026-07-27) : la
  * limite entre la DONNÉE et le LANGAGE se franchissait par accident, dans le sens qui agrandit le
  * langage. Le mot ainsi créé se serait comporté comme un vrai mot — réservant son nom, avalant
- * l'écriture d'un auteur qui l'aurait porté (c'est exactement ce que `mute` venait de faire à la
+ * l'écriture d'un auteur qui l'aurait porté(c'est exactement ce que `mute` venait de faire à la
  * démo du patchbay le même jour).
  *
  * LISTE BLANCHE, PAS LISTE NOIRE — la correction demandée, et la seule qui tienne. Exclure des
@@ -66,9 +66,9 @@ for (const [ou, batir] of PLACEMENTS) {
     const { ctx, erreur } = charger(`essai_doc_${ou}_${forme}`.replace(/\W/g, '_'),
                                     batir({ _note_de_service: valeur }));
     ok(erreur === null, `2a. une clé '_' (${forme}) dans '${ou}' doit être admise — reçu : ${erreur}`);
-    ok(ctx?.controlNames.has('vel'), `2a. et le vrai contrôle voisin doit charger (${ou}, ${forme})`);
+    ok(ctx?.controlNames.has('vel'), `2a. et le vrai contrôle voisin doit charger(${ou}, ${forme})`);
     ok(!ctx?.controlNames.has('_note_de_service'),
-       `2a. la documentation ne doit JAMAIS entrer au vocabulaire (${ou}, ${forme})`);
+       `2a. la documentation ne doit JAMAIS entrer au vocabulaire(${ou}, ${forme})`);
   }
 }
 
@@ -85,8 +85,8 @@ for (const [ou, batir] of PLACEMENTS) {
     const { erreur } = charger(nom, batir({ commodite: valeur }));
     ok(erreur !== null,
        `2b. '${forme}' dans '${ou}' doit être REFUSÉE — un fichier de données n'agrandit pas le langage`);
-    ok(erreur?.includes('commodite'), `2b. le refus doit NOMMER la clé fautive (${ou}, ${forme}) — reçu : ${String(erreur).slice(0, 100)}`);
-    ok(erreur?.includes(nom), `2b. et NOMMER la librairie (${ou}, ${forme}) — reçu : ${String(erreur).slice(0, 100)}`);
+    ok(erreur?.includes('commodite'), `2b. le refus doit NOMMER la clé fautive(${ou}, ${forme}) — reçu : ${String(erreur).slice(0, 100)}`);
+    ok(erreur?.includes(nom), `2b. et NOMMER la librairie(${ou}, ${forme}) — reçu : ${String(erreur).slice(0, 100)}`);
   }
 }
 
@@ -95,7 +95,7 @@ for (const [ou, batir] of PLACEMENTS) {
   const { ctx, erreur } = charger(`essai_ok_${ou}`.replace(/\W/g, '_'),
                                   batir({ inedit: { args: [], description: 'contrôle sans argument' } }));
   ok(erreur === null, `3. un contrôle bien formé dans '${ou}' doit charger — reçu : ${erreur}`);
-  ok(ctx?.controlNames.has('inedit'), `3. et il doit entrer au vocabulaire (${ou})`);
+  ok(ctx?.controlNames.has('inedit'), `3. et il doit entrer au vocabulaire(${ou})`);
 }
 
 // Le registre a été sali par les librairies d'essai : on le rend propre aux tests qui suivent.

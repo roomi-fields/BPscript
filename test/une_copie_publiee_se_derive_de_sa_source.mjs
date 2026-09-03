@@ -7,7 +7,7 @@
  * recherche qui l'a produite est décrite plus bas.
  *
  * ⚠️ CE QUE CE GARDE FERME, mesuré le 2026-08-18 : les deux fichiers d'une paire étaient
- * identiques à l'octet et maintenus À LA MAIN. En migrant la source (l'arobase sortie du langage),
+ * identiques à l'octet et maintenus À LA MAIN. En migrant la source(l'arobase sortie du langage),
  * la copie est restée en arrière — et c'est ELLE que les consommateurs chargent. Pendant cette
  * fenêtre, l'appui d'éditeur enseignait un signe retiré à qui écrivait une scène.
  *

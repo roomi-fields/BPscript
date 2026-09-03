@@ -102,7 +102,7 @@ for (const [niveau, motif] of [
   ok(affirme, "3. la fiche doit AFFIRMER l'absence de scènes — sinon il n'y a rien à garder ici");
   ok(scenes === 0,
      `3. la fiche affirme 0 scène sous l'arborescence d'oracles, il y en a ${scenes}. `
-     + `Soit une copie est revenue (incident 'vina'), soit le document est à corriger — les deux `
+     + `Soit une copie est revenue(incident 'vina'), soit le document est à corriger — les deux `
      + `demandent une action, aucune ne se résout en attendant.`);
 }
 

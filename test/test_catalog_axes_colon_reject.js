@@ -31,7 +31,7 @@ function accepts(src) {
 
 const components = describeVocabulary().components;
 const axes = Object.keys(components);
-console.log(`\n=== Axes-composants audités (autorité machine) : ${axes.join(', ')} ===`);
+console.log(`\n=== Axes-composants audités(autorité machine) : ${axes.join(', ')} ===`);
 assert('au moins alphabet/tuning/octaves/scale sont des axes-composants',
   ['alphabet', 'tuning', 'octaves', 'scale'].every((a) => axes.includes(a)), axes.join(', '));
 
@@ -46,7 +46,7 @@ for (const axis of axes) {
 }
 
 // Garde de non-régression : le `:` RESTE le canon des VALEURS (hors-scope du rejet).
-console.log('\n=== Le `:` reste valide pour les VALEURS (jamais rejeté) ===');
+console.log('\n=== Le `:` reste valide pour les VALEURS(jamais rejeté) ===');
 for (const val of ['tempo:120', 'diapason:432', 'meter:4/4', 'transpose:24']) {
   assert(`${val} (valeur) → ACCEPTÉ`, accepts(`core\n${val}\n-----\nS -> C4\n`), val);
 }

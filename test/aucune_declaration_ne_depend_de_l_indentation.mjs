@@ -13,7 +13,7 @@
  *
  * ⚠️ ET LA FORME QUI LE REMPLACE S'EST DÉCIDÉE AU COMPILATEUR, PAS DE MÉMOIRE. `def scales(…)` collé
  * est REFUSÉ — « la liste de paramètres ne porte que des NOMS » : la parenthèse collée fait une
- * DÉFINITION À PARAMÈTRES. C'est `def scales (…)`, avec l'espace, qui porte un sac de réglages. Un
+ * DÉFINITION À PARAMÈTRES. C'est `def scales(…)`, avec l'espace, qui porte un sac de réglages. Un
  * signe de ponctuation porte des rôles que personne n'a écrits, et l'espace est le signe ici.
  *
  * ⛔ CE QUE CE GARDE NE REFUSE PAS, ET C'EST MESURÉ : les 57 lignes indentées de `lib/engine.bpsl`
@@ -45,10 +45,18 @@ for (const f of fichiers) {
   for (let i = 0; i < lignes.length; i++) {
     const l = lignes[i];
     lignesExaminees++;
-    // Ouverture / fermeture grossière : ce qui compte est de savoir si l'on est DANS une parenthèse.
-    const ouvre = (l.match(/\(/g) || []).length;
-    const ferme = (l.match(/\)/g) || []).length;
-    if (/^def\s+\S+\s*$/.test(l)) { dernierDef = { nom: l.trim(), ligne: i + 1 }; ouverte = false; continue; }
+    // ⛔ LES PARENTHÈSES D'UNE CHAÎNE NE COMPTENT PAS — mesuré le 2026-09-03, quand les librairies
+    //   ont été repliées sur plusieurs lignes : `description:"… (gain, filtre)"` porte une paire
+    //   ÉQUILIBRÉE qui refermait la déclaration aux yeux de ce détecteur, et les lignes suivantes
+    //   passaient pour rattachées par leur décalage. 79 fausses fautes, sur une forme juste.
+    //   Tant que tout tenait sur une ligne, le déséquilibre ne pouvait pas se voir.
+    const horsChaine = l.replace(/"(?:[^"]|"")*"/g, '""');
+    const ouvre = (horsChaine.match(/\(/g) || []).length;
+    const ferme = (horsChaine.match(/\)/g) || []).length;
+    // ⚠️ `\S+` AVALAIT LA PARENTHÈSE : `def audio(` passait pour un `def` NU, donc le détecteur
+    //   fermait la déclaration et voyait ses membres comme rattachés par leur décalage. La faute
+    //   qu'il cherche est un `def` SANS parenthèse — il faut donc l'exclure explicitement.
+    if (/^def\s+[A-Za-z_][\w-]*\s*$/.test(l)) { dernierDef = { nom: l.trim(), ligne: i + 1 }; ouverte = false; continue; }
     if (ouvre > ferme) ouverte = true;
     else if (ferme >= ouvre && ferme > 0) ouverte = false;
     if (ouverte) continue;                                  // DANS une parenthèse : mise en forme
@@ -74,19 +82,19 @@ ok(fautives.length === 0,
     if (/^def\s+\S+\s*$/.test(l)) { dernierDef = l.trim(); continue; }
     if (dernierDef && /^\s+[A-Za-z_][A-Za-z0-9_]*\s*:/.test(l)) vu++;
   }
-  ok(vu === 1, `TÉMOIN — le détecteur doit voir la faute fabriquée (reçu ${vu})`);
+  ok(vu === 1, `TÉMOIN — le détecteur doit voir la faute fabriquée(reçu ${vu})`);
   // Et son complément : la MÊME clé, dans une parenthèse, n'est pas une faute.
-  const bon = ['def zorglub (', '  cle:valeur', ')'].join('\n');
+  const bon = ['def zorglub(', '  cle:valeur', ')'].join('\n');
   let vuBon = 0, ouverte = false, def2 = null;
   for (const l of bon.split('\n')) {
     const o = (l.match(/\(/g) || []).length, c = (l.match(/\)/g) || []).length;
-    if (/^def\s+\S+\s*$/.test(l)) { def2 = l.trim(); ouverte = false; continue; }
+    if (/^def\s+[A-Za-z_][\w-]*\s*$/.test(l)) { def2 = l.trim(); ouverte = false; continue; }
     if (o > c) { ouverte = true; continue; }
     if (c > 0) { ouverte = false; continue; }
     if (ouverte) continue;
     if (def2 && /^\s+[A-Za-z_][A-Za-z0-9_]*\s*:/.test(l)) vuBon++;
   }
-  ok(vuBon === 0, `TÉMOIN — une clé DANS une parenthèse n'est pas une faute (reçu ${vuBon})`);
+  ok(vuBon === 0, `TÉMOIN — une clé DANS une parenthèse n'est pas une faute(reçu ${vuBon})`);
 }
 
 const ATTENDU = 5;

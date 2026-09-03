@@ -67,10 +67,10 @@ for (const t of TYPES_A_PARENTHESE) {
 
 // ── B. ET LA FORME AVEC PARENTHÈSE PORTE LE MÊME — sinon la forme nue serait un régime à part ────
 for (const t of TYPES_A_PARENTHESE) {
-  const avec = lire(`${t} truc (x:1)`);
-  ok(avec.erreurs.length === 0, `B. '${t} truc (x:1)' doit COMPILER`);
+  const avec = lire(`${t} truc(x:1)`);
+  ok(avec.erreurs.length === 0, `B. '${t} truc(x:1)' doit COMPILER`);
   ok(avec.v?.varType?.type === t,
-     `B. '${t} truc (x:1)' doit porter le MÊME type que sa forme nue — reçu ${JSON.stringify(avec.v?.varType)}`);
+     `B. '${t} truc(x:1)' doit porter le MÊME type que sa forme nue — reçu ${JSON.stringify(avec.v?.varType)}`);
 }
 
 // ── B-bis. ⛔ `flag` A UNE SEULE FORME, ET LES DEUX AUTRES SONT REFUSÉES ──────────────────────────
@@ -80,7 +80,7 @@ for (const t of TYPES_A_PARENTHESE) {
   ok(avec.v?.varType?.kind === 'flag' && avec.v?.varType?.initiale === 1,
      `B-bis. et porter sa valeur initiale — reçu ${JSON.stringify(avec.v?.varType)}`);
   ok(lire('flag truc').erreurs.length >= 1, "B-bis. 'flag truc' NU doit être refusé");
-  ok(lire('flag truc (x:1)').erreurs.length >= 1, "B-bis. 'flag truc (x:1)' doit être refusé");
+  ok(lire('flag truc(x:1)').erreurs.length >= 1, "B-bis. 'flag truc(x:1)' doit être refusé");
 }
 
 // ── C. UNE CONVENTION EST UNE AUTRE FAMILLE — elle se déclare nue, et refuse la parenthèse ───────
@@ -94,7 +94,7 @@ for (const c of CONVENTIONS) {
 
 // ── D. TÉMOIN — le mécanisme ne s'ouvre pas à n'importe quel mot ─────────────────────────────────
 ok(lire('zorglubinvente truc').erreurs.length > 0, "D. TÉMOIN — un mot qui ne désigne rien reste refusé, nu");
-ok(lire('zorglubinvente truc (x:1)').erreurs.length > 0, "D. TÉMOIN — et refusé avec un corps");
+ok(lire('zorglubinvente truc(x:1)').erreurs.length > 0, "D. TÉMOIN — et refusé avec un corps");
 
 // ⛔ Le compte se dérive de la donnée, il ne s'écrit pas : une primitive ajoutée l'augmente d'elle-même.
 // ⛔ LE COMPTE SUIT LA SORTIE DE `flag` : ses deux lignes quittent les volets A et B (donc

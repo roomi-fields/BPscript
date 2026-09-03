@@ -48,7 +48,7 @@ const FORMES = [
       && n?.varType?.kind === 'flag'
       && n?.varType?.initiale === 1
       && JSON.stringify(n.varType.states) === '[]'],
-  ['in.keyboard touches', 'une entrée (déjà portée — InDirective, hors `ast.vars`)',
+  ['in.keyboard touches', 'une entrée(déjà portée — InDirective, hors `ast.vars`)',
     null, (r) => (r.ast?.inputs || []).some((i) => i.name === 'touches' && i.transport === 'keyboard')],
   ['signal grain', 'la convention signal',
     (n) => n?.names?.[0] === 'grain' && n?.varType?.kind === 'convention' && n.varType.convention === 'signal'],
@@ -98,9 +98,9 @@ for (const [ligne, quoi, verifNoeud, verifAlt] of FORMES) {
 // passent du deux-points aux parenthèses.
 const REFUS = [
   ['zorglub x', "un mot en tête qui ne désigne RIEN de connu",
-    /'zorglub' n'est pas un type/],
+    /'zorglub' is not a type/],
   ['lpf lpf1', "un mot qui n'ouvre aucune déclaration — le catalogue de modules est archivé",
-    /'lpf' n'est pas un type/],
+    /'lpf' is not a type/],
 ];
 for (const [ligne, quoi, attendu] of REFUS) {
   const r = compile(ligne);
@@ -121,7 +121,7 @@ for (const [ligne, quoi, attendu] of REFUS) {
   // le MESSAGE, qui avait raison. Un garde qui recopie une liste devient sa concurrente.
   // ⛔ LA LISTE A DISPARU LE 2026-09-02 : les types de déclaration sont des OBJETS de `types`
   // (Romain : « ces objets ne devraient pas être dans types ? »), en portée quand ce fichier l'est.
-  // `object` est sorti (`def` est le mot unique) et `native` aussi (forme B : un geste natif est un
+  // `object` est sorti(`def` est le mot unique) et `native` aussi (forme B : un geste natif est un
   // `control` portant `bpscript:false`). Six types du socle ; le plancher suit ces deux retraits.
   const TYPES_DECLARES = Object.entries(LIBS.types || {})
     .filter(([k, v]) => k !== 'types' && v && typeof v === 'object' && !Array.isArray(v)).map(([k]) => k);
@@ -132,13 +132,13 @@ for (const [ligne, quoi, attendu] of REFUS) {
     // ⚠️ LE REFUS N'ÉNUMÈRE PLUS LES MODULES, et c'est voulu : un refus qui nomme une forme la
     // ressuscite pour son lecteur. Le catalogue est archivé le 2026-08-23, la liste part avec lui.
     // Les conventions sont des objets de `types` depuis le 2026-09-02 : le refus ne les énumère plus.
-    ok(/in\.<canal>/.test(m) && !/adsr|lfo|ramp/.test(m),
+    ok(/in\.<channel>/.test(m) && !/adsr|lfo|ramp/.test(m),
       `2. le refus ${quoi} doit nommer le canal d'entrée, et NE PLUS nommer les modules archivés `
       + `— reçu : ${m.slice(0, 160)}`);
-    // ⚠️ LE REFUS N'ÉNUMÈRE PLUS LES TYPES : ils sont des objets en portée (tout ce qu'une librairie
+    // ⚠️ LE REFUS N'ÉNUMÈRE PLUS LES TYPES : ils sont des objets en portée(tout ce qu'une librairie
     // invoquée apporte, des centaines de noms), et une liste ne dirait rien. Il nomme d'où ils
     // viennent — un objet en portée, et le fichier qui porte le socle.
-    ok(/objet en portée/.test(m) && /'types'/.test(m),
+    ok(/object in scope/.test(m) && /'types'/.test(m),
       `2. le refus ${quoi} doit dire qu'un type est un OBJET EN PORTÉE et nommer 'types' — `
       + `reçu : ${m.slice(0, 200)}`);
   }

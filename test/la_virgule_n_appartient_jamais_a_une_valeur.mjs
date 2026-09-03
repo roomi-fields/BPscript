@@ -147,7 +147,7 @@ const lire = (flux) => {
     + 'n\'est pas une paire. Si ça compile, le passe-droit est revenu.');
 
   const espace = lire('C4(keyxpand:C4 2)');
-  ok(espace.erreurs.length === 0, `C. \`keyxpand:C4 2\` doit COMPILER (reçu : ${espace.erreurs[0]})`);
+  ok(espace.erreurs.length === 0, `C. \`keyxpand:C4 2\` doit COMPILER(reçu : ${espace.erreurs[0]})`);
   // ⛔ COMPILER NE SUFFIT PAS : c'est la forme où l'ancien défaut perdait la moitié de la valeur.
   ok(espace.valeur === 'C4 2',
     `C. et porter ses DEUX parties — c'est ici que l'aval criait « needs a pivot note and a factor ». `

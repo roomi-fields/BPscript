@@ -37,7 +37,7 @@ const erreursDe = (src) => {
   try { return compileToBPxAST(src).errors ?? []; } catch (e) { return [{ message: e.message }]; }
 };
 const refusGenerique = (src) =>
-  erreursDe(src).filter((e) => /est un mot GÉNÉRIQUE/.test(String(e.message)));
+  erreursDe(src).filter((e) => /is a GENERIC word/.test(String(e.message)));
 
 // ── 0. SOCLE — l'interface et ses DEUX réalisations existent ─────────────────────────────────
 ok(LIBS.expression?.controls?.volume && !LIBS.expression.controls.volume.implements,

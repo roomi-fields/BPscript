@@ -37,7 +37,7 @@ const erreursDe = (src) => {
   try { return compileToBPxAST(src).errors ?? []; } catch (e) { return [{ message: e.message }]; }
 };
 const refusDeTag = (src) =>
-  erreursDe(src).filter((e) => /nomme un évaluateur qui n'est pas déclaré/.test(String(e.message)));
+  erreursDe(src).filter((e) => /names an evaluator that is not declared/.test(String(e.message)));
 
 // ─── 0. SOCLE — la liste doit exister ET être en portée d'une scène ordinaire ────────────────
 clearRegistry();

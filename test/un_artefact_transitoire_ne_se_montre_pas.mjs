@@ -74,7 +74,7 @@ ok(nus.length === 0,
 {
   ok(!estIgnore('zzz-temoin-du-garde.tmp'),
     'TEMOIN — un `.tmp` que rien ne declare NE DOIT PAS etre vu comme ignore ; si ce volet echoue, '
-    + 'une regle trop large (`*.tmp`) masque tout et le volet principal ne mesure plus rien');
+    + 'une regle trop large(`*.tmp`) masque tout et le volet principal ne mesure plus rien');
   // Et son complement : un chemin que .gitignore couvre VRAIMENT doit sortir ignore.
   ok(estIgnore('baseline-status.json.tmp'),
     'TEMOIN — et le detecteur doit reconnaitre un chemin reellement ignore, sinon il rend faux des '

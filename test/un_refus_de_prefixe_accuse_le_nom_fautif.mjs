@@ -63,7 +63,7 @@ for (const [ecrit, quoi] of [['zorglub.vel:80', 'vel'], ['zorglub.wave:sine', 'w
   const m = refus(ecrit);
   ok(m !== null, `A. '${ecrit}' doit être refusé`);
   ok(m && m.includes('zorglub'), `A. le refus de '${ecrit}' doit nommer le PRÉFIXE — reçu : ${m}`);
-  ok(m && !/directive de SCÈNE/.test(m),
+  ok(m && !/SCENE directive/.test(m),
     `A. et NE PAS accuser '${quoi}' d'être un mot de tête : le nom fautif est le préfixe — reçu : ${m}`);
 }
 
@@ -90,7 +90,7 @@ for (const [ecrit, quoi] of [['zorglub.vel:80', 'vel'], ['zorglub.wave:sine', 'w
     const m = refus(`engine.${mot}:42`);
     if (m === null) continue;                    // certains mots ne se lisent pas ainsi : hors sujet
     vus++;
-    if (!/directive de SCÈNE/.test(m)) manques.push(`${mot} → ${String(m).slice(0, 70)}`);
+    if (!/SCENE directive/.test(m)) manques.push(`${mot} → ${String(m).slice(0, 70)}`);
   }
   ok(vus >= 5, `C. le garde doit avoir éprouvé plusieurs mots de tête — ${vus} sur ${teteSeule.length}`);
   ok(manques.length === 0,
@@ -108,7 +108,7 @@ for (const [ecrit, quoi] of [['zorglub.vel:80', 'vel'], ['zorglub.wave:sine', 'w
     const m = refus(`zorglub.${mot}:1`);
     if (m === null) continue;
     vus++;
-    if (/directive de SCÈNE/.test(m)) fautifs.push(mot);
+    if (/SCENE directive/.test(m)) fautifs.push(mot);
     else if (!String(m).includes('zorglub')) fautifs.push(`${mot} (ne nomme pas le préfixe)`);
   }
   ok(vus >= 1, `D. le garde doit avoir éprouvé au moins un mot réservé-ET-contrôle — ${vus}`);

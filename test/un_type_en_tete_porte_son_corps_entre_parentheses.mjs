@@ -65,7 +65,7 @@ for (const [ligne, nom, clesAttendues] of [
   ['control srand(bp3:_srand, bpscript:false)', 'srand', ['bp3', 'bpscript']],
   ['destination midi(resolvedBy:runtime-MIDI, version:1.0.0)', 'midi', ['resolvedBy', 'version']],
   // ⛔ `object racine(…)` A QUITTÉ CETTE TABLE LE 2026-09-02. La réserve de Romain du 2026-08-16
-  // — `object racine (a:1)` et `def racine (a:1)` rendent le même contenu — a tranché : `object`
+  // — `object racine(a:1)` et `def racine(a:1)` rendent le même contenu — a tranché : `object`
   // est SORTI, `def` est le mot unique, et une racine n'est pas un TYPE en tête. Sa forme, et le
   // collage de sa parenthèse, sont gardés par `def_declare_un_terminal.mjs`.
 ]) {
@@ -131,17 +131,17 @@ for (const [ligne, nom, clesAttendues] of [
 // ── 4. LES REFUS QUI BORNENT LA FORME ───────────────────────────────────────────────────────
 {
   const inconnu = lire('lpf lpf1');
-  ok(inconnu.erreurs.length >= 1 && /n'est pas un type/.test(inconnu.erreurs[0]),
+  ok(inconnu.erreurs.length >= 1 && /is not a type in scope/.test(inconnu.erreurs[0]),
     `4. un type NON DÉCLARÉ reste refusé en nommant les types — reçu ${inconnu.erreurs[0]?.slice(0, 90)}`);
   // Depuis le 2026-09-02 les types sont des objets en portée : le refus nomme d'où ils viennent.
-  ok(/objet en portée/.test(inconnu.erreurs[0] || '') && /'types'/.test(inconnu.erreurs[0] || ''),
+  ok(/object in scope/.test(inconnu.erreurs[0] || '') && /'types'/.test(inconnu.erreurs[0] || ''),
     '4. et le refus doit dire qu\'un type est un objet en portée et nommer \'types\' — sinon il envoie l\'auteur chercher ailleurs');
   const sansNom = lire('enum');
-  ok(sansNom.erreurs.length >= 1 && /doit nommer/.test(sansNom.erreurs[0]),
+  ok(sansNom.erreurs.length >= 1 && /must name what it declares/.test(sansNom.erreurs[0]),
     `4. un type SEUL sur sa ligne ne déclare rien — reçu ${sansNom.erreurs[0]?.slice(0, 90)}`);
 }
 
-ok(passe >= 30, `le garde doit avoir EXAMINÉ, pas seulement tourné (${passe} assertions)`);
+ok(passe >= 30, `le garde doit avoir EXAMINÉ, pas seulement tourné(${passe} assertions)`);
 
 if (echecs.length) {
   console.error(`[type-en-tête] ${echecs.length} ÉCHEC(S) :`);

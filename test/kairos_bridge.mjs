@@ -97,7 +97,7 @@ export function unirCatalogues(base, apport = {}) {
         `[pont-kairos] collision de catalogue sur '${axe}' : ${collisions.join(', ')}. `
         + `L'apport d'une voie AJOUTE des entrées, il n'en redéfinit aucune — sinon les deux `
         + `voies résoudraient le même nom différemment sans que la comparaison le voie. `
-        + `Si une clé est DÉJÀ dans la base partagée (ex. bp3_indian depuis [352], commit 4f9ab75), `
+        + `Si une clé est DÉJÀ dans la base partagée(ex. bp3_indian depuis [352], commit 4f9ab75), `
         + `la voie doit CESSER de la passer en apport : la base la fournit à tous.`,
       );
     }
@@ -278,7 +278,7 @@ export async function resoudreViaKairos(session, opts = {}) {
       // de Kairos, donc sur le RÉSOLU ; les captures natives portent des noms résolus (do2 après un
       // chromashift:-12, E3 après un +12), pas le littéral de la scène. Kairos grave ce nom dans
       // `content.pitch` (noteName + altération + registre) et JAMAIS dans `content.token`, dont le
-      // contrat d'événement ne change pas (refus archi). Comparer le nu imputait un DIFF d'octave à
+      // contrat d'événement ne change pas(refus archi). Comparer le nu imputait un DIFF d'octave à
       // une hauteur JUSTE (mesuré : acceleration E2 nu → E reg 3 résolu = natif E3). Seule la MESURE
       // (`voie_b_status.mjs`) lit ce champ ; les gardes gardent le nu.
       nomResolu: nomComparable(c),

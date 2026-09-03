@@ -107,7 +107,7 @@ ok(ILLISIBLES.length >= 6 && POSITIONS.length >= 5, 'la matrice ne s\'est pas vi
   // sous-grammaires est fait des mêmes tirets. Refuser « un tiret devant une flèche » aurait
   // emporté les deux. Le refus porte donc sur le tiret COLLÉ, que personne n'écrit pour un silence.
   const sep = compileToBPxAST('core\nalphabet.simple\n-----\nS -> a b\n-----\nS -> c d');
-  ok(!!sep.ast, 'le séparateur de sous-grammaires (cinq tirets) doit survivre');
+  ok(!!sep.ast, 'le séparateur de sous-grammaires(cinq tirets) doit survivre');
   const silence = compileToBPxAST('core\nalphabet.simple\n-----\n- a a -> b');
   ok(!!silence.ast, 'un SILENCE en membre gauche, détaché, doit rester permis');
   const espace = compileToBPxAST('core\nalphabet.simple\n-----\nS - -> a');

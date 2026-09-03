@@ -44,7 +44,7 @@ const banqueDe = (ast, acteur) =>
 {
   const r = compileToBPxAST('core\nactor v  eval.hydra(bank:gm)\n-----\nS -> v_r\nv_r -> v.`osc()`');
   check((r.errors || []).length > 0, 'bank sur hydra doit être REFUSÉ — il appartient à strudel');
-  check((r.errors || []).some((e) => /n'est ni un paramètre de 'hydra'/.test(e.message)),
+  check((r.errors || []).some((e) => /is neither a parameter of 'hydra'/.test(e.message)),
         'le refus nomme l entrée : ' + (r.errors || []).map((e) => e.message).join(' | '));
 }
 

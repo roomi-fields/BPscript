@@ -55,7 +55,7 @@ lignes.forEach((l, i) => {
 });
 
 if (!blocs.length) {
-  console.log('[formes] aucune forme BPScript dans ce message (aucun bloc indenté de 4 espaces).');
+  console.log('[formes] aucune forme BPScript dans ce message(aucun bloc indenté de 4 espaces).');
   console.log('⚠️ Ce n\'est PAS une preuve que le message est juste : c\'est une absence de forme à');
   console.log('   vérifier. Si le message CITE une forme sans l\'indenter, la règle est violée et');
   console.log('   ce vérificateur ne peut pas le voir — c\'est à la relecture du brouillon.');

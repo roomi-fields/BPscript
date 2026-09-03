@@ -4,7 +4,7 @@
 // POURQUOI CE GARDE EXISTE. Trois écarts spec-contre-code ont été relevés le 2026-08-06, tous de la
 // MÊME famille : un champ que l'arbre porte et que la spec ne déclare pas (`Setting.decrement`), un
 // champ que la spec nomme autrement que l'arbre (`Rule.scan` là où l'arbre porte `Rule.mode`), un
-// nœud que la spec décrit et que l'arbre ne produit jamais (`SpeedChange`). Aucun des trois n'a été
+// nœud que la spec décrit et que l'arbre ne produit jamais(`SpeedChange`). Aucun des trois n'a été
 // trouvé par relecture — ils l'ont été en COMPILANT et en regardant les champs. Un quatrième
 // dormait dans l'exemple JSON du même document, à quatre cents lignes de la déclaration qu'il
 // illustrait : réparer la déclaration seule l'aurait laissé mentir.
@@ -104,7 +104,7 @@ const DEROGATIONS = [
   //  ci-dessous a montré qu'elle n'abritait rien — la spec déclare `type` sur chaque nœud.)
   { nœud: '*', champ: 'payload',
     motif: "sceau de nature posé par bpxAst.js, décrit à sa propre section de la spec et non nœud "
-         + "par nœud (2026-08-06) — il se pose sur des nœuds de familles trop différentes pour "
+         + "par nœud(2026-08-06) — il se pose sur des nœuds de familles trop différentes pour "
          + "être déclaré dans chacun." },
 ];
 
@@ -210,7 +210,7 @@ if (nouveaux.length) {
   for (const x of nouveaux.sort((a, b) => b.n - a.n)) console.log(`     ${String(x.n).padStart(6)} × ${x.cle}`);
   rouge = true;
 } else {
-  console.log(`✅ aucun champ hors spec (dette portée : ${DETTE.size}).`);
+  console.log(`✅ aucun champ hors spec(dette portée : ${DETTE.size}).`);
 }
 
 // ── CLIQUET : la dette ne remonte pas, et une ligne réparée doit sortir ─────

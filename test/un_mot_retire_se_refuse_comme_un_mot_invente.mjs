@@ -320,7 +320,7 @@ for (const [mot, decision, vivant] of MOTS_RETIRES) {
     texte.split('\n').forEach((ligne, i) => {
       const fence = ligne.match(/^```(\w*)/);
       if (fence) { dansUnBloc = dansUnBloc === null ? (fence[1] || 'nu') : null; return; }
-      // Un bloc de code est jugé par l'oracle (bpscript) ou appartient à un autre langage (bp3).
+      // Un bloc de code est jugé par l'oracle (bpscript) ou appartient à un autre langage(bp3).
       if (dansUnBloc !== null) return;
       lignesLues++;
       // L'arobase PRESCRITE : collée à un mot, hors d'une table de correspondance native.
@@ -360,13 +360,13 @@ const CE_QUI_VIT = [
   // parce que ce garde-là porte sur les mots RETIRÉS NOMMÉMENT, et `adsr` n'est pas un mot du
   // langage retiré : c'était une ENTRÉE DE CATALOGUE, une autre nature.
   ['une table d\'homomorphisme',  `core\nhomomorphism.dhati\n-----\nS -> C4\n`],
-  ['une définition nommée',       `${T}def k (vel:120)\n-----\nS -> C4\n`],
+  ['une définition nommée',       `${T}def k(vel:120)\n-----\nS -> C4\n`],
   ['l\'état de départ',           `${T}init\n  \`sc: x\`\n-----\nS -> C4\n`],
   ['un mode de dérivation',       `${T}-----\nS -> C4\nmode:rnd\nT -> D4\n`],
 ];
 for (const [quoi, src] of CE_QUI_VIT) {
   const e = erreurs(src);
-  ok(e.length === 0, `COMPLÉMENT — ${quoi} doit COMPILER (reçu : ${e[0]?.slice(0, 140)})`);
+  ok(e.length === 0, `COMPLÉMENT — ${quoi} doit COMPILER(reçu : ${e[0]?.slice(0, 140)})`);
 }
 
 // ── TÉMOINS ANTI-RÉTRÉCISSEMENT ─────────────────────────────────────────────────────────────
@@ -377,7 +377,7 @@ ok(GRAPHIES.length >= 5, 'la matrice des graphies ne s\'est pas vidée');
 // Un plancher qui baisse sans dire quelle forme l'a quitté ne se distingue pas d'un plancher qu'on
 // desserre — et c'est précisément ce que ce garde existe pour refuser ailleurs.
 ok(CE_QUI_VIT.length >= 15, 'le complément ne s\'est pas vidé');
-ok(passe > 200, `le garde doit avoir EXAMINÉ, pas seulement tourné (${passe} assertions)`);
+ok(passe > 200, `le garde doit avoir EXAMINÉ, pas seulement tourné(${passe} assertions)`);
 // ⛔ ET LE REGISTRE DE RETARD DOIT ÊTRE ATTEINT EN ENTIER. Une entrée dont la GRAPHIE a disparu de
 // la matrice ne rougirait jamais et ne serait jamais retirée : elle deviendrait une exemption
 // muette, exactement ce que ce registre refuse d'être.

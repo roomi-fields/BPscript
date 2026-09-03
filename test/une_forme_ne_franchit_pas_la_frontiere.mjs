@@ -7,7 +7,7 @@
  * sur le contrôle final de la librairie avec son destinataire dans l'arbre ? »
  *
  * LA MESURE D'ALORS, ET ELLE ÉTAIT MAUVAISE : par PERSONNE. Une scène qui écrivait
- * `@def kick (vel:120)` puis posait `kick` produisait un symbole opaque nommé `kick`, étiqueté
+ * `@def kick(vel:120)` puis posait `kick` produisait un symbole opaque nommé `kick`, étiqueté
  * `nature:'sounding'` — donc lu en aval comme une NOTE. Le réglage canonique n'apparaissait pas,
  * son destinataire non plus, et aucun des cinq voisins ne lit `DefDirective`.
  *
@@ -16,7 +16,7 @@
  * cas particulier. Une forme sert à écrire ; elle ne voyage pas.
  *
  * LES TROIS SORTES QUI SE DÉPLIENT, et elles n'ajoutent QUE de l'écriture :
- *   `prereglage`      `@def kick (vel:120)`        un sac de réglages nommé ;
+ *   `prereglage`      `@def kick(vel:120)`        un sac de réglages nommé ;
  *   `structure`       `@def cadence sa re ga pa`   une suite de termes nommée ;
  *   `transformation`  `@def accent(x) x(vel:120)`  une suite de termes nommée, à trous.
  * LA MACRO SE CONFORME À LA RÉÉCRITURE (arbitrage Romain, 2026-08-13) : le corps entre dans la
@@ -68,22 +68,22 @@ const empreinte = (n) => JSON.stringify(n, (k, v) => (k === 'line' || k === 'col
 
 // ─── 0. Témoin anti-rétrécissement — l'écriture directe rend bien ce qu'on va comparer ───────
 const direct = arbreDe(`${TETE}-----\nS -> !(vel:120) C4\n`);
-ok(direct.erreurs.length === 0, `0. l'écriture directe doit compiler (${direct.erreurs[0]?.message})`);
+ok(direct.erreurs.length === 0, `0. l'écriture directe doit compiler(${direct.erreurs[0]?.message})`);
 const sacsDirect = sacsDe(direct.ast.subgrammars);
 ok(sacsDirect.length === 1 && sacsDirect[0].params.vel === 120,
-   `0. l'écriture directe doit porter un sac (vel:120) — reçue ${JSON.stringify(sacsDirect)}`);
+   `0. l'écriture directe doit porter un sac(vel:120) — reçue ${JSON.stringify(sacsDirect)}`);
 ok(sacsDirect[0].resolvedBy?.vel === 'toutes les sorties',
    `0. l'écriture directe doit porter son destinataire — reçu ${JSON.stringify(sacsDirect[0].resolvedBy)}`);
 
 // ─── 1 à 4. LE PRÉRÉGLAGE DÉPLIÉ ─────────────────────────────────────────────────────────────
-const deplie = arbreDe(`${TETE}def kick (vel:120)\n\n-----\nS -> kick C4\n`);
-ok(deplie.erreurs.length === 0, `1. le préréglage doit compiler (${deplie.erreurs[0]?.message})`);
+const deplie = arbreDe(`${TETE}def kick(vel:120)\n\n-----\nS -> kick C4\n`);
+ok(deplie.erreurs.length === 0, `1. le préréglage doit compiler(${deplie.erreurs[0]?.message})`);
 ok(!symbolesDe(deplie.ast.subgrammars).includes('kick'),
    "1. le nom 'kick' ne doit plus figurer dans les symboles de l'arbre — une forme ne franchit pas "
-   + `la frontière (symboles : ${JSON.stringify(symbolesDe(deplie.ast.subgrammars))})`);
+   + `la frontière(symboles : ${JSON.stringify(symbolesDe(deplie.ast.subgrammars))})`);
 const sacsDeplie = sacsDe(deplie.ast.subgrammars);
 ok(sacsDeplie.length === 1 && sacsDeplie[0].params.vel === 120,
-   `2. le réglage canonique (vel:120) doit être dans l'arbre — reçu ${JSON.stringify(sacsDeplie)}`);
+   `2. le réglage canonique(vel:120) doit être dans l'arbre — reçu ${JSON.stringify(sacsDeplie)}`);
 ok(sacsDeplie[0]?.resolvedBy?.vel === 'toutes les sorties',
    `3. le destinataire doit suivre le réglage déplié — reçu ${JSON.stringify(sacsDeplie[0]?.resolvedBy)}`);
 ok(empreinte(deplie.ast.subgrammars) === empreinte(direct.ast.subgrammars),
@@ -95,7 +95,7 @@ ok(empreinte(deplie.ast.subgrammars) === empreinte(direct.ast.subgrammars),
 {
   const t = arbreDe('core\nalphabet.western:midi\ndef ka voice.bayan_muted\n-----\nS -> ka\n');
   if (t.erreurs.length) {
-    ok(false, `5. la déclaration de terminal doit compiler (${t.erreurs[0]?.message})`);
+    ok(false, `5. la déclaration de terminal doit compiler(${t.erreurs[0]?.message})`);
   } else {
     ok(symbolesDe(t.ast.subgrammars).includes('ka'),
        "5. un TERMINAL déclaré garde son nom dans l'arbre — il crée un nom, il n'est pas du sucre");
@@ -108,7 +108,7 @@ ok(empreinte(deplie.ast.subgrammars) === empreinte(direct.ast.subgrammars),
 // contient. Chaque ligne compare l'écriture avec la forme à l'écriture SANS elle, sur l'empreinte
 // ENTIÈRE : c'est la seule comparaison qui ne laisse pas choisir ce qu'on ne verra pas.
 for (const [quoi, avecForme, enDirect] of [
-  ['préréglage',                 `def kick (vel:120)\n\n-----\nS -> kick C4\n`,        `S -> !(vel:120) C4\n`],
+  ['préréglage',                 `def kick(vel:120)\n\n-----\nS -> kick C4\n`,        `S -> !(vel:120) C4\n`],
   ['transformation, 1 paramètre', `def accent(x) x(vel:120)\n\n-----\nS -> accent(C4)\n`, `S -> C4(vel:120)\n`],
   ['transformation, 2 paramètres', `def duo(a,b) a!b\n\n-----\nS -> duo(C4,E4)\n`,      `S -> C4!E4\n`],
   ['paramètre RÉPÉTÉ dans le corps', `def echo(x) x x\n\n-----\nS -> echo(C4)\n`,       `S -> C4 C4\n`],
@@ -120,7 +120,7 @@ for (const [quoi, avecForme, enDirect] of [
   const g = arbreDe(`${TETE}${avecForme}`);
   const d = arbreDe(`${TETE}-----\n${enDirect}`);
   if (g.erreurs.length || d.erreurs.length) {
-    ok(false, `5bis. ${quoi} : les deux écritures doivent compiler (${g.erreurs[0]?.message ?? d.erreurs[0]?.message})`);
+    ok(false, `5bis. ${quoi} : les deux écritures doivent compiler(${g.erreurs[0]?.message ?? d.erreurs[0]?.message})`);
     continue;
   }
   ok(empreinte(g.ast.subgrammars) === empreinte(d.ast.subgrammars),
@@ -141,10 +141,10 @@ for (const [quoi, avecForme, enDirect] of [
 // nom, et le conflit de noms, qui est refusé, ne se déclarait plus. Une forme s'emploie là où un
 // terme s'emploie ; une tête de règle n'est pas un emploi, c'est une déclaration.
 {
-  const t = arbreDe(`${TETE}def kick (vel:120)\n\n-----\nkick -> C4\nS -> kick\n`);
-  ok(t.erreurs.some((e) => /nom déjà pris par une définition/.test(String(e.message))),
+  const t = arbreDe(`${TETE}def kick(vel:120)\n\n-----\nkick -> C4\nS -> kick\n`);
+  ok(t.erreurs.some((e) => /bears a name already taken by a definition/.test(String(e.message))),
      "6. une TÊTE DE RÈGLE homonyme d'une forme doit rester un conflit de noms REFUSÉ — le "
-     + `dépliage ne doit pas l'effacer en la réécrivant (reçu : ${JSON.stringify(t.erreurs.map((e) => String(e.message).slice(0, 60)))})`);
+     + `dépliage ne doit pas l'effacer en la réécrivant(reçu : ${JSON.stringify(t.erreurs.map((e) => String(e.message).slice(0, 60)))})`);
 }
 
 // ─── 6bis. ⛔ UNE RÈGLE N'A DE NOM QUE SI SON MEMBRE GAUCHE EST UN SEUL SYMBOLE ──────────────
@@ -164,7 +164,7 @@ for (const [quoi, avecForme, enDirect] of [
 {
   const D = `${TETE}def trkt tr kt\n-----\n`;
   const collision = (regle) => arbreDe(D + regle + '\n').erreurs
-    .some((e) => /nom déjà pris par une définition/.test(String(e.message)));
+    .some((e) => /bears a name already taken by a definition/.test(String(e.message)));
   for (const [quoi, regle, attendu] of [
     ['membre DROIT, deux symboles à gauche',     'V V <> trkt',      false],
     ['membre DROIT, un symbole à gauche',        'S <> trkt',        false],
@@ -179,7 +179,7 @@ for (const [quoi, avecForme, enDirect] of [
   ]) {
     ok(collision(regle) === attendu,
        `6bis. « ${regle} » — collision ${attendu ? 'ATTENDUE' : 'INTERDITE'} : une règle n'a de nom `
-       + `que si son membre gauche est un seul symbole (${quoi})`);
+       + `que si son membre gauche est un seul symbole(${quoi})`);
   }
 }
 
@@ -191,17 +191,17 @@ for (const [quoi, avecForme, enDirect] of [
 // Sans eux, l'écart traversait l'arbre en appel opaque étiqueté SONNANT : le mode d'échec que ce
 // garde tient tout entier.
 for (const [ecart, src, motif] of [
-  ['un préréglage APPELÉ',        `def kick (vel:120)\n\n-----\nS -> kick(C4)\n`,       /est un préréglage : il se pose NU/],
-  ['une structure APPELÉE',       `def cadence C4 D4\n\n-----\nS -> cadence(E4)\n`,     /est une structure : il se pose NU/],
-  ['une transformation POSÉE NUE', `def accent(x) x(vel:120)\n\n-----\nS -> accent\n`,  /est une transformation sur x/],
-  ['un argument DE TROP',         `def accent(x) x(vel:120)\n\n-----\nS -> accent(C4, D4)\n`, /1 paramètre\(s\).*2 argument\(s\)/],
-  ['un argument NOMMÉ',           `def accent(x) x(vel:120)\n\n-----\nS -> accent(x: C4)\n`, /par POSITION, jamais par nom/],
-  ['une forme qui SE contient',   `def a C4 a\n\n-----\nS -> a\n`,                      /se déplie sans fin/],
-  ['deux formes qui se contiennent', `def a b\ndef b a\n\n-----\nS -> a\n`,            /se déplie sans fin/],
+  ['un préréglage APPELÉ',        `def kick(vel:120)\n\n-----\nS -> kick(C4)\n`,       /is a preset: it is placed BARE/],
+  ['une structure APPELÉE',       `def cadence C4 D4\n\n-----\nS -> cadence(E4)\n`,     /is a structure: it is placed BARE/],
+  ['une transformation POSÉE NUE', `def accent(x) x(vel:120)\n\n-----\nS -> accent\n`,  /is a transformation on x/],
+  ['un argument DE TROP',         `def accent(x) x(vel:120)\n\n-----\nS -> accent(C4, D4)\n`, /1 parameter\(s\).*2 argument\(s\)/],
+  ['un argument NOMMÉ',           `def accent(x) x(vel:120)\n\n-----\nS -> accent(x: C4)\n`, /by POSITION, never by name/],
+  ['une forme qui SE contient',   `def a C4 a\n\n-----\nS -> a\n`,                      /expands without end/],
+  ['deux formes qui se contiennent', `def a b\ndef b a\n\n-----\nS -> a\n`,            /expands without end/],
 ]) {
   const t = arbreDe(`${TETE}${src}`);
   ok(t.erreurs.some((e) => motif.test(String(e.message))),
-     `7. ${ecart} doit être refusé, avec sa réécriture (reçu : `
+     `7. ${ecart} doit être refusé, avec sa réécriture(reçu : `
      + `${JSON.stringify(t.erreurs.map((e) => String(e.message).slice(0, 70)))})`);
 }
 
@@ -209,10 +209,10 @@ for (const [ecart, src, motif] of [
 // Écrire la portée sans son complément décrirait un langage plus étroit que le vrai : une forme
 // posée sous un groupe polymétrique est un emploi comme un autre, et elle s'y déplie.
 {
-  const g = arbreDe(`${TETE}def kick (vel:120)\n\n-----\nS -> {kick C4, D4}\n`);
+  const g = arbreDe(`${TETE}def kick(vel:120)\n\n-----\nS -> {kick C4, D4}\n`);
   const d = arbreDe(`${TETE}-----\nS -> {!(vel:120) C4, D4}\n`);
   ok(g.erreurs.length === 0 && d.erreurs.length === 0,
-     `8. les deux écritures groupées doivent compiler (${g.erreurs[0]?.message ?? d.erreurs[0]?.message})`);
+     `8. les deux écritures groupées doivent compiler(${g.erreurs[0]?.message ?? d.erreurs[0]?.message})`);
   ok(empreinte(g.ast.subgrammars) === empreinte(d.ast.subgrammars),
      '8. une forme posée SOUS UN GROUPE se déplie comme ailleurs — même empreinte que l\'écriture '
      + 'directe au même endroit');

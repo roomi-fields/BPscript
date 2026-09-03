@@ -67,7 +67,7 @@ if (!existsSync(DIR_BPS) || !existsSync(DIR_GR)) {
   process.exit(1);
 }
 if (NOMS_CORPUS.size === 0) {
-  console.log('  FAIL  garde CREUX : la bibliothèque est VIDE (0 nom) — aucun fichier ne peut entrer en collision '
+  console.log('  FAIL  garde CREUX : la bibliothèque est VIDE(0 nom) — aucun fichier ne peut entrer en collision '
             + "avec une liste vide, « aucune copie ici » ne prouve alors rien non plus");
   process.exit(1);
 }

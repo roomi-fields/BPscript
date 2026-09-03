@@ -46,29 +46,29 @@ const REGLES = [
   ['autre-langage', "le séparateur de séquence de BP2", S('S -> C4; D4'), S('S -> C4 D4'), 'BP2'],
 
   // ── Décisions datées ───────────────────────────────────────────────────────
-  ['decision', "le signe d'égalité dans une directive (2026-07-27)",
+  ['decision', "le signe d'égalité dans une directive(2026-07-27)",
    S('def V = C4\n-----\nS -> V'), S('def V C4\n-----\nS -> V'), "'=' a DISPARU"],
   ['decision', "le suffixe arobase sur un élément (2026-07-28)",
    S('S -> C4@kick D4'), S('S -> C4 D4'), 'SUPPRIMÉ'],
   ['decision', "la directive d'étiquette (2026-07-28)",
    S('label groove\n-----\nS -> C4'), S('S -> groove:{C4 D4}'), 'SUPPRIMÉE'],
-  ['decision', "l'ancienne coupure de câblage (2026-07-28)",
+  ['decision', "l'ancienne coupure de câblage(2026-07-28)",
    S('def coupe !>> out.in\n-----\nS -> coupe'), S('def coupe \\>> out.in\n-----\nS -> coupe'), "n'est plus la coupure"],
   ['decision', "le qualificatif de vitesse, supprimé (2026-06-26)",
    S('S -> {C4 D4}[speed:2]'), S('S -> {C4 D4}:2'), null],
-  ['decision', "la forme d'appel d'un contrôle (2026-07-26)",
+  ['decision', "la forme d'appel d'un contrôle(2026-07-26)",
    S('core\n-----\nS -> C4 vel(80) D4'), S('core\n-----\nS -> C4 !(vel:80) D4'), null],
-  ['decision', "un canal de sortie périmé (2026-07-16)",
+  ['decision', "un canal de sortie périmé(2026-07-16)",
    S('alphabet.western:browser\n-----\nS -> C4'), S('alphabet.western:audio\n-----\nS -> C4'), null],
-  ['decision', "un canal de sortie hors de la liste fermée (2026-07-16)",
+  ['decision', "un canal de sortie hors de la liste fermée(2026-07-16)",
    S('alphabet.western:video\n-----\nS -> C4'), S('alphabet.western:midi\n-----\nS -> C4'), null],
-  ['decision', "un nom déjà pris par une note (2026-07-28)",
+  ['decision', "un nom déjà pris par une note(2026-07-28)",
    S('def G4 saw >> audio\n-----\nS -> C4'), S('def grondement saw >> audio\n-----\nS -> C4'), 'TERMINAL'],
   // ⚠️ « une tête de règle nommée comme une note » A ÉTÉ RETIRÉE D'ICI le 2026-08-07 — décision
   // Romain `2026-08-03-une-tete-de-regle-peut-etre-un-terminal.md` : c'est le principe même du
   // mode sub/sub1, une règle de substitution réécrit un terminal. La ligne au-dessus reste : elle
   // porte une DÉCLARATION (`macro G4`), qui CRÉE un nom — la règle d'unicité tient pour elle.
-  ['decision', "un câblage écrit dans le flux, non porté par le moteur (2026-07-28)",
+  ['decision', "un câblage écrit dans le flux, non porté par le moteur(2026-07-28)",
    S('S -> C4 !osc >> filtre D4'), S('def v osc >> filtre\n-----\nS -> C4!v D4'), null],
 
   // ── Formes sans sens ───────────────────────────────────────────────────────

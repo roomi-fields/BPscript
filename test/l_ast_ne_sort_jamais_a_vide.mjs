@@ -54,7 +54,7 @@ const reference = (ast, cat) => (acteur(ast)?.references || []).find((r) => r.ca
 // ── 0. SOCLE — sans la donnée, ce garde serait creux et vert ─────────────────────────────────
 const SOCLE_CORE = LIBS['core']?.defaults?.components || {};
 ok(SOCLE_CORE.alphabet === 'western',
-  `0. @core doit porter l'alphabet de socle en DONNÉE (lu : ${JSON.stringify(SOCLE_CORE)})`);
+  `0. @core doit porter l'alphabet de socle en DONNÉE(lu : ${JSON.stringify(SOCLE_CORE)})`);
 
 // ── 1. LA MATRICE — situations × propriétés ─────────────────────────────────────────────────
 // Une SITUATION dit ce que la scène déclare ; l'attendu dit ce que l'AST doit porter.
@@ -66,7 +66,7 @@ const SITUATIONS = [
    'core\nalphabet.sargam\n-----\nS -> sa re', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
   // Un alphabet qui n'écrit pas ses registres HÉRITE ceux du prototype `alphabet` (Romain, 2026-09-02) ;
   // ses terminaux restent nus parce qu'il ne résout aucune hauteur — la convention est portée, pas appliquée.
-  ['un alphabet sans registres écrits porte ceux du prototype (tabla : 39 frappes nues, convention héritée)',
+  ['un alphabet sans registres écrits porte ceux du prototype(tabla : 39 frappes nues, convention héritée)',
    'core\nalphabet.tabla\n-----\nS -> dha', { alphabet: 'tabla', octaves: 'western', tuning: null }],
   ['la scène déclare des registres : ils gagnent sur ceux de l\'alphabet',
    'core\nalphabet.sargam\noctaves.saptak\n-----\nS -> madhya_sa', { alphabet: 'sargam', octaves: 'saptak', tuning: 'sargam_12TET' }],
@@ -81,7 +81,7 @@ const SITUATIONS = [
   // L'adresse remplace l'ardoise d'alphabet ; les registres, eux, sont ceux que l'alphabet adressé
   // porte — hérités du prototype, puisque `abc` ne les écrit pas. Portés, pas appliqués : `abc` ne
   // résout aucune hauteur et ses terminaux restent nus.
-  ['invocation par le canal NEUTRE : l\'alphabet reste ABSENT (l\'adresse remplace l\'ardoise), ses registres hérités sont portés',
+  ['invocation par le canal NEUTRE : l\'alphabet reste ABSENT(l\'adresse remplace l\'ardoise), ses registres hérités sont portés',
    'core\nalphabet.abc\n-----\nS -> a b', { alphabet: null, octaves: 'western', tuning: null }],
   ['une VOIX-CODE est un acteur comme un autre : elle hérite l\'alphabet par défaut',
    'core\nactor viz  eval.hydra\n-----\nS -> voix\nvoix -> viz.`osc(4).out()`', { alphabet: 'western', octaves: 'western', tuning: 'western_12TET' }],
@@ -115,7 +115,7 @@ for (const [quoi, src, attendu] of SITUATIONS) {
 // ── 2. TÉMOINS DES DEUX SENS — la cascade doit MORDRE et se TAIRE ───────────────────────────
 // Sans le premier, une régression qui remettrait l'alphabet à vide laisserait tout ce fichier au
 // vert. Sans le second, une cascade qui refuserait tout aurait l'air juste.
-const refusUnicite = (src) => compiler(src).erreurs.filter((m) => /TERMINAL de l'alphabet actif/.test(m));
+const refusUnicite = (src) => compiler(src).erreurs.filter((m) => /TERMINAL of the active alphabet/.test(m));
 // ⚠️ LE SUJET DU TÉMOIN A CHANGÉ le 2026-08-07 ET SA FONCTION EST INTACTE. Il prouvait que
 // l'alphabet est bien résolu dans une scène NUE en montrant qu'une TÊTE DE RÈGLE nommée comme une
 // note était refusée — devenu une forme légitime (décision `2026-08-03-une-tete-de-regle-peut-
@@ -124,7 +124,7 @@ const refusUnicite = (src) => compiler(src).erreurs.filter((m) => /TERMINAL de l
 // été levée — la règle d'unicité tient pour ce qui CRÉE un nom.
 ok(refusUnicite('core\ndef G4 C4 D4\n-----\nS -> C4').length >= 1,
   '2. MORD — dans une scène NUE, une DÉCLARATION nommée comme une note est refusée : la preuve que '
-  + "l'alphabet du socle est bien descendu (sans lui, il n'y a rien à heurter)");
+  + "l'alphabet du socle est bien descendu(sans lui, il n'y a rien à heurter)");
 ok(refusUnicite('core\ndef grondement saw >> audio\n-----\nS -> C4').length === 0,
   '2. SE TAIT — la même scène nue accepte une déclaration au nom quelconque');
 ok(refusUnicite('core\ntemperament.12TET\n-----\nG4 -> C4').length === 0,

@@ -1,3 +1,26 @@
+control keyxpand(
+  bp3:_keyxpand,
+  args(pivot, factor),
+  value(pivot:0, factor:1),
+  description:"Interval expansion/contraction around a pivot. factor=2 doubles, factor=-1 inverts, factor=0.5 contracts.",
+  scope(symbol, group, rule, flow),
+  transportGroup:transpo,
+  rank:20,
+  params(
+    pivotStep(
+      from:pivot,
+      coerce:token-step,
+      default:0,
+      description:"Pivot : token de note résolu en pas de grille par la coercition token-step de Kairos (crie si irrésoluble) ; reste fixe."
+    ),
+    factor(
+      from:factor,
+      coerce:raw,
+      default:1,
+      description:"Facteur d'échelle de l'écart au pivot (1 = identité, 2 = doublé, 0,5 = replié ; peut être négatif = miroir)."
+    )
+  )
+) ``ts:
 // Corps de la MANIPULATION `keyxpand` — AUTHORING F1 (vrai .ts TYPÉ contre le SDK Kairos).
 // Source de vérité : ce fichier. Le chargeur le greffe sur le CONTRÔLE `keyxpand` de `transpo`, qui
 // porte le mot — arbitrage de Romain, 2026-09-03 : le corps se rattache à l'objet qui le nomme.
@@ -17,3 +40,4 @@ const keyxpand: DigitalFn = (ctx) => {
 };
 
 export default keyxpand;
+``

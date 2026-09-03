@@ -96,11 +96,11 @@ for (const [quoi, corps, attendu] of FORMES) {
 // 2026-09-02). Ce que ce témoin gardait — qu'un mot ILLISIBLE après le nom refuse en le nommant —
 // est tenu par les cinq lignes qui restent ; la forme nue, elle, est éprouvée au volet F.
 for (const [quoi, corps, fragment] of [
-  ['un mot nu APRÈS une clé',         'def ka  hz:440  voice', /ni un appel de composant ni une affectation/],
-  ['un mot nu dans le BLOC',          'def ka\n  hz:440\n  voice', /ni un appel de composant ni une affectation/],
+  ['un mot nu APRÈS une clé',         'def ka  hz:440  voice', /is neither a component call nor an assignment/],
+  ['un mot nu dans le BLOC',          'def ka\n  hz:440\n  voice', /is neither a component call nor an assignment/],
   ['un point sans nom derrière',      'def ka  voice.',      /nom attendu après/],
-  ['un deux-points sans valeur',      'def ka  hz:',         /valeur attendue après/],
-  ['aucun nom après la directive',    'def',                 /doit nommer ce qu'il définit/],
+  ['un deux-points sans valeur',      'def ka  hz:',         /value expected after/],
+  ['aucun nom après la directive',    'def',                 /must name what it defines/],
 ]) {
   const msg = messages(compiler(corps));
   ok(fragment.test(msg),
@@ -160,7 +160,7 @@ for (const [quoi, corps] of [
   // second cas est le piège : un terminal peut porter le nom d'une clé.
   const CLE = compiler('def ka  voice.bayan_muted');
   ok(defDe(CLE)?.kind === 'terminal',
-     `E-départage. 'def ka voice.bayan_muted' porte une CLÉ (point collé) : nature 'terminal' attendue, `
+     `E-départage. 'def ka voice.bayan_muted' porte une CLÉ(point collé) : nature 'terminal' attendue, `
      + `reçu ${JSON.stringify(defDe(CLE)?.kind)}.`);
   const NU = compiler('def suite voice sec');
   ok(defDe(NU)?.kind === 'structure',
@@ -196,7 +196,7 @@ for (const [quoi, corps] of [
     ['transformation structurelle', 'def fast(x) {x}:2',      'transformation', ['x']],
     ['deux paramètres',           'def entre(a, b) a b',      'transformation', ['a', 'b']],
   ];
-  // ⛔ LE PRÉRÉGLAGE A QUITTÉ CETTE TABLE LE 2026-09-02 : `def kick (vel:120)` n'est plus une
+  // ⛔ LE PRÉRÉGLAGE A QUITTÉ CETTE TABLE LE 2026-09-02 : `def kick(vel:120)` n'est plus une
   // « nature » de définition, c'est un OBJET RACINE — un nom et un sac, dans `vars`. Le collage de la
   // parenthèse reste le seul discriminant, et c'est ce que le témoin juste après la boucle garde :
   // collée, une transformation ; séparée, une racine.
@@ -219,28 +219,39 @@ for (const [quoi, corps] of [
   // `kick (vel:120)` séparé est un objet. Si la racine tombait dans `defs`, ou si le sac se perdait,
   // c'est ici que ça rougit — et le C-témoin d'avant ne garde plus cette forme.
   {
-    const r = compiler('def kick (vel:120)');
+    const r = compiler('def kick(vel:120)');
     const racine = (r.ast?.vars || []).find((v) => v.varType?.kind === 'type' && v.varType.type === null);
     const vel = (racine?.settings?.pairs || []).find((p) => p.key === 'vel');
     ok(messages(r) === '' && !!racine && racine.names?.[0] === 'kick' && vel?.value === 120 && !defDe(r),
-       `F-racine. 'def kick (vel:120)' est un objet RACINE porté par 'vars' avec son sac — reçu `
+       `F-racine. 'def kick(vel:120)' est un objet RACINE porté par 'vars' avec son sac — reçu `
        + `${messages(r).slice(0, 60) || JSON.stringify({ racine: racine?.names, vel: vel?.value, def: !!defDe(r) })}.`);
   }
 
   // ⚠️ L'APPEL — la moitié qui compte. Le bloc EXACT de la référence (`LANGUAGE.md:317-321`).
-  const bloc = compiler('def kick (vel:120)\ndef accent(x) x(vel:120)\ndef fast(x) {x}:2\n-----\n'
+  const bloc = compiler('def kick(vel:120)\ndef accent(x) x(vel:120)\ndef fast(x) {x}:2\n-----\n'
                         + 'Motif -> C4 D4 E4', '\n-----\nS -> C4!kick D4 accent(E4) fast(Motif)\n');
   ok(messages(bloc) === '',
      `F-APPEL. le bloc de la référence doit compiler ENTIER — reçu : ${messages(bloc).slice(0, 100)}`);
 
-  // Témoins qui mordent, dans les deux sens.
-  for (const [quoi, corps, fragment] of [
-    ['une liste de paramètres VIDE',   'def rien() C4',        /ne parametre rien/],
-    ['une transformation sans corps',  'def accent(x)',        /sans corps/],
-    ['un paramètre qui n\'est pas un nom', 'def f(1) C4',      /que des NOMS/],
+  // ⛔ CES TROIS FORMES REFUSAIENT AVANT LA DÉCISION DE ROMAIN DU 2026-09-03 — « ce qui départage un
+  // objet d'une transformation est le CORPS, jamais l'espace ». Sans corps qui suit la parenthèse,
+  // `def NOM(…)` est TOUJOURS un objet racine, y compris un sac vide ou un membre dont la clé est un
+  // nombre (« un membre accepte ce qu'une valeur accepte ailleurs », Romain 2026-08-19) : une liste
+  // de paramètres qui ne serait pas faite que de noms nus n'est plus lue comme telle, elle retombe
+  // sur le lecteur de sac générique.
+  for (const [quoi, corps, cles] of [
+    ['une liste de paramètres VIDE',       'def rien()',    []],
+    ['une transformation sans corps',      'def accent(x)', [['x', true]]],
+    ['un paramètre qui n\'est pas un nom', 'def f(1)',      [['1', true]]],
   ]) {
-    ok(fragment.test(messages(compiler(corps))),
-       `F-témoin. ${quoi} — doit REFUSER en nommant la faute. Reçu : ${messages(compiler(corps)).slice(0, 90) || 'aucune erreur'}`);
+    const r = compiler(corps);
+    ok(messages(r) === '',
+       `F-témoin. ${quoi} — doit compiler comme un OBJET RACINE, pas être refusé : ${messages(r).slice(0, 90)}`);
+    const racine = (r.ast?.vars || []).find((v) => v.varType?.kind === 'type' && v.varType.type === null);
+    const pairs = (racine?.settings?.pairs || []).map((p) => [p.key, p.value]);
+    ok(!!racine && !defDe(r) && JSON.stringify(pairs) === JSON.stringify(cles),
+       `F-témoin. ${quoi} — objet racine avec ${JSON.stringify(cles)} attendu, reçu `
+       + `${JSON.stringify({ racine: racine?.names, pairs, def: !!defDe(r) })}.`);
   }
 }
 
@@ -272,7 +283,7 @@ for (const [quoi, corps] of [
   }
   // ⚠️ LE TÉMOIN QUI COMPTE : un type HORS des conventions déclarées ne doit pas passer pour un
   // code typé — sinon n'importe quel terme nu suivi d'un backtick en deviendrait un.
-  ok(/porte du CODE, pas une structure/.test(messages(compiler('def h zzz `js: 1`'))),
+  ok(/carries CODE, not a structure/.test(messages(compiler('def h zzz `js: 1`'))),
      `G-témoin. un type hors des conventions déclarées ne fait PAS un code typé — reçu : `
      + `${messages(compiler('def h zzz `js: 1`')).slice(0, 90)}`);
 }

@@ -28,7 +28,7 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const lire = (ligne) => {
   const r = compileToBPxAST(`core\n${ligne}\n\n-----\nS -> -\n`, {});
   return { ok: !(r.errors || []).length, err: String((r.errors || [])[0]?.message || ''),
-           // `def x (…)` est un objet RACINE depuis le 2026-09-02 : il vit dans `vars`, pas dans `defs`.
+           // `def x(…)` est un objet RACINE depuis le 2026-09-02 : il vit dans `vars`, pas dans `defs`.
            def: (r.ast?.vars || []).find((v) => v.varType?.kind === 'type' && v.varType.type === null)
                 || (r.ast?.defs || [])[0] || null };
 };
@@ -76,8 +76,8 @@ const lire = (ligne) => {
   ok(!r.ok, `B. ⛔ « def fatbass for:sub37 (…) » doit être REFUSÉ. Reçu : name=${JSON.stringify(r.def?.name)} `
           + `kind=${JSON.stringify(r.def?.kind)} — un nom tronqué écrase l'entrée voisine en silence.`);
   // Le témoin qui discrimine : la MÊME déclaration sans le suffixe reste vivante et garde sa nature.
-  const t = lire('def fatbass (device(preset:bass-init))');
-  // `def fatbass (…)` est un objet RACINE depuis le 2026-09-02 : un nom, `type: null`, et son sac.
+  const t = lire('def fatbass(device(preset:bass-init))');
+  // `def fatbass(…)` est un objet RACINE depuis le 2026-09-02 : un nom, `type: null`, et son sac.
   ok(t.ok && t.def?.names?.[0] === 'fatbass' && t.def?.varType?.type === null && !!t.def?.settings,
      `B-témoin. la déclaration SANS le nom illisible doit rester un objet racine nommé 'fatbass' — `
    + `reçu name=${JSON.stringify(t.def?.name)} kind=${JSON.stringify(t.def?.kind)}. Sans ce témoin, `
@@ -100,13 +100,13 @@ const lire = (ligne) => {
     // a conclu que la forme était morte. Elle ne l'est pas ; elle vit dans une seule des deux.
     ['deux parties, corps NU',  'def x range:0 127'],
     ['une structure de noms',  'def cadence sa re ga pa'],       // LANGUAGE.md:336
-    ['un corps parenthésé',    'def x (a:1, b(c:2))'],
+    ['un corps parenthésé',    'def x(a:1, b(c:2))'],
     // ⛔ CES QUATRE-LÀ VIENNENT DE VOISINS QUI ONT ÉPROUVÉ MON PRÉAVIS, pas de ma liste. Atlas
     // enseigne la transformation paramétrée dans son aide publiée et a demandé qu'elle ne tombe
     // pas « par le bord » ; Kanopi porte les deux voix de code en vitrine. Aucune n'était dans mes
     // bornes, et toutes touchent l'espace que ce refus resserre.
     ['une transformation',     'def accent(x) x(vel:120)'],      // atlas, aide publiée
-    ['un préréglage',          'def fort (vel:100)'],            // atlas
+    ['un préréglage',          'def fort(vel:100)'],            // atlas
     ['une voix de code',       'def wobble phase `js: (t, dur) => 0.5`'],   // kanopi, cv-backtick
     ['du code sans convention', 'def wobble `js: 1`'],           // kanopi
   ];

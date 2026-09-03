@@ -8,7 +8,7 @@
  * du bundle sans qu'un seul signe le dise, et l'outil déclarait la conversion réussie.
  *
  * ⛔ ET LA RÉPARATION D'ALORS ÉTAIT FAUSSE À SON TOUR — c'est le second temps, et il coûte plus cher
- * que le premier. J'ai remplacé le commentaire par `def apporte (expression, midi, …)` sur une mesure
+ * que le premier. J'ai remplacé le commentaire par `def apporte(expression, midi, …)` sur une mesure
  * que j'avais faite moi-même : *« mesuré à l'oracle, cette graphie COMPILE »*. Elle compile. Elle rend
  * `{expression:true, midi:true, …}` — un objet de booléens là où la source porte une liste ordonnée de
  * neuf, et rangé sous la section majoritaire au lieu de la racine. **J'avais mesuré la COMPILATION et
@@ -139,7 +139,7 @@ const CLASSES = {
     __refuse: 'quoi', documented: true, name: 'z', resolves: 'z', quoi: 42, t: { a: { b: 1 } },
   },
   // ⛔ CETTE CLASSE A CHANGÉ D'ISSUE, ET LE MOTIF VAUT D'ÊTRE RETENU. Elle attendait un SUCCÈS :
-  // l'outil écrivait `def apporte (un, deux)`, la source compilait, le nom apparaissait dans le
+  // l'outil écrivait `def apporte(un, deux)`, la source compilait, le nom apparaissait dans le
   // rendu, et ce garde était vert. **Il comptait le NOM ÉCRIT ; personne n'exerçait la DONNÉE.**
   // Passée par le générateur du bundle, cette graphie rend `{un:true, deux:true}` — un objet de
   // booléens là où la source porte une liste ordonnée. Aucune graphie ne rend une liste en position
@@ -208,7 +208,7 @@ const CLASSES = {
         `⛔ MATRICE · ${classe} — l'outil REFUSE un cas qu'il doit convertir : `
         + `${String(r.stderr || '').split('\n').filter(Boolean).slice(0, 2).join(' / ').slice(0, 160)}`);
       // ⛔ UNE INVOCATION S'ÉCRIT NUE, ET « le nom apparaît » NE LE PROUVE PAS. C'est l'erreur exacte
-      // que ce garde a déjà payée sur `apporte` : il comptait le NOM ÉCRIT, et `def apporte (un, deux)`
+      // que ce garde a déjà payée sur `apporte` : il comptait le NOM ÉCRIT, et `def apporte(un, deux)`
       // le portait tout autant qu'une invocation. On exige donc la LIGNE NUE — le nom seul, sans
       // parenthèse ni deux-points — et l'ABSENCE de la forme `def apporte`, qui republierait un objet
       // de booléens là où la source porte une liste ordonnée.
@@ -219,14 +219,14 @@ const CLASSES = {
             + `n'est pas une entrée : écrite autrement, elle ne remplit pas la chaîne 'apporte'.`);
         }
         ok(!/^\s*def\s+apporte\b/m.test(rendu),
-          `⛔ MATRICE · ${classe} — l'outil écrit encore 'def apporte (…)'. Cette graphie revient du `
+          `⛔ MATRICE · ${classe} — l'outil écrit encore 'def apporte(…)'. Cette graphie revient du `
           + `bundle en OBJET DE BOOLÉENS : la liste ordonnée est perdue, et le rendu a l'air juste.`);
       }
       for (const entree of entreesDe(donnee)) {
         if (r.status !== 0) continue;
         // ⛔ `apporte` N'EST PAS UNE ENTRÉE DU VOCABULAIRE — c'est l'invocation transitive, et elle
         // s'écrit en noms NUS hors de la déclaration. Exiger que le MOT `apporte` figure dans la
-        // source produite reviendrait à exiger la graphie `def apporte (…)`, celle-là même qui
+        // source produite reviendrait à exiger la graphie `def apporte(…)`, celle-là même qui
         // republie un objet de booléens. Sa forme s'exerce par `__invoque`, juste au-dessus.
         // ⚠️ ET `entreesDe()` LE COMPTE ENCORE COMME UNE ENTRÉE, sur le paquet comme ici : il n'est
         // pas un champ de fichier et rien ne l'écarte. Défaut préexistant, rendu à l'architecte.

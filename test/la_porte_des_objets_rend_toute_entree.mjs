@@ -150,7 +150,7 @@ for (const [cle, place, nom] of attendues) {
   ok(sargam && sargam.membres.octaves === 'saptak', `5. 'alphabet.sargam' écrit ses octaves et les garde — reçu ${JSON.stringify(sargam && sargam.membres.octaves)}`);
 }
 
-ok(passe >= 2000, `le garde doit avoir EXAMINÉ (${passe} assertions)`);
+ok(passe >= 2000, `le garde doit avoir EXAMINÉ(${passe} assertions)`);
 if (echecs.length) {
   console.error(`[porte des objets] ${echecs.length} ÉCHEC(S) :`);
   for (const e of echecs.slice(0, 20)) console.error('  ✗ ' + e);

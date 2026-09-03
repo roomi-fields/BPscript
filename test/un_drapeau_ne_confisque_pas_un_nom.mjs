@@ -36,7 +36,7 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 // (deux decisions de Romain le meme jour). Les socles de ce banc declarent donc leurs drapeaux.
 const TETE = 'core\nalphabet.western:midi\nflag stage:0\nflag count:1\nflag Ideas:20\nflag zz_drapeau_neuf:0\n-----\n\n';
 const erreursDe = (src) => (compileToBPxAST(src).errors ?? []);
-const refusDeDrapeau = (src) => erreursDe(src).filter((e) => /le drapeau '/.test(String(e.message)));
+const refusDeDrapeau = (src) => erreursDe(src).filter((e) => /the flag '/.test(String(e.message)));
 
 // ─── 0. Témoin anti-rétrécissement ───────────────────────────────────────────────────────────
 const controles = [...universeControlNames()];
@@ -45,7 +45,7 @@ ok(controles.length >= 75, `0. l'univers doit porter au moins 75 réglages (reç
 // ─── 1. LA MATRICE — sorte volée × position × forme d'écriture ───────────────────────────────
 // Trois réglages pris dans TROIS librairies différentes, pour qu'aucune ne soit le seul témoin.
 const VOLES = ['velcont', 'vel', 'transpose'].filter((n) => controles.includes(n));
-ok(VOLES.length === 3, `1. les trois réglages témoins doivent exister (trouvés ${VOLES.join(', ')})`);
+ok(VOLES.length === 3, `1. les trois réglages témoins doivent exister(trouvés ${VOLES.join(', ')})`);
 for (const n of VOLES) {
   const positions = [
     ['en fin de règle, muté', `${TETE}S -> C4 [${n}=1]\n`],

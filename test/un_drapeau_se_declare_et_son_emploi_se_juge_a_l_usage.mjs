@@ -31,7 +31,7 @@ const cri = (regle, tete = DECL) => {
     return (r.errors || []).map((x) => x.message || String(x));
   } catch (x) { return [x.message]; }
 };
-const refuse = (regle, tete) => cri(regle, tete).some((m) => /drapeau/i.test(m));
+const refuse = (regle, tete) => cri(regle, tete).some((m) => /flag/i.test(m));
 const passe = (regle, tete) => cri(regle, tete).length === 0;
 
 const COMPARE = ['==', '!=', '>', '<', '>=', '<='];
@@ -74,7 +74,7 @@ ok(refuse('[Num_a>Num_b] X -> C4', SANS),
    'D. un drapeau NON déclaré est refusé en garde, même comparé à un autre');
 ok(refuse('X -> C4 [Num_a=20]', SANS),
    'D. et en mutation — c\'est le cas qui passait en silence, parce que le test jugeait la VALEUR');
-ok(cri('X -> C4 [Num_a=20]', SANS).some((m) => /n'est pas déclaré/.test(m)),
+ok(cri('X -> C4 [Num_a=20]', SANS).some((m) => /is not declared/.test(m)),
    'D. et le refus NOMME le drapeau manquant, plus la forme qui le déclare');
 
 // ── E. ⛔ LE CRI EST À L'USAGE, JAMAIS À LA DÉCLARATION ─────────────────────────────────────────

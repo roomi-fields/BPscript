@@ -39,7 +39,7 @@ const FAMILLE = [...loadLibsFromDirectives(Object.keys(leRegistre()).map((name) 
 for (const attendu of ['goto', 'failed', 'repeat', 'stop']) {
   ok(FAMILLE.includes(attendu),
      `SOCLE : '${attendu}' doit porter scope:"rule" dans lib/controls.json — c'est une procédure de `
-     + `niveau règle pour le moteur (Encode.c:367). Sans le marqueur, elle n'est plus gardée du tout`);
+     + `niveau règle pour le moteur(Encode.c:367). Sans le marqueur, elle n'est plus gardée du tout`);
 }
 
 const compile = (regles) => {
@@ -53,7 +53,7 @@ for (const nom of FAMILLE) {
   const r = compile(`S -> C4 ![${nom}:1] D4`);
   const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
   ok(r.errors && r.errors.length > 0, `1. '![${nom}:…]' dans le flux doit être refusé — une procédure de règle n'a pas de position`);
-  ok(/niveau RÈGLE/.test(msg) && msg.includes(`[${nom}:`),
+  ok(/RULE-level/.test(msg) && msg.includes(`[${nom}:`),
      `1. le refus de '![${nom}: …]' doit NOMMER la cause et donner la réécriture '[${nom}:…]' — reçu : ${msg}`);
 }
 
@@ -64,7 +64,7 @@ for (const [nom, valeur] of [['repeat', '3'], ['goto', '2 1'], ['failed', '2 1']
   ok((r.errors || []).length === 0, `2. '[${nom}:${valeur}]' en suffixe doit compiler — reçu : ${(r.errors || []).map((e) => e.message || e).join(' | ')}`);
   const regle = r.ast?.subgrammars?.[0]?.rules?.[0];
   const auNiveauRegle = (regle?.qualifiers || []).some((q) => (q.pairs || []).some((p) => p.key === nom));
-  ok(auNiveauRegle, `2. '[${nom}:${valeur}]' doit atteindre rule.qualifiers — c'est là que le moteur la lit (BPx mergeQualifierProcedures)`);
+  ok(auNiveauRegle, `2. '[${nom}:${valeur}]' doit atteindre rule.qualifiers — c'est là que le moteur la lit(BPx mergeQualifierProcedures)`);
   const dansLeFlux = JSON.stringify(regle?.rhs || []).includes(`"${nom}"`);
   ok(!dansLeFlux, `2. '[${nom}:${valeur}]' ne doit PAS rester dans la RHS — un jeton de contrôle inerte y sortirait dans la production`);
 }
@@ -81,7 +81,7 @@ for (const [nom, valeur] of [['repeat', '3'], ['goto', '2 1'], ['failed', '2 1']
     ({ createSession: session } = await importerArtefact('BPx'));
   } catch { /* BPx absent de ce poste */ }
   if (!session || !r.ast) {
-    console.log('   ⓘ BPx introuvable — le témoin par l\'effet n\'a pas tourné (les points 1 et 2 restent vérifiés).');
+    console.log('   ⓘ BPx introuvable — le témoin par l\'effet n\'a pas tourné(les points 1 et 2 restent vérifiés).');
   } else {
     const jetons = [];
     const parcours = (n) => {

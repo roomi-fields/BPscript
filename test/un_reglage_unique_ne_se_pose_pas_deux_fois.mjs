@@ -68,7 +68,7 @@ for (const [quoi, src, groupe] of DOUBLONS) {
   const e = err(src);
   ok(e.length >= 1, `2. '${quoi}' doit être REFUSÉ`);
   ok(e.some((m) => m.includes(`'${groupe}'`)),
-     `2. '${quoi}' — le refus doit NOMMER le groupe ('${groupe}'), pas seulement le mot ; reçu : ${e[0]}`);
+     `2. '${quoi}' — le refus doit NOMMER le groupe('${groupe}'), pas seulement le mot ; reçu : ${e[0]}`);
 }
 // ⚠️ LES DEUX CROISÉS SONT LE CŒUR : un compteur par SECTION (les directives d'un côté, les
 // modificateurs de l'autre) serait vert sur les trois premiers et muet sur ceux-là.

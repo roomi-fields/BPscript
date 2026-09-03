@@ -253,7 +253,7 @@ ok(CLES.filter((c) => c.source.startsWith('modulation.')).length === 0,
   for (const { nom, def, source } of adresses) {
     ok(Array.isArray(def.scope) && def.scope.length > 0 && def.scope.every((s) => VOCABULAIRE.includes(s)),
        `C. la clé d'adresse '${nom}' (${source}) ne déclare pas sa portée, ou l'écrit hors `
-       + `vocabulaire : ${JSON.stringify(def.scope)}. Elle s'écrit dans un sac ('E4(ch:5)') : la `
+       + `vocabulaire : ${JSON.stringify(def.scope)}. Elle s'écrit dans un sac('E4(ch:5)') : la `
        + `règle vaut pour elle aussi.`);
   }
 }
@@ -288,7 +288,7 @@ ok(CLES.filter((c) => c.source.startsWith('modulation.')).length === 0,
   ok(!de('mode').includes('rule') && !de('mode').includes('group') && !de('mode').includes('symbol')
      && !de('mode').includes('flow'),
      `D. 'mode' ne doit valoir NI sur une règle, NI sur un groupe, NI sur un élément, NI dans le `
-     + `flux — il ne change pas en cours de tirage (Romain, 2026-08-08). Reçu : `
+     + `flux — il ne change pas en cours de tirage(Romain, 2026-08-08). Reçu : `
      + `${JSON.stringify(de('mode'))}.`);
   ok((de('vel') || []).length >= 4,
      `D. 'vel' doit valoir pour au moins quatre places — c'est l'exemple qui a fait rejeter le `

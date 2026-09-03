@@ -89,7 +89,7 @@ for (const [, mot] of DIVERGENTS) {
   for (const f of IDENTIQUES) {
     const m = refus(`${f}\n-----\nS -> C4`);
     vus++;
-    ok(m === null || !/NOM DU FICHIER/.test(m),
+    ok(m === null || !/FILE NAME/.test(m),
       `C. « ${f} » a le même nom que son mot déclaré : ce garde ne doit PAS le refuser comme un nom `
       + `physique. Reçu : ${String(m).slice(0, 110)}`);
   }
@@ -101,7 +101,7 @@ for (const [, mot] of DIVERGENTS) {
 {
   const m = refus('zzzjamais\n-----\nS -> C4');
   ok(m !== null, "D-borne. un mot qu'aucune librairie ne porte doit rester REFUSÉ.");
-  ok(m === null || !/NOM DU FICHIER/.test(m),
+  ok(m === null || !/FILE NAME/.test(m),
     `D-borne. et son refus ne doit PAS l'accuser d'être un nom de fichier — il n'en est pas un. `
     + `Reçu : ${String(m).slice(0, 110)}`);
 }
@@ -112,7 +112,7 @@ for (const [, mot] of DIVERGENTS) {
 {
   const [fichier, mot] = DIVERGENTS[0];
   const pointeFichier = refus(`core\n${fichier}.western\n-----\nS -> C4`);
-  ok(pointeFichier !== null && /NOM DU FICHIER/.test(pointeFichier),
+  ok(pointeFichier !== null && /FILE NAME/.test(pointeFichier),
     `E. la tête POINTÉE refusait déjà le nom physique et doit continuer — reçu : ${pointeFichier}`);
   ok(refus(`core\nalphabet.western:midi\n-----\nS -> C4(vel:120)`) === null,
     'E. une affectation ordinaire doit compiler — la fermeture ne touche pas les sacs.');

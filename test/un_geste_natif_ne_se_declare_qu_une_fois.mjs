@@ -43,7 +43,7 @@ function entrees(racine = LIBS) {
 
 const toutes = entrees();
 const declarantes = toutes.filter((e) => typeof e.valeur.bp3 === 'string');
-verifier(declarantes.length > 0, 'au moins une clé déclare un geste natif (sinon le garde ne mesure rien)');
+verifier(declarantes.length > 0, 'au moins une clé déclare un geste natif(sinon le garde ne mesure rien)');
 
 // ── UNICITÉ : un geste natif, une seule clé ───────────────────────────────────────────────────
 /**
@@ -86,7 +86,7 @@ verifier(parNom.get('transpose') === undefined, 'transpose ne revendique AUCUN g
 // l'empreinte de la seule table contre laquelle ce garde avait été écrit, celle des mots du FLUX.
 // Le moteur s'écrit à deux endroits, et le second — le fichier de réglages — nomme ses clés sans
 // tiret bas : `EndFadeOut`, `MIDIsyncDelay`, `ResetWeights`. Lier un mot BPScript sans tiret bas à
-// une commande native qui en porte un est résolu depuis toujours (`def chan (bp3:_chan, …)`) ;
+// une commande native qui en porte un est résolu depuis toujours (`def chan(bp3:_chan, …)`) ;
 // c'est le même mécanisme dans l'autre sens. LE CHAMP PORTE LE NOM NATIF, QUEL QU'IL SOIT.
 // Ce que le moteur porte RÉELLEMENT se prouve ailleurs, contre ses deux tables — garde
 // `un_controle_dit_sa_graphie_native`, volets 3 et 5. Ici on tient la forme, pas l'existence.
@@ -104,7 +104,7 @@ const gestesDeclares = new Set(declarantes.map((e) => e.valeur.bp3));
 const prosesQuiNomment = toutes
   .map((e) => ({ ...e, nomme: typeof e.valeur.description === 'string' ? (e.valeur.description.match(/BP3 (_[a-zA-Z][a-zA-Z0-9]*)/) || [])[1] : undefined }))
   .filter((e) => e.nomme);
-verifier(prosesQuiNomment.length > 0, 'au moins une description nomme un geste natif (sinon le complément ne mesure rien)');
+verifier(prosesQuiNomment.length > 0, 'au moins une description nomme un geste natif(sinon le complément ne mesure rien)');
 for (const e of prosesQuiNomment) {
   verifier(gestesDeclares.has(e.nomme),
     `${e.chemin} : sa description nomme « ${e.nomme} », et ce geste est DÉCLARÉ en donnée quelque part`);

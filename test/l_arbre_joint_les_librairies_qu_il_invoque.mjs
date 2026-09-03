@@ -4,7 +4,7 @@
  *
  * Décision de Romain, 2026-09-02 : l'arbre gagne une section `librairies` qui porte, pour chaque
  * objet que la scène invoque, l'objet tel que la porte des objets le rend, sans rien calculer. Un
- * objet entre s'il est nommé par une CHAÎNE (`libRefs`, liaison d'acteur), par un MOT (la clé d'un
+ * objet entre s'il est nommé par une CHAÎNE(`libRefs`, liaison d'acteur), par un MOT (la clé d'un
  * réglage, le nom d'une directive — chaque objet qui porte le mot entre, le contrôle ET la fonction
  * digitale avec son corps), ou par un MEMBRE d'un objet déjà entré dont la clé est un mot de
  * famille. Ce garde tient, sur TOUTES les scènes du corpus, avec SA PROPRE lecture des références —
@@ -133,9 +133,9 @@ ok(parMot > 0, `aucune entrée par un mot de réglage sur ${scenes} scènes — 
   {
     // sans `core` ni alphabet : aucun défaut, et un terminal non déclaré est refusé en nommant `core`
     const nue = compileToBPxAST('-----\nS -> C4 D4\n', {});
-    ok(nue.errors.some((e) => /aucun alphabet en portée/.test(e.message) && /core/.test(e.message)),
+    ok(nue.errors.some((e) => /no alphabet in scope/.test(e.message) && /core/.test(e.message)),
        `une scène qui n'invoque rien n'a aucun alphabet, et son terminal est refusé en nommant 'core' — reçu ${JSON.stringify(nue.errors.map((e) => e.message.slice(0, 60)))}`);
-    // `core` + un tempérament invoqué : le défaut d'alphabet reste (l'invocation ne le coupe plus)
+    // `core` + un tempérament invoqué : le défaut d'alphabet reste(l'invocation ne le coupe plus)
     const temp = compileToBPxAST('core\ntemperament.12TET\n-----\nS -> C4\n', {});
     ok(temp.ast && 'alphabet.western' in temp.ast.librairies,
        `'core' + 'temperament.12TET' : l'acteur implicite reçoit l'alphabet par défaut — reçu ${JSON.stringify(Object.keys((temp.ast && temp.ast.librairies) || {}))}`);

@@ -59,7 +59,7 @@ for (const [axe, fichiers] of axes) {
   const attendu = [...fichiers].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))[0];
   ok(fichiers[0] === attendu,
      `C.${axe}. l'axe « ${axe} » a pour référence « ${fichiers[0] }» là où l'ordre des noms désigne `
-   + `« ${attendu} » — le premier fichier d'un axe EST son autorité (libs.js, fichierDeLAxe).`);
+   + `« ${attendu} » — le premier fichier d'un axe EST son autorité(libs.js, fichierDeLAxe).`);
 }
 
 // ── D. LE CAS FABRIQUÉ — un rangement par PASSE fait-il bien basculer une autorité ? ─────────

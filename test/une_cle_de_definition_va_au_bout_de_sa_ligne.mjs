@@ -52,7 +52,7 @@ const clesDe = (corps) => {
 // ─── 0. TÉMOIN — une clé à UNE partie ne change pas de forme ─────────────────────────────────
 ok(clesDe('  bp3:_k').bp3 === '_k',
    `0. TÉMOIN : une valeur à une seule partie reste une CHAÎNE — sinon tout ce qui existe déjà `
-   + `change de forme (reçu ${JSON.stringify(clesDe('  bp3:_k'))})`);
+   + `change de forme(reçu ${JSON.stringify(clesDe('  bp3:_k'))})`);
 
 // ─── 1. LES PARTIES SONT GARDÉES, ET TYPÉES ──────────────────────────────────────────────────
 for (const [quoi, corps, cle, attendu] of [
@@ -74,13 +74,13 @@ for (const [quoi, corps, cle, attendu] of [
   const r = clesDe('  range:0 127').range;
   ok(r !== '0127' && JSON.stringify(r) === '["0","127"]',
      `2. 'range:0 127' ne doit JAMAIS rendre une valeur collée — c'était « 0127 », une corruption `
-     + `que la compilation ne signalait pas (reçu ${JSON.stringify(r)})`);
+     + `que la compilation ne signalait pas(reçu ${JSON.stringify(r)})`);
 }
 
 // ─── 3. LE BLOC ENTIER D'UN CONTRÔLE — la forme dont une librairie a besoin ──────────────────
 {
   const k = clesDe('  bp3:_vel\n  args:value\n  range:0 127\n  default:64\n  scope:symbol group rule flow');
-  ok(!k.erreur, `3. le bloc entier d'un contrôle doit compiler (${k.erreur})`);
+  ok(!k.erreur, `3. le bloc entier d'un contrôle doit compiler(${k.erreur})`);
   ok(k.bp3 === '_vel' && k.args === 'value' && k.default === '64'
      && JSON.stringify(k.range) === '["0","127"]'
      && JSON.stringify(k.scope) === '["symbol","group","rule","flow"]',
@@ -92,7 +92,7 @@ for (const [quoi, corps, cle, attendu] of [
 // la règle écrite juste après deviendrait une clé, en silence.
 {
   let r; try { r = compileToBPxAST(`${TETE}def k\n  bp3:_k\n\n-----\nS -> C4 D4\n`); } catch (e) { r = { errors: [{ message: e.message }] }; }
-  ok((r.errors ?? []).length === 0, `4. la règle qui suit le bloc doit rester une règle (${r.errors?.[0]?.message})`);
+  ok((r.errors ?? []).length === 0, `4. la règle qui suit le bloc doit rester une règle(${r.errors?.[0]?.message})`);
   const rhs = r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs || [];
   ok(rhs.length === 2,
      `4. la règle doit garder ses DEUX termes — si la valeur avait débordé, elle en aurait avalé `

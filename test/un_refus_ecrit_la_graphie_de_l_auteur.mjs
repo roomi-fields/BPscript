@@ -136,14 +136,14 @@ for (const [quoi, ecrit] of [
   const m = refusSac('settings.transpose:2');
   ok(m !== null, "INVOQUÉE — « settings.transpose:2 » doit être REFUSÉ : cette librairie ne porte "
     + 'aucun contrôle. Si elle passe, ce volet ne mesure plus aucun message.');
-  ok(m === null || !/n'est ni une librairie invoquée/.test(m),
+  ok(m === null || !/neither an invoked library/.test(m),
     `⛔ INVOQUÉE — le refus dit que « settings » n'est PAS une librairie invoquée, alors qu'elle est `
     + `écrite en tête de la scène. Il accuse le mauvais fait, et celui qui lit un refus apprend la `
     + `règle par lui. Reçu : ${m}`);
   // ⚠️ LE TÉMOIN QUI DISCRIMINE : un préfixe que RIEN n'invoque doit garder l'ancien diagnostic,
   // sinon la réparation aurait simplement supprimé un message juste.
   const inconnu = refusSac('zzzjamais.transpose:2');
-  ok(inconnu !== null && /n'est ni une librairie invoquée/.test(inconnu),
+  ok(inconnu !== null && /neither an invoked library/.test(inconnu),
     `INVOQUÉE-témoin — un préfixe que rien n'invoque doit GARDER ce diagnostic : il est vrai pour `
     + `lui. Sans ce témoin, retirer le message partout passerait le volet précédent. Reçu : ${inconnu}`);
 }

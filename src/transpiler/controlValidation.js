@@ -86,8 +86,8 @@ export function validateControls(ast, controls, qualifies = {}) {
       const v = String(p.value);
       if (!def.values.includes(v)) {
         errors.push({
-          message: `valeur '${p.value}' interdite pour le contrôle '${p.key}' `
-                 + `(autorisées : ${def.values.join(', ')})`,
+          message: `value '${p.value}' is not allowed for control '${p.key}' `
+                 + `(allowed: ${def.values.join(', ')})`,
           ...where,
         });
       }
@@ -99,7 +99,7 @@ export function validateControls(ast, controls, qualifies = {}) {
       const [min, max] = def.range;
       if (p.value < min || p.value > max) {
         errors.push({
-          message: `valeur ${p.value} hors plage pour le contrôle '${p.key}' `
+          message: `value ${p.value} is out of range for control '${p.key}' `
                  + `(${min}..${max})`,
           ...where,
         });

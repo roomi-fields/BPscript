@@ -8,7 +8,7 @@
  * (`ARCHITECTURE.md:168-169`). Il ne mesurait pas le texte BP3 pour autant : il passait déjà
  * `out.ast` à BPx. Mais cet arbre-là N'EST PAS le canonique — mesuré sur `bells`,
  * `compileToBPxAST().ast` fait 16939 octets avec `actors: []`, quand `compileToBPxAST().ast` en fait
- * 18870 et SYNTHÉTISE l'acteur par défaut avec son transport (les défauts d'environnement).
+ * 18870 et SYNTHÉTISE l'acteur par défaut avec son transport(les défauts d'environnement).
  * On mesurait donc le produit à travers une façade en retrait, sur un arbre moins complet.
  *
  * Bascule faite APRÈS mesure, jamais avant : les deux façades ont été comparées sur TOUT le
@@ -179,7 +179,7 @@ function produceAllB(name) {
     let resoudreNom;
     try { session.derive(); resoudreNom = session.buildProjectionContext('chronological').resolveName; }
     catch (e) {
-      process.stderr.write(`[rendu] ${name} — pas de résolveur de noms (${e.message}) : suite plate\n`);
+      process.stderr.write(`[rendu] ${name} — pas de résolveur de noms(${e.message}) : suite plate\n`);
       return { text: r.items.map((i) => (i.terminals || []).join(' ')).join('\n'), tronque: !!r.truncated };
     }
     const echecs = [];
@@ -250,7 +250,7 @@ let _rang = 0;
 for (const [nom, cause] of Object.entries(HORS_LANGAGE_PAR_DECISION)) {
   if (!byName[nom] || (only.length && !only.includes(nom))) continue;
   rows.push({ grammaire: nom, modalite: byName[nom].modalite ?? '—', status: 'HORS LANGAGE',
-    detail: `${cause} — BPScript n'écrit pas de métagrammaires (décision Romain 2026-08-12)` });
+    detail: `${cause} — BPScript n'écrit pas de métagrammaires(décision Romain 2026-08-12)` });
 }
 
 for (const name of withBps) {

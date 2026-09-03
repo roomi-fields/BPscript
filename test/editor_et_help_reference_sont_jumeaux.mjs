@@ -21,6 +21,6 @@ const aide = readFileSync(new URL('../public/help/reference.json', import.meta.u
 if (editeur === aide) {
   console.log('✅ editor/reference.json et public/help/reference.json sont jumeaux — 1 vérification passée');
 } else {
-  console.error('❌ editor/reference.json et public/help/reference.json ont DIVERGÉ — ils doivent rester identiques (octet par octet)');
+  console.error('❌ editor/reference.json et public/help/reference.json ont DIVERGÉ — ils doivent rester identiques(octet par octet)');
   process.exitCode = 1;
 }

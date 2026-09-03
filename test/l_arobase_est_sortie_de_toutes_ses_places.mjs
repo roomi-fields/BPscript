@@ -33,7 +33,7 @@ const err = (src) => {
 const PLACES = [
   ['une invocation de librairie', `core\n@alphabet.western\n-----\nS -> C4\n`],
   ['un bloc d\'acteur',           `core\n@actor d\n  alphabet.western\n  out.midi\n-----\nS -> C4\n`],
-  ['une définition',              `${T}@def k (vel:120)\n-----\nS -> C4\n`],
+  ['une définition',              `${T}@def k(vel:120)\n-----\nS -> C4\n`],
   ['l\'état de départ',           `${T}@init\n  \`sc: x\`\n-----\nS -> C4\n`],
   ['un réglage',                  `${T}@tempo:120\n-----\nS -> C4\n`],
   ['un mode, DANS le corps',      `${T}-----\nS -> C4\n@mode:ord\nT -> D4\n`],
@@ -45,9 +45,9 @@ console.log(`[arobase] ${PLACES.length} places de tête + les positions du suffi
 for (const [quoi, src] of PLACES) {
   const e = err(src);
   ok(e.length >= 1, `1. l'arobase devant ${quoi} doit être REFUSÉE`);
-  ok(e.some((m) => /l'arobase est SORTIE du langage/.test(m)),
+  ok(e.some((m) => /the at-sign has LEFT the language/.test(m)),
     `1. l'arobase devant ${quoi} — le refus doit NOMMER la sortie de l'arobase, `
-    + `pas constater une faute de frappe (reçu : ${e[0]?.slice(0, 110)})`);
+    + `pas constater une faute de frappe(reçu : ${e[0]?.slice(0, 110)})`);
   ok(e.some((m) => /POSITION/.test(m)),
     `1. l'arobase devant ${quoi} — le refus doit dire ce qui qualifie une ligne À SA PLACE : `
     + `sa POSITION de part et d'autre du délimiteur. Sans ça il retire sans réapprendre.`);
@@ -74,10 +74,10 @@ const POSITIONS_DU_SUFFIXE = [
 for (const [ou, src] of POSITIONS_DU_SUFFIXE) {
   const e = err(src);
   ok(e.length >= 1, `2. le suffixe ${ou} doit être REFUSÉ`);
-  ok(e.some((m) => /suffixe/.test(m)),
+  ok(e.some((m) => /suffix/.test(m)),
     `2. le suffixe ${ou} — le refus doit NOMMER le suffixe, qui est ce qui sort ici `
     + `(reçu : ${e[0]?.slice(0, 110)})`);
-  ok(!e.some((m) => /l'arobase est SORTIE du langage/.test(m)),
+  ok(!e.some((m) => /the at-sign has LEFT the language/.test(m)),
     `2. le suffixe ${ou} ne doit PAS être refusé au nom de l'arobase : il est sorti par sa propre `
     + `décision, le 2026-07-28. Un seul message pour deux retraits fait disparaître l'un des deux.`);
 }
@@ -89,11 +89,11 @@ ok(POSITIONS_DU_SUFFIXE.length >= 7, '2. la matrice des positions ne s\'est pas 
 for (const [quoi, src] of [
   ['une invocation de librairie', `core\nalphabet.western\n-----\nS -> C4\n`],
   ['un bloc d\'acteur',           `core\nactor d\n  alphabet.western\n  out.midi\n-----\nS -> C4\n`],
-  ['une définition',              `${T}def k (vel:120)\n-----\nS -> C4\n`],
+  ['une définition',              `${T}def k(vel:120)\n-----\nS -> C4\n`],
   ['un réglage',                  `${T}tempo:120\n-----\nS -> C4\n`],
   ['un mode, DANS le corps',      `${T}-----\nS -> C4\nmode:ord\nT -> D4\n`],
 ]) {
-  ok(err(src).length === 0, `3. TÉMOIN — ${quoi} SANS arobase doit PASSER (reçu : ${err(src)[0]?.slice(0, 90)})`);
+  ok(err(src).length === 0, `3. TÉMOIN — ${quoi} SANS arobase doit PASSER(reçu : ${err(src)[0]?.slice(0, 90)})`);
 }
 
 // ── 4. ET LE SIGNE LUI-MÊME N'EST PLUS UN JETON DU LANGAGE ──────────────────────────────────

@@ -162,7 +162,7 @@ for (const [fichier, portees] of [...invoquees].sort()) {
     ok(typeof lib.resolvedBy === 'string' && lib.resolvedBy.length > 0,
        `3. '${nom}' déclare ${n} contrôle(s) et NE NOMME PAS son destinataire — ses réglages `
        + `arriveraient en aval sans qu'on sache qui les résout, et aucune exception ne couvre une `
-       + `librairie de contrôles (règle Romain 2026-08-13)`);
+       + `librairie de contrôles(règle Romain 2026-08-13)`);
   }
   // TÉMOINS D'INSTRUMENT, dans les deux sens : un balayage qui ne verrait aucune librairie de
   // contrôles passerait au vert en ne mesurant rien, et un balayage qui les verrait TOUTES

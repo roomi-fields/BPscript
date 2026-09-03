@@ -51,7 +51,7 @@ try {
   // La source reçoit le témoin ; le paquet du bac n'est PAS régénéré.
   const paquetAvant = readFileSync(join(bac, 'src/transpiler/libs-data.js'), 'utf8');
   appendFileSync(join(bac, 'lib/audio.bpsl'),
-    '\ncontrol zorglubtemoin (args(value), description:"témoin de ce garde", scope(scene), section:controls)\n');
+    '\ncontrol zorglubtemoin(args(value), description:"témoin de ce garde", scope(scene), section:controls)\n');
   const apres = compiler();
   ok(apres.length === 0,
      `2. une entrée ajoutée à la SOURCE doit atteindre le compilateur sans régénérer le paquet — reçu ${JSON.stringify(apres)}`);
@@ -61,7 +61,7 @@ try {
   rmSync(bac, { recursive: true, force: true });
 }
 
-ok(passe >= 6, `le garde doit avoir EXAMINÉ (${passe} assertions)`);
+ok(passe >= 6, `le garde doit avoir EXAMINÉ(${passe} assertions)`);
 if (echecs.length) {
   console.error(`[sources] ${echecs.length} ÉCHEC(S) :`);
   for (const e of echecs) console.error('  ✗ ' + e);

@@ -56,7 +56,7 @@ function mmFromAst(a) {
   const ast = compileToBPxAST('core\ntempo:70\n-----\nA -> C4', { tempo:90 }).ast;
   assert('tempo:70 préservé (scène gagne)', mmFromAst(ast) === 70, `got ${mmFromAst(ast)}`);
   const mmDirs = ast.directives.filter((d) => d.name === 'tempo');
-  assert('une seule directive mm (pas de doublon)', mmDirs.length === 1, `got ${mmDirs.length}`);
+  assert('une seule directive mm(pas de doublon)', mmDirs.length === 1, `got ${mmDirs.length}`);
   assert('pas d injection environnement', !mmDirs.some((d) => d.fromEnvironment));
 }
 
@@ -89,10 +89,10 @@ function mmFromAst(a) {
   // Décision : env.tempo != null déclenche l'inscription ; mmFromAst (>0) la rejettera.
   // On documente le comportement plutôt que de le masquer.
   const dir0 = ast0.directives.find((d) => d.name === 'tempo');
-  assert('env.tempo=0 → inscrit mais rejeté par lecteur (>0)', dir0?.value === 0 && mmFromAst(ast0) === undefined);
+  assert('env.tempo=0 → inscrit mais rejeté par lecteur(>0)', dir0?.value === 0 && mmFromAst(ast0) === undefined);
 
   const astU = compileToBPxAST('core\n-----\nA -> C4', { octave: 5 }).ast; // clé non câblée
-  assert('env sans tempo (autre clé) → pas d injection tempo', (astU.directives || []).filter((d) => d && d.fromEnvironment).length === 0);
+  assert('env sans tempo(autre clé) → pas d injection tempo', (astU.directives || []).filter((d) => d && d.fromEnvironment).length === 0);
 }
 
 console.log(`\n${pass} PASS / ${fail} FAIL`);

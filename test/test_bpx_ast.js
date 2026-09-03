@@ -124,12 +124,12 @@ function backtickNodes(ast) {
   }
   check(guards.some((g) => g.flag === 'section' && g.value === 1), 'garde [section==1] portée telle quelle dans l\'AST : ' + JSON.stringify(guards.map((g) => g.value)));
   check(guards.some((g) => g.flag === 'section' && g.value === 2), 'garde [section==2] portée telle quelle dans l\'AST');
-  check(!guards.some((g) => typeof g.value === 'string'), 'aucun nom d\'état non résolu (que des entiers)');
+  check(!guards.some((g) => typeof g.value === 'string'), 'aucun nom d\'état non résolu(que des entiers)');
   // ⛔ UN AUTRE DRAPEAU RESTE UNE CHAÎNE — c'est la référence croisée, fidèle BP3. Mais il doit
   // être DÉCLARÉ : ce volet éprouvait 'other', qui n'est ni un état de 'section' ni un drapeau,
   // donc un nom qui ne désigne RIEN. Il certifiait le trou que la décision du 2026-08-20 ferme.
   const r2 = compileToBPxAST('core\nflag section:1\nflag autre:9\n-----\n[section==autre] S -> A\n-----\nA -> C4');
-  check(r2.ast.subgrammars[0].rules[0].guard[0].value === 'autre', 'le nom d un AUTRE DRAPEAU déclaré reste une chaîne (réf croisée)');
+  check(r2.ast.subgrammars[0].rules[0].guard[0].value === 'autre', 'le nom d un AUTRE DRAPEAU déclaré reste une chaîne(réf croisée)');
   // ET SON COMPLÉMENT : un nom qui ne désigne rien est REFUSÉ — l'incomplétude se refuse à l'usage.
   const r3 = compileToBPxAST('core\nflag section:1\n-----\n[section==other] S -> A\n-----\nA -> C4');
   check((r3.errors || []).length > 0, 'un nom qui n est ni un état ni un drapeau est REFUSÉ');

@@ -50,7 +50,7 @@ console.log(`[modes] ${listes.length} domiciles : ${listes.map(([n, l]) => `${n}
 // ── 1. AUCUN DOMICILE N'EST VIDE — un ensemble vide passe toutes les inclusions ──────────────
 for (const [nom, liste] of listes) {
   ok(liste.length >= 7,
-    `1. ${nom} doit déclarer au moins les sept modes du natif (reçu : ${liste.length})`);
+    `1. ${nom} doit déclarer au moins les sept modes du natif(reçu : ${liste.length})`);
 }
 
 // ── 2. LES DEUX LISTES SONT ÉGALES — les deux inclusions, pas une ───────────────────────────
@@ -72,7 +72,7 @@ for (const [nom, liste] of listes) {
   for (const v of liste) {
     const e = erreursDe(`${T}-----\nS -> C4\nmode:${v}\nT -> D4\n`);
     ok(e.length === 0,
-      `3. ${nom} déclare '${v}', que le compilateur REFUSE (reçu : ${e[0]?.slice(0, 130)})`);
+      `3. ${nom} déclare '${v}', que le compilateur REFUSE(reçu : ${e[0]?.slice(0, 130)})`);
   }
 }
 
@@ -82,7 +82,7 @@ for (const invente of ['zorglubmode', 'random']) {
   const e = erreursDe(`${T}-----\nS -> C4\nmode:${invente}\nT -> D4\n`);
   ok(e.length >= 1, `4. TÉMOIN — le mode '${invente}' n'est déclaré nulle part et doit être REFUSÉ`);
   ok(e.some((m) => m.includes(invente)),
-    `4. TÉMOIN — le refus doit nommer la VALEUR fautive, pas la clé (reçu : ${e[0]?.slice(0, 130)})`);
+    `4. TÉMOIN — le refus doit nommer la VALEUR fautive, pas la clé(reçu : ${e[0]?.slice(0, 130)})`);
 }
 
 if (echecs.length) {

@@ -90,7 +90,7 @@ function convertir(source) {
     + `resolves@${rang('resolves:')}. Ajoutée en fin d'en-tête, elle déplace la clé publiée.`);
 
   // ⛔ ET L'ORDRE DES CHAMPS DE FICHIER AUSSI — `documented` en tête, comme dans la source.
-  ok(/def zz_temoin \(documented:yes, resolvedBy:/.test(texte),
+  ok(/def zz_temoin\(documented:yes, resolvedBy:/.test(texte),   // collé (Romain, 2026-09-03)
     `A. ⛔ les champs de fichier gardent l'ordre de la SOURCE, jamais celui de la liste du `
     + `convertisseur. Reçu : ${(texte.match(/^def zz_temoin \(.{0,80}/m) || [''])[0]}`);
 }

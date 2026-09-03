@@ -80,7 +80,7 @@ for (const [ou, forme] of PORTEURS_DE_SUJET) {
   porteursExamines += 1;
   const errs = compile(`${T}-----\n${forme('vide')}\n`).errs;
   verifier(errs.length > 0, `sujet dans un ${ou} : un nom qui ne désigne aucun terminal est REFUSÉ`);
-  verifier(errs.some((m) => /sujet de réglage/.test(m)),
+  verifier(errs.some((m) => /setting subject/.test(m)),
     `sujet dans un ${ou} : le refus nomme la PLACE — un utilisateur doit savoir que c'est le sujet`);
 }
 verifier(porteursExamines === 5, `les 5 porteurs de paires ont été examinés (${porteursExamines})`);
@@ -99,8 +99,8 @@ for (const [quoi, src] of [
 }
 // Ce qui se déclare passe aussi — une définition, un non-terminal.
 for (const [quoi, src] of [
-  ['une DÉFINITION en sujet', `def f (vel:120)\n-----\nS -> C4 (f:vel:120)`],
-  ['une DÉFINITION en objet hors-temps', `def f (vel:120)\n-----\nS -> !f C4`],
+  ['une DÉFINITION en sujet', `def f(vel:120)\n-----\nS -> C4 (f:vel:120)`],
+  ['une DÉFINITION en objet hors-temps', `def f(vel:120)\n-----\nS -> !f C4`],
   ['un NON-TERMINAL en sujet', `-----\nS -> A (A:vel:120)\nA -> C4`],
   ['un NON-TERMINAL en objet hors-temps', `-----\nS -> C4 !A\nA -> D4`],
 ]) {
@@ -110,7 +110,7 @@ for (const [quoi, src] of [
 verifier(compile('core\nactor melodie\n  alphabet.western\nactor perc\n  alphabet.tabla\n'
   + '-----\nS -> melodie.C4 !perc.dha\n').errs.length === 0,
   'un objet hors-temps QUALIFIÉ PAR UN ACTEUR passe toujours');
-verifier(compile('core\nactor moteur (eval.js)\nalphabet.western\n'
+verifier(compile('core\nactor moteur(eval.js)\nalphabet.western\n'
   + '-----\nS -> C4 !moteur.nimporte\n').errs.length === 0,
   "un objet hors-temps sur une VOIX-CODE passe toujours — son terminal est arbitraire");
 
@@ -126,9 +126,9 @@ verifier(compile('core\nactor moteur (eval.js)\nalphabet.western\n'
 // aucun régime : le jour où le vocabulaire du flux jugera la nature, ces trois places bougeront
 // ensemble ou ce garde rougira. C'est l'assiette, et elle vaut sur toutes les natures déclarées.
 const NATURES = [
-  ['objet vide', 'object n1 ()\n', 'n1'],
-  ['objet PORTEUR', 'object n2 (scope:flow, x:1)\n', 'n2'],
-  ['exemplaire dérivé', 'object p (scope:flow)\np n3 ()\n', 'n3'],
+  ['objet vide', 'object n1()\n', 'n1'],
+  ['objet PORTEUR', 'object n2(scope:flow, x:1)\n', 'n2'],
+  ['exemplaire dérivé', 'object p(scope:flow)\np n3()\n', 'n3'],
   ['drapeau', 'flag n4:0\n', 'n4'],
   ['acteur', 'actor n5\n  alphabet.western\n', 'n5'],
   ['entrée', 'in.midi n6\n', 'n6'],
@@ -140,10 +140,10 @@ for (const [quoi, decl, nom] of NATURES) {
   const horsTemps = compile(`${T}${decl}-----\nS -> !${nom} C4\n`).errs.length > 0;
   const enSujet = compile(`${T}${decl}-----\nS -> C4 D4 (${nom}:vel:120)\n`).errs.length > 0;
   verifier(horsTemps === dansLeFlux,
-    `${quoi} : l'objet hors-temps a le MÊME sort que le flux (flux ${dansLeFlux ? 'refuse' : 'passe'}, `
+    `${quoi} : l'objet hors-temps a le MÊME sort que le flux(flux ${dansLeFlux ? 'refuse' : 'passe'}, `
     + `hors-temps ${horsTemps ? 'refuse' : 'passe'}) — un seul mécanisme, un seul régime`);
   verifier(enSujet === dansLeFlux,
-    `${quoi} : le sujet de réglage a le MÊME sort que le flux (flux ${dansLeFlux ? 'refuse' : 'passe'}, `
+    `${quoi} : le sujet de réglage a le MÊME sort que le flux(flux ${dansLeFlux ? 'refuse' : 'passe'}, `
     + `sujet ${enSujet ? 'refuse' : 'passe'}) — un seul mécanisme, un seul régime`);
 }
 verifier(naturesExaminees === 6, `les 6 natures déclarées ont été examinées (${naturesExaminees})`);

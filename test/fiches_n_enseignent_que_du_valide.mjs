@@ -82,7 +82,7 @@ for (const [nom, lib] of Object.entries(LIBS)) parcourir(lib, nom);
 
 // TÉMOIN ANTI-VACUITÉ. Un garde qui n'extrait rien, ou qui accepte tout, passerait au vert sans
 // rien prouver — c'est exactement ce qu'on a payé ailleurs. Deux preuves : qu'il a bien du
-// matériau, et que son critère DISCRIMINE (une graphie qu'on sait morte doit être refusée).
+// matériau, et que son critère DISCRIMINE(une graphie qu'on sait morte doit être refusée).
 const temoins = [];
 if (examines < 2) temoins.push(`n'a extrait que ${examines} graphie(s) — trop peu pour qu'un vert veuille dire quoi que ce soit`);
 if (accepte('(cc.98)')) temoins.push("accepte '(cc.98)' (composant sans valeur) — son critère ne discrimine pas");
@@ -92,7 +92,7 @@ if (temoins.length) {
   console.error('❌ fiches : le garde lui-même est creux');
   for (const t of temoins) console.error(`   - ${t}`);
   process.exitCode = 1;
-} else if (morts.length) {
+} else if(morts.length) {
   console.error(`❌ fiches : ${morts.length} graphie(s) enseignée(s) que le compilateur REFUSE`);
   for (const m of morts) console.error(`   - ${m.chemin} montre « ${m.extrait} »`);
   console.error('   Une fiche qui enseigne une forme morte la fait renaître à la première lecture.');

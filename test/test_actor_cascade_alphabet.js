@@ -28,7 +28,7 @@ function scene(src) {
   return { alphabet: a?.properties?.alphabet, transport: a?.properties?.transport?.key, notes, errors: (errors || []).map((e) => e.message) };
 }
 
-console.log('\n=== FACTORY : acteur transport-seul HÉRITE l\'alphabet de scène (@alphabet.western) ===');
+console.log('\n=== FACTORY : acteur transport-seul HÉRITE l\'alphabet de scène(@alphabet.western) ===');
 {
   const r = scene('core\nalphabet.western\nactor mavoix out.audio\n-----\nvoice -> C4 D4\n');
   assert('0 erreur (plus de rejet no-alphabet)', r.errors.length === 0, r.errors.join(' | '));
@@ -53,7 +53,7 @@ console.log('\n=== TEMPÉRAMENT INVOQUÉ : la cascade ne se coupe pas, l\'acteur
   const r = scene('core\ntemperament.12TET\nactor mavoix out.audio\n-----\nvoice -> C4 D4\n');
   assert('0 erreur', r.errors.length === 0, r.errors.join(' | '));
   assert('alphabet = western (défaut de core, l\'invocation ne le coupe pas)', r.alphabet === 'western', String(r.alphabet));
-  assert('transport présent (canon audio)', r.transport === 'audio', String(r.transport));
+  assert('transport présent(canon audio)', r.transport === 'audio', String(r.transport));
 }
 
 console.log('\n=== VOIX-CODE (eval) : un acteur comme un autre, elle hérite ===');

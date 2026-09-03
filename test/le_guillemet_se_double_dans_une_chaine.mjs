@@ -51,11 +51,11 @@ const chaines = (ligne) => {
 // caractère près, et c'est ce qui rendait le défaut invisible.
 {
   const cas = [
-    ['def t (d:"scale ""Ma05"" fin")', ['scale "Ma05" fin'], 'au milieu'],
-    ['def t (d:"""Ma05"" fin")',       ['"Ma05" fin'],       'en tête'],
-    ['def t (d:"fin ""Ma05""")',       ['fin "Ma05"'],       'en queue'],
-    ['def t (d:"""")',                 ['"'],                'un guillemet SEUL'],
-    ['def t (d:"""""")',               ['""'],               'deux guillemets à la suite'],
+    ['def t(d:"scale ""Ma05"" fin")', ['scale "Ma05" fin'], 'au milieu'],
+    ['def t(d:"""Ma05"" fin")',       ['"Ma05" fin'],       'en tête'],
+    ['def t(d:"fin ""Ma05""")',       ['fin "Ma05"'],       'en queue'],
+    ['def t(d:"""")',                 ['"'],                'un guillemet SEUL'],
+    ['def t(d:"""""")',               ['""'],               'deux guillemets à la suite'],
   ];
   for (const [ligne, attendu, ou] of cas) {
     const vu = chaines(ligne);
@@ -73,10 +73,10 @@ const chaines = (ligne) => {
 // toujours », et la donnée d'octaves partirait sans un signe.
 {
   const cas = [
-    ['def t (d:"")',                              [''],                   'seule'],
-    ['def t (a:"", b:"")',                        ['', ''],               'deux fois'],
-    ['def t (registers(vv, v, "", "^", "^^"))',   ['', '^', '^^'],        'dans une liste'],
-    ['def t (separator:"", default:"4")',         ['', '4'],              'la forme d octaves'],
+    ['def t(d:"")',                              [''],                   'seule'],
+    ['def t(a:"", b:"")',                        ['', ''],               'deux fois'],
+    ['def t(registers(vv, v, "", "^", "^^"))',   ['', '^', '^^'],        'dans une liste'],
+    ['def t(separator:"", default:"4")',         ['', '4'],              'la forme d octaves'],
   ];
   for (const [ligne, attendu, ou] of cas) {
     const vu = chaines(ligne);
@@ -130,10 +130,10 @@ const chaines = (ligne) => {
 // ── D. LES BORNES — ce que ce câblage ne doit PAS changer ─────────────────────────────────────
 {
   const cas = [
-    ['def t (d:"deux mots")',        ['deux mots'],        'une chaîne ordinaire'],
-    ['def t (d:"un-mot")',           ['un-mot'],           'sans espace'],
-    ['def t (a:"x", b:"y")',         ['x', 'y'],           'deux chaînes séparées'],
-    ['def t (d:"le mot `midi` ici")', ['le mot `midi` ici'], 'un accent grave à l intérieur'],
+    ['def t(d:"deux mots")',        ['deux mots'],        'une chaîne ordinaire'],
+    ['def t(d:"un-mot")',           ['un-mot'],           'sans espace'],
+    ['def t(a:"x", b:"y")',         ['x', 'y'],           'deux chaînes séparées'],
+    ['def t(d:"le mot `midi` ici")', ['le mot `midi` ici'], 'un accent grave à l intérieur'],
   ];
   for (const [ligne, attendu, ou] of cas) {
     const vu = chaines(ligne);
@@ -151,7 +151,7 @@ const chaines = (ligne) => {
   //
   // Le comportement vit désormais dans `un_texte_ouvert_ne_mange_pas_le_fichier.mjs` ; ici on garde
   // seulement que la chaîne ouverte ne passe PAS en silence.
-  const ouverte = chaines('def t (d:"jamais fermee');
+  const ouverte = chaines('def t(d:"jamais fermee');
   ok(ouverte && ouverte.jet,
      `D-borne. une chaîne NON TERMINÉE doit être REFUSÉE, pas rendue — rendu `
    + `${JSON.stringify(ouverte)}. Sans refus, elle avale le reste du fichier et la scène compile à vide.`);
@@ -167,12 +167,12 @@ const chaines = (ligne) => {
   const paires = (ligne) => {
     const r = compileToBPxAST(`core\nalphabet.western\n${ligne}\n-----\nS -> C4\n`);
     return { err: (r.errors || []).map((e) => String(e.message ?? e))[0] || '',
-             // ⛔ `def f (…)` est un objet RACINE dans `vars` depuis le 2026-09-02 — `def` est le
+             // ⛔ `def f(…)` est un objet RACINE dans `vars` depuis le 2026-09-02 — `def` est le
              // mot unique, `object` est sorti. Le sac se lit là, ou dans `defs` pour les autres corps.
              p: ((r.ast?.vars || []).find((d) => d.varType?.kind === 'type' && d.varType.type === null)
                  || (r.ast?.defs || [])[0])?.settings?.pairs || [] };
   };
-  const { err, p } = paires('def x (a:"", b:"deux mots", c:"scale ""Ma05"" fin", d:nu, e:12)');
+  const { err, p } = paires('def x(a:"", b:"deux mots", c:"scale ""Ma05"" fin", d:nu, e:12)');
   ok(err === '', `E. la ligne d'épreuve doit COMPILER — reçu : ${err.slice(0, 90)}`);
   const par = (k) => p.find((x) => x.key === k) || {};
   ok(par('c').value === 'scale "Ma05" fin',

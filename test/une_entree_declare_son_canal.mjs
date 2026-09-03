@@ -56,8 +56,8 @@ ok(CANAUX.length >= 2,
           + `part avec transport:null, que trois dépôts en aval refusent ou ignorent en silence.`);
   if (r.ok) { /* le reste du volet n'a plus de sens */ }
   else {
-    ok(/in\.<canal> pedale/.test(r.err),
-       `A. le refus doit NOMMER LA RÉÉCRITURE — 'in.<canal> pedale'. Reçu : ${r.err.slice(0, 120)}`);
+    ok(/in\.<channel> pedale/.test(r.err),
+       `A. le refus doit NOMMER LA RÉÉCRITURE — 'in.<channel> pedale'. Reçu : ${r.err.slice(0, 120)}`);
     for (const c of CANAUX) {
       ok(r.err.includes(c),
          `A. le refus doit énumérer les canaux d'entrée que la donnée déclare — '${c}' manque. `
@@ -115,14 +115,14 @@ for (const canal of CANAUX) {
 // ce parseur. Chacun de ces cas a son refus PROPRE : il doit rester le sien.
 {
   const bornes = [
-    ['in.zorglub pedale', /n'est pas une entrée/, `un canal INCONNU garde son refus nommé`],
-    ['in.midi pedale alphabet.western', /AUCUN alphabet/, `une entrée ne porte pas d'alphabet`],
-    ['in.midi pedale (mapping.t)', /Expected|refus/i, `les parenthèses restent refusées à la forme`],
+    ['in.zorglub pedale', /is not an input/, `un canal INCONNU garde son refus nommé`],
+    ['in.midi pedale alphabet.western', /carries NO alphabet/, `une entrée ne porte pas d'alphabet`],
+    ['in.midi pedale(mapping.t)', /Expected|refus/i, `les parenthèses restent refusées à la forme`],
     ['in.midi pedale [mapping.t]', /Expected|refus/i, `les crochets restent refusés à la forme`],
   ];
   for (const [ligne, motif, quoi] of bornes) {
     const r = compile([ligne]);
-    ok(!r.ok, `D-borne. '${ligne}' doit rester REFUSÉ (${quoi}) — il est ACCEPTÉ.`);
+    ok(!r.ok, `D-borne. '${ligne}' doit rester REFUSÉ(${quoi}) — il est ACCEPTÉ.`);
     if (r.ok) continue;
     ok(motif.test(r.err),
        `D-borne. '${ligne}' — ${quoi}, et son refus PROPRE a été avalé par celui de la forme nue. `
@@ -130,7 +130,7 @@ for (const canal of CANAUX) {
   }
   // Et la borne inverse : un mot qui n'est pas `in` ne tombe pas dans ce refus.
   const r = compile(['flag zz']);
-  ok(r.ok || !/in\.<canal>/.test(r.err),
+  ok(r.ok || !/in\.<channel>/.test(r.err),
      `D-borne. 'flag zz' ne doit pas recevoir le refus des entrées — le refus vise 'in', pas toute `
    + `déclaration nue. Reçu : ${r.err.slice(0, 100)}`);
 }
@@ -162,7 +162,7 @@ for (const canal of CANAUX) {
   try { const x = compileToBPxAST(src, {}); err = ((x.errors || [])[0] || {}).message || ''; }
   catch (x) { err = x.message; }
   ok(err !== '', `F-témoin. un rôle JAMAIS déclaré doit rester refusé au point d'attente.`);
-  ok(/rien ne déclare/.test(err),
+  ok(/nothing declares/.test(err),
      `F-témoin. et son refus est l'AUTRE — celui du nom inconnu, pas celui du canal manquant. `
    + `Reçu : ${err.slice(0, 100)}`);
 }
@@ -173,6 +173,6 @@ if (echecs.length) {
   process.exit(1);
 }
 console.log(`✅ une entrée déclare son canal — la forme nue est refusée avec sa réécriture, les `
-  + `${CANAUX.length} canaux que la donnée déclare (${CANAUX.join(', ')}) compilent et arrivent dans `
+  + `${CANAUX.length} canaux que la donnée déclare(${CANAUX.join(', ')}) compilent et arrivent dans `
   + `l'arbre avec leur canal, aucune entrée du corpus ne sort sans le sien, et les quatre refus `
   + `voisins gardent le leur. ${passe} vérification(s) passée(s).`);

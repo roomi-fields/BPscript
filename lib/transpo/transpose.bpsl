@@ -1,3 +1,23 @@
+control transpose(
+  args(interval),
+  argType:interval,
+  description:"Real (chromatic) transposition — shift the alphabet anchor by a fixed interval (fraction 3/2, cents 700c, decimal 1.5). Preserves intervals AND note names; works in any tuning. A bare integer is a ratio N:1 (N-th harmonic): 2/4/8 = octaves; for semitones use cents (12 semitones = 1200c). The old grid-step regime is removed.",
+  scope(symbol, group, rule, flow, scene),
+  transportGroup:transpo,
+  rank:30,
+  params(
+    ratio(
+      from:value,
+      coerce:interval-ratio,
+      description:"Intervalle normalisé en ratio par Kairos depuis la chaîne 3-formats. Un transpose NUMÉRIQUE crie ici (cri de migration : l'ancien régime par pas de grille est supprimé)."
+    ),
+    interval(
+      from:value,
+      coerce:raw,
+      description:"La chaîne d'intervalle brute (diagnostic) ; le corps ne la parse pas."
+    )
+  )
+) ``ts:
 // Corps de la MANIPULATION `transpose` — AUTHORING F1 (vrai .ts TYPÉ contre le SDK Kairos).
 // Source de vérité : ce fichier. Le chargeur le greffe sur le CONTRÔLE `transpose` de `transpo`, qui
 // porte le mot — arbitrage de Romain, 2026-09-03 : le corps se rattache à l'objet qui le nomme.
@@ -19,3 +39,4 @@ const transpose: DigitalFn = (ctx) => {
 };
 
 export default transpose;
+``

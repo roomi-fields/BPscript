@@ -132,7 +132,7 @@ for (const [fichier, symbole] of [
 // les cinq précédents restent tous justes.
 for (const [quoi, ligne, usage] of [
   ['une séquence',    'def montee C4 D4 E4', 'S -> montee\n'],
-  ['un préréglage',   'def fort (vel:100)',  'S -> C4 fort\n'],
+  ['un préréglage',   'def fort(vel:100)',   'S -> C4 fort\n'],   // collé : l'espace entre un mot déclaré et son sac est interdite (Romain, 2026-09-03)
   ['une transformation', 'def accent(x) x(vel:120)', 'S -> accent(C4)\n'],
   ['un nom pointé',   'def souffle perc.tin', 'S -> C4\n'],
 ]) {

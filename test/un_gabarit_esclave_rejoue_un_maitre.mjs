@@ -31,7 +31,7 @@ const compile = (src) => {
   const r = compileToBPxAST(T + src + '\n');
   return { errs: (r.errors || []).map((e) => e.message), arbre: r.ast ? JSON.stringify(r.ast) : '' };
 };
-const orphelin = (src) => compile(src).errs.filter((m) => /rejoue un gabarit que rien ne capture/.test(m));
+const orphelin = (src) => compile(src).errs.filter((m) => /replays a template that nothing captures/.test(m));
 
 // ── 1. L'ORPHELIN EST REFUSÉ, DANS TOUS SES CONTENANTS ────────────────────────────────────────
 // Les contenants se dérivent de la place d'un terme dans le flux, pas d'un cas vu.
@@ -48,7 +48,7 @@ for (const [ou, src] of CONTENANTS) {
   contenantsExamines += 1;
   const m = orphelin(src);
   verifier(m.length > 0, `1. un esclave orphelin ${ou} est REFUSÉ — « ${src} »`);
-  verifier(m.length > 0 && m[0].includes('zzz'), `1. et le refus CITE le nom fautif (${ou})`);
+  verifier(m.length > 0 && m[0].includes('zzz'), `1. et le refus CITE le nom fautif(${ou})`);
 }
 verifier(contenantsExamines === 6, `1. les 6 contenants ont été examinés (${contenantsExamines})`);
 

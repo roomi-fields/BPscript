@@ -84,7 +84,7 @@ for (const [quoi, decl] of [
 {
   const r = compiler('actor basse(out.midi(ch:1)');
   ok(!r.ok, 'C. une parenthèse non refermée doit être REFUSÉE');
-  ok(/n'est pas refermé/.test(r.err),
+  ok(/is not closed/.test(r.err),
      `C. et le refus doit NOMMER ce qui manque — sans ça il sort en « Expected IDENT » sur la ligne `
      + `suivante, qui accuse la ligne au lieu de dire la faute. Reçu : ${r.err}`);
 }

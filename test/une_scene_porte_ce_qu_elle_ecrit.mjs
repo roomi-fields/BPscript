@@ -120,7 +120,7 @@ for (const e of ecarts) {
   const vus = new Set(ecarts.map((e) => e.cle));
   for (const [cle, motif] of CONNUS) {
     ok(vus.has(cle),
-      `'${cle}' est inscrit comme défaut connu (${motif}) mais l'écart a DISPARU — le retirer de la `
+      `'${cle}' est inscrit comme défaut connu(${motif}) mais l'écart a DISPARU — le retirer de la `
       + `liste, sinon l'exception survit à sa raison et masquera la prochaine.`);
   }
 }

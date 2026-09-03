@@ -40,7 +40,7 @@ const compiler = (tete) => compileToBPxAST(`core\nalphabet.western\n${tete}\n---
 {
   for (const axe of ['module', 'patch', 'devices', 'zzzinvente', 'quoiquecesoit']) {
     const msg = messages(compiler(`${axe}.nimporte`));
-    ok(new RegExp(`aucune librairie ne sert l'axe '${axe}'`).test(msg),
+    ok(new RegExp(`no library serves the axis '${axe}'`).test(msg),
        `A. '${axe}.nimporte' doit REFUSER en nommant l'axe. Reçu : ${msg.slice(0, 100) || 'aucune erreur'}`);
   }
 }
@@ -64,7 +64,7 @@ const compiler = (tete) => compileToBPxAST(`core\nalphabet.western\n${tete}\n---
     if (axe === 'alphabet') continue;   // une scène ne déclare qu'un alphabet — testé au volet C
     verifies++;
     const msg = messages(compiler(`${axe}.${entrees[0]}`));
-    ok(!/aucune librairie ne sert/.test(msg),
+    ok(!/no library serves the axis/.test(msg),
        `B. '${axe}.${entrees[0]}' est servi par le bundle : il ne doit PAS tomber sous ce refus. `
        + `Reçu : ${msg.slice(0, 90)}`);
   }
@@ -101,13 +101,13 @@ const compiler = (tete) => compileToBPxAST(`core\nalphabet.western\n${tete}\n---
     examines++;
     const msg = messages(compiler(`${mot}.zzz`));
     if (!msg) epargnes++;
-    ok(!/aucune librairie ne sert/.test(msg),
+    ok(!/no library serves the axis/.test(msg),
        `C. '${mot}' est un mot du LANGAGE recensé par la donnée : il ne doit jamais tomber sous le `
        + `refus d'axe. Reçu : ${msg.slice(0, 90)}. Une liste écrite dans le code au lieu de la `
        + `donnée en épargnerait moins que la donnée n'en recense.`);
   }
   // ⚠️ SEUIL DESCENDU DE 5 À 4 LE 2026-08-19, À LA MAIN ET SUR MESURE. `out` a quitté les épargnés :
-  // la sortie de SCÈNE (`out.<canal>` en tête, sans acteur) acceptait un canal inventé, alors que
+  // la sortie de SCÈNE(`out.<canal>` en tête, sans acteur) acceptait un canal inventé, alors que
   // la forme d'acteur le refusait depuis le 2026-08-04. La quatrième case de la liste fermée est
   // fermée, donc `out.zzz` porte désormais un message — et c'est le bon : il NOMME la direction,
   // jamais « aucune librairie ne sert », ce que le volet juste au-dessus vérifie mot pour mot.
@@ -129,7 +129,7 @@ const compiler = (tete) => compileToBPxAST(`core\nalphabet.western\n${tete}\n---
 // Un axe SERVI dont l'entrée manque crie autrement : c'est l'entrée qu'il nomme, pas l'axe.
 {
   const msg = messages(compiler('temperament.nexistepasdutout'));
-  ok(/l'entrée 'nexistepasdutout' n'existe pas/.test(msg),
+  ok(/entry 'nexistepasdutout' does not exist/.test(msg),
      `D. un axe servi dont l'entrée manque doit nommer L'ENTRÉE, pas l'axe — les deux refus se `
      + `distinguent. Reçu : ${msg.slice(0, 100)}`);
 }

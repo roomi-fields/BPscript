@@ -64,13 +64,13 @@ for (const [quoi, flux] of JUSTES) {
 {
   const r = compileToBPxAST(`${S}S -> basse.A2!chant.A4`);
   const el = r.ast?.subgrammars?.[0]?.rules?.[0]?.rhs?.[0];
-  ok(el?.type === 'SimultaneousGroup', `2. la frappe commune doit être un groupe (reçu ${el?.type})`);
+  ok(el?.type === 'SimultaneousGroup', `2. la frappe commune doit être un groupe(reçu ${el?.type})`);
   ok(el?.actor === undefined,
-    `2. LE GROUPE NE PORTE PAS D'ACTEUR — c'est la faute exacte qu'on répare (reçu '${el?.actor}')`);
+    `2. LE GROUPE NE PORTE PAS D'ACTEUR — c'est la faute exacte qu'on répare(reçu '${el?.actor}')`);
   ok(el?.primary?.actor === 'basse',
-    `2. le TERME de gauche porte le sien (reçu '${el?.primary?.actor}')`);
+    `2. le TERME de gauche porte le sien(reçu '${el?.primary?.actor}')`);
   ok(el?.secondaries?.[0]?.actor === 'chant',
-    `2. le TERME de droite porte le sien (reçu '${el?.secondaries?.[0]?.actor}')`);
+    `2. le TERME de droite porte le sien(reçu '${el?.secondaries?.[0]?.actor}')`);
 }
 
 // ── 3. LE PRÉFIXE NE SE DISTRIBUE PAS — la moitié qui démasque une correction trop large ─────

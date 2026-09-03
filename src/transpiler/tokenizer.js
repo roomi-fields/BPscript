@@ -247,12 +247,41 @@ function tokenize(source, opts = {}) {
       continue;
     }
 
-    // Backtick — read until closing backtick
+    // ── ⛔ LA CLÔTURE COMPTE — Romain, 2026-09-03 ────────────────────────────────────────────────
+    // L'ouverture est une SUITE de backticks ; la fermeture est la première suite de MÊME LONGUEUR.
+    //
+    // ⇒ POURQUOI. Le code porté entre backticks est la marque de fabrique du langage, et le langage
+    //   n'a AUCUN caractère d'échappement. Mesuré le 2026-09-03 sur les cinq corps de librairie :
+    //   TOUS contiennent des backticks (5 à 8 chacun) — le TypeScript moderne écrit ses chaînes en
+    //   gabarits. Un délimiteur d'un seul backtick les coupait au premier gabarit, et le reste du
+    //   code devenait du langage.
+    //
+    // ⇒ CE QUE ÇA NE CASSE PAS, mesuré sur les 389 scènes de la bibliothèque : 150 portent un
+    //   backtick, 1080 en tout ; DEUX portent deux backticks consécutifs — dans un COMMENTAIRE,
+    //   jamais dans du code — et AUCUNE n'en porte trois. La forme d'une seule barre reste donc la
+    //   forme courante, et c'est ce qui compte pour le live coding : on n'en met plus d'une que
+    //   quand le code en contient, comme une clôture de Markdown.
+    //
+    // ⚠️ LE TAG NE CHANGE PAS. `code`, ``code``, `ts: code` et ``ts: code`` se lisent tous pareil :
+    //   le comptage porte sur les barres, le tag reste facultatif — un acteur peut déclarer le
+    //   langage par défaut de ses blocs.
     if (ch === '`') {
-      advance(); // opening `
+      const ouvert = { line, col };
+      let n = 0;
+      while (peek() === '`') { advance(); n++; }
+      const cloture = '`'.repeat(n);
       let code = '';
-      while (i < source.length && peek() !== '`') code += advance();
-      if (i < source.length) advance(); // closing `
+      for (;;) {
+        if (i >= source.length) {
+          throw new LexError(
+            `A code block opened with ${n} backtick${n > 1 ? 's' : ''} at line ${ouvert.line}, `
+            + `column ${ouvert.col} is never closed — it swallows everything that follows. Close it `
+            + `with the same run of ${n} backtick${n > 1 ? 's' : ''}.`, ouvert.line, ouvert.col);
+        }
+        if (peek() === '`' && source.startsWith(cloture, i)
+            && source[i + n] !== '`') { i += n; col += n; break; }
+        code += advance();
+      }
       emit(T.BACKTICK, code);
       continue;
     }

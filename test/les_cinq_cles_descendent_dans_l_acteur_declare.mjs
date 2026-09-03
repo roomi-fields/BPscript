@@ -69,7 +69,7 @@ for (const c of CLES) {
   const scene = c.scene || SCENE_COMPLETE;
   // 1. HÉRITÉE — l'acteur nu reçoit ce que la scène écrit. C'est la moitié qui était CASSÉE.
   const nu = acteur(`${scene}actor nu\n-----\nS -> nu.C4`, 'nu');
-  ok(!nu.erreur && !nu.absent, `1. '${c.cle}' — la scène témoin doit compiler (reçu : ${nu.erreur})`);
+  ok(!nu.erreur && !nu.absent, `1. '${c.cle}' — la scène témoin doit compiler(reçu : ${nu.erreur})`);
   ok(lire(nu, c) === c.herite,
     `1. '${c.cle}' doit DESCENDRE dans un acteur déclaré nu : attendu '${c.herite}', reçu `
     + `'${lire(nu, c)}'. Nommer un acteur ne fait rien perdre.`);

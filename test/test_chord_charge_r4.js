@@ -49,13 +49,13 @@ const DECLS = 'core\nC4:midi\nE4:midi\n-----\n';
   // l'accolade fermante.
   //
   // ⚠️ CE TEST LISAIT `r.settings`, LA RÈGLE, ET IL AVAIT RAISON SUR L'ÉTAT D'ALORS. Sa scène
-  // n'invoque aucune librairie de contrôles (`gate` seul) : `vel` n'était donc pas reconnu comme
+  // n'invoque aucune librairie de contrôles(`gate` seul) : `vel` n'était donc pas reconnu comme
   // un réglage, le sac collé au `}` n'était pas absorbé par le bloc, et il retombait sur la règle.
   // Le test mesurait la voie SANS contrôles — celle que presque aucune scène réelle n'emprunte.
   // Depuis que `core` amène les contrôles (2026-08-08), il n'y a plus qu'une voie, et c'est la
   // règle du 2026-08-07 qui s'applique : COLLÉ règle le groupe, ESPACÉ règle la règle.
   const rq = poly?.settings;
-  assert('F1 contenance sur le BLOC (sac collé à })', rq?.payload?.containment === true,
+  assert('F1 contenance sur le BLOC(sac collé à })', rq?.payload?.containment === true,
     JSON.stringify(rq?.payload));
   assert('F1 params.vel=90 sur le BLOC', rq?.payload?.params?.vel === 90,
     JSON.stringify(rq?.payload?.params));

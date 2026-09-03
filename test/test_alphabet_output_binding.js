@@ -32,9 +32,9 @@ for (const chan of ['audio', 'midi', 'osc']) {
 // ⛔ UN CANAL SORTI SE REFUSE COMME UN CANAL INVENTÉ — la liste `deprecatedTransports` est sortie
 // avec le schéma de `core` (Romain, 2026-09-03) ; le refus est celui de la liste positive fermée,
 // et il NOMME les canaux qui existent. Décision du 2026-08-15, appliquée ici.
-rejects('alphabet.western:browser\n-----\nS -> C', 'liste positive fermée', 'alphabet.western:browser');
-rejects('types\nactor v alphabet.western out.browser\n-----\nS -> v.C', "n'est pas une sortie", 'out.browser');
-rejects('types\nactor v alphabet.western out.webaudio\n-----\nS -> v.C', "n'est pas une sortie", 'out.webaudio');
+rejects('alphabet.western:browser\n-----\nS -> C', 'closed positive list', 'alphabet.western:browser');
+rejects('types\nactor v alphabet.western out.browser\n-----\nS -> v.C', "is not an output", 'out.browser');
+rejects('types\nactor v alphabet.western out.webaudio\n-----\nS -> v.C', "is not an output", 'out.webaudio');
 
 // --- LISTE POSITIVE FERMÉE (addendum ratifié Romain 2026-07-16 : « on n'autorise que les 3
 // qu'on connaît ») : tout suffixe ∉ {audio, midi, osc} → rejet, sur LES DEUX voies. ':sc'
@@ -53,8 +53,8 @@ function acceptsBothPaths(src, label) {
   }
 }
 rejectsBothPaths('alphabet.western:sc\n-----\nS -> C', 'ABOLI', ':sc (ancien sucre transport+eval)');
-rejectsBothPaths('alphabet.western:video\n-----\nS -> C', 'liste positive', ':video');
-rejectsBothPaths('alphabet.western:foo\n-----\nS -> C', 'liste positive', ':foo (inconnu)');
+rejectsBothPaths('alphabet.western:video\n-----\nS -> C', 'positive list', ':video');
+rejectsBothPaths('alphabet.western:foo\n-----\nS -> C', 'positive list', ':foo (inconnu)');
 for (const chan of ['audio', 'midi', 'osc']) {
   acceptsBothPaths(`alphabet.western:${chan}\n-----\nS -> C`, `:${chan} (liste positive)`);
 }

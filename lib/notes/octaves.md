@@ -1,0 +1,65 @@
+# Notes — librairie `octaves`
+
+Ce que `lib/octaves.bpsl` ne montre pas : la cause d'une valeur, l'histoire d'une forme, la
+borne d'une mesure. La source porte ce qui EST, cette note porte le reste.
+
+## types
+
+LA LIBRAIRIE « octaves » — écrite dans le langage qu'elle sert.
+Convertie depuis le JSON : le bundle en rend la MÊME donnée, champ par champ. Les
+consommateurs ne voient aucun changement — c'est l'AUTHORING qui change, pas la donnée.
+
+⚠️ UNE NOTE EST UN COMMENTAIRE, plus une clé `_xxx` dans la donnée : un commentaire ne
+   voyage pas jusqu'aux consommateurs, une clé si.
+
+⛔ LE CORPS SE DÉLIMITE PAR LA PARENTHÈSE, ET LA VIRGULE SÉPARE. Décisions Romain, 2026-08-19 :
+   l'indentation ne porte rien, et dans le déclaratif l'espace ne sépare rien non plus — c'est
+   de la mise en forme. Une LISTE s'écrit par une parenthèse, et la parenthèse PRÉSERVE L'ORDRE
+   de ce qu'on y écrit.
+
+⛔ `default` NOMME SON REGISTRE — `saptak` porte `default:madhya`. Un nom ne bouge pas quand la
+   liste s'allonge ; un rang désigne silencieusement autre chose dès qu'on insère devant lui.
+   Deux tables sur trois écrivaient un nombre qui n'était PAS le nom du registre visé : `bp3`
+   portait 5 pour le registre nommé « 4 », `bp3_fr` portait 5 pour le registre nommé « 3 » —
+   leur liste commence un cran plus bas. L'ordre de la parenthèse reste ce qui construit la
+   table ; il ne sert plus à la désigner.
+
+⛔ UN REGISTRE EST UN TEXTE, ET IL S'ÉCRIT ENTRE GUILLEMETS quand il n'est pas un nom : les dix
+   registres occidentaux sont les textes « 0 » à « 9 », jamais les nombres 0 à 9. Le vide s'écrit
+   `""` — le délimiteur, sans rien dedans.
+COMMENT
+Octave/register naming conventions for BPscript. Each convention defines how register
+(octave) is expressed relative to a note name. Fields: position — 'prefix' or 'suffix' (where
+the register marker goes) separator — string between note and register marker (empty =
+concatenated). NEVER a space: a space is BPscript's token delimiter, so 'taar sa' would split
+into two terminals (the register prefix torn from the svara). Prefix conventions use '_' —
+already absorbed inside an identifier by the tokenizer (tokenizer.js:259), same glue char as
+the 'arrows' convention. Notation: 'taar_sa', 'tiz_re' (TAAR-TOK). registers — ordered list
+from lowest to highest, '' = no marker (default register) default — index in registers[] for
+the 'home' register NOT INCLUDED due to BPscript syntax conflicts: - Helmholtz (C, c, c',
+c'') — uses case distinction, too fragile - Lilypond (c,, c, c c' c'') — comma ',' conflicts
+with polymetry separator - Jianpu/Chinese cipher (dots above/below) — '.' conflicts with
+period notation For these conventions, 'arrows' (_v/_^) is proposed as a compatible
+substitute.
+Les prototypes de ce catalogue vivent dans `types` — invoquée ci-dessous.
+
+## saptak_us
+
+saptak_us · Registre numérique en SUFFIXE séparé par '_' (sa_4, r1_4) — convention native
+-to.tryShruti (22-shruti). Distinct de 'saptak' (préfixe mandra/madhya/taar).
+
+## bp3
+
+bp3 · Registres du moteur BP3 natif, conventions ENGLISH/FRENCH/INDIAN. Identique à 'western'
+SAUF le registre '00' — une octave SOUS '0' (quirk d'octave BP3 [79]). Le marqueur se lit en
+plus-long-d'abord : '00' ne doit jamais être avalé par '0'. Le français seul ajoute '000'
+(non porté ici : seul bp3_indian est servi).
+bp3 · bp3-engine/csrc/bp3/Inits.c:451-497 (tables d'octaves natives)
+
+## bp3_fr
+
+bp3_fr · Registres du moteur BP3 natif, convention FRENCH. Décalés d'un cran sous 'bp3' (la3
+= A4) et prolongés par '000' — l'octave sous '00'. Lecture plus-long-d'abord obligatoire :
+'000' ne doit jamais être avalé par '00' ni par '0'.
+bp3_fr · bp3-engine/csrc/bp3 -BP3main.h:136-147 + Inits.c:445-530
+

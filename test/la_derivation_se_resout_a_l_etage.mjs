@@ -56,7 +56,7 @@ const compile = (src) => {
 
 // ── A. UNE SCÈNE — l'héritage arrive, et il se distingue de ce qui est écrit ──────────────────
 {
-  const ast = compile('core\ndef alphabet (scope:scene, documented:true)\nalphabet western (scope:flow)\n'
+  const ast = compile('core\ndef alphabet(scope:scene, documented:true)\nalphabet western(scope:flow)\n'
     + '-----\nS -> C4\n');
   ok(valeur(ast, 'western', 'documented') === 'true',
      `A. ⛔ L'HÉRITAGE N'ARRIVE PAS : « western » dérive d'« alphabet » et ne porte pas son `
@@ -73,7 +73,7 @@ const compile = (src) => {
 
 // ── B. CE QUI EST ÉCRIT GAGNE — le témoin qui ne discriminait pas avant ───────────────────────
 {
-  const ast = compile('core\ndef alphabet (scope:scene)\nalphabet western (scope:flow)\n-----\nS -> C4\n');
+  const ast = compile('core\ndef alphabet(scope:scene)\nalphabet western(scope:flow)\n-----\nS -> C4\n');
   ok(valeur(ast, 'western', 'scope') === 'flow',
      `B. ⛔ LA SURCHARGE EST ÉCRASÉE : « western » écrit scope:flow et rend `
      + `${JSON.stringify(valeur(ast, 'western', 'scope'))}. Un héritage qui écrase l'écrit est une `
@@ -85,7 +85,7 @@ const compile = (src) => {
 
 // ── C. LA REMONTÉE EST TRANSITIVE, et le plus proche gagne sur le plus lointain ───────────────
 {
-  const ast = compile('core\ndef a (x:racine, y:racine)\na b (y:milieu)\nb c (z:feuille)\n-----\nS -> C4\n');
+  const ast = compile('core\ndef a(x:racine, y:racine)\na b(y:milieu)\nb c(z:feuille)\n-----\nS -> C4\n');
   ok(valeur(ast, 'c', 'x') === 'racine',
      `C. ⛔ LA REMONTÉE S'ARRÊTE AU PREMIER PARENT. Mesuré sur les librairies : 387 exemplaires `
      + `remontent d'un cran, 179 de deux, 7 de trois. Un mécanisme qui s'arrête au premier serait `
@@ -99,7 +99,7 @@ const compile = (src) => {
 
 // ── D. LA PARENTHÈSE ABSENTE VAUT PARENTHÈSE VIDE — et elle hérite ───────────────────────────
 {
-  const ast = compile('core\ndef alphabet (scope:scene)\nalphabet plain\n-----\nS -> C4\n');
+  const ast = compile('core\ndef alphabet(scope:scene)\nalphabet plain\n-----\nS -> C4\n');
   ok(valeur(ast, 'plain', 'scope') === 'scene' && herite(ast, 'plain', 'scope'),
      `D. ⛔ UN EXEMPLAIRE SANS CORPS N'HÉRITE PAS. « la parenthèse absente vaut parenthèse vide, et `
      + `le type voyage » — un sac fermé n'est pas une raison de ne rien recevoir. `
@@ -108,7 +108,7 @@ const compile = (src) => {
 
 // ── E. CE QUI N'EST PAS DÉCLARÉ N'EST PAS REFUSÉ, et rien ne boucle ──────────────────────────
 {
-  const ast = compile('core\nalphabet.western\ndef seul (a:1)\n-----\nS -> C4\n');
+  const ast = compile('core\nalphabet.western\ndef seul(a:1)\n-----\nS -> C4\n');
   ok(membres(ast, 'seul').length === 1,
      `E. « def seul » a reçu une greffe : « def » est la RACINE du prototypal, elle ne se `
      + `déclare jamais et ne transmet rien.`);
@@ -126,8 +126,8 @@ const compile = (src) => {
 
 // ── F. UNE SOURCE DE LIBRAIRIE — la même règle, l'autre côté ──────────────────────────────────
 {
-  const ast = compile('def temoin (documented:true, section:controls)\n'
-    + 'def reglage (scope:scene, bp3:none)\nreglage vitesse (bp3:tempo)\n');
+  const ast = compile('def temoin(documented:true, section:controls)\n'
+    + 'def reglage(scope:scene, bp3:none)\nreglage vitesse(bp3:tempo)\n');
   ok(valeur(ast, 'vitesse', 'scope') === 'scene' && herite(ast, 'vitesse', 'scope'),
      `F. ⛔ L'HÉRITAGE N'ARRIVE PAS DANS UNE SOURCE DE LIBRAIRIE. C'est la raison d'être de l'étage : `
      + `une scène et une librairie passent par la MÊME voie, donc par le même mécanisme. Si ce volet `
@@ -151,11 +151,11 @@ const compile = (src) => {
     // brouille le compte.
     // ⚠️ SANS `section:controls` : une entrée d'une place de contrôles doit être une déclaration de
     // contrôle (args ET description), et le générateur le vérifie désormais AU FIL de la lecture,
-    // puisque chaque librairie construite entre au registre (2026-09-02). Le témoin porte ses
+    // puisque chaque librairie construite entre au registre(2026-09-02). Le témoin porte ses
     // entrées à la racine, comme `types`.
     const source = '// @documented\ndef temoin_derivation\n'
-      + 'def socle_temoin (marque_heritee:oui)\n'
-      + 'socle_temoin exemplaire_temoin (bp3:none)\n';
+      + 'def socle_temoin(marque_heritee:oui)\n'
+      + 'socle_temoin exemplaire_temoin(bp3:none)\n';
     writeFileSync(join(bac, 'lib/temoin_derivation.bpsl'), source);
 
     // ⛔ LE JUGE VISE L'ENTRÉE, JAMAIS LE TEXTE. Ma première écriture cherchait le membre partout
@@ -184,7 +184,7 @@ const compile = (src) => {
     // ⛔ L'INJECTION QUI PROUVE LE FILTRE : on le RETIRE, et le paquet doit grossir. Sans ce
     // retrait, ce volet serait vert dans un dépôt où le filtre n'existe pas — le corpus ne pose
     // aucune greffe, et « rien à filtrer » a la même empreinte que « ne filtre plus ».
-    // Le filtre vit dans `librairies.js` depuis que le compilateur lit ses sources (2026-09-02).
+    // Le filtre vit dans `librairies.js` depuis que le compilateur lit ses sources(2026-09-02).
     const chemin = join(bac, 'src/transpiler/librairies.js');
     const texte = readFileSync(chemin, 'utf8');
     const ancre = '      if (p.herite) continue;';

@@ -33,12 +33,12 @@ const lire = (src) => { try { return { ast: parse(tokenize(src)), err: null }; }
 // Une matrice, pas une liste : chaque lecteur de parenthèse déclarative est éprouvé.
 {
   for (const [quoi, src] of [
-    ['un préréglage',            'def x (\n  a:1,\n  b:2\n)\nalphabet.western\n-----\nS -> C4\n'],
+    ['un préréglage',            'def x(\n  a:1,\n  b:2\n)\nalphabet.western\n-----\nS -> C4\n'],
     ['une transformation',       'core\ndef accent(\n  x\n) x(vel:120)\nalphabet.western\n-----\nS -> C4\n'],
     ['une sortie d\'acteur',     'core\nactor l @alphabet.western out.midi(\n  ch:1,\n  volume:80\n)\n-----\nS -> C4\n'],
-    ['un mot sans argument',     'def kick (\n  letring,\n  vel:120\n)\nalphabet.western\n-----\nS -> C4\n'],
-    ['une virgule finale',       'def x (\n  a:1,\n  b:2,\n)\nalphabet.western\n-----\nS -> C4\n'],
-    ['un commentaire dedans',    'def x (\n  a:1,\n  // ce que la clé suivante règle\n  b:2\n)\nalphabet.western\n-----\nS -> C4\n'],
+    ['un mot sans argument',     'def kick(\n  letring,\n  vel:120\n)\nalphabet.western\n-----\nS -> C4\n'],
+    ['une virgule finale',       'def x(\n  a:1,\n  b:2,\n)\nalphabet.western\n-----\nS -> C4\n'],
+    ['un commentaire dedans',    'def x(\n  a:1,\n  // ce que la clé suivante règle\n  b:2\n)\nalphabet.western\n-----\nS -> C4\n'],
   ]) {
     const { err } = lire(src);
     ok(err === null,
@@ -51,7 +51,7 @@ const lire = (src) => { try { return { ast: parse(tokenize(src)), err: null }; }
 // tout en cassant toutes les déclarations existantes.
 {
   for (const [quoi, src] of [
-    ['un préréglage',        'def x (a:1, b:2)\nalphabet.western\n-----\nS -> C4\n'],
+    ['un préréglage',        'def x(a:1, b:2)\nalphabet.western\n-----\nS -> C4\n'],
     ['une transformation',   'core\ndef accent(x) x(vel:120)\nalphabet.western\n-----\nS -> C4\n'],
     ['une sortie d\'acteur', 'core\nactor l @alphabet.western out.midi(ch:1)\n-----\nS -> C4\n'],
     ['un sac de règle',      'core\nalphabet.western\n-----\nS -> C4(vel:80)\n'],
@@ -80,7 +80,7 @@ const lire = (src) => { try { return { ast: parse(tokenize(src)), err: null }; }
 // ⚠️ LE TÉMOIN QUI COMPTE : en sautant les retours à la ligne, un lecteur qui ne bornerait plus
 // rien avalerait la scène entière en silence. Le refus doit sortir, et nommer la fermante.
 {
-  const { err } = lire('def x (\n  a:1\nalphabet.western\n-----\nS -> C4\n');
+  const { err } = lire('def x(\n  a:1\nalphabet.western\n-----\nS -> C4\n');
   ok(err !== null,
      `D. une parenthèse jamais refermée doit REFUSER — sinon le saut des retours à la ligne fait `
      + `avaler tout ce qui suit, sans un signe.`);
@@ -92,10 +92,10 @@ const lire = (src) => { try { return { ast: parse(tokenize(src)), err: null }; }
 // ⛔ ACCEPTER N'EST PAS LIRE. Une forme qui compile en rendant un arbre différent est pire qu'une
 // forme refusée : elle passe le volet A en vert et la donnée sort fausse.
 {
-  const courte = lire('def x (a:1, b:2, letring)\nalphabet.western\n-----\nS -> C4\n');
-  const longue = lire('def x (\n  a:1,\n  b:2,\n  letring\n)\nalphabet.western\n-----\nS -> C4\n');
+  const courte = lire('def x(a:1, b:2, letring)\nalphabet.western\n-----\nS -> C4\n');
+  const longue = lire('def x(\n  a:1,\n  b:2,\n  letring\n)\nalphabet.western\n-----\nS -> C4\n');
   const paires = (r) => {
-    // `def x (…)` est un objet RACINE depuis le 2026-09-02 : il vit dans `vars`, pas dans `defs`.
+    // `def x(…)` est un objet RACINE depuis le 2026-09-02 : il vit dans `vars`, pas dans `defs`.
     const d = (r.ast?.vars || []).find((v) => v.varType?.kind === 'type' && v.varType.type === null);
     return d?.settings?.pairs?.map((p) => `${p.key}=${p.value}`).join(' ') ?? null;
   };

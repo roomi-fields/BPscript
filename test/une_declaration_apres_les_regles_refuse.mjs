@@ -66,7 +66,7 @@ const S = 'core\nalphabet.western\n-----\n';
 const FORME = {
   // Trois seulement ont besoin d'une écriture : nues, elles manquent leur nom ou leur valeur.
   // Le reste s'éprouve NU — et c'est voulu : une forme écrite à la main est une forme qu'on choisit.
-  def: 'def k (vel:120)',
+  def: 'def k(vel:120)',
   // Les mots de la GRAMMAIRE entrés dans l'union le 2026-09-03 (le schéma de `core` est dissous,
   // ils viennent du schéma de syntaxe) : nus, ils manqueraient leur nom.
   actor: 'actor v', terminal: 'terminal zz voice.wobble', in: 'in.midi pedale',
@@ -168,7 +168,7 @@ for (const [nom, forme] of DECLARATIONS) {
   ok(apres.length >= 1, `1. '${nom}' après une règle doit être REFUSÉE (elle se perdait en silence)`);
   ok(apres.some((m) => m.includes(`'${nom}'`)),
     `1. '${nom}' — le refus doit NOMMER la directive, pas dire « ligne non reconnue » (reçu : ${apres[0]})`);
-  ok(apres.some((m) => /avant la première règle/.test(m)),
+  ok(apres.some((m) => /before the scene's first rule/.test(m)),
     `1. '${nom}' — le refus doit donner la RÉÉCRITURE, sinon il constate sans aider`);
   // AVANT les règles → PASSE. Sans cette moitié, une règle qui refuserait tout aurait l'air juste.
   ok(err(`${socle(forme)}${forme}\n-----\nS -> C4\n`).length === 0,
@@ -182,7 +182,7 @@ for (const nom of CONTROLES_DE_PORTEE) {
   const tete = err(`${socle(nom)}${nom}\n-----\nS -> C4\n`);
   ok(tete.length >= 1, `1bis. '${nom}' est un contrôle de PORTÉE : il doit être REFUSÉ en tête de scène`);
   ok(tete.some((m) => m.includes(`'${nom}'`) && /ne peut pas s'écrire en tête de scène/.test(m)),
-    `1bis. '${nom}' — le refus doit NOMMER le mot et dire qu'il ne s'écrit pas en tête (reçu : ${tete[0]?.slice(0, 100)})`);
+    `1bis. '${nom}' — le refus doit NOMMER le mot et dire qu'il ne s'écrit pas en tête(reçu : ${tete[0]?.slice(0, 100)})`);
   ok(tete.some((m) => /il (vaut|ne vaut)/.test(m)),
     `1bis. '${nom}' — le refus doit dire OÙ le mot vit, sinon il ferme une porte sans en ouvrir une`);
 
@@ -306,7 +306,7 @@ ok(DECLARATIONS_DE_TETE.size + CONTROLES_DE_PORTEE.size + LEGITIME_APRES.size ==
   + `fois ou pas du tout rend le compte juste et la couverture fausse.`);
 // TÉMOIN D'INSTRUMENT : sans lui, une régression rendant le refus muet laisserait tout au vert.
 ok(err(`${S}S -> C4\nsymbol v\n`).length >= 1,
-  '4. TÉMOIN — la règle doit savoir MORDRE même en toute fin de scène (aucune règle après)');
+  '4. TÉMOIN — la règle doit savoir MORDRE même en toute fin de scène(aucune règle après)');
 
 if (echecs.length) {
   console.error(`[declaration apres regles] ${echecs.length} ÉCHEC(S) :`);

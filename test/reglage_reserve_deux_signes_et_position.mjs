@@ -59,7 +59,7 @@ ok(Array.isArray(QUALIFIER_KEYS) && QUALIFIER_KEYS.length > 0,
 for (const exclu of ['goto', 'repeat', 'failed', 'rndtime']) {
   ok(!QUALIFIER_KEYS.includes(exclu),
      `0. '${exclu}' ne doit PAS être dans qualifierKeys — sa lecture côté BPx dépend de ast.qualifiers `
-     + `au niveau règle (cf. lib/core.json _qualifierKeys_doc). Si cette assertion casse, c'est que `
+     + `au niveau règle(cf. lib/core.json _qualifierKeys_doc). Si cette assertion casse, c'est que `
      + `quelqu'un l'a migré : vérifier la coordination BPx AVANT de faire taire ce témoin.`);
 }
 ok(!QUALIFIER_KEYS.includes('shuffle'),
@@ -108,7 +108,7 @@ for (const cle of QUALIFIER_KEYS.filter((c) => porteesDe(c).includes('rule'))) {
   {
     const { errors } = compile(`S -> C4 [${cle}:${valeur}]`);
     ok(errors.length > 0, `2. '[${cle}:${valeur}]' doit être REFUSÉ`);
-    ok(errors.some((e) => e.message.includes(`(${cle}:…)`) && /PARENTHÈSES/.test(e.message)),
+    ok(errors.some((e) => e.message.includes(`(${cle}:…)`) && /PARENTHESES/.test(e.message)),
        `2. le refus de '[${cle}:${valeur}]' doit NOMMER la forme cible '(${cle}:…)' — reçu : `
        + `${errors.map((e) => e.message).join(' | ')}`);
   }

@@ -3,7 +3,7 @@
  * GARDE — INVOQUER UNE LIBRAIRIE APPORTE CE QU'ELLE DÉCLARE, PROTOTYPES COMPRIS.
  *
  * ⛔ CE QUI MANQUAIT. Le registre des prototypes ne se remplissait qu'à la lecture du fichier
- * COURANT. Écrire `types` en tête n'y ajoutait rien, donc `interval ionian (…)` était refusé dans
+ * COURANT. Écrire `types` en tête n'y ajoutait rien, donc `interval ionian(…)` était refusé dans
  * `lib/scales.bpsl` — et le refus ne nommait pas la cause, il tombait sur une erreur de syntaxe.
  * Un mécanisme qui ne faisait que la moitié de son travail : l'invocation apportait les contrôles
  * et pas les modèles, sans que rien ne dise pourquoi.
@@ -33,23 +33,23 @@ const passe = (src) => {
 };
 
 // ── A. L'INVOCATION APPORTE LES PROTOTYPES — la faute d'origine ──────────────────────────────────
-ok(passe('types\ninterval x (ratios(1))'), "A. ⛔ `types` invoquée rend son prototype `interval` dérivable");
-ok(passe('types\ndirectional y (ascending(1), descending(2))'),
+ok(passe('types\ninterval x(ratios(1))'), "A. ⛔ `types` invoquée rend son prototype `interval` dérivable");
+ok(passe('types\ndirectional y(ascending(1), descending(2))'),
   "A. et jusqu'au troisième étage — `directional` dérive de `degree`, qui dérive de `scale`");
-ok(passe('scale\nbilaval x (a:1)'), "A. une VRAIE entrée de catalogue dérive aussi — tout objet est un modèle");
+ok(passe('scale\nbilaval x(a:1)'), "A. une VRAIE entrée de catalogue dérive aussi — tout objet est un modèle");
 
 // ── B. TÉMOINS — l'invocation apporte ce que LA librairie déclare, pas ce qu'une autre déclare ───
 // ⚠️ `core` N'EST PLUS LE TÉMOIN : il apporte `audio`, qui invoque `types` en tête, et la chaîne se
 // suit transitivement depuis le 2026-09-02 — `interval` lui arrive. `eval` n'invoque rien.
-ok(!passe('eval\ninterval x (ratios(1))'), "B. TÉMOIN — `eval` ne déclare pas `interval` et n'apporte rien, il reste refusé");
-ok(passe('core\ninterval x (ratios(1))'), "B. et `core` l'apporte PAR SA CHAÎNE — core → audio → types");
-ok(!passe('interval x (ratios(1))'), "B. TÉMOIN — sans aucune invocation, rien n'est apporté");
-ok(!passe('types\nzorglubinvente x (a:1)'), "B. TÉMOIN — un mot que `types` ne déclare pas reste refusé");
+ok(!passe('eval\ninterval x(ratios(1))'), "B. TÉMOIN — `eval` ne déclare pas `interval` et n'apporte rien, il reste refusé");
+ok(passe('core\ninterval x(ratios(1))'), "B. et `core` l'apporte PAR SA CHAÎNE — core → audio → types");
+ok(!passe('interval x(ratios(1))'), "B. TÉMOIN — sans aucune invocation, rien n'est apporté");
+ok(!passe('types\nzorglubinvente x(a:1)'), "B. TÉMOIN — un mot que `types` ne déclare pas reste refusé");
 
 // ── C. ⛔ LA NATURE FILTRE — une méta est une chaîne, jamais un modèle ───────────────────────────
-ok(!passe('scale\nresolves x (a:1)'), "C. `resolves` est une chaîne : elle n'entre pas au registre");
-ok(!passe('scale\nresolvedBy x (a:1)'), "C. `resolvedBy` non plus");
-ok(!passe('types\nresolvedBy x (a:1)'), "C. ni par une librairie qui ne la porte même pas");
+ok(!passe('scale\nresolves x(a:1)'), "C. `resolves` est une chaîne : elle n'entre pas au registre");
+ok(!passe('scale\nresolvedBy x(a:1)'), "C. `resolvedBy` non plus");
+ok(!passe('types\nresolvedBy x(a:1)'), "C. ni par une librairie qui ne la porte même pas");
 
 // ── C bis. ⛔ ET UNE ENTRÉE NE CONFISQUE PAS UN MOT DU LANGAGE ───────────────────────────────────
 // Deux collisions mesurées le jour où ce mécanisme est né : `core` porte une SECTION nommée
@@ -63,7 +63,7 @@ ok(passe('core\nalphabet.western\nsettings\n-----\nS -> C4\n'),
 // `gamut` le 2026-08-25, puis a tranché l'inverse le 2026-09-02 — « `scale` est le mot des gammes ».
 // Le mot a donc QUITTÉ la liste réservée de `core` (un type fourni par une librairie n'appartient
 // pas au socle), et le prototype `scale` de `types` ouvre une déclaration : c'est ce qu'on éprouve.
-ok(passe('types\nscale x (description:"y")'),
+ok(passe('types\nscale x(description:"y")'),
   "C bis. `scale` est le prototype des gammes — il dérive, et il n'est plus un mot réservé");
 
 // ── D. LA DONNÉE EST BIEN CELLE QU'ON CROIT — sinon les assertions ci-dessus ne prouvent rien ────

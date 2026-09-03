@@ -1,0 +1,97 @@
+# Notes — librairie `expression`
+
+Ce que `lib/expression.bpsl` ne montre pas : la cause d'une valeur, l'histoire d'une forme, la
+borne d'une mesure. La source porte ce qui EST, cette note porte le reste.
+
+## types
+
+LA LIBRAIRIE « expression » — écrite dans le langage qu'elle sert.
+Convertie depuis le JSON : le bundle en rend la MÊME donnée, les consommateurs ne
+voient aucun changement. C'est l'AUTHORING qui change, pas la donnée.
+
+⚠️ LA DOCUMENTATION EST UN COMMENTAIRE, plus une clé `_xxx_doc` dans la donnée : un
+   commentaire ne voyage pas jusqu'aux consommateurs, une clé si.
+SCISSION
+Née le 2026-08-10 de la scission de controls.json (Romain : « controls.json doit être divisé
+», une librairie = un destinataire, LIBRAIRIES.md:213). Porte le groupe 'musical' ORIGINEL
+(vel/pan/rndvel/velcont/offvel, match EXACT de LIBRAIRIES.md:171) et le groupe 'generic'
+(value/fixed/cont, 'Sound object parameter controls — transport-agnostic, forwarded as-is'
+depuis leur création le 2026-04-09, commit 535c2a0) : la MÊME propriété distinctive que celle
+qui range 'expression' à part dans la table — aucun transport ne les réclame en propre, ils
+voyagent jusqu'à celui qui sonne.
+SCOPE
+OU CE CONTROLE A LE DROIT D ETRE ECRIT — une LISTE, jamais une valeur seule. Vocabulaire
+FERME de six mots, arrete par Romain le 2026-08-08 : scene, subgrammar, rule, group, symbol,
+flow. L accrochage dans l arbre DIT deja la portee ; cette declaration ne sert donc pas a
+localiser un reglage mais a REFUSER celui qui est mal place — sans elle on lit n importe quoi
+n importe ou sans pouvoir le dire (c est ce qui a rendu un poids muet pendant quatre jours).
+symbol couvre TOUT element du flux, pas seulement une note : un silence, une prolongation, un
+joker et les deux membres d un gabarit portent aussi un sac (mesure : 10 porteurs dans l
+arbre). flow = le sac pose avec ! ; ce n est pas une portee au sens de LANGUAGE.md (c est un
+etat courant, par voix) mais la validation doit pouvoir dire qu un poids n a rien a y faire.
+L ABSENCE DE CE CHAMP EST UNE FAUTE, gardee : 57 des 65 controles n en portaient aucun, et
+une absence qui voudrait dire partout rendrait toute validation impossible. ⚠️ IL N Y A QU UN
+SEUL AXE. Un axe portee d EFFET distinct de la portee d ECRITURE etait prevu ; il reposait
+entierement sur mode — ecrit sur une regle, gouvernant le bloc. Mesure du 2026-08-08 : cette
+forme n existe ni au moteur d origine, ni dans une seule des 274 scenes, et l arbre ne l
+appliquait nulle part. Romain l a supprimee. L axe tombe avec elle.
+FORME GENERIQUE RETIREE
+LA GRAPHIE GENERIQUE value/fixed/cont EST RETIREE le 2026-08-13, arbitrage Romain. Elle
+cassait DEUX canons du langage : `!(cont:slide)` inversait le sujet et la valeur -- le
+deux-points LIE UN SUJET A UNE VALEUR, or le sujet ecrit etait `cont` et la valeur etait le
+parametre -- et `!(value:slide 101)` cachait le SUJET DANS LA VALEUR, deux termes dont le
+premier est un nom. FORME CANONIQUE : le PARAMETRE devient la cle et le mode se COLLE a lui,
+exactement la construction des vingt-sept mots des neuf parametres de jeu. `!(slide:101)`,
+`!(slidecont)`, `!(slidestep)`, `!(slidefixed)`. Le parametre se DECLARE : `var slide
+signal`, un flux de nombres sans convention de lecture. Sans declaration le nom est refuse,
+et c est le but -- un mot inconnu ne devient pas un parametre par accident. Le destinataire
+cesse d etre emprunte : il vient de la declaration du parametre, pas de cette librairie.
+CONTINUS
+LES NEUF MODES CONTINUS PARTENT AUX SORTIES, SANS EXCEPTION (arbitrage Romain, 2026-08-13,
+relaye par l architecte) : « la destination suit la NATURE du mot, pas le comportement du
+moteur ». Un mode continu exige des messages intermediaires PENDANT la note, a une cadence —
+c est celui qui sonne qui les emet. articulcont vivait chez engine (BPx) et transposecont
+chez transpo (Kairos) : ni l un ni l autre n est une sortie, et le moteur comme le resolveur
+d arbre travaillent NOTE A NOTE. Ils rejoignent velcont et pancont dans expression, dont le
+destinataire est la classe « toutes les sorties » — un mode continu vaut pour toute sortie,
+aucune ne le reclame en propre. Les sept autres continus etaient deja chez une sortie.
+GESTES NATIFS
+QUATRE ENTREES PORTENT `bpscript: false` : elles declarent un geste que le MOTEUR execute,
+pour que le frontal BP3 puisse le router, sans en faire un mot du langage. Leur graphie
+BPScript est ailleurs -- le parametre est la cle et le mode s y colle (`!(slide:101)`,
+`!(slidecont)`), arbitrage Romain du 2026-08-13. Les ecrire dans une scene reste REFUSE.
+
+## volume
+
+_comment : Sound object parameter controls — transport-agnostic, forwarded as-is
+L INTERFACE GENERIQUE DU VOLUME. Doctrine de Romain, 2026-08-15 : « on va mettre un volume dans
+expression ainsi que dans audio, OSC... donc on applique le principe qu on a defini ». C est le
+mot que l auteur ecrit ; chaque sortie le REALISE a sa facon, en declarant
+`implements:expression.volume`. Aujourd hui seul `midi` le realise.
+⚠️ ELLE NE PORTE PAS DE VALEUR PAR DEFAUT, ET C EST LA REGLE : « les defauts sont dans la
+librairie midi-default, ca sera modifie dans le live par les controles de volume de l UI »
+(Romain, meme jour). Ni l interface ni la realisation ne portent la valeur ; elles decrivent le
+mot.
+
+## vel
+
+PORTEE ETENDUE A LA SCENE le 2026-08-15 pour `vel` et `pan` (Romain, « ok pour les extensions de
+portee ») : DeftVelocity et DeftPanoramic sont des defauts de scene au moteur natif, et il ne
+manquait que le mot `scene` dans leur portee pour qu ils s ecrivent en tete.
+
+## panrate
+
+PANRATE · LA CADENCE DU CONTINU DE PANORAMIQUE. Elle se declare parametre par parametre, et vaut
+CINQUANTE valeurs par seconde sans ecriture -- comme le moteur natif. Decision de Romain du
+2026-08-13 : le continu voyage en SUITE DE VALEURS produite en amont a cadence fixe, et le
+runtime la convertit vers la sienne -- il decime ou il lisse, il ne decide d aucune courbe.
+PLAGE 0..1000, BORNES INCLUSES — mesuree par bp3-engine le 2026-08-14 sur le binaire natif
+v3.5.1-iso.2 (CompileProcs.c:1149-1173, la MEME condition pour les cinq). C est un REFUS, pas un
+ecretage : 1001 arrete la compilation en nommant sa cause. L unite est bien des emissions par
+seconde — l ecart mesure vaut 1000/cadence millisecondes sur toute la plage, et les cinq sorties
+se comportent identiquement. Le defaut de 50 est confirme par un temoin : avec ou sans le mot,
+152 messages et 20 ms d ecart, exactement.
+⚠️ LA VALEUR 0 EST ACCEPTEE PAR LE NATIF ET SUPPRIME LE FLUX CONTINU : un mode continu ecrit avec
+   une cadence de 0 compile et ne module rien. Le fait est mesure, la declaration appartient a
+   Romain — je porte le natif, je ne retranche pas de mon propre chef.
+

@@ -67,10 +67,10 @@ const POSITIONS = [
 for (const [quoi, src] of POSITIONS) {
   const msg = messages(compiler(src));
   ok(/n'a plus sa place|mode/.test(msg),
-     `A. ${quoi} — '(mode:…)' doit être REFUSÉ et ne l'est pas (${msg.slice(0, 70) || 'aucune erreur'}). `
+     `A. ${quoi} — '(mode:…)' doit être REFUSÉ et ne l'est pas(${msg.slice(0, 70) || 'aucune erreur'}). `
      + `Une garde écrite pour la seule position du ticket laisse vivre les cinq autres.`);
   ok(/mode:/.test(msg),
-     `A. ${quoi} — le refus doit donner la RÉÉCRITURE ('mode:…' en tête de sous-grammaire). `
+     `A. ${quoi} — le refus doit donner la RÉÉCRITURE('mode:…' en tête de sous-grammaire). `
      + `Un refus qui ne dit pas quoi écrire à la place envoie l'auteur dans un mur.`);
 }
 

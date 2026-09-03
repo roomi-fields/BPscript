@@ -24,7 +24,7 @@ const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const refus = (src) => (compileToBPxAST(src).errors || [])
   .map((e) => e.message ?? String(e))
-  .filter((m) => /TERMINAL de l'alphabet actif|déjà pris/.test(m));
+  .filter((m) => /TERMINAL of the active alphabet|bears a name already taken|is already taken/.test(m));
 
 // ── A. CE QUI DOIT ÊTRE REFUSÉ ───────────────────────────────────────────────
 // L'espace : chaque SORTE qui crée un nom × ce qu'elle peut heurter.
@@ -50,7 +50,7 @@ for (const [sorte, ligne] of SORTES) {
     // Une sorte ne peut pas se heurter elle-même dans ce montage (le poseur EST la 2e occurrence).
     ok(r.length >= 1, `${sorte} nommée comme ${quoi} — doit être refusée`);
     ok(r.some((m) => m.includes(nom)), `${sorte} contre ${quoi} — le refus doit NOMMER le conflit`);
-    ok(r.some((m) => /Choisir un autre nom/.test(m)), `${sorte} contre ${quoi} — doit proposer la sortie`);
+    ok(r.some((m) => /Choose another name/.test(m)), `${sorte} contre ${quoi} — doit proposer la sortie`);
   }
 }
 // La TÊTE DE RÈGLE, contre tout le reste — portée globale.
@@ -63,19 +63,19 @@ const TETES_REFUSEES = [
   ['contre une définition', 'core\ndef motif C4 D4\n-----\nmotif -> C4'],
   ['contre un drapeau',   'core\nflag motif:1\n-----\nmotif -> C4'],
   // L'AMALGAME acteur / tête de règle — l'erreur grave tranchée par Romain le 2026-07-28.
-  ['contre un ACTEUR (l\'amalgame)', 'core\nactor viz  eval.hydra\n-----\nS -> viz\nviz -> `hydra: osc(4).out()`'],
+  ['contre un ACTEUR(l\'amalgame)', 'core\nactor viz  eval.hydra\n-----\nS -> viz\nviz -> `hydra: osc(4).out()`'],
   ['contre un acteur de notes',      'core\nalphabet.western\nactor v\n  alphabet.western\n  out.audio\n-----\nS -> v\nv -> C4 D4'],
 ];
 for (const [quoi, src] of TETES_REFUSEES) {
   const r = refus(src);
   ok(r.length >= 1, `une tête de règle ${quoi} — doit être refusée`);
-  ok(r.some((m) => /règle/.test(m)), `tête ${quoi} — le refus doit dire que c'est la RÈGLE qui heurte`);
+  ok(r.some((m) => /rule/i.test(m)), `tête ${quoi} — le refus doit dire que c'est la RÈGLE qui heurte`);
 }
 
 // ── B. CE QUI DOIT PASSER, ET C'EST LA MOITIÉ QU'ON CASSE ────────────────────
 // Chacune de ces lignes est une forme RATIFIÉE. Si l'une rougit, la règle a débordé.
 const DOIVENT_PASSER = [
-  ['une tête RÉPÉTÉE = les alternatives d\'une règle (120 scènes sur 333 en vivent)',
+  ['une tête RÉPÉTÉE = les alternatives d\'une règle(120 scènes sur 333 en vivent)',
    'core\nalphabet.simple\n-----\nS -> X\nX -> a b\nX -> c d'],
   ['la même tête dans DEUX sous-grammaires = deux passes successives',
    'core\nalphabet.simple\n-----\nS -> X\nX -> a b\n-----\nX -> c d'],
@@ -83,7 +83,7 @@ const DOIVENT_PASSER = [
    'core\nalphabet.western\nC4:midi\n-----\nS -> C4 D4'],
   // LES TROIS FORMES DE LA DÉCISION DU 2026-08-03, mot pour mot. Elles étaient REFUSÉES ici même
   // jusqu'au 2026-08-07 : « aucune grammaire de substitution ne compilait en BPScript ».
-  ['une SUBSTITUTION : la tête est un terminal (mode sub/sub1)',
+  ['une SUBSTITUTION : la tête est un terminal(mode sub/sub1)',
    'core\nalphabet.western\n-----\nC4 -> G4\nS -> C4'],
   ['un JOKER devant un terminal en tête',
    'core\nalphabet.western\n?1 D4 -> ?1 E4\n-----\nS -> C4 D4'],
@@ -115,7 +115,7 @@ const DOIVENT_PASSER = [
   // 2026-07-04), une scène qui se tait HÉRITE de `western` — donc `G4` y est bien une note, et la
   // règle mord. L'ancien témoin gardait ma zone aveugle : 91 scènes sur 263 y vivaient.
   // Il devient un cas REFUSÉ, plus haut.
-  ['une hauteur OPAQUE invoquée : l\'alphabet reste ABSENT, et c\'est la SEULE absence légitime (loi 35)',
+  ['une hauteur OPAQUE invoquée : l\'alphabet reste ABSENT, et c\'est la SEULE absence légitime(loi 35)',
    'core\ntest_alphabets.abc\ndef G4 saw >> audio\n-----\nS -> a b'],
   // ⚠️ LES CONTEXTES — régression mesurée par BPx le 2026-07-28. Un contexte n'est PAS une tête :
   // il DÉSIGNE un terminal, c'est sa raison d'être. « ne pas être précédé de C4 » ne peut pas
@@ -154,9 +154,9 @@ for (const [quoi, src] of DOIVENT_PASSER) {
 // Le témoin porte donc désormais sur une collision qui, elle, n'a jamais été levée : l'AMALGAME
 // d'un nom d'acteur et d'un nom de règle (« erreur grave », Romain 2026-07-28).
 ok(refus('core\nactor viz  eval.hydra\n-----\nS -> viz\nviz -> `hydra: osc(4).out()`').length >= 1,
-  'TÉMOIN — la règle doit savoir MORDRE (sinon tout ce fichier ment)');
+  'TÉMOIN — la règle doit savoir MORDRE(sinon tout ce fichier ment)');
 ok(refus('core\nalphabet.western\n-----\nmotif -> C4').length === 0,
-  'TÉMOIN — et savoir se TAIRE (sinon elle refuserait tout, et mordrait aussi)');
+  'TÉMOIN — et savoir se TAIRE(sinon elle refuserait tout, et mordrait aussi)');
 // PLANCHERS INCHANGÉS APRÈS LE RETRAIT D'`alias` (2026-08-15) : la sorte et le conflit qu'il
 // portait sortent tous deux, et les seuils restent au-dessus de ce qui subsiste. Ils ne se règlent
 // jamais sur ce que les matrices rendent — ils disent ce qu'on refuse de descendre en dessous.

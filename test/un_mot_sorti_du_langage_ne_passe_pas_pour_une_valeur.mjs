@@ -40,10 +40,10 @@ ok(compiler('-----\nS -> C4\n').ok, 'SOCLE : la scène nue doit compiler');
 for (const mot of ['required', 'many']) {
   const r = compiler(`control zz(args:value, scope:${mot})\n-----\nS -> C4\n`);
   ok(!r.ok, `A. 'scope:${mot}' doit être REFUSÉ — le mot est sorti du langage le 2026-08-20`);
-  ok(/est SORTI du langage/.test(r.err),
+  ok(/has LEFT the language/.test(r.err),
      `A. et le refus doit le DIRE, avec sa décision — sans quoi l'auteur cherche une faute de `
      + `syntaxe dans une forme correcte. Reçu : ${r.err.slice(0, 80)}`);
-  ok(/scope\(\)/.test(r.err) && /'scope' seul|`scope` seul|scope' seul/.test(r.err),
+  ok(/scope\(\)/.test(r.err) && /'scope' alone/.test(r.err),
      `A. ⛔ ET IL DOIT PORTER LES DEUX RÉÉCRITURES — le nu pour l'obligation, la parenthèse vide `
      + `pour la collection obligatoire. Un refus qui n'en donne qu'une envoie la moitié des auteurs `
      + `écrire l'autre faute. Reçu : ${r.err.slice(0, 140)}`);
@@ -83,7 +83,7 @@ for (const [quoi, forme] of [
 // Sans lui, « le mot sorti est refusé » se confondrait avec « toute valeur inconnue est refusée ».
 {
   const r = compiler('control zz(args:value, scope:zorglub)\n-----\nS -> C4\n');
-  ok(!/est SORTI du langage/.test(r.err),
+  ok(!/has LEFT the language/.test(r.err),
      `D. une valeur inconnue qui n'est PAS un mot sorti ne reçoit pas ce refus-là — sinon le `
      + `message accuserait une décision qui ne la concerne pas. Reçu : ${r.err.slice(0, 70) || 'compile'}`);
 }

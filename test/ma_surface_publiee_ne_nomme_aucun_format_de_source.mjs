@@ -40,17 +40,33 @@ console.log(`[surface] ${fichiersDeLib.length} fichiers de lib, ${formats.length
 // ── 1. LE BUNDLE EST COMPLET — chaque fichier de lib a sa clé, et réciproquement ─────────────
 // Les deux inclusions : une clé en trop est un fantôme, une clé manquante est une librairie muette.
 {
+  // ⛔ UN FICHIER DE CORPS N'EST PAS UNE LIBRAIRIE — depuis le 2026-09-03, une librairie DÉCLARE ses
+  //   fichiers de corps (`transpo/foobar`) et leur contenu se pose sur ses objets. Ils ne portent
+  //   donc aucune clé au bundle, et c'est voulu : les compter comme des librairies muettes ferait
+  //   rougir ce garde sur une forme juste.
+  // La déclaration se lit dans la SOURCE de la racine — une ligne `transpo/foobar` en tête. Le
+  // bundle, lui, n'en porte rien : un corps se pose sur les objets, il ne devient pas une clé.
+  const corpsDeclares = new Set();
+  for (const d of fichiersDeLib) {
+    const sous = d.parentPath ?? d.path ?? '';
+    if (sous.endsWith('lib') || sous.endsWith('lib/')) continue;
+    const parent = sous.split('/').pop();
+    const nom = `${parent}/${d.name.replace(/\.(json|bpsl)$/, '')}`;
+    let racine = '';
+    try { racine = readFileSync(new URL(`../lib/${parent}.bpsl`, import.meta.url), 'utf8'); } catch { /* pas une librairie du langage */ }
+    if (new RegExp(`^${nom}\\s*$`, 'm').test(racine)) corpsDeclares.add(nom);
+  }
   const attendus = new Set(fichiersDeLib.map((d) => {
     const sous = d.parentPath ?? d.path ?? '';
     const prefixe = sous.endsWith('lib') || sous.endsWith('lib/') ? '' : sous.split('/').pop() + '/';
     return prefixe + d.name.replace(/\.(json|bpsl)$/, '');
-  }));
+  }).filter((n) => !corpsDeclares.has(n)));
   const presents = new Set(Object.keys(LIBS));
   for (const a of attendus) ok(presents.has(a), `1. la librairie '${a}' existe en fichier et MANQUE au bundle`);
   for (const p of presents) ok(attendus.has(p), `1. le bundle porte '${p}', qui n'a aucun fichier source`);
   // 25 → 24 le 2026-09-03 : `digital` sort, ses quatre manipulations sont les contrôles de `transpo`
   // qui les nommaient déjà, et leurs corps ont suivi leur objet (arbitrage Romain).
-  ok(attendus.size >= 24, `1. le garde doit avoir EXAMINÉ des librairies (${attendus.size} trouvée(s))`);
+  ok(attendus.size >= 24, `1. le garde doit avoir EXAMINÉ des librairies(${attendus.size} trouvée(s))`);
   // ⛔ ET UNE CLÉ PRÉSENTE NE PROUVE PAS UN CONTENU. Ce volet comptait les clés du bundle et
   // n'aurait pas vu une librairie SORTIE VIDE — le mode d'échec exact de la réécriture des neuf
   // fichiers : le générateur ne lisait qu'une des deux graphies de déclaration, donc réécrire un
@@ -71,7 +87,7 @@ const paquet = JSON.parse(readFileSync(join(RACINE, 'package.json'), 'utf-8'));
 const exportes = [...new Set(
   JSON.stringify(paquet.exports ?? {}).match(/\.\/[\w./-]+\.(?:js|d\.ts)/g) ?? [],
 )];
-ok(exportes.length >= 2, `2. le garde doit trouver des chemins exportés (${exportes.length} trouvé(s))`);
+ok(exportes.length >= 2, `2. le garde doit trouver des chemins exportés(${exportes.length} trouvé(s))`);
 
 for (const rel of exportes) {
   let texte;

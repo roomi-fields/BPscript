@@ -43,8 +43,8 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
   const sousCore = loadLibsFromDirectives([{ name: 'core' }]).controls.volume;
   const attendue = (leRegistre().midi_default.reglages || {}).volume;
   ok(attendue !== undefined, `2. midi_default écrit 'volume' en tête — reçu ${JSON.stringify(leRegistre().midi_default.reglages)}`);
-  ok(sousCore && sousCore.value === attendue, `2. sous core, volume vaut la ligne de tête de midi_default (${attendue}) — reçu ${sousCore && sousCore.value}`);
-  // `midi.volume` ne déclare pas de valeur propre : sans l'environnement, il n'en a pas (mesuré).
+  ok(sousCore && sousCore.value === attendue, `2. sous core, volume vaut la ligne de tête de midi_default(${attendue}) — reçu ${sousCore && sousCore.value}`);
+  // `midi.volume` ne déclare pas de valeur propre : sans l'environnement, il n'en a pas(mesuré).
   ok(declaree && declaree.value !== attendue,
      `2. sans midi_default, volume vaut sa déclaration, jamais l'environnement — reçu ${declaree && declaree.value} contre ${attendue}`);
   const bool = loadLibsFromDirectives([{ name: 'core' }]).controls.letring;
@@ -53,10 +53,10 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 // ── 3. la ligne de tête d'une librairie n'est pas jugée par sa place ───────────────────────────
 {
-  const r = compileToBPxAST('types\nmidi\npitchbend:0\nmod:0\ndef zzenv (resolvedBy:x, resolves:zzenv, name:zzenv)\n', { librairie: true });
+  const r = compileToBPxAST('types\nmidi\npitchbend:0\nmod:0\ndef zzenv(resolvedBy:x, resolves:zzenv, name:zzenv)\n', { librairie: true });
   ok((r.errors || []).length === 0, `3. 'pitchbend:0' (sans portée scène) en tête d'une LIBRAIRIE compile — reçu ${JSON.stringify((r.errors || []).map((e) => e.message))}`);
   const scene = compileToBPxAST('core\npitchbend:0\n-----\nS -> C4\n');
-  ok((scene.errors || []).some((e) => /pitchbend.*ne peut pas s'écrire en tête/.test(e.message)),
+  ok((scene.errors || []).some((e) => /pitchbend.*cannot be written at the top/.test(e.message)),
      `3. la même ligne en tête de SCÈNE reste jugée par sa place — reçu ${JSON.stringify((scene.errors || []).map((e) => e.message))}`);
 }
 
@@ -67,7 +67,7 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
   registerLib('zzenvB', { resolves: 'zzenvB', resolvedBy: 'témoin', reglages: { volume: 22 } });
   try {
     ok(loadLibsFromDirectives([{ name: 'midi' }, { name: 'zzenvA' }]).controls.volume.value === 11, '4. une librairie d\'environnement invoquée surcharge volume');
-    ok(loadLibsFromDirectives([{ name: 'midi' }]).controls.volume.value !== 11, '4. non invoquée, elle ne surcharge rien (principe 1)');
+    ok(loadLibsFromDirectives([{ name: 'midi' }]).controls.volume.value !== 11, '4. non invoquée, elle ne surcharge rien(principe 1)');
     ok(loadLibsFromDirectives([{ name: 'midi' }, { name: 'zzenvA' }, { name: 'zzenvB' }]).controls.volume.value === 22, '4. deux invoquées : la dernière gagne');
   } finally {
     delete registre.zzenvA; delete registre.zzenvB;

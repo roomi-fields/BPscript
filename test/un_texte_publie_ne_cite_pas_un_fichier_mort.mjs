@@ -93,7 +93,7 @@ ok(morts.length === 0,
   + `dérive. Corriger le TEXTE, jamais recréer le fichier.`);
 
 console.log(`[citations] ${present.size} fichier(s) sous lib/ · ${citations.size} nom(s) cité(s) dans `
-  + `le paquet · ${horsPerimetre.length} hors périmètre (autre dépôt, NON jugé${horsPerimetre.length
+  + `le paquet · ${horsPerimetre.length} hors périmètre(autre dépôt, NON jugé${horsPerimetre.length
     ? ' : ' + horsPerimetre.join(', ') : ''})`);
 
 // ── L'INJECTION — dans le JUGE, et dans les DEUX sens ────────────────────────────────────────

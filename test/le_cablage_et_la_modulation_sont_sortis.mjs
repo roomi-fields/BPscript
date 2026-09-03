@@ -89,7 +89,7 @@ for (const [quoi, src] of TOUTES) {
   const msg = erreurs.join(' ');
   ok(!/>>|\\>>/.test(msg),
     `1. ${quoi} — le refus ne doit PAS écrire le signe sorti : un message est le troisième `
-    + `domicile d'une forme retirée (reçu : ${erreurs[0]?.slice(0, 120)})`);
+    + `domicile d'une forme retirée(reçu : ${erreurs[0]?.slice(0, 120)})`);
   ok(!/mod\.|modulateur|FaustX|FauxtX/i.test(msg),
     `1. ${quoi} — le refus ne doit nommer NI le mécanisme retiré, NI ce qui le remplacera `
     + `(reçu : ${erreurs[0]?.slice(0, 120)})`);
@@ -112,7 +112,7 @@ for (const mot of ['wire', 'map', 'mod', 'macro', 'cv']) {
 // Un nœud peut cesser d'être ATTEIGNABLE tout en restant produit par une autre porte. On balaie
 // donc la sérialisation d'une scène riche, pas seulement le membre droit d'une règle.
 {
-  const { ast, erreurs } = mesure(`${T}def ouvre (vel:120)\ninit\n  \`sc: x\`\n-----\n`
+  const { ast, erreurs } = mesure(`${T}def ouvre(vel:120)\ninit\n  \`sc: x\`\n-----\n`
     + `M -> $ C4 D4\nS -> C4 !(filter:400) D4 {E4, F4} &M\n`);
   ok(erreurs.length === 0, `4. TÉMOIN NON NUL — la scène de contrôle doit compiler `
     + `(reçu : ${erreurs[0]?.slice(0, 140)})`);
@@ -136,7 +136,7 @@ for (const mot of ['wire', 'map', 'mod', 'macro', 'cv']) {
 const CE_QUI_RESTE = [
   ['le sac de flux pose une valeur',        `${T}-----\nS -> C4 !(filter:400) D4\n`],
   ['un sac de flux à deux entrées',         `${T}-----\nS -> C4 !(filter:400, vel:80) D4\n`],
-  ['la définition nommée',                  `${T}def ouvre (vel:120)\n-----\nS -> C4\n`],
+  ['la définition nommée',                  `${T}def ouvre(vel:120)\n-----\nS -> C4\n`],
   ['l\'état de départ — le code lancé',     `${T}init\n  \`sc: x\`\n-----\nS -> C4\n`],
   ['l\'état de départ — les valeurs',       `${T}init\n  (vel:100)\n-----\nS -> C4\n`],
   ['le gabarit capture et rejoue',          `${T}-----\nM -> $ C4 D4\nS -> &M G4\n`],
@@ -147,14 +147,14 @@ const CE_QUI_RESTE = [
   // `f`. Il passait parce que l'objet hors-temps ne vérifiait pas son nom — la seule place du flux
   // qui ne le faisait pas. En la fermant, le témoin est tombé, et il avait tort : ce qu'il mesure
   // est LA PLACE, jamais le nom qui l'occupe, et un nom que rien ne déclare n'occupe rien.
-  ['l\'objet hors-temps',                   `${T}def f (vel:120)\n-----\nS -> !f D4\n`],
+  ['l\'objet hors-temps',                   `${T}def f(vel:120)\n-----\nS -> !f D4\n`],
   ['le changement de vitesse dans le flux', `${T}-----\nS -> C4 ! (/2) D4\n`],
   ['la voix polymétrique',                  `${T}-----\nS -> {C4 D4, E4}\n`],
 ];
 for (const [quoi, src] of CE_QUI_RESTE) {
   const { erreurs } = mesure(src);
   ok(erreurs.length === 0,
-    `5. TÉMOIN NON NUL — ${quoi} doit COMPILER (reçu : ${erreurs[0]?.slice(0, 140)})`);
+    `5. TÉMOIN NON NUL — ${quoi} doit COMPILER(reçu : ${erreurs[0]?.slice(0, 140)})`);
 }
 
 // ── 6. TÉMOINS ANTI-RÉTRÉCISSEMENT ──────────────────────────────────────────────────────────
@@ -163,7 +163,7 @@ ok(PLACES_DU_BRANCHEMENT.length >= 12, '6. la matrice du branchement ne s\'est p
 ok(PLACES_DE_LA_COUPURE.length >= 5, '6. la matrice de la coupure ne s\'est pas vidée');
 ok(PLACES_DE_LA_MODULATION.length >= 4, '6. la matrice de la modulation ne s\'est pas vidée');
 ok(CE_QUI_RESTE.length >= 12, '6. la liste de ce qui reste ne s\'est pas vidée');
-ok(passe > 60, `6. le garde doit avoir EXAMINÉ, pas seulement tourné (${passe} assertions)`);
+ok(passe > 60, `6. le garde doit avoir EXAMINÉ, pas seulement tourné(${passe} assertions)`);
 
 if (echecs.length) {
   console.error(`[câblage sorti] ${echecs.length} ÉCHEC(S) :`);

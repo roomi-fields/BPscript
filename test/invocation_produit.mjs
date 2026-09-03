@@ -49,7 +49,7 @@ for (const [axe, entrees] of Object.entries(composants)) {
   ok((r.ast?.libRefs || []).includes(`${axe}.${entree}`),
      `1. '${axe}.${entree}' doit PRODUIRE l'adresse '${axe}.${entree}' — libRefs = ${JSON.stringify(r.ast?.libRefs || null)}`);
 }
-ok(axesVerifies > 0, "1. aucun axe à vérifier — le garde serait creux (l'univers des composants est vide ?)");
+ok(axesVerifies > 0, "1. aucun axe à vérifier — le garde serait creux(l'univers des composants est vide ?)");
 
 // ─── 2. Le cas qui a motivé le garde, nommé explicitement ────────────────────────────────────
 {

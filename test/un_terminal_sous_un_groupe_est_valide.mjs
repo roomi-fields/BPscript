@@ -61,8 +61,8 @@ console.log(`[terminal sous un groupe] ${CONTENANTS.length} contenants x 2 sens`
 for (const [quoi, forme] of CONTENANTS) {
   // INCONNU → doit être REFUSÉ, et le refus doit NOMMER le terminal.
   const e = err(S + forme.replace('%s', 'zzz') + '\n-----\nS -> motif\n');
-  ok(e.some((m) => /terminal 'zzz' non déclaré/.test(m)),
-    `1. ${quoi} : un terminal inconnu doit être REFUSÉ et NOMMÉ (reçu : ${e[0] ?? 'rien'})`);
+  ok(e.some((m) => /terminal 'zzz' undeclared/.test(m)),
+    `1. ${quoi} : un terminal inconnu doit être REFUSÉ et NOMMÉ(reçu : ${e[0] ?? 'rien'})`);
   // CONNU → doit PASSER. Sans cette moitié, un validateur qui refuserait tout aurait l'air juste.
   ok(err(S + forme.replace('%s', 'C4') + '\n-----\nS -> motif\n').length === 0,
     `1. ${quoi} : une NOTE au même endroit doit passer — c'est la moitié qu'on casse`);
@@ -83,9 +83,9 @@ ok(err('core\nalphabet.western\n-----\nmotif -> {- _ C4}\nS -> motif\n').length 
 // ── 3. SOCLE ET ANTI-RÉTRÉCISSEMENT ─────────────────────────────────────────────────────────
 ok(CONTENANTS.length >= 9, `3. la matrice ne s'est pas vidée — ${CONTENANTS.length} contenants`);
 ok(err(S + 'motif -> {zzz}\n-----\nS -> motif\n').length >= 1,
-  '3. TÉMOIN — la descente doit MORDRE (c\'est le cas exact qui a vécu des mois)');
+  '3. TÉMOIN — la descente doit MORDRE(c\'est le cas exact qui a vécu des mois)');
 ok(err(S + 'motif -> {C4}\n-----\nS -> motif\n').length === 0,
-  '3. TÉMOIN — et se TAIRE (sinon elle refuserait tout, et mordrait aussi)');
+  '3. TÉMOIN — et se TAIRE(sinon elle refuserait tout, et mordrait aussi)');
 
 if (echecs.length) {
   console.error(`[terminal sous un groupe] ${echecs.length} ÉCHEC(S) :`);

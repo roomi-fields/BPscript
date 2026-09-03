@@ -194,7 +194,7 @@ ok(porteurs.length > 0, `SOCLE : la donnée ne porte AUCUNE unité — le champ 
   }
   ok(plagesPartagees >= 1,
     `B-bis. le garde doit avoir vu au moins une plage PARTAGÉE dont un membre parle — sinon il ne `
-    + `compare rien (${parPlage.size} plage(s) distinctes, ${plagesPartagees} partagée(s))`);
+    + `compare rien(${parPlage.size} plage(s) distinctes, ${plagesPartagees} partagée(s))`);
   // ⚠️ CE N'EST PAS UNE ASSERTION SUR LE CONTENU. Ces candidats ne sont ni des fautes ni des
   // non-fautes : ils disent ce qu'aucun critère mécanique ne tranche. Les compter les rend visibles ;
   // les refuser rendrait le portillon rouge sur `legato` contre `panrate`.

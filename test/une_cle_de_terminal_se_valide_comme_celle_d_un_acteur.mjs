@@ -13,7 +13,7 @@
  *
  * ⛔ LE GARDE S'ÉCRIT POUR LA CONSTRUCTION, JAMAIS POUR LA FORME SIGNALÉE. Les QUATRE graphies de
  * déclaration convergent sur le même nœud (`DefDirective{kind:'terminal'}`) et il les éprouve
- * toutes : `terminal x (k.v)`, `terminal x k.v`, `def x k.v`, et le bloc indenté. Fermer sur celle
+ * toutes : `terminal x(k.v)`, `terminal x k.v`, `def x k.v`, et le bloc indenté. Fermer sur celle
  * qui s'est montrée en aurait laissé trois ouvertes.
  *
  * ⛔ ET IL ÉPROUVE PLUS D'UNE NATURE. Un garde qui ne pose qu'un objet vide mesure un PLAFOND de
@@ -37,7 +37,7 @@ const compile = (src) => {
 
 // LES QUATRE GRAPHIES — elles se dérivent du nom de la clé et de sa valeur, jamais recopiées.
 const graphies = (cle, val) => [
-  `terminal cloche (${cle}.${val})`,
+  `terminal cloche(${cle}.${val})`,
   `terminal cloche ${cle}.${val}`,
   `def cloche ${cle}.${val}`,
   `def cloche\n  ${cle}.${val}`,
@@ -67,27 +67,27 @@ verifier(graphiesExaminees === 16, `les 16 graphies × clés ont été examinée
 // ── 2. LE REFUS DIT LAQUELLE DES TROIS CAUSES DE CANAL ────────────────────────────────────────
 // Un canal peut être fautif de trois façons ; un message unique enverrait chercher la mauvaise.
 {
-  const inexistant = compile(`${T}terminal cloche (out.zzzz)\n-----\nS -> C4\n`).errs.join(' ');
-  verifier(/n'existe pas/.test(inexistant), "out.zzzz : le refus dit que le CANAL n'existe pas");
-  const pasUneSortie = compile(`${T}terminal cloche (out.keyboard)\n-----\nS -> C4\n`).errs.join(' ');
-  verifier(/n'est pas une sortie/.test(pasUneSortie),
+  const inexistant = compile(`${T}terminal cloche(out.zzzz)\n-----\nS -> C4\n`).errs.join(' ');
+  verifier(/does not exist/.test(inexistant), "out.zzzz : le refus dit que le CANAL n'existe pas");
+  const pasUneSortie = compile(`${T}terminal cloche(out.keyboard)\n-----\nS -> C4\n`).errs.join(' ');
+  verifier(/is not an output/.test(pasUneSortie),
     "out.keyboard : le canal EXISTE, et le refus dit qu'il n'est pas une SORTIE — pas « inconnu »");
   verifier(/terminal 'cloche'/.test(pasUneSortie), 'et le refus nomme le terminal en cause');
 }
 
 // ── 3. LE CONTRÔLE NÉGATIF — couper trop large est l'autre façon d'échouer ─────────────────────
 for (const forme of [
-  'terminal cloche (tuning.western_just)',
-  'terminal cloche (octaves.western)',
-  'terminal cloche (out.midi)',
-  'terminal cloche (voice.wobble)',
-  'terminal cloche (voice.bayan_muted)',
-  'terminal cloche (voice.dayan_ring)',
-  'terminal cloche (tuning.western_just, octaves.western, out.midi)',
-  'terminal cloche (degree:0)',
-  'terminal cloche (hz:440)',
+  'terminal cloche(tuning.western_just)',
+  'terminal cloche(octaves.western)',
+  'terminal cloche(out.midi)',
+  'terminal cloche(voice.wobble)',
+  'terminal cloche(voice.bayan_muted)',
+  'terminal cloche(voice.dayan_ring)',
+  'terminal cloche(tuning.western_just, octaves.western, out.midi)',
+  'terminal cloche(degree:0)',
+  'terminal cloche(hz:440)',
   'def cadence C4 D4',
-  'def kick (vel:120)',
+  'def kick(vel:120)',
 ]) {
   verifier(compile(`${T}${forme}\n-----\nS -> C4\n`).errs.length === 0,
     `la place remplie CORRECTEMENT passe toujours : « ${forme} »`);
@@ -95,43 +95,43 @@ for (const forme of [
 
 // ── 4. PLUS D'UNE NATURE — le refus ne tient pas qu'à l'objet vide ─────────────────────────────
 const NATURES = [
-  ['objet vide', 'object n1 ()\n', 'n1'],
-  ['objet PORTEUR', 'object n2 (scope:flow, x:1)\n', 'n2'],
-  ['exemplaire dérivé', 'object p (scope:flow)\np n3 ()\n', 'n3'],
+  ['objet vide', 'object n1()\n', 'n1'],
+  ['objet PORTEUR', 'object n2(scope:flow, x:1)\n', 'n2'],
+  ['exemplaire dérivé', 'object p(scope:flow)\np n3()\n', 'n3'],
   ['drapeau', 'flag n4:0\n', 'n4'],
-  ['définition', 'def n5 (vel:120)\n', 'n5'],
+  ['définition', 'def n5(vel:120)\n', 'n5'],
   ['variable de travail', 'signal n6\n', 'n6'],
 ];
 for (const cle of ['tuning', 'octaves', 'out', 'voice']) {
   for (const [quoi, decl, nom] of NATURES) {
-    verifier(compile(`${T}${decl}terminal cloche (${cle}.${nom})\n-----\nS -> C4\n`).errs.length > 0,
+    verifier(compile(`${T}${decl}terminal cloche(${cle}.${nom})\n-----\nS -> C4\n`).errs.length > 0,
       `${cle} : un ${quoi} déclaré y est refusé — le refus porte sur la NATURE, pas sur l'absence`);
   }
 }
 // LE CROISEMENT D'AXES : une entrée qui EXISTE, posée sur la clé d'un autre axe.
-verifier(compile(`${T}terminal cloche (tuning.western)\n-----\nS -> C4\n`).errs.length > 0,
+verifier(compile(`${T}terminal cloche(tuning.western)\n-----\nS -> C4\n`).errs.length > 0,
   "tuning.western : 'western' existe en REGISTRES, pas en accordage — la place le refuse");
-verifier(compile(`${T}terminal cloche (octaves.western_just)\n-----\nS -> C4\n`).errs.length > 0,
+verifier(compile(`${T}terminal cloche(octaves.western_just)\n-----\nS -> C4\n`).errs.length > 0,
   "octaves.western_just : l'entrée existe en ACCORDAGE, pas en registres — la place le refuse");
 
 // ── 5. LA BÊTISE N'ARRIVE PLUS DANS L'ARBRE, et le témoin correct n'en porte aucune trace ─────
 {
-  const bon = compile(`${T}terminal cloche (tuning.western_just)\n-----\nS -> C4\n`);
+  const bon = compile(`${T}terminal cloche(tuning.western_just)\n-----\nS -> C4\n`);
   verifier(!/zzzz/.test(bon.arbre), "CONTRÔLE NÉGATIF : l'arbre du témoin correct ne porte pas le mot témoin");
-  const mauvais = compile(`${T}terminal cloche (tuning.zzzz)\n-----\nS -> C4\n`);
+  const mauvais = compile(`${T}terminal cloche(tuning.zzzz)\n-----\nS -> C4\n`);
   verifier(mauvais.arbre === '', "et l'arbre d'un refus est NUL — le mot ne part pas à l'aval");
 }
 
 // ── 6. L'ACTEUR N'A PAS BOUGÉ — la fermeture reprend son mécanisme, elle n'en pose pas un second ─
-verifier(compile(`${A}actor basse (tuning.zzzz)\n-----\nS -> C4\n`).errs.length > 0,
+verifier(compile(`${A}actor basse(tuning.zzzz)\n-----\nS -> C4\n`).errs.length > 0,
   "l'acteur refuse toujours un accordage inconnu");
-verifier(compile(`${A}actor basse (tuning.western_just)\n-----\nS -> C4\n`).errs.length === 0,
+verifier(compile(`${A}actor basse(tuning.western_just)\n-----\nS -> C4\n`).errs.length === 0,
   "et il accepte toujours le bon");
 {
   // LE MÊME MESSAGE DES DEUX CÔTÉS pour un axe à catalogue : un seul mécanisme, donc une seule
   // phrase. Deux textes différents signaleraient deux chemins de refus.
-  const a = compile(`${A}actor basse (tuning.zzzz)\n-----\nS -> C4\n`).errs[0];
-  const t = compile(`${T}terminal cloche (tuning.zzzz)\n-----\nS -> C4\n`).errs[0];
+  const a = compile(`${A}actor basse(tuning.zzzz)\n-----\nS -> C4\n`).errs[0];
+  const t = compile(`${T}terminal cloche(tuning.zzzz)\n-----\nS -> C4\n`).errs[0];
   verifier(a === t, `acteur et terminal rendent le MÊME refus sur un axe à catalogue`);
 }
 

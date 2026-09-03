@@ -191,7 +191,7 @@ section('nature — couverture des types de nœuds RHS');
     `got ${JSON.stringify(icColle?.payload)}`);
   assert('!(...) ESPACÉ → conjoint=false', icEspace?.conjoint === false && icEspace?.payload?.conjoint === false,
     `got ${JSON.stringify(icEspace?.payload)}`);
-  assert('!(...) en tête (sans terminal) → conjoint=false', icTete?.conjoint === false,
+  assert('!(...) en tête(sans terminal) → conjoint=false', icTete?.conjoint === false,
     `got conjoint=${icTete?.conjoint}`);
 }
 
@@ -209,7 +209,7 @@ section('nature — couverture des types de nœuds RHS');
   // → tagué `containment:true scope:'rule'` (PAS flux). Seul `!(...)` porte flux:true.
   const ast = parseSource('core\n-----\nS -> (vel:80)');
   const rule = ast.subgrammars[0].rules[0];
-  assert('(vel:80) standalone → settings de règle (pas rhs)',
+  assert('(vel:80) standalone → settings de règle(pas rhs)',
     rule.settings?.type === 'SettingBag',
     `settings=${JSON.stringify(rule.settings)}`);
   assert('settings de règle ANNOTÉ contenance scope:rule (pas flux)',
@@ -282,7 +282,7 @@ section('ActorDirective.references[] (forme canonique, lue par le dispatcher)');
   const al = refs?.find((r) => r.category === 'alphabet');
   assert('ActorReference alphabet name=tabla', al?.name === 'tabla', `got ${JSON.stringify(al)}`);
   // properties conservées pour le pipeline interne (non-régression)
-  assert('properties conservées (interne)', !!actor.properties, 'properties absentes');
+  assert('properties conservées(interne)', !!actor.properties, 'properties absentes');
 }
 
 // ============================================================

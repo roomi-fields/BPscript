@@ -68,8 +68,8 @@ const DOIVENT_REFUSER = [
 ];
 for (const [quoi, src] of DOIVENT_REFUSER) {
   const msg = messages(compiler(src));
-  ok(/non déclaré|absent des alphabets/.test(msg),
-     `B-témoin. ${quoi} — doit être REFUSÉ, et ne l'est plus (${msg.slice(0, 80) || 'aucune erreur'}). `
+  ok(/undeclared|absent from the alphabets/.test(msg),
+     `B-témoin. ${quoi} — doit être REFUSÉ, et ne l'est plus(${msg.slice(0, 80) || 'aucune erreur'}). `
      + `Déclarer les noms d'une table invoquée ne doit pas déclarer tous les noms du monde.`);
 }
 
@@ -87,5 +87,5 @@ if (echecs.length) {
   process.exit(1);
 }
 console.log(`✅ le nom d'un homomorphisme se pose dans le flux — ${passe} vérification(s) : `
-          + `${DOIVENT_PASSER.length} formes lues (nom invoqué ET étiquettes de section) et `
+          + `${DOIVENT_PASSER.length} formes lues(nom invoqué ET étiquettes de section) et `
           + `${DOIVENT_REFUSER.length} refus qui prouvent que le vocabulaire mord encore.`);

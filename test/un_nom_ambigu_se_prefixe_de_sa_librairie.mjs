@@ -45,7 +45,7 @@ const erreursDe = (src) => {
   try { return compileToBPxAST(src).errors ?? []; } catch (e) { return [{ message: e.message }]; }
 };
 const refusDAmbiguite = (src) =>
-  erreursDe(src).filter((e) => /ne peut pas s'écrire NU/.test(String(e.message)));
+  erreursDe(src).filter((e) => /cannot be written BARE/.test(String(e.message)));
 
 // ─── 0. TÉMOIN — sans ambiguïté, tout passe. C'est l'état de référence à retrouver après. ─────
 clearRegistry();
@@ -72,7 +72,7 @@ registerLib('audio', audioAvecPan);
      `1. deux déclarations d'un même contrôle sont PERMISES — le chargeur ne doit pas refuser `
      + `(reçu : ${JSON.stringify(e.map((x) => String(x.message).slice(0, 70)))})`);
   ok(e.length === 0,
-     `1. une scène qui n'emploie pas le nom ambigu doit compiler normalement (${e[0]?.message})`);
+     `1. une scène qui n'emploie pas le nom ambigu doit compiler normalement(${e[0]?.message})`);
 }
 
 // ─── 2. L'APPEL NU EST REFUSÉ — aux QUATRE positions où un réglage s'écrit ───────────────────
@@ -115,7 +115,7 @@ for (const [ou, src] of [
 // préfixe serait accepté et ignoré — le pire des deux mondes, une graphie qui rassure sans agir.
 {
   const horsAudio = erreursDe(`${TETE}S -> C4(audio.pan:20)\n`);
-  ok(horsAudio.some((e) => /hors plage/.test(String(e.message))),
+  ok(horsAudio.some((e) => /out of range/.test(String(e.message))),
      "5. 'audio.pan:20' doit sortir HORS PLAGE — audio va de -1 à 1, et c'est sa plage qui juge");
   const dansExpression = erreursDe(`${TETE}S -> C4(expression.pan:20)\n`);
   ok(dansExpression.length === 0,

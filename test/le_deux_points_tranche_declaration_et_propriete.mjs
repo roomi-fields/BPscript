@@ -67,7 +67,7 @@ ok(err(`${S}signal grain\n-----\nS -> C4\n`).length === 0,
 {
   const e = err(`${S}X\n-----\nS -> C4\n`);
   ok(e.length >= 1, '2. `X` seul ne déclare rien et doit être refusé');
-  ok(e.some((m) => /déclaré par aucune librairie/.test(m)),
+  ok(e.some((m) => /is declared by no loaded library/.test(m)),
      `2. et le refus doit dire POURQUOI — reçu : ${e.join(' | ').slice(0, 120)}`);
 }
 
@@ -118,7 +118,7 @@ for (const [quoi, corps] of [['un bloc de code', '`js: 1`']]) {
 {
   const r = compileToBPxAST(`${S}C4:midi\n-----\nS -> C4\n`);
   ok((r.ast?.declarations || []).some((d) => d.name === 'C4' && d.runtime === 'midi'),
-    `3. la PROPRIÉTÉ doit arriver dans les déclarations (reçu : ${JSON.stringify(r.ast?.declarations)})`);
+    `3. la PROPRIÉTÉ doit arriver dans les déclarations(reçu : ${JSON.stringify(r.ast?.declarations)})`);
 }
 
 // ── 4. SOCLE ET ANTI-RÉTRÉCISSEMENT ─────────────────────────────────────────────────────────

@@ -67,7 +67,7 @@ for (const [nomLib, lib] of Object.entries(LIBS)) {
 const univers = universeControlNames();
 ok(univers.size >= 75, `0. l'univers doit porter au moins 75 contrôles (reçu ${univers.size})`);
 ok(Object.keys(destinataireAttendu).length >= 75,
-   `0. au moins 75 contrôles doivent avoir un destinataire déclaré (reçu ${Object.keys(destinataireAttendu).length})`);
+   `0. au moins 75 contrôles doivent avoir un destinataire déclaré(reçu ${Object.keys(destinataireAttendu).length})`);
 const libCtx = loadLibsFromDirectives(Object.keys(LIBS).map((name) => ({ name })));
 ok(Object.keys(libCtx.controlResolvedBy || {}).length >= 75,
    `0. le chargeur doit exposer au moins 75 destinataires (reçu ${Object.keys(libCtx.controlResolvedBy || {}).length})`);
@@ -91,7 +91,7 @@ for (const [nom, attendu] of Object.entries(destinataireAttendu)) {
      + `'${attendu.destinataire}' ; le sac porte ${JSON.stringify(sac.resolvedBy)}`);
 }
 ok(mesures >= 40,
-   `1. le lot réellement mesuré doit rester massif (mesurés ${mesures}, non écrivables tels quels `
+   `1. le lot réellement mesuré doit rester massif(mesurés ${mesures}, non écrivables tels quels `
    + `${nonEcrivables.length}) — sinon ce garde serait vert sans rien avoir vu`);
 
 // ─── 2. UN SAC MÉLANGÉ REND UN DESTINATAIRE PAR CLÉ ──────────────────────────────────────────

@@ -52,9 +52,9 @@ for (const [nom, val, unite] of COLLEES) {
   const e = err(`${nom}:${val}${unite}\n-----\nS -> C4`);
   ok(e.length >= 1, `1. '${nom}:${val}${unite}' doit être REFUSÉ — '${unite}' ne se lit pas`);
   ok(e.some((m) => m.includes(`'${unite}'`)),
-     `1. le refus de '${nom}:${val}${unite}' doit NOMMER ce qui reste collé ('${unite}') ; reçu : ${e[0]}`);
+     `1. le refus de '${nom}:${val}${unite}' doit NOMMER ce qui reste collé('${unite}') ; reçu : ${e[0]}`);
   ok(e.some((m) => m.includes(`'${nom}'`)),
-     `1. le refus de '${nom}:${val}${unite}' doit NOMMER la directive ('${nom}') ; reçu : ${e[0]}`);
+     `1. le refus de '${nom}:${val}${unite}' doit NOMMER la directive('${nom}') ; reçu : ${e[0]}`);
   // ⚠️ LA MOITIÉ QUI DIT POURQUOI CE GARDE EXISTE : le message d'AVANT parlait de flèche, à la
   // ligne suivante. S'il revenait, tout le reste de ce garde resterait vert.
   ok(!e.some((m) => /Expected arrow/.test(m)),

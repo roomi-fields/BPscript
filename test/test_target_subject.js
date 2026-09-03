@@ -25,7 +25,7 @@ const get = (pairs, key) => pairs.find((p) => p.key === key) || {};
 {
   const { pairs, err } = bassPairs('Bass -> C2 E2 (filter:400, wave:square)');
   check(!err, '1: pas d\'erreur, ' + JSON.stringify(err));
-  check(get(pairs, 'filter').subject === undefined, '1: filter sans sujet (défaut=règle), obtenu ' + JSON.stringify(get(pairs, 'filter')));
+  check(get(pairs, 'filter').subject === undefined, '1: filter sans sujet(défaut=règle), obtenu ' + JSON.stringify(get(pairs, 'filter')));
 }
 
 // 2. Sujet '*' = chaque terminal
@@ -44,7 +44,7 @@ const get = (pairs, key) => pairs.find((p) => p.key === key) || {};
 {
   const { pairs } = bassPairs('Bass -> C2 E2 (*:filter:400, wave:square, vel:100)');
   check(get(pairs, 'filter').subject === '*', '4: filter sujet=*');
-  check(get(pairs, 'wave').subject === undefined, '4: wave sans sujet (règle)');
+  check(get(pairs, 'wave').subject === undefined, '4: wave sans sujet(règle)');
   check(get(pairs, 'vel').subject === undefined && get(pairs, 'vel').value === 100, '4: vel sans sujet, valeur 100');
 }
 

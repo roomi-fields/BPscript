@@ -69,8 +69,16 @@ const CONSOMMATEURS = [
   { depot: 'bp3-frontend', mode: 'paquet', lienDirect: false, note: 'importe par chemin relatif',
     lit: ["l'arbre", 'lib/alphabets.json et lib/test_alphabets.json — miroir des alphabets, et'
         + " l'ORDRE des terminaux y porte le sens : il indexe les degrés de l'accordage"] },
-  { depot: 'runtime-MIDI', mode: 'nomme', lienDirect: false, note: 'lit lib/ en direct via AUTORITE_LIB',
-    lit: ['lib/ en direct'] },
+  // ⛔ CORRIGÉ SUR LA MESURE DU PROPRIÉTAIRE, 2026-09-03. Ce motif disait « lit lib/ en direct », et
+  // il rendait ZÉRO — runtime-MIDI ne porte NULLE PART la graphie d'un de mes fichiers. Il me l'a
+  // écrit avec ses pièces : il n'a aucun lien vers moi (`node_modules/bpscript` : ENOENT), il
+  // atteint mon PAQUET PUBLIÉ sous `.paquets/bpscript` et ouvre la PORTE que mon manifeste déclare
+  // (`scripts/lib/voisins.mjs`, `porteDuPaquet()` lit `exports['./libs-data']`).
+  // ⇒ *Un compte qui rend zéro se mesure lui-même* : c'était mon motif qui était faux, pas son
+  //   usage qui avait disparu. Le garde a crié juste ; c'est sa description qui était périmée.
+  { depot: 'runtime-MIDI', mode: 'nomme', lienDirect: false,
+    note: 'ouvre la porte declaree par mon manifeste, sur le paquet publie',
+    lit: ["la porte './libs-data' de mon manifeste, jamais un chemin de fichier"] },
   // ⚠️ UNE SECONDE INSTANCE DU MÊME VOISIN, ET ELLE NE SE DEVINE PAS. Un agent qui compile publie
   // DEUX dépôts — un de développement, un de PRODUCTION — et le second lit mes catalogues comme le
   // premier. Il est apparu sur le disque le 2026-08-12 ; c'est ce garde qui l'a vu, pas moi.
@@ -181,8 +189,28 @@ const MOTIFS = [
   // chemin est atteint par tout fichier que j'écris ; un lecteur par la porte n'est atteint que par
   // ce que je DÉCLARE. Les confondre fait donner le bon préavis pour la mauvaise raison — et fait
   // croire à un rayon d'impact qui n'existe pas.
-  { nom: 'par chemin', regex: "BPscript/lib\\|BPscript/src\\|BPscript/public\\|\\.\\./BPscript" },
+  // ⛔ ET UN CHEMIN NE PORTE PAS TOUJOURS MON NOM. bp3-frontend lit `src/transpiler/libs-data.js`
+  //   par une fonction d'autorité dont le DÉPÔT est une variable : mon nom n'apparaît chez lui que
+  //   dans des commentaires, et le filtre anti-commentaire les écarte — à juste titre. Résultat
+  //   mesuré le 2026-09-03 : ZÉRO, et ce garde concluait « il ne lit plus rien » sur le dépôt qui
+  //   m'a justement écrit, la même soirée, qu'il me lit par chemin de disque.
+  //   ⇒ *Un motif qui exige mon nom rate qui me lit par un chemin INTERNE.* Mes chemins à moi —
+  //     `src/transpiler/`, `lib/` — sont donc cherchés aussi, avec la porte d'autorité qui les sert.
+  { nom: 'par chemin', regex: "BPscript/lib\\|BPscript/src\\|BPscript/public\\|\\.\\./BPscript\\|src/transpiler/\\|lireAutorite" },
   { nom: 'par la porte', regex: "from 'bpscript\\|require('bpscript\\|from \"bpscript" },
+  // ⛔ UN TROISIÈME RÉGIME, ET IL N'ÉTAIT COUVERT PAR AUCUN MOTIF — rendu par runtime-MIDI le
+  // 2026-09-03, avec ses pièces. Il n'importe RIEN et ne porte aucun chemin de mes fichiers : il
+  // atteint mon paquet publié sous `.paquets/bpscript` et OUVRE LA PORTE que mon manifeste déclare,
+  // en lisant `exports['./libs-data']`. Les deux motifs ci-dessus rendaient donc ZÉRO chez lui, et
+  // ce garde concluait « il ne lit plus rien, retire-le » — la conclusion exactement inverse.
+  // ⇒ *Ce régime décide d'un préavis différent des deux autres* : il n'est atteint ni par ce que
+  //   j'écris, ni par ce que j'importe — mais par ce que je DÉCLARE dans mon manifeste. Retirer une
+  //   entrée d'`exports` le casse, et aucun fichier n'a besoin de bouger pour ça.
+  // ⚠️ ET LE MOTIF SE RESSERRE SUR CE QUI ME NOMME : ma première écriture cherchait `exports['./`,
+  //   qui apparie le manifeste de N'IMPORTE QUI — runtime-OSC est sorti « lecteur » sur sa propre
+  //   configuration, alors qu'il m'a écrit n'avoir aucun site. Un motif qui ne me nomme pas compte
+  //   des dépôts qui ne me lisent pas. *Suspecter l'instrument avant le sujet.*
+  { nom: 'par le manifeste', regex: "\\.paquets/bpscript\\|AUTORITE_PORTE" },
   // ⚠️ SEUL `HEAD:` SIGNE LA LECTURE AU COMMIT. Ma première version rangeait `../BPscript` ici et
   // annonçait 94 lecteurs-au-commit chez BPx : une racine relative est un import PAR CHEMIN, pas
   // une lecture au commit. Un motif trop large ne rend pas le garde plus prudent, il lui fait
@@ -358,7 +386,7 @@ for (const c of CONSOMMATEURS) {
   }
 
   // ⚠️ ET LE PAQUET DOIT DIRE TOUTES MES LIBRAIRIES, quel que soit leur format — sinon la lecture
-  // au paquet déplace le silence d'un cran au lieu de le fermer (témoin posé par bp3-frontend).
+  // au paquet déplace le silence d'un cran au lieu de le fermer(témoin posé par bp3-frontend).
   const surDisque = readdirSync(path.join(MOI, 'lib'))
     .filter((f) => /\.(json|bps)$/.test(f)).map((f) => f.replace(/\.(json|bps)$/, ''));
   const _p = createRequire(import.meta.url)('../src/transpiler/libs-data.js');

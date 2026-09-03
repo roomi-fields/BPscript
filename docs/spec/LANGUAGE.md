@@ -185,6 +185,17 @@ surcharge ces defauts avec un sac.
 
 Le plus proche l'emporte, et le tag en tete d'un backtick l'emporte sur les trois.
 
+**La cloture compte.** L'ouverture est une suite de backticks ; la fermeture est la premiere suite de
+meme longueur. Une seule barre est la forme courante ; on n'en ecrit plus d'une que lorsque le code
+porte lui-meme des backticks -- ce que font les gabarits de chaine de la plupart des langages.
+
+```text
+`ts: return a * b`                      une barre, le code n'en contient aucune
+``ts: return `x${n}` + 1``              deux barres, le code en contient une
+```
+
+Une ouverture qui ne trouve pas sa fermeture est refusee en nommant la longueur attendue.
+
 Il prend deux formes :
 
 - **autonome** -- le backtick occupe une position a lui seul et joue son code quand la derivation
@@ -303,8 +314,8 @@ valeur -- `"x":1` et `"x"(b:1)` s'ecrivent l'une comme l'autre. Ce qui distingue
 nu est ce qui la suit : un deux-points ou une parenthese en font une cle.
 
 ```text
-def w (alterations("bb":-2, "b":-1, "":0, "#":1, "##":2))
-def w (sections("*"(dha:ta, ge:ke)))
+def w(alterations("bb":-2, "b":-1, "":0, "#":1, "##":2))
+def w(sections("*"(dha:ta, ge:ke)))
 ```
 
 Un **nom** qui commence par un chiffre porte au moins une lettre. `12TET` et `22shruti` sont des
@@ -313,7 +324,7 @@ valeur c'est une grandeur avec son unite.
 
 ```text
 def 12TET (divisions:12)
-def w (a:100c, b:20ms)
+def w(a:100c, b:20ms)
 ```
 
 Ces types sont le SOCLE du langage. Les librairies l'etendent : toute entree d'un catalogue invoque
@@ -354,7 +365,7 @@ ensuite.** Ses types sont ceux des signaux : `signal`, `pitch`, `phase`, `logic`
 ```text
 def cadence sa re ga pa                  // une structure de terminaux
 def fondu phase `js: (t, dur) => 1 - t / dur`       // du code
-def kick (vel:120)                       // un objet racine : un nom et un sac
+def kick(vel:120)                       // un objet racine : un nom et un sac
 def accent(x) x(vel:120)                 // une transformation parametree
 def fast(x) {x}:2                        // une transformation structurelle
 ```
@@ -374,8 +385,8 @@ derive de rien. Un nom nu vaut un objet vide. Ses exemplaires se declarent ensui
 tete, et chacun herite de ce qu'il n'ecrit pas :
 
 ```text
-def gamme (culture, ratios)
-gamme ionian (ratios(1, 2), notes_count:7)
+def gamme(culture, ratios)
+gamme ionian(ratios(1, 2), notes_count:7)
 ```
 
 #### Declarer un terminal
@@ -625,7 +636,11 @@ librairie invoquee arrete la compilation, et le message le nomme.
 .              reference a une entite (alphabet.western, out.midi, in.keyboard),
                sous-partie (acteur.terminal), separateur de fragments (A B . C D)
 [ ]            derivation : un drapeau qui la conditionne, un rang de forme structurelle
-` `            code externe, execute par l'interpreter que son tag nomme
+` `            code externe, execute par l'interpreter que son tag nomme ; la CLOTURE COMPTE --
+               l'ouverture est une suite de backticks, la fermeture la premiere suite de meme
+               longueur (``ts: le code peut porter `un` backtick``)
+/              entre deux NOMBRES, un rapport (3/2, *2/3) ; en tete de librairie, entre deux
+               NOMS, le FICHIER de corps qu'elle declare (transpo/foobar)
 //             commentaire
 -              silence : occupe du temps
 _              prolongation : etend l'evenement precedent
@@ -1866,6 +1881,19 @@ S -> sa sa(vel:120)          // sa prend le defaut de librairie, puis 120
 
 ## Conventions de notation — l'espace, le point, le deux-points
 
+**Entre un mot declare et son sac, l'espace est interdite.** Le collage reunit deux termes, l'espace
+les separe : `control transpose (rank:3)` ferait deux termes d'un objet et de son sac. La regle vaut
+a toutes les profondeurs -- en tete de declaration comme entre une cle et son sous-sac.
+
+```text
+control transpose(rank:3)          la forme
+control transpose (rank:3)         refusee, avec sa reecriture
+```
+
+**Un retour a la ligne vaut une espace**, et ne se pose donc que la ou une espace est permise : apres
+une virgule, apres la parenthese ouvrante, avant la parenthese fermante. Jamais entre un mot et son
+sac, jamais a la place d'une virgule.
+
 Trois signes structurent toute l'écriture : l'**espace** sépare les termes, le **point**
 désigne un élément dans un espace de noms, le **deux-points** lie un sujet à une valeur.
 Ils gardent le même sens dans la partie déclarative et dans le flux.
@@ -1903,7 +1931,7 @@ peuvent se suivre, le collage porte une information et le langage la lit.
 ```bpscript
 alphabet.western
 def accent(x) x(vel:120)
-def souffle (vel:60)
+def souffle(vel:60)
 
 -----
 S -> accent(C4) D4 (weight:50)
@@ -2209,31 +2237,42 @@ et un champ n'existe que si sa notion s'applique.
 qui permet au moteur de rester vide de toute specificite : ajouter un filtre n'ajoute pas une ligne
 au moteur, il ajoute une entree a une librairie.
 
-### La declaration et le corps -- l'entete et son implementation
+### La declaration et le corps
 
-**La declaration nomme, le fichier voisin porte le corps.** Un objet dont le comportement se calcule
-se declare dans le catalogue avec ce qu'il EST -- ses arguments, sa portee, ses parametres, sa
-description -- et son code vit dans un fichier a cote, qui porte SON NOM :
+**Un corps est du code, et il s'ecrit entre backticks, comme partout ailleurs.** Un objet dont le
+comportement se calcule porte son code apres sa declaration, hors du sac, tague par le langage qui
+l'execute :
 
 ```text
-lib/transpo.bpsl              control transpose (args(interval), params(...), ...)
-lib/transpo/transpose.ts      le corps, ecrit dans le langage de qui l'execute
+def gain(params(a, b)) `ts: return a * b`
 ```
 
-Le nom du fichier dit l'objet ; le corps se rattache a lui, et voyage avec lui partout ou il est
-invoque. **Un objet et son corps ne vivent jamais dans deux catalogues** : ce qu'un composant sait
-calculer se dit par le mot, et le mot porte son code.
+Ce qui distingue un objet d'une fonction est donc **le corps**, jamais la forme de la declaration :
+un objet qui n'en porte pas ne s'appelle pas. Un membre sans valeur reste un membre obligatoire.
 
 **Le corps d'un prototype descend sur ses exemplaires.** Une famille dont toutes les entrees
 partagent un meme traitement le declare une fois, sur sa racine : chaque entree l'emporte avec elle.
 
+**Qui execute le corps est declare, jamais devine** : le tag du backtick le nomme, ou l'acteur, ou la
+scene, ou `core` -- la place la plus proche l'emporte.
+
+#### Un corps volumineux vit dans un fichier que la librairie DECLARE
+
+Une librairie nomme ses fichiers de corps, une ligne par fichier, en tete :
+
 ```text
-lib/homomorphism/homomorphism.ts     l'applicateur, ecrit une fois
-lib/homomorphism.bpsl                homomorphism dhati (sections(...))
+lib/transpo.bpsl            transpo/foobar
+                            control transpose(rank:3, params(interval))
+
+lib/transpo/foobar.bpsl     control transpose(rank:3, params(interval)) ``ts: le code``
 ```
 
-**Qui execute le corps est declare, jamais devine** : la librairie nomme son resolveur, et c'est lui
-qui sait lire le langage dans lequel le corps est ecrit.
+**Ce qui lie les deux est la reprise EXACTE de l'en-tete**, jamais le nom du fichier : celui-ci
+s'appelle comme on veut. Trois refus le tiennent :
+
+- un fichier de corps que la librairie ne declare pas ;
+- un fichier declare qu'aucune source ne fournit ;
+- un en-tete repris qui diverge de sa declaration.
 
 **Une entree introuvable est nommee** : `alphabet.raga` repond « alphabet 'raga' introuvable dans
 le catalogue ». Rien ne se resout par defaut en silence.

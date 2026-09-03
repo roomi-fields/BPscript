@@ -138,8 +138,8 @@ const ERREURS_ADMISES = [
   // appartiennent à kanopi et sont à réparer chez lui ; elles figurent ici pour être VUES, pas
   // pour être tolérées. Le jour où l'une passe au vert, le témoin ci-dessous exige qu'on l'enlève.
   // Elles étaient déjà rouges avant le chantier du jour — ce garde ne les regardait simplement pas.
-  { demo: 'trySrand', pourquoi: 'scène incomplète (kanopi) : terminaux nus sans convention de notes déclarée', date: '2026-08-08' },
-  { demo: 'tryCsoundObjects', pourquoi: 'scène incomplète (kanopi) : objets sonores nus sans convention de notes', date: '2026-08-08' },
+  { demo: 'trySrand', pourquoi: 'scène incomplète(kanopi) : terminaux nus sans convention de notes déclarée', date: '2026-08-08' },
+  { demo: 'tryCsoundObjects', pourquoi: 'scène incomplète(kanopi) : objets sonores nus sans convention de notes', date: '2026-08-08' },
   // `koto2` est entrée ici le 2026-09-02 (plus de socle implicite) et en est sortie le soir même :
   // kanopi a écrit `core` en tête (`5427bfd`). Une dérogation sans bénéficiaire est un trou.
   // ⛔ controls.json SUPPRIME (Romain, 2026-08-10 : « on supprime controls.json et tous les
@@ -194,7 +194,7 @@ const activesCount = targets.length - demosCount;
 // VERT. Il DISAIT pourtant son compte — mais dire zéro sans en tirer de conséquence, c'est encore
 // l'absence de signal prise pour un bon signal. Annoncer ne suffit pas, il faut refuser.
 if (activesCount === 0) {
-  console.error(`[ast-conformance] AUCUNE source active examinée (${skipped.length} grammaire(s) sans .bps). `
+  console.error(`[ast-conformance] AUCUNE source active examinée(${skipped.length} grammaire(s) sans .bps). `
     + `Le corpus appartient à la bibliothèque Kanopi — vérifier le clone ou KANOPI_LIBRARY. `
     + `Un verdict vert sur zéro source n'est pas un verdict.`);
   process.exit(1);
@@ -204,7 +204,7 @@ if (activesCount === 0) {
 for (const e of ERREURS_ADMISES) {
   if (!admisesServies.has(e.demo)) {
     bad++;
-    console.error(`✗ ERREURS_ADMISES : '${e.demo}' est inscrit comme toléré (${e.date}) mais compile `
+    console.error(`✗ ERREURS_ADMISES : '${e.demo}' est inscrit comme toléré(${e.date}) mais compile `
       + `désormais — RETIRER l'entrée. Une dérogation sans bénéficiaire est un trou, pas une tolérance.`);
   }
 }

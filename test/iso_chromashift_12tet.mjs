@@ -4,7 +4,7 @@
  * chromashift = image de BP3 `_transpose(N)` (décision Romain 2026-07-17) : décalage de N clés
  * CHROMATIQUES sur la grille 12. En tempérament ÉGAL (12-TET, le défaut western/sargam quand aucun
  * `@scale` n'est fixé), une clé = un demi-ton → chromashift(N) = +N demi-tons = hz × 2^(N/12).
- * AUCUNE table de gamme n'est nécessaire (les 3 scènes sont en 12-TET). La microtonalité n'apparaît
+ * AUCUNE table de gamme n'est nécessaire(les 3 scènes sont en 12-TET). La microtonalité n'apparaît
  * que pour une scène à gamme explicite (grammaire `scales`), traitée à part.
  *
  * FRONTIÈRE : BPScript ÉMET `(chromashift:N)` (opaque) ; KAIROS RÉSOUT le hz (fonction digitale
@@ -59,11 +59,11 @@ console.log('=== (A) Émission chromashift:N (les 3 scènes) ===');
   // Ex-bloqueur octave-sargam LEVÉ : `octaves.western` déclaré (routage kairos [402]/[521]) → sa6/re6…
   // résolvent l'octave (plus de saptak par défaut). Le scène compile désormais SANS terminal non déclaré.
   const sargamErr = errors.filter((e) => /terminal '(sa|re|ga|pa|dha|ni)\d' non déclaré/.test(e.message || ''));
-  ok(sargamErr.length === 0, 'kss2 compile sans terminal sargam non déclaré (octaves.western) — got ' + sargamErr.length);
+  ok(sargamErr.length === 0, 'kss2 compile sans terminal sargam non déclaré(octaves.western) — got ' + sargamErr.length);
 }
 {
   const { ast, errors } = compileToBPxAST(G('mohanam'));
-  ok(errors.length === 0, 'mohanam compile sans erreur (octaves.western → sa6 résolu)');
+  ok(errors.length === 0, 'mohanam compile sans erreur(octaves.western → sa6 résolu)');
   const v = chromashiftValues(ast);
   ok(v.includes(-24), 'mohanam émet chromashift:-24 — got ' + JSON.stringify(v));
 }

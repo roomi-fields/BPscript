@@ -35,7 +35,7 @@ const find = (acc, sym, i = 0) => acc.filter((n) => n.s === sym)[i]?.p;
   const a = payloads('core\n-----\nsitar -> C4 C4(ch:5)');
   const p = find(a, 'C4', 1);
   assert('address.ch=5', p?.address?.ch === 5, JSON.stringify(p));
-  assert('pas de params (pas de contrôle)', p?.params === undefined, JSON.stringify(p));
+  assert('pas de params(pas de contrôle)', p?.params === undefined, JSON.stringify(p));
   assert('occurrence:true', p?.occurrence === true);
 }
 

@@ -110,7 +110,7 @@ ok(erreursDe(`${TETE}S -> C4(vel:100)\n`).length === 0,
 
 // ─── 4bis. LE MARQUEUR SE LIT STRICTEMENT — seul le booléen `false` exclut ───────────────────
 // ⚠️ VOLET AJOUTÉ APRÈS UNE INJECTION MUETTE, ET LA PREMIÈRE VERSION DE CE VOLET ÉTAIT FAUSSE : je
-// l'avais écrit sur la CHAÎNE 'false', or une lecture molle (`!def.bpscript && 'bpscript' in def`)
+// l'avais écrit sur la CHAÎNE 'false', or une lecture molle(`!def.bpscript && 'bpscript' in def`)
 // traite une chaîne non vide comme VRAIE — les deux lectures s'accordent donc sur cette valeur, et
 // le test ne pouvait rien séparer. C'est `null` qui les divise : strictement, ce n'est pas `false`
 // et le mot RESTE au vocabulaire ; mollement, il en SORT. Une clé posée à `null` par un outil de

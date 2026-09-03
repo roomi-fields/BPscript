@@ -208,7 +208,9 @@ function ecrireEntree(nom, lignesDeCles) {
   // imbriqué que la forme à parenthèse accepte. La divergence de graphie de l'outil se lisait comme
   // une limite du langage — pendant six jours, et sur 82 valeurs.
   if (!lignesDeCles.length) return [`def ${nom}`];
-  return [`def ${nom} (${lignesDeCles.join(', ')})`];
+  // ⛔ COLLÉ : l'espace entre un mot déclaré et son sac est interdite depuis le 2026-09-03. Le
+  //   convertisseur écrivait `def X (…)`, et la source qu'il produisait ne compilait plus.
+  return [`def ${nom}(${lignesDeCles.join(', ')})`];
 }
 
 /**
@@ -413,7 +415,7 @@ export function convertir(nom, j) {
           continue;
         }
         refus.push(`${nomE} : entrée-LISTE de ${def.length} élément(s) à la racine — aucune graphie `
-          + `du langage ne rend une liste comme ENTRÉE. Écrite \`def ${nomE} (…)\`, elle revient du `
+          + `du langage ne rend une liste comme ENTRÉE. Écrite \`def ${nomE}(…)\`, elle revient du `
           + `bundle en OBJET DE BOOLÉENS et la donnée publiée change. Seul \`apporte\` échappe à ce `
           + `refus, et pas par une graphie : ce n'est pas une entrée, c'est une invocation.`);
         continue;

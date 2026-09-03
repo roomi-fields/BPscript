@@ -165,9 +165,21 @@ function construireLaLibrairie(nom, fichier, ast, documente) {
   // registre la porte sous `reglages`, dans l'ordre d'écriture ; le chargeur l'applique par niveaux.
   const aUneValeur = (d) => d.value != null || d.runtime != null;
   const invoquees = (ast.directives || [])
-    .filter((d) => d.name && !d.subkey && !aUneValeur(d))
+    .filter((d) => d.type !== 'FileDirective' && d.name && !d.subkey && !aUneValeur(d))
     .map((d) => d.name);
   if (invoquees.length) lib.apporte = invoquees;
+  // ⛔ LES FICHIERS DE CORPS QUE CETTE LIBRAIRIE DÉCLARE — `transpo/foobar`, une ligne par fichier.
+  // C'est la LISTE, l'équivalent du Makefile : quelqu'un doit la donner, et c'est la librairie, pas
+  // une convention de dossier ni un nom deviné.
+  // ⚠️ ET ELLE NE SE PUBLIE PAS : c'est une information de CONSTRUCTION, pas de la donnée. Posée sur
+  //   la librairie, elle entrait dans le paquet — et un champ neuf est une ENTRÉE FANTÔME pour qui
+  //   énumère. Le témoin d'égalité du paquet l'a vue apparaître, et il a eu raison de crier.
+  const fichiersDeCorps = (ast.directives || [])
+    .filter((d) => d.type === 'FileDirective')
+    .map((d) => `${d.name}/${d.fichier}`);
+  if (fichiersDeCorps.length) Object.defineProperty(lib, '_fichiersDeCorps', {
+    value: fichiersDeCorps, enumerable: false, configurable: true,
+  });
   const reglages = (ast.directives || []).filter((d) => d.name && !d.subkey && aUneValeur(d));
   // Un mot après le deux-points est porté brut par le lecteur de tête ; `true` et `false` sont des
   // booléens, comme dans un sac (`letring:true`).
@@ -298,7 +310,12 @@ export function chargerLesLibrairies(sources, compiler, registerLib) {
     if (s.format !== 'json') continue;
     registerLib(s.nom, JSON.parse(s.texte));
   }
-  let restants = sources.filter((s) => s.format === 'bpsl');
+  // ⛔ LES RACINES D'ABORD, LES CORPS ENSUITE. Un fichier de corps reprend l'en-tête de sa
+  // déclaration — `control transpose(…)` — et `control` n'est en portée que par ce que la librairie
+  // INVOQUE. Compilé isolément, il ne connaît pas ce mot : mesuré, quatre des cinq corps refusaient
+  // « Expected IDENT ». C'est l'équivalent du `.c` qui inclut son `.h` ; ici la racine le lui donne.
+  let restants = sources.filter((s) => s.format === 'bpsl' && !s.nom.includes('/'));
+  const corpsAcompiler = sources.filter((s) => s.format === 'bpsl' && s.nom.includes('/'));
   const construites = {};
   for (;;) {
     const encore = [];
@@ -326,25 +343,163 @@ export function chargerLesLibrairies(sources, compiler, registerLib) {
     }
     restants = encore;
   }
-  // ⛔ UN CORPS SE RATTACHE À L'OBJET QUI PORTE LE MOT — arbitrage de Romain, 2026-09-03 : « le code
-  // n'est pas exactement au même endroit que la déclaration », comme un `.h` et son `.c`. Le nom du
-  // fichier dit l'objet : `lib/transpo/transpose.ts` va sur le CONTRÔLE `transpose` de `transpo`,
-  // `lib/homomorphism/homomorphism.ts` sur le PROTOTYPE de la famille, dont chaque table hérite.
-  // L'objet se cherche à la RACINE (le nom du fichier de librairie) puis dans chaque place — aucune
-  // section n'est nommée ici, et la famille `function` a disparu avec cette forme.
-  for (const s of sources) {
-    if (s.format !== 'ts') continue;
-    const lib = construites[s.nom];
-    const cible = !lib ? null
-      : s.fonction === s.nom ? lib
-        : Object.values(lib).find((place) => place && typeof place === 'object' && !Array.isArray(place)
-            && place[s.fonction] && typeof place[s.fonction] === 'object')?.[s.fonction];
-    if (!cible) {
-      throw new FauteDeLibrairie(`lib/${s.fichier} : aucun objet '${s.fonction}' dans la librairie '${s.nom}' — `
-        + `un corps se rattache à l'objet qui porte son nom, à la racine ou dans une place`);
+  // ⛔ UN CORPS SE RATTACHE PAR LA REPRISE DE SON EN-TÊTE, JAMAIS PAR LE NOM DU FICHIER — Romain,
+  // 2026-09-03 : « même si le corps est dans un autre fichier il devrait reprendre EXACTEMENT le même
+  // en-tête ». Ce site lisait `lib/transpo/transpose.ts` et le posait sur l'objet `transpose` de la
+  // seule foi du nom : « il me semble qu'on a dit que ça ne devait pas juste marcher parce que les
+  // fichiers sont correctement nommés ».
+  //
+  // ⇒ CE QUE FAIT LE C, ET QUE CE SITE NE FAISAIT PAS : le nom des fichiers n'y joue AUCUN rôle. Le
+  //   `.c` inclut le `.h`, l'éditeur de liens apparie par NOM DE SYMBOLE, et la LISTE des fichiers
+  //   vient du build. Ici la liste vient de la librairie — elle déclare `transpo/foobar` en tête — et
+  //   l'appariement se fait sur la déclaration reprise, que le fichier de corps peut donc appeler
+  //   comme il veut.
+  //
+  // ⇒ TROIS REFUS, qui n'existaient ni l'un ni l'autre :
+  //     · un fichier de corps que la racine ne déclare pas          — un corps que personne n'a demandé
+  //     · un fichier déclaré qu'aucune source ne fournit            — l'`undefined reference` du lien
+  //     · un en-tête repris qui DIVERGE de sa déclaration           — la concordance de signature
+  // ⇒ UN FICHIER DE CORPS N'EST PAS UNE LIBRAIRIE : il ne se construit pas, il se LIT. Ses
+  //   déclarations reprennent celles de la racine ; seul son corps est neuf. On lit donc son arbre
+  //   directement — `construireLaLibrairie` le traiterait comme un catalogue et refuserait ses
+  //   membres au sommet (mesuré : « 'bp3' n'est pas un champ de FICHIER »).
+  const corpsLus = new Map();      // nom de source → [{ nom, corps, enTete }]
+  for (const s of corpsAcompiler) {
+    const [nomLib] = s.nom.split('/');
+    const racine = construites[nomLib];
+    // La racine met en portée ce qu'elle invoque, plus elle-même : c'est l'inclusion de l'en-tête.
+    const invoque = [...(racine && racine.apporte ? racine.apporte : []), nomLib].join('\n');
+    const r = compiler(`${invoque}\n${s.texte}`, { librairie: true });
+    if ((r.errors || []).length) {
+      throw new FauteDeLibrairie(`lib/${s.fichier} NE COMPILE PAS : ${r.errors[0].message}`);
     }
-    cible.body = s.texte;
+    const lus = [];
+    for (const v of (r.ast && r.ast.vars) || []) {
+      const nom = (v.names || [])[0];
+      if (!nom || !v.corps) continue;
+      lus.push({ nom, corps: v.corps.code, tag: v.corps.tag });
+    }
+    corpsLus.set(s.nom, lus);
   }
+  const corpsParLibrairie = new Map();
+  for (const s of corpsAcompiler) {
+    const [lib] = s.nom.split('/');
+    if (!corpsParLibrairie.has(lib)) corpsParLibrairie.set(lib, []);
+    corpsParLibrairie.get(lib).push(s);
+  }
+  for (const [lib, fichiers] of corpsParLibrairie) {
+    const racine = construites[lib];
+    if (!racine) continue;                       // pas une librairie écrite dans le langage
+    const declares = new Set(racine._fichiersDeCorps || []);
+    for (const s of fichiers) {
+      if (!declares.has(s.nom)) {
+        throw new FauteDeLibrairie(`lib/${s.fichier} : la librairie '${lib}' ne DÉCLARE pas ce fichier `
+          + `de corps — l'écrire en tête de 'lib/${lib}.bpsl' sur une ligne à elle : '${s.nom}'. `
+          + `Un corps que rien ne déclare ne se charge pas sur la foi de son nom.`);
+      }
+      declares.delete(s.nom);
+      // ⇒ APPARIER PAR L'EN-TÊTE REPRIS. Le fichier de corps est une source comme une autre : il a
+      //   été compilé et construit sous son nom (`transpo/transpose`). Chacun de ses objets doit
+      //   retrouver son homonyme dans la racine, y concorder, et lui donner son corps.
+      const lus = corpsLus.get(s.nom) || [];
+      if (!lus.length) {
+        throw new FauteDeLibrairie(`lib/${s.fichier} ne porte AUCUN corps — un fichier déclaré comme `
+          + `corps écrit son code après l'en-tête repris, entre backticks tagués.`);
+      }
+      const texteRacine = (sources.find((x) => x.nom === lib) || {}).texte || '';
+      for (const { nom, corps } of lus) {
+        // ⚠️ LA LIGNE DE TÊTE EST LE PROTOTYPE DE LA FAMILLE, et elle devient la RACINE elle-même,
+        //   jamais une entrée : `def homomorphism(…)` dans `homomorphism.bpsl`. Son corps descend
+        //   ensuite sur les dix-huit tables, qui en héritent.
+        const cible = nom === lib ? racine
+          : racine[nom] && typeof racine[nom] === 'object' && !Array.isArray(racine[nom])
+            ? racine[nom]
+            : Object.values(racine).find((place) => place && typeof place === 'object'
+                && !Array.isArray(place) && place[nom] && typeof place[nom] === 'object')?.[nom];
+        if (!cible) {
+          throw new FauteDeLibrairie(`lib/${s.fichier} reprend l'en-tête de '${nom}', et la librairie `
+            + `'${lib}' ne déclare aucun objet de ce nom — un corps reprend l'en-tête d'une `
+            + `déclaration qui existe.`);
+        }
+        if (!memeEnTete(texteRacine, s.texte, nom)) {
+          throw new FauteDeLibrairie(`lib/${s.fichier} : l'en-tête repris de '${nom}' DIVERGE de sa `
+            + `déclaration dans 'lib/${lib}.bpsl' — un corps reprend EXACTEMENT le même en-tête.`);
+        }
+        cible.body = corps;
+      }
+      // ⛔ POSER UN CORPS FAIT BOUGER LE REGISTRE — et la porte des objets se mémoïse sur sa VERSION.
+      //   Sans ce signalement, les corps étaient dans le registre et INVISIBLES à la porte : mesuré,
+      //   `transpo.transpose` sortait sans `body` alors que le registre le portait. Un état posé
+      //   après la dernière invalidation n'existe pour personne.
+      registerLib(lib, racine);
+    }
+    for (const manque of declares) {
+      throw new FauteDeLibrairie(`lib/${lib}.bpsl déclare le fichier de corps '${manque}', et aucune `
+        + `source ne le fournit — écrire 'lib/${manque}.bpsl', ou retirer la ligne.`);
+    }
+  }
+}
+
+/**
+ * L'EN-TÊTE d'un objet, tel qu'il est ÉCRIT : de sa première ligne à la parenthèse qui la ferme.
+ */
+export function enTeteEcrit(texte, nom) {
+  const L = String(texte || '').split('\n');
+  const i = L.findIndex((l) => new RegExp(`^[a-z_]+ ${nom}\\(|^def ${nom}\\(`).test(l));
+  if (i < 0) return null;
+  // ⚠️ L'EN-TÊTE S'ARRÊTE À SA PARENTHÈSE FERMANTE, PAS À LA FIN DE LIGNE : dans un fichier de corps,
+  //   le backtick s'ouvre sur la MÊME ligne — `) ``ts:` — et le prendre faisait diverger tous les
+  //   en-têtes repris de leur déclaration.
+  let prof = 0;
+  for (let j = i; j < L.length; j++) {
+    for (let k = 0; k < L[j].length; k++) {
+      const c = L[j][k];
+      if (c === '(') prof++;
+      else if (c === ')') {
+        prof--;
+        if (prof <= 0) return L.slice(i, j).concat(L[j].slice(0, k + 1)).join('\n');
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * ⛔ LA CONCORDANCE SE JUGE SUR L'EN-TÊTE ÉCRIT — Romain, 2026-09-03 : « même si le corps est dans un
+ * autre fichier il devrait reprendre EXACTEMENT le même en-tête ». C'est la vérification que le
+ * compilateur C fait entre un prototype et sa définition. Les blancs ne comptent pas : le pli et
+ * l'indentation sont de la mise en forme, et le langage le dit ailleurs.
+ */
+export function memeEnTete(texteRacine, texteCorps, nom) {
+  const a = enTeteEcrit(texteRacine, nom);
+  const b = enTeteEcrit(texteCorps, nom);
+  if (a == null || b == null) return false;
+  // ⚠️ LA COMPARAISON NORMALISE LES BLANCS, ET C'EST SÛR ICI : les deux en-têtes ont déjà passé le
+  //   refus de l'espace entre un mot et son sac, et le pli comme l'indentation sont de la mise en
+  //   forme — le langage le dit ailleurs. Sans normaliser AUTOUR des parenthèses et des virgules,
+  //   une déclaration pliée ne concordait jamais avec la même écrite sur une ligne.
+  const nu = (x) => x.replace(/\s+/g, ' ').replace(/\s*([(),])\s*/g, '$1').trim();
+  return nu(a) === nu(b);
+}
+
+/**
+ * ⛔ LA CONCORDANCE — un en-tête repris dit la MÊME chose que sa déclaration, ou il est refusé.
+ *
+ * C'est la vérification que le compilateur C fait entre un prototype et sa définition. Comparer les
+ * membres SANS le corps : ce que le fichier de corps ajoute est justement son corps.
+ */
+export function concorde(declaration, repris) {
+  const nu = (o) => {
+    const out = {};
+    for (const [k, v] of Object.entries(o || {})) {
+      if (k === 'body' || k === 'corps' || k.startsWith('_')) continue;
+      out[k] = v;
+    }
+    return out;
+  };
+  const a = JSON.stringify(nu(declaration));
+  const b = JSON.stringify(nu(repris));
+  return a === b;
 }
 
 /**

@@ -116,7 +116,7 @@ for (const cle of CLES) {
   // Les deux écritures d'une sortie disent la MÊME chose — si elles se contredisent, on refuse en
   // les nommant, plutôt que d'en élire une en silence.
   const r = compiler('core\nalphabet.sargam:audio\nout.midi\n-----\nS -> sa\n');
-  ok(/deux sorties pour la même scène/.test(messages(r)),
+  ok(/two outputs for the same scene/.test(messages(r)),
      `C. 'alphabet.sargam:audio' + 'out.midi' désignent deux canaux différents et l'arbre en `
      + `choisit un SANS RIEN DIRE (${messages(r).slice(0, 80) || 'aucune erreur'}).`);
 }
@@ -132,7 +132,7 @@ for (const cle of CLES) {
   const p = acteurImplicite(r)?.properties;
   const socle = loadLib('core')?.defaults?.components?.transport;
   ok(valeurDe(p, 'transport') === socle,
-     `D-témoin. sans 'out', la sortie devrait valoir le défaut du socle ('${socle}') et vaut `
+     `D-témoin. sans 'out', la sortie devrait valoir le défaut du socle('${socle}') et vaut `
      + `'${valeurDe(p, 'transport')}'. Une cascade qui ne rend rien quand la scène se tait n'est `
      + `pas une cascade, c'est une recopie.`);
   ok(valeurDe(p, 'alphabet') === 'sargam',

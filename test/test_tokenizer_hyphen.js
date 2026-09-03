@@ -102,14 +102,14 @@ section('Cas 2 : re6- fin de ligne');
 // ============================================================
 // Cas 3 — do4- fin de fichier sans \n → IDENT(do4) + REST   [CHANGE]
 // ============================================================
-section('Cas 3 : do4- fin de fichier (sans \\n)');
+section('Cas 3 : do4- fin de fichier(sans \\n)');
 {
   const tokens = toks('S -> do4-');
   const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
   const rests = tokens.filter(t => t.type === T.REST);
   assert('do4- est UN nom', idents.includes('do4-'), `IDENT trouvés: ${idents}`);
   assert('do4 nu absent', !idents.includes('do4'), `IDENT trouvés: ${idents}`);
-  assert('aucun REST (EOF) : le tiret est dans le nom', rests.length === 0, `REST count: ${rests.length}`);
+  assert('aucun REST(EOF) : le tiret est dans le nom', rests.length === 0, `REST count: ${rests.length}`);
 }
 
 // ============================================================
@@ -155,7 +155,7 @@ M <- V A8-2`;
   assert('A8-2 présent comme IDENT unique', idents.includes('A8-2'), `IDENT trouvés: ${idents}`);
   // Vérifier pas de séparation en A8 + REST + INT
   const a8idx = tokens.findIndex(t => t.type === T.IDENT && t.value === 'A8-2');
-  assert('A8-2 est un seul token (pas suivi REST+INT)', a8idx >= 0, `A8-2 trouvé à: ${a8idx}`);
+  assert('A8-2 est un seul token(pas suivi REST+INT)', a8idx >= 0, `A8-2 trouvé à: ${a8idx}`);
 }
 
 // Cas 6b — A'16-2 avec apostrophe
@@ -371,7 +371,7 @@ section('F2 : si3_____ → IDENT(si3) + PROLONG×5');
   const tokens = toks('X -> si3_____');
   const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
   const prolongs = tokens.filter(t => t.type === T.PROLONG);
-  assert('si3 présent (pas si3_____)', idents.includes('si3') && !idents.includes('si3_____'),
+  assert('si3 présent(pas si3_____)', idents.includes('si3') && !idents.includes('si3_____'),
     `IDENT: ${idents}`);
   assert('5 PROLONG', prolongs.length === 5, `PROLONG count: ${prolongs.length}`);
 }
@@ -381,7 +381,7 @@ section('F2 : pa3_ → IDENT(pa3) + PROLONG×1');
   const tokens = toks('X -> pa3_');
   const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);
   const prolongs = tokens.filter(t => t.type === T.PROLONG);
-  assert('pa3 présent (pas pa3_)', idents.includes('pa3') && !idents.includes('pa3_'),
+  assert('pa3 présent(pas pa3_)', idents.includes('pa3') && !idents.includes('pa3_'),
     `IDENT: ${idents}`);
   assert('1 PROLONG', prolongs.length === 1, `PROLONG count: ${prolongs.length}`);
 }
@@ -403,7 +403,7 @@ section('F2 : Num_total intact (flag avec underscore interne)');
   assert('Num pas IDENT séparé', !idents.includes('Num'), `IDENT: ${idents}`);
 }
 
-section('F2 : sa_4 intact (shruti — underscore interne)');
+section('F2 : sa_4 intact(shruti — underscore interne)');
 {
   const tokens = toks('S -> sa_4 r1_4');
   const idents = tokens.filter(t => t.type === T.IDENT).map(t => t.value);

@@ -32,24 +32,24 @@ function bothAccept(src, label) {
 // --- a. eval + out → REJET ---
 bothReject(
   'types\nactor viz  eval.hydra  out.audio\n-----\nS -> voix\nvoix -> `hydra: osc(4).out()`',
-  'sort en natif',
+  'outputs natively',
   'a. eval.hydra + out.audio',
 );
 bothReject(
   'types\nactor beat  out.midi(ch:3)  eval.strudel\n-----\nS -> voix\nvoix -> `strudel: s("bd")`',
-  'sort en natif',
+  'outputs natively',
   'a. out.midi + eval.strudel (ordre inverse)',
 );
 
 // --- b. out.video / out.visual → REJET (canal supprimé) ---
 bothReject(
   'types\nactor v  alphabet.western  out.video\n-----\nS -> v.C',
-  'SUPPRIMÉ',
+  'REMOVED',
   'b. out.video (acteur de notes, sans eval)',
 );
 bothReject(
   'types\nactor v  alphabet.western  out.visual\n-----\nS -> v.C',
-  'SUPPRIMÉ',
+  'REMOVED',
   'b. out.visual',
 );
 

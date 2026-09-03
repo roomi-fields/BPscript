@@ -69,7 +69,7 @@ for (const [quoi, src] of [
   const msg = messages(compiler(src));
   ok(msg !== '', `B. un contexte ${quoi} doit REFUSER, et il passe. Un arbre que rien en aval ne `
                  + `sait lire est pire qu'un refus.`);
-  ok(/EXTREMITES du membre gauche/.test(msg),
+  ok(/EXTREMITIES of the left-hand side/.test(msg),
      `B. ${quoi} — le refus doit nommer les DEUX places qui restent. Reçu : ${msg.slice(0, 90)}`);
 }
 

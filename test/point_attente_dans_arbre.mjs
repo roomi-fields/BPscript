@@ -192,7 +192,7 @@ ok(cellules === FORMES.length * PROPRIETES.length && cellules >= 35,
 // Trois éléments que personne n'a écrits, et l'adresse écrite disparue.
 //
 // ⚠️ POURQUOI CE N'EST PAS COSMÉTIQUE — c'est BPx qui l'a vu depuis son côté, et l'argument est
-// décisif : une attente SANS adresse se lève sur N'IMPORTE QUEL événement de son rôle (c'est la
+// décisif : une attente SANS adresse se lève sur N'IMPORTE QUEL événement de son rôle(c'est la
 // forme voulue, celle du sustain). Une adresse qui s'évapore transforme donc une barrière PRÉCISE
 // en barrière PROMISCUE : la pièce repart au premier événement venu, l'exact contraire de ce qui
 // est écrit, et rien ne le dit à personne. L'aval ne peut rien rattraper — il ne distingue pas une
@@ -219,7 +219,7 @@ for (const [quoi, regle] of ADRESSES_MALFORMEES) {
   const msg = (err || []).map((e) => e.message || e).join(' | ');
   ok((err || []).length > 0,
      `7. une adresse formée avec ${quoi} doit REFUSER, jamais se défaire en silence — '${regle}'`);
-  ok(/adresse/i.test(msg),
+  ok(/address/i.test(msg),
      `7. et le refus doit parler d'ADRESSE, pas retomber sur un message de parse générique — reçu : ${msg.slice(0, 120)}`);
   ok(/<!sync1\.60|<!sync1\.suivant|<!sync1'|ADRESSE/.test(msg),
      `7. et DONNER la forme attendue, pas seulement constater — reçu : ${msg.slice(0, 120)}`);

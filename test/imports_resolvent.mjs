@@ -30,7 +30,7 @@ const EXCLUS = ['node_modules', '.git', '.claude', '_archive', 'dist', 'bp3-engi
 /**
  * `public/src/` NE DOIT PAS REPOUSSER (directive Romain 2026-07-26 : « à supprimer »).
  *
- * C'était une COPIE COMPLÈTE du transpileur (9 fichiers) et d'un dispatcher (7) qui n'existe plus
+ * C'était une COPIE COMPLÈTE du transpileur(9 fichiers) et d'un dispatcher (7) qui n'existe plus
  * du tout dans le dépôt vivant. Elle portait encore `encoder.js` et `prototypes.js`, supprimés le
  * 2026-07-19 avec l'émission BP3, et n'avait pas `bpxAst.js` : du code d'AVANT la bascule, qu'un
  * lecteur pouvait prendre pour l'outil courant et croire à un comportement qui n'existe plus.

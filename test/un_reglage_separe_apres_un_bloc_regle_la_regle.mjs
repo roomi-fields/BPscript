@@ -87,7 +87,7 @@ for (const [nom, src] of concernees) {
   const entree = concernees.find(([n]) => n.endsWith('tryRotate.bps'));
   ok(!!entree,
      `B. la scène tryRotate n'est plus dans le corpus — c'est ELLE qui discrimine. Sans elle, ce `
-     + `garde ne prouve plus rien : aucun cas fabriqué ne reproduit le défaut (mesuré, et signalé `
+     + `garde ne prouve plus rien : aucun cas fabriqué ne reproduit le défaut(mesuré, et signalé `
      + `par BPx avant moi).`);
   if (entree) {
     const r = compileToBPxAST(entree[1]);
@@ -95,9 +95,9 @@ for (const [nom, src] of concernees) {
     ok(porteurs.includes('Rule'),
        `B. tryRotate : le poids doit être porté par la RÈGLE, il l'est par ${porteurs.join('/') || 'rien'}. `
        + `C'est le décrément de ce poids qui BORNE une règle récursive ; sans lui, la dérivation ne `
-       + `rend jamais la main (45 s chez BPx, 150 s chez Kairos, 10 min chez Kanopi, 25 ms au natif).`);
+       + `rend jamais la main(45 s chez BPx, 150 s chez Kairos, 10 min chez Kanopi, 25 ms au natif).`);
     ok(!porteurs.includes('Polymetric'),
-       `B. tryRotate : le poids est ENCORE dans le bloc (${porteurs.join('/')}) — le défaut est revenu.`);
+       `B. tryRotate : le poids est ENCORE dans le bloc(${porteurs.join('/')}) — le défaut est revenu.`);
   }
 }
 
@@ -107,5 +107,5 @@ if (echecs.length) {
   process.exit(1);
 }
 console.log(`✅ un réglage séparé après un bloc règle la RÈGLE — ${passe} vérification(s) sur `
-          + `${concernees.length} scène(s) du corpus qui écrivent la forme (liste CALCULÉE, pas `
+          + `${concernees.length} scène(s) du corpus qui écrivent la forme(liste CALCULÉE, pas `
           + `écrite), ${cellules} réglage(s) suivis, dont le cas nommé tryRotate.`);

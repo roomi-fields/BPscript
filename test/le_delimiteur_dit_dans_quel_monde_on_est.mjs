@@ -39,10 +39,10 @@ console.log('[délimiteur] le délimiteur dit dans quel monde on est');
 
 // ── A. AVANT LE DÉLIMITEUR — UNE VALEUR N'A QU'UNE PARTIE ───────────────────────────────────
 for (const [ecrit, reecrit] of [
-  ['def f (scope:symbol group)', 'scope(symbol, group'],
-  ['def f (scope:symbol group rule flow)', 'scope(symbol, group'],
-  ['def f (value:0 1)', 'value(0, 1'],
-  ['def f (args:pivot factor)', 'args(pivot, factor'],
+  ['def f(scope:symbol group)', 'scope(symbol, group'],
+  ['def f(scope:symbol group rule flow)', 'scope(symbol, group'],
+  ['def f(value:0 1)', 'value(0, 1'],
+  ['def f(args:pivot factor)', 'args(pivot, factor'],
 ]) {
   const r = declaratif(ecrit);
   ok(r.erreurs.length >= 1,
@@ -53,11 +53,11 @@ for (const [ecrit, reecrit] of [
 // ⛔ TÉMOIN NON NUL — ce qui n'a qu'une partie passe, et la parenthèse aussi. Sans lui, un lecteur
 // qui refuserait TOUTE valeur déclarative passerait le volet A en triomphe.
 {
-  ok(declaratif('def f (scope:symbol)').erreurs.length === 0,
+  ok(declaratif('def f(scope:symbol)').erreurs.length === 0,
     'A-témoin. une valeur à UNE partie doit passer dans le déclaratif');
-  const p = declaratif('def f (scope(symbol, group))');
-  ok(p.erreurs.length === 0, `A-témoin. la parenthèse est la forme de remplacement — elle doit passer (${p.erreurs[0]})`);
-  ok(declaratif('def f (x:"deux mots")').erreurs.length === 0,
+  const p = declaratif('def f(scope(symbol, group))');
+  ok(p.erreurs.length === 0, `A-témoin. la parenthèse est la forme de remplacement — elle doit passer(${p.erreurs[0]})`);
+  ok(declaratif('def f(x:"deux mots")').erreurs.length === 0,
     'A-témoin. un TEXTE délimité porte ses espaces — ce sont ses caractères, pas des séparateurs');
 }
 
@@ -123,7 +123,7 @@ for (const [ecrit, reecrit] of [
     + fautives.slice(0, 4).map(([c, v]) => `${c} = ${JSON.stringify(v).slice(0, 40)}`).join(' · '));
 }
 
-ok(passe >= 20, `le garde doit avoir EXAMINÉ, pas seulement tourné (${passe} assertions)`);
+ok(passe >= 20, `le garde doit avoir EXAMINÉ, pas seulement tourné(${passe} assertions)`);
 
 if (echecs.length) {
   console.error(`[délimiteur] ${echecs.length} ÉCHEC(S) :`);

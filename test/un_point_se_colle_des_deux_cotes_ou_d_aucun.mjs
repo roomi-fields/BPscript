@@ -56,14 +56,14 @@ const PLACES = [
   ['invocation de tuning',              `${A}tuning@western_just\n-----\nS -> C4`],
   ["invocation d'octaves",              `${A}octaves@western\n-----\nS -> C4`],
   ["invocation d'homomorphisme",        `${A}homomorphism@checkhomo\n-----\nS -> C4`],
-  ['clé de terminal entre parenthèses', `${T}terminal cloche (tuning@western_just)\n-----\nS -> C4`],
+  ['clé de terminal entre parenthèses', `${T}terminal cloche(tuning@western_just)\n-----\nS -> C4`],
   ['clé de terminal nue',               `${T}terminal cloche tuning@western_just\n-----\nS -> C4`],
   ['clé de def nue',                    `${T}def cloche tuning@western_just\n-----\nS -> C4`],
   ['clé de def en bloc indenté',        `${T}def cloche\n  tuning@western_just\n-----\nS -> C4`],
-  ['canal de sortie sur un terminal',   `${T}terminal cloche (out@midi)\n-----\nS -> C4`],
-  ["clé d'acteur",                      `${A}actor sitar (out@midi)\n-----\nS -> C4`],
+  ['canal de sortie sur un terminal',   `${T}terminal cloche(out@midi)\n-----\nS -> C4`],
+  ["clé d'acteur",                      `${A}actor sitar(out@midi)\n-----\nS -> C4`],
   ["section d'homomorphisme",           `${A}homomorphism.checkhomo\n-----\nS -> $N1 checkhomo@TR &N1`],
-  ['objet sonore vu par un acteur',     `${A}actor sitar (out.midi)\n-----\nS -> sitar@C4`],
+  ['objet sonore vu par un acteur',     `${A}actor sitar(out.midi)\n-----\nS -> sitar@C4`],
   ["adresse d'un point d'attente",      `${ENTREES}-----\nS -> C4 <!brut@60 D4`],
   ["entrée et son canal",               `${A}in@midi touches\n-----\nS -> C4`],
 ];
@@ -117,7 +117,7 @@ for (const [quoi, src] of [
   ['le repos indéterminé',                 `${A}-----\nS -> C4 ... D4`],
   ['un accent grave sur une ligne',        `${A}-----\nS -> \`js: n("c2").sound("sq").release(.1)\` C4`],
   ['un accent grave sur PLUSIEURS lignes', `${A}-----\nS -> \`js: saw(p)\n  .lpf(400)\n  .adsr(0.1)\` C4`],
-  ['une chaîne',                           `${A}def d (description:"une phrase. Et une autre.")\n-----\nS -> C4`],
+  ['une chaîne',                           `${A}def d(description:"une phrase. Et une autre.")\n-----\nS -> C4`],
   ['un commentaire',                       `${A}// une phrase. Et une autre.\n-----\nS -> C4`],
 ]) {
   verifier(msgs(src).length === 0,
@@ -148,7 +148,7 @@ for (const [quoi, src] of [
   const attendue = source.split('\n').findIndex((l) => l.includes('A4. D5')) + 1;
   const m = msgs(source).join(' | ');
   verifier(new RegExp(`[Ll]igne ${attendue}\\b`).test(m),
-    `5. le refus dit la LIGNE (${attendue}) — reçu : ${m.slice(0, 130)}`);
+    `5. le refus dit la LIGNE(${attendue}) — reçu : ${m.slice(0, 130)}`);
   verifier(/colonne \d+/.test(m), `5. et la COLONNE — reçu : ${m.slice(0, 130)}`);
 }
 

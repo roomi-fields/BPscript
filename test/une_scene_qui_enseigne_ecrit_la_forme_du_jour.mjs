@@ -114,6 +114,6 @@ ok(temoin.errors.length >= 1,
   'TÉMOIN — une forme retirée du langage doit être REFUSÉE ; le compilateur ne mord plus.');
 
 console.log(echecs === 0
-  ? `✅ les démos écrivent la forme du jour (${scenes.length} scènes, ${SUSPENDUES.size} suspendues nommément)`
+  ? `✅ les démos écrivent la forme du jour(${scenes.length} scènes, ${SUSPENDUES.size} suspendues nommément)`
   : `❌ ${echecs} échec(s)`);
 process.exit(echecs === 0 ? 0 : 1);

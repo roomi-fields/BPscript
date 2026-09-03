@@ -96,7 +96,7 @@ function litLaHauteur(fn) {
 /** La batterie complète, appliquée à un corps. Rendue réutilisable pour les injections. */
 function verdict(brut) {
   const { type, fn } = compiler(brut);
-  if (type !== 'js') return { motif: `réalisation non-js (${type}:)` };
+  if (type !== 'js') return { motif: `réalisation non-js(${type}:)` };
   if (typeof fn !== 'function') return { motif: 'ne compile pas en fonction' };
 
   const avec = rendre(fn, { pitch: 220 });
