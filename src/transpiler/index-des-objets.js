@@ -254,6 +254,17 @@ export function motsDeLaGrammaire() {
 }
 
 /**
+ * LA FORME QU'UN MOT DE LA GRAMMAIRE ADMET — `seed:<N>`, `out.<canal>`, `def <nom> <corps>`. Elle
+ * existe pour qu'un refus donne la RÉÉCRITURE au lieu de constater : un mot du langage écrit
+ * autrement s'entend dire ce qu'il fallait écrire. Rend `null` quand la donnée ne la porte pas.
+ */
+export function formeDuMot(nom) {
+  const s = SYNTAXE.grammarWords && SYNTAXE.grammarWords.syntaxe;
+  const f = s && s[nom];
+  return typeof f === 'string' ? f : null;
+}
+
+/**
  * Un mot RÉSERVÉ — un mot de la GRAMMAIRE, celui qu'un auteur ne peut jamais ombrer (décision du
  * 2026-08-21 : la grammaire, le socle, les librairies ; seule la première est inombrable). La liste
  * `reservedDirectives` du schéma de `core` mêlait ces mots-là et des mots de LIBRAIRIE (`transpose`,

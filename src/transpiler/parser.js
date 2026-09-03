@@ -8,7 +8,7 @@
  */
 
 import { T } from './tokenizer.js';
-import { famille, motReserve, axesDeCatalogue, clesDActeur, canaux } from './index-des-objets.js';
+import { famille, motReserve, axesDeCatalogue, clesDActeur, canaux, formeDuMot } from './index-des-objets.js';
 import { loadLib, directiveDeclareeParLaLibrairie, loadLibsFromDirectives, librairiesQuiDeclarent, versionDuRegistre, placesDesLibrairies, leRegistre } from './libs.js';
 import { describeVocabulary } from './vocabulaire.js';
 import { BP3_OPERATORS } from './constants.js';
@@ -3178,6 +3178,17 @@ function parse(tokens, opts = {}) {
     // Ce qu'il recueillait de plus est sorti du langage le 2026-08-18 ; la boucle s'arrête sur
     // tout le reste, et la ligne tombe alors dans le refus ordinaire d'une forme inconnue.
     if (name === 'init') {
+      // ⛔ `init` N'ADMET PAS DE SOUS-CLÉ, et son silence coûtait la ligne entière. Mesuré le
+      // 2026-09-03 : `init.zzz` rendait ZÉRO erreur et `init: []` — la boucle ci-dessous s'arrête
+      // sur le point, et ce qui suit était avalé sans laisser une trace dans l'arbre. Un mot du
+      // langage écrit avec un point qu'il n'admet pas se refuse AVEC sa forme, lue dans la donnée.
+      if (subkey) {
+        const forme = formeDuMot('init');
+        throw new ParseError(
+          `'init.${subkey}' : 'init' est un mot du LANGAGE, il ne se qualifie pas par un point`
+          + `${forme ? ` — il s'écrit '${forme}'` : ''}, et recueille ce qui appartient à la scène `
+          + `entière : un code taggé, ou un sac de valeurs de départ.`, current());
+      }
       // LA FORME DE L'ARBRE EST CELLE QUE LA SPEC ÉCRIT : `init: InitEntry[] | null`, un tableau
       // PLAT (AST.md:30, :201-204). Pas de `{codes, valeurs}` de mon invention — une seconde forme
       // obligerait chaque consommateur à connaître la mienne en plus de celle qui est publiée.
@@ -3226,6 +3237,18 @@ function parse(tokens, opts = {}) {
       // ⛔ UN NOM D'ACTEUR EST UN NOM — la règle du chiffre initial dit « un NOM », pas « un nom de
       // déclaration typée ». Elle cite des déclarations par le type parce que c'est ce que la mesure
       // du jour avait sous la main ; elle ne restreint rien. C'est la PORTÉE, pas l'exemple.
+      // ⛔ `actor` N'ADMET PAS DE SOUS-CLÉ, et son refus n'apprenait rien. Mesuré le 2026-09-03 :
+      // `actor.zzz` sortait « Expected IDENT, got NEWLINE » — le lecteur consommait le point comme
+      // une sous-clé de directive, puis butait sur la fin de ligne en accusant le SIGNE, trois
+      // jetons après le nom fautif. Un mot du langage écrit avec un point qu'il n'admet pas se
+      // refuse en le nommant, avec sa forme lue dans la donnée.
+      if (subkey) {
+        const forme = formeDuMot('actor');
+        throw new ParseError(
+          `'actor.${subkey}' : 'actor' est un mot du LANGAGE, il ne se qualifie pas par un point`
+          + `${forme ? ` — il s'écrit '${forme}'` : ''}. Le point porte la DÉRIVATION d'un acteur, `
+          + `après son nom : 'actor <nom>.<sorte>'.`, current());
+      }
       let actorName = lireNomDEntree(tok);
       // Le POINT porte la dérivation — `extends` a été effacé pour ça (même décision, « ce qui
       // s'efface »). Le nom qualifié voyage TEL QUEL dans `name`, comme le langage l'écrit : aucun

@@ -54,7 +54,7 @@ import { sortieHeritee, alphabetHerite, octavesHerite, tuningHerite, evalHerite 
   from './actorResolver.js';
 import { parse, ParseError } from './parser.js';
 import { LIBS } from './libs-data.js';
-import { lesDefauts, motsInvoques, familles, canaux, clesDActeur, motReserve } from './index-des-objets.js';
+import { lesDefauts, motsInvoques, familles, canaux, clesDActeur, motReserve, formeDuMot } from './index-des-objets.js';
 import { universeControlNames, resolveActorAlphabet, nomsDeTerminaux, loadLib, leRegistre, versionDuRegistre, librairiesQuiDeclarent } from './libs.js';
 import { expandAlphabetTerminals } from './actorResolver.js';
 import { resolveActorAlphabetSource } from './libs.js';
@@ -2619,10 +2619,30 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
     // est aveugle — elle epargne le mot sans que personne ne juge la SOUS-CLE — et `out`/`in` ne
     // s'en tirent que parce qu'un autre juge les rattrape ensuite. Un message imparfait qui REFUSE
     // vaut mieux qu'un message parfait qui AVALE.
-    // Ce qui manque est un juge pour « un mot du langage suivi d'une sous-cle qu'il n'admet pas » :
-    // remonte a l'architecte, pas bricole ici.
+    // ⛔ ET LE JUGE QUI MANQUAIT EST ICI — « un mot du langage suivi d'une sous-clé qu'il n'admet
+    // pas ». L'exemption qui vivait à cette ligne épargnait le MOT sans juger la SOUS-CLÉ : elle
+    // était aveugle, et le seul refus qui la rattrapait venait d'ailleurs, pour certains mots
+    // seulement. Mesuré le 2026-09-03, mot par mot sur les neuf : `seed.zzz` et `init.zzz` ne
+    // rendaient AUCUNE erreur — la ligne était lue, écrite dans l'arbre, et sans effet. Sept autres
+    // étaient rattrapés par leur propre lecteur, ce qui masquait le trou au lieu de le fermer.
+    //
+    // LE REFUS PORTE SA RÉÉCRITURE, lue dans la donnée (`grammarWords.syntaxe`) : un auteur qui
+    // écrit `seed.42` s'entend dire `seed:<N>`. Ce qui ÉCHAPPE se lit aussi dans la donnée — une
+    // CLÉ D'ACTEUR (`out.midi`, `alphabet.western`) porte une sous-clé par construction, et une
+    // FAMILLE du registre est une invocation, jugée deux lignes plus bas sur son entrée.
     if (!libExiste(d.name)) {
-      if (motsDuLangage.has(d.name)) continue;
+      if (motsDuLangage.has(d.name)) {
+        if (clesDActeur().has(d.name)) continue;   // `out.<canal>` : la sous-clé est sa forme
+        const forme = formeDuMot(d.name);
+        errors.push({
+          message: `'${d.name}.${d.subkey}' : '${d.name}' est un mot du LANGAGE, il ne se qualifie `
+            + `pas par un point`
+            + (forme ? ` — il s'écrit '${forme}'.` : '.')
+            + ` Une ligne qu'aucune donnée ne sert est lue, écrite dans l'arbre, et sans effet.`,
+          line: d.line,
+        });
+        continue;
+      }
       // ⛔ ET LE REFUS NOMME LE MOT A ECRIRE quand l axe est un NOM DE FICHIER. Sans ça, l auteur
       // de `voices.bayan_open` lit « aucune librairie ne sert cet axe » devant un fichier qui
       // existe, et il cherche une donnee manquante au lieu de changer un mot.

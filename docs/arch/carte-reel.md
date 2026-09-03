@@ -5,7 +5,7 @@
 > vit dans le document d'architecture, chez Atlas, qui cite celui-ci.
 ## Ce qui est mesuré
 
-- **26 modules** dans `src/transpiler/`, **15946 lignes**.
+- **26 modules** dans `src/transpiler/`, **16012 lignes**.
 - Le **rôle** est lu dans l'en-tête de chaque fichier, verbatim — jamais interprété.
 - Les **arêtes** sont les imports d'un module vers un voisin du même dossier.
 
@@ -13,17 +13,17 @@
 
 | Module | Lignes | Importe | Importé par | Rôle (lu dans l'en-tête) |
 | --- | ---: | ---: | ---: | --- |
-| `parser.js` | 7980 | 6 | 2 | BPScript Parser |
-| `resolution.js` | 3103 | 6 | 1 | L'ÉTAGE QUI RÉSOUT — le troisième des quatre, et le seul qui n'avait pas de domicile. |
+| `parser.js` | 8003 | 6 | 2 | BPScript Parser |
+| `resolution.js` | 3123 | 6 | 1 | L'ÉTAGE QUI RÉSOUT — le troisième des quatre, et le seul qui n'avait pas de domicile. |
 | `libs.js` | 1203 | 4 | 7 | BPScript Library Loader |
 | `actorResolver.js` | 588 | 2 | 2 | BPScript Actor Resolver |
 | `bpxAst.js` | 517 | 10 | 2 | Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table |
 | `tokenizer.js` | 514 | 0 | 2 | BPScript Tokenizer |
 | `librairies.js` | 382 | 1 | 1 | LA LECTURE DES LIBRAIRIES — une source écrite dans le langage devient un objet du registre. |
-| `index-des-objets.js` | 363 | 3 | 6 | L'INDEX DES OBJETS — ce que les librairies déclarent, rendu comme des objets, pour la porte |
+| `index-des-objets.js` | 374 | 3 | 6 | L'INDEX DES OBJETS — ce que les librairies déclarent, rendu comme des objets, pour la porte |
 | `librairies-jointes.js` | 144 | 1 | 1 | L'ARBRE JOINT LE CONTENU DES LIBRAIRIES QU'IL INVOQUE — décision de Romain, 2026-09-02. |
+| `syntaxe-data.js` *(généré)* | 126 | 0 | 4 | — |
 | `orderTokens.js` | 123 | 0 | 0 | — |
-| `syntaxe-data.js` *(généré)* | 114 | 0 | 4 | — |
 | `controlValidation.js` | 113 | 0 | 1 | Collecte récursivement toutes les paires de SettingBag de l'AST. |
 | `libs-champs.js` | 98 | 0 | 3 | LES CHAMPS DE FICHIER D'UNE LIBRAIRIE — déclarés UNE FOIS, pour tous mes lecteurs. |
 | `vocabulaire.js` | 89 | 3 | 4 | LE VOCABULAIRE DU LANGAGE — la porte d'éditeur, DÉRIVÉE de la porte des objets. |

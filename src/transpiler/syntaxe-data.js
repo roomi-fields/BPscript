@@ -86,7 +86,19 @@ const SYNTAXE = {
    "out",
    "seed",
    "terminal"
-  ]
+  ],
+  "syntaxe": {
+   "description": "La FORME que chaque mot admet, pour que son refus donne une réécriture au lieu de constater. Un mot du langage écrit autrement — qualifié par un point qu'il n'admet pas, par exemple — est refusé avec la ligne qu'il fallait écrire.",
+   "actor": "actor <nom>",
+   "core": "core",
+   "def": "def <nom> <corps>",
+   "in": "in.<canal> <rôle>",
+   "init": "init",
+   "mode": "mode:<mode>",
+   "out": "out.<canal>",
+   "seed": "seed:<N>",
+   "terminal": "terminal <nom> <corps>"
+  }
  },
  "bracketRewrites": {
   "description": "Les réglages que le CROCHET a portés et qui s'écrivent en PARENTHÈSES depuis la décision du 2026-08-02. Le compilateur les comprend lui-même : écrits entre crochets, ils sont refusés AVEC leur réécriture, au lieu de tomber sur « clé inconnue ». Une pierre tombale de graphie, donc du LANGAGE — elle a quitté le schéma de `core` avec lui le 2026-09-03.",

@@ -83,7 +83,19 @@ var SYNTAXE = {
       "out",
       "seed",
       "terminal"
-    ]
+    ],
+    "syntaxe": {
+      "description": "La FORME que chaque mot admet, pour que son refus donne une r\xE9\xE9criture au lieu de constater. Un mot du langage \xE9crit autrement \u2014 qualifi\xE9 par un point qu'il n'admet pas, par exemple \u2014 est refus\xE9 avec la ligne qu'il fallait \xE9crire.",
+      "actor": "actor <nom>",
+      "core": "core",
+      "def": "def <nom> <corps>",
+      "in": "in.<canal> <r\xF4le>",
+      "init": "init",
+      "mode": "mode:<mode>",
+      "out": "out.<canal>",
+      "seed": "seed:<N>",
+      "terminal": "terminal <nom> <corps>"
+    }
   },
   "bracketRewrites": {
     "description": "Les r\xE9glages que le CROCHET a port\xE9s et qui s'\xE9crivent en PARENTH\xC8SES depuis la d\xE9cision du 2026-08-02. Le compilateur les comprend lui-m\xEAme : \xE9crits entre crochets, ils sont refus\xE9s AVEC leur r\xE9\xE9criture, au lieu de tomber sur \xAB cl\xE9 inconnue \xBB. Une pierre tombale de graphie, donc du LANGAGE \u2014 elle a quitt\xE9 le sch\xE9ma de `core` avec lui le 2026-09-03.",

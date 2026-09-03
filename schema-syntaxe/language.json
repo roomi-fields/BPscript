@@ -65,7 +65,19 @@
   "grammarWords": {
     "description": "Les mots avec lesquels on écrit la STRUCTURE — la grammaire, qu'un auteur ne peut jamais ombrer. Un PLANCHER : ce qui n'a pas su être établi ne compte pas comme une absence. Dissous du schéma de `core` le 2026-09-03.",
     "qualite": "plancher",
-    "mots": ["actor", "core", "def", "in", "init", "mode", "out", "seed", "terminal"]
+    "mots": ["actor", "core", "def", "in", "init", "mode", "out", "seed", "terminal"],
+    "syntaxe": {
+      "description": "La FORME que chaque mot admet, pour que son refus donne une réécriture au lieu de constater. Un mot du langage écrit autrement — qualifié par un point qu'il n'admet pas, par exemple — est refusé avec la ligne qu'il fallait écrire.",
+      "actor": "actor <nom>",
+      "core": "core",
+      "def": "def <nom> <corps>",
+      "in": "in.<canal> <rôle>",
+      "init": "init",
+      "mode": "mode:<mode>",
+      "out": "out.<canal>",
+      "seed": "seed:<N>",
+      "terminal": "terminal <nom> <corps>"
+    }
   },
   "syntaxWords": {
     "->": {

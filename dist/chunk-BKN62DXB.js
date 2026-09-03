@@ -8,7 +8,7 @@ import {
 } from "./chunk-JWEI77WV.js";
 import {
   SYNTAXE
-} from "./chunk-4X227AGU.js";
+} from "./chunk-7IMIRTTZ.js";
 
 // src/transpiler/librairies.js
 var places = {};
@@ -2592,6 +2592,11 @@ function motsDeLaGrammaire() {
   const g = SYNTAXE.grammarWords;
   return new Set(g && Array.isArray(g.mots) ? g.mots : []);
 }
+function formeDuMot(nom) {
+  const s = SYNTAXE.grammarWords && SYNTAXE.grammarWords.syntaxe;
+  const f = s && s[nom];
+  return typeof f === "string" ? f : null;
+}
 function motReserve(nom) {
   return motsDeLaGrammaire().has(nom);
 }
@@ -4062,6 +4067,13 @@ function parse(tokens, opts = {}) {
       return { type: "DefDirective", name: defName, kind: "terminal", keys: cles, line: tok.line };
     }
     if (name === "init") {
+      if (subkey) {
+        const forme = formeDuMot("init");
+        throw new ParseError(
+          `'init.${subkey}' : 'init' est un mot du LANGAGE, il ne se qualifie pas par un point${forme ? ` \u2014 il s'\xE9crit '${forme}'` : ""}, et recueille ce qui appartient \xE0 la sc\xE8ne enti\xE8re : un code tagg\xE9, ou un sac de valeurs de d\xE9part.`,
+          current()
+        );
+      }
       const entrees = [];
       while (!atEnd()) {
         while (at(T.NEWLINE) || at(T.COMMENT)) advance();
@@ -4082,6 +4094,13 @@ function parse(tokens, opts = {}) {
       return { type: "InitDirective", entrees, line: tok.line };
     }
     if (name === "actor") {
+      if (subkey) {
+        const forme = formeDuMot("actor");
+        throw new ParseError(
+          `'actor.${subkey}' : 'actor' est un mot du LANGAGE, il ne se qualifie pas par un point${forme ? ` \u2014 il s'\xE9crit '${forme}'` : ""}. Le point porte la D\xC9RIVATION d'un acteur, apr\xE8s son nom : 'actor <nom>.<sorte>'.`,
+          current()
+        );
+      }
       let actorName = lireNomDEntree(tok);
       while (at(T.PERIOD) && !current().spaceBefore && peek(1).type === T.IDENT) {
         advance();
@@ -6618,6 +6637,7 @@ export {
   famille,
   objet,
   objets,
+  formeDuMot,
   motReserve,
   clesDActeur,
   canaux,

@@ -6,6 +6,7 @@ import {
   describeVocabulary,
   famille,
   familles,
+  formeDuMot,
   groupeDUnicite,
   leRegistre,
   lesDefauts,
@@ -21,7 +22,7 @@ import {
   resolveActorAlphabetSource,
   universeControlNames,
   versionDuRegistre
-} from "./chunk-MLDYBRI4.js";
+} from "./chunk-BKN62DXB.js";
 import {
   LexError,
   tokenize
@@ -1460,7 +1461,15 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
     }
     if (catalogAxes.includes(d.name)) continue;
     if (!libExiste(d.name)) {
-      if (motsDuLangage.has(d.name)) continue;
+      if (motsDuLangage.has(d.name)) {
+        if (clesDActeur().has(d.name)) continue;
+        const forme = formeDuMot(d.name);
+        errors.push({
+          message: `'${d.name}.${d.subkey}' : '${d.name}' est un mot du LANGAGE, il ne se qualifie pas par un point` + (forme ? ` \u2014 il s'\xE9crit '${forme}'.` : ".") + ` Une ligne qu'aucune donn\xE9e ne sert est lue, \xE9crite dans l'arbre, et sans effet.`,
+          line: d.line
+        });
+        continue;
+      }
       const fichier = LIBS[d.name];
       const motAEcrire = fichier && typeof fichier === "object" ? fichier.resolves : null;
       errors.push({
