@@ -10,7 +10,7 @@
  *      bac reste celui d'avant, et une scène qui écrit ce contrôle compile.
  * Et la contre-épreuve : le même contrôle, ABSENT de la source, est refusé.
  */
-import { readFileSync, writeFileSync, mkdtempSync, rmSync, mkdirSync, cpSync, appendFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdtempSync, rmSync, mkdirSync, cpSync, lstatSync, appendFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -33,7 +33,17 @@ const bac = mkdtempSync(join(tmpdir(), 'bpscript-sources-'));
 try {
   const suivis = execFileSync('git', ['ls-files'], { encoding: 'utf8', cwd: RACINE }).split('\n').filter(Boolean);
   ok(suivis.length >= 100, `SOCLE : assiette de ${suivis.length} fichier(s) — trop peu pour un bac`);
-  for (const f of suivis) { mkdirSync(join(bac, dirname(f)), { recursive: true }); cpSync(join(RACINE, f), join(bac, f)); }
+  for (const f of suivis) {
+    // ⛔ UN LIEN VERS UN DOSSIER NE SE COPIE PAS COMME UN FICHIER — depuis que les skills partagés
+    //   sont des LIENS vers l'espace publié de leur propriétaire (architecte, 2026-09-03), git les
+    //   suit comme des entrées uniques et `cpSync` refuse : « Recursive option not enabled ». Ces
+    //   fichiers ne sont pas du sujet de ce banc, qui régénère les LIBRAIRIES.
+    let st;
+    try { st = lstatSync(join(RACINE, f)); } catch { continue; }
+    if (st.isSymbolicLink() || st.isDirectory()) continue;
+    mkdirSync(join(bac, dirname(f)), { recursive: true });
+    cpSync(join(RACINE, f), join(bac, f));
+  }
   execFileSync('ln', ['-s', join(RACINE, 'node_modules'), join(bac, 'node_modules')]);
 
   const scene = 'core\nalphabet.western\nzorglubtemoin:1\n-----\nS -> C4\n';

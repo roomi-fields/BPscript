@@ -21,7 +21,7 @@
  * discrimine est une clé inventée, qu'aucune liste ne pouvait connaître.
  */
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync, mkdtempSync, rmSync, mkdirSync, cpSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdtempSync, rmSync, mkdirSync, cpSync, lstatSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 
@@ -52,7 +52,17 @@ const bac = mkdtempSync(join(tmpdir(), 'bpscript-forme-nature-'));
 try {
   const suivis = execFileSync('git', ['ls-files'], { encoding: 'utf8', cwd: RACINE }).split('\n').filter(Boolean);
   ok(suivis.length >= 100, `SOCLE : assiette de ${suivis.length} fichier(s) — trop peu pour régénérer.`);
-  for (const f of suivis) { mkdirSync(join(bac, dirname(f)), { recursive: true }); cpSync(join(RACINE, f), join(bac, f)); }
+  for (const f of suivis) {
+    // ⛔ UN LIEN VERS UN DOSSIER NE SE COPIE PAS COMME UN FICHIER — depuis que les skills partagés
+    //   sont des LIENS vers l'espace publié de leur propriétaire (architecte, 2026-09-03), git les
+    //   suit comme des entrées uniques et `cpSync` refuse : « Recursive option not enabled ». Ces
+    //   fichiers ne sont pas du sujet de ce banc, qui régénère les LIBRAIRIES.
+    let st;
+    try { st = lstatSync(join(RACINE, f)); } catch { continue; }
+    if (st.isSymbolicLink() || st.isDirectory()) continue;
+    mkdirSync(join(bac, dirname(f)), { recursive: true });
+    cpSync(join(RACINE, f), join(bac, f));
+  }
   execFileSync('ln', ['-s', join(RACINE, 'node_modules'), join(bac, 'node_modules')]);
 
   // ⛔ LA SOURCE TÉMOIN N'EMPLOIE AUCUN DES CINQ ANCIENS NOMS. C'est ce qui rend le cas
