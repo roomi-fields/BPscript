@@ -8,10 +8,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "paths": {
-      "@kairos/core": [
-        "./node_modules/@kairos/core/dist/index.d.ts",
-        "../kairos/dist/index.d.ts"
-      ]
+      "@kairos/core": ["./node_modules/@kairos/core/dist/index.d.ts", "../kairos/dist/index.d.ts"]
     },
     "types": [],
     "skipLibCheck": true
