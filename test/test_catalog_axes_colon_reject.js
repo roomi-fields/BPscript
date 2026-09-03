@@ -14,7 +14,7 @@
 import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur (2026-09-02)
 import { parse } from '../src/transpiler/parser.js';
 import { tokenize } from '../src/transpiler/tokenizer.js';
-import { describeVocabulary } from '../src/transpiler/libs.js';
+import { describeVocabulary } from '../src/transpiler/vocabulaire.js';
 
 let ok = 0, ko = 0;
 function assert(label, cond, detail) {

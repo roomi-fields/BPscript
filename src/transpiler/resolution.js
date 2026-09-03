@@ -58,7 +58,8 @@ import { leSchema, lesDefauts, motsInvoques, familles } from './index-des-objets
 import { universeControlNames, resolveActorAlphabet, nomsDeTerminaux, loadLib, leRegistre, versionDuRegistre, librairiesQuiDeclarent } from './libs.js';
 import { expandAlphabetTerminals } from './actorResolver.js';
 import { resolveActorAlphabetSource } from './libs.js';
-import { describeVocabulary, groupeDUnicite } from './libs.js';
+import { groupeDUnicite } from './libs.js';
+import { describeVocabulary } from './vocabulaire.js';
 
 /**
  * Les nœuds de l'arbre, à toute profondeur — le parcours que l'étage emprunte pour compter ce qu'il

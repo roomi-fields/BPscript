@@ -33,7 +33,8 @@
  */
 import { createRequire } from 'node:module';
 import { compileToBPxAST } from '../src/transpiler/index.js';
-import { describeVocabulary, registerLib, clearRegistry, registerAll } from '../src/transpiler/libs.js';
+import { registerLib, clearRegistry, registerAll } from '../src/transpiler/libs.js';
+import { describeVocabulary } from '../src/transpiler/vocabulaire.js';
 
 const require = createRequire(import.meta.url);
 const { LIBS } = require('../src/transpiler/libs-data.js');

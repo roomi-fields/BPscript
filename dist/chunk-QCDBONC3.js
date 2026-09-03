@@ -19,7 +19,7 @@ import {
   resolveActorAlphabetSource,
   universeControlNames,
   versionDuRegistre
-} from "./chunk-ESZD6XAI.js";
+} from "./chunk-RUAV75P6.js";
 import {
   LexError,
   tokenize

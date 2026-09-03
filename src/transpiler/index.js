@@ -30,7 +30,7 @@
  */
 
 import { compileToBPxAST } from './bpxAst.js';
-import { describeVocabulary } from './libs.js';
+import { describeVocabulary } from './vocabulaire.js';
 
 // describeVocabulary : autorité du vocabulaire du langage pour l'éditeur Kanopi
 // (coloration/autocomplétion/erreurs) — même agrégation que le garde de compilation.

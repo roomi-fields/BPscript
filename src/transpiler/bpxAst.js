@@ -21,7 +21,8 @@
 import { tokenize, LexError } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
 import { resoudre, noterLePassage, emitSceneMeter, refuserEsclaveSansMaitre, poserLaVoixDesTerminaux, retirerArdoiseAlphabet, applyDefaultActor, hasTempoDirective, applyEnvironmentDefaults, canonicalizeLhsContext, canonicalizeLhsElement, canonicalizeRhsElement, canonicalizeContexts, ctxSymbolToElement, enrichRemoteHeadContext, canalFautif, nomsDeclares, validateCallVocabulary, terminauxEnPortee, validateTerminals, restesDeSegmentation, emitSceneLibRefs, deriveAlphabetFromTuning, emitActorLibRefs, emitNoteTerminals, resolveHomomorphismMarkers, annotateBackticks, poserLeDestinataireDesReglages, refuserAttenteNonDeclaree, refuserNomsEnDouble, applySceneValues, validateReferences, splitCompoundTerminals, chargerPorteesPermises, singleCharAlphabetSet, splitLhsElement, splitRhsElement, tokenizeCompoundName, makeSplitAtom } from './resolution.js';
-import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, describeVocabulary, universeControlNames, nomsDeTerminaux, groupeDUnicite, brancherLeCompilateur } from './libs.js';
+import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, universeControlNames, nomsDeTerminaux, groupeDUnicite, brancherLeCompilateur } from './libs.js';
+import { describeVocabulary } from './vocabulaire.js';
 import { LIBS } from './libs-data.js';
 import { segmenter } from './segmentation.js';
 

@@ -84,7 +84,7 @@ for (const [groupe, mots] of gestesMidi) {
 // ── 2. LA VALEUR ARRIVE AU CONSOMMATEUR, elle ne reste pas dans le fichier ───────────────────
 // « Déclaré » n'est pas « publié » : le reversement sur la déclaration est ce que lit l'aval.
 {
-  const { describeVocabulary } = await import('../src/transpiler/libs.js');
+  const { describeVocabulary } = await import('../src/transpiler/vocabulaire.js');
   const vocab = describeVocabulary();
   for (const [, mots] of gestesMidi) {
     for (const { nom } of mots) {

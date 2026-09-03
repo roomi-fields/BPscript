@@ -9,7 +9,8 @@
 
 import { T } from './tokenizer.js';
 import { leSchema, famille } from './index-des-objets.js';
-import { loadLib, directiveDeclareeParLaLibrairie, loadLibsFromDirectives, describeVocabulary, librairiesQuiDeclarent } from './libs.js';
+import { loadLib, directiveDeclareeParLaLibrairie, loadLibsFromDirectives, librairiesQuiDeclarent } from './libs.js';
+import { describeVocabulary } from './vocabulaire.js';
 import { BP3_OPERATORS } from './constants.js';
 // ⛔ LE SCHÉMA DE SYNTAXE N'EST PAS UNE LIBRAIRIE — il se lit par SA PROPRE PORTE, jamais par le
 // registre des librairies. Décision Romain, 2026-08-20.

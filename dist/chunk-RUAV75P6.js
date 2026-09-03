@@ -2188,8 +2188,6 @@ function loadLibsFromDirectives(directives) {
       ctx.valueRegistry[vname] = { ...spec, _axis: null };
     }
   }
-  const digitalLib = loadJsonFile("function");
-  ctx.digitalFunctions = new Set(Object.keys(digitalLib && digitalLib.objects || {}));
   const settingsLib = loadLib("settings");
   if (settingsLib) ctx._libs["settings"] = settingsLib;
   const invoquees = new Set((directives || []).flatMap((d) => d ? [d.name, d.lib] : []).filter(Boolean));
@@ -2451,41 +2449,6 @@ function loadLibsFromDirectives(directives) {
   }
   return ctx;
 }
-function describeVocabulary(directives = []) {
-  const aUneScene = Array.isArray(directives) && directives.length > 0;
-  const allDirs = aUneScene ? directives : Object.keys(leRegistre()).map((name) => ({ name }));
-  const ctx = loadLibsFromDirectives(allDirs);
-  const isEntry = (v) => v && typeof v === "object" && !Array.isArray(v);
-  const META = CHAMPS_DE_FICHIER;
-  const components = {};
-  for (const axis of ctx.catalogAxes) {
-    const file = loadLib(axis);
-    components[axis] = file ? file.objects && isEntry(file.objects) ? Object.keys(file.objects).filter((k) => !k.startsWith("_")) : Object.keys(file).filter((k) => !k.startsWith("_") && !META.has(k) && isEntry(file[k])) : [];
-  }
-  const pick = (def, keys) => {
-    const o = {};
-    for (const k of keys) if (def[k] !== void 0) o[k] = def[k];
-    return o;
-  };
-  const langLib = SYNTAXE;
-  const voicesLib = loadJsonFile("voice");
-  const voiceNames = Object.keys(voicesLib && voicesLib.objects || {});
-  return {
-    voices: voiceNames,
-    keywords: [...ctx.reservedDirectiveNames],
-    controls: Object.entries(ctx.controls).map(([name, def]) => ({ name, ...pick(def || {}, ["args", "range", "values", "default", "description", "transportGroup"]) })),
-    values: Object.entries(ctx.valueRegistry).map(([name, spec]) => ({ name, ...pick(spec || {}, ["range", "unit", "values", "description"]) })),
-    functions: [...ctx.digitalFunctions],
-    components,
-    addressKeys: [...ctx.addressKeys],
-    // Réglages RÉSERVÉS (mode/scan/weight/on_fail/tempx/meter) — écrits en PARENTHÈSES depuis la
-    // décision Romain 2026-08-02 (LANGUAGE.md:773-800). Exposé pour que le vocabulaire consommé
-    // par validateReferences() les reconnaisse comme des attributs `(k:v)` connus.
-    qualifierKeys: [...ctx.qualifierKeys],
-    directiveValues: langLib.directiveValues || {},
-    syntaxWords: langLib.syntaxWords || {}
-  };
-}
 
 // src/transpiler/index-des-objets.js
 function motDe(cle, lib) {
@@ -2659,6 +2622,36 @@ function objetEnPortee(nom, ast) {
   if (!o) return null;
   if (o.ambigu) throw new Error(`'${nom}' est d\xE9clar\xE9 par plusieurs librairies \u2014 ${o.ambigu.join(", ")} \u2014 et le compilateur ne peut pas choisir`);
   return motsInvoques(ast).has(o.famille) ? o : null;
+}
+
+// src/transpiler/vocabulaire.js
+var nomsDe = (mot) => {
+  const f = famille(mot);
+  return f ? f.entrees.filter((e) => e.documented).map((e) => e.nom) : [];
+};
+var pick = (def, keys) => {
+  const o = {};
+  for (const k of keys) if (def[k] !== void 0) o[k] = def[k];
+  return o;
+};
+function describeVocabulary(directives = []) {
+  const aUneScene = Array.isArray(directives) && directives.length > 0;
+  const allDirs = aUneScene ? directives : Object.keys(leRegistre()).map((name) => ({ name }));
+  const ctx = loadLibsFromDirectives(allDirs);
+  const components = {};
+  for (const axis of (leSchema() || {}).catalogAxes || []) components[axis] = nomsDe(axis);
+  return {
+    voices: nomsDe("voice"),
+    keywords: [...ctx.reservedDirectiveNames],
+    controls: Object.entries(ctx.controls).map(([name, def]) => ({ name, ...pick(def || {}, ["args", "range", "values", "default", "description", "transportGroup"]) })),
+    values: Object.entries(ctx.valueRegistry).map(([name, spec]) => ({ name, ...pick(spec || {}, ["range", "unit", "values", "description"]) })),
+    functions: nomsDe("function"),
+    components,
+    addressKeys: [...ctx.addressKeys],
+    qualifierKeys: [...ctx.qualifierKeys],
+    directiveValues: SYNTAXE.directiveValues || {},
+    syntaxWords: SYNTAXE.syntaxWords || {}
+  };
 }
 
 // src/transpiler/constants.js
@@ -6601,7 +6594,6 @@ export {
   resolveActorAlphabetSource,
   nomsDeTerminaux,
   loadLibsFromDirectives,
-  describeVocabulary,
   familles,
   famille,
   objet,
@@ -6609,6 +6601,7 @@ export {
   leSchema,
   lesDefauts,
   motsInvoques,
+  describeVocabulary,
   ParseError,
   parse
 };

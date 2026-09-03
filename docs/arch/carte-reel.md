@@ -5,7 +5,7 @@
 > vit dans le document d'architecture, chez Atlas, qui cite celui-ci.
 ## Ce qui est mesuré
 
-- **25 modules** dans `src/transpiler/`, **15738 lignes**.
+- **26 modules** dans `src/transpiler/`, **15712 lignes**.
 - Le **rôle** est lu dans l'en-tête de chaque fichier, verbatim — jamais interprété.
 - Les **arêtes** sont les imports d'un module vers un voisin du même dossier.
 
@@ -13,19 +13,20 @@
 
 | Module | Lignes | Importe | Importé par | Rôle (lu dans l'en-tête) |
 | --- | ---: | ---: | ---: | --- |
-| `parser.js` | 7934 | 5 | 2 | BPScript Parser |
-| `resolution.js` | 3090 | 5 | 1 | L'ÉTAGE QUI RÉSOUT — le troisième des quatre, et le seul qui n'avait pas de domicile. |
-| `libs.js` | 1321 | 4 | 7 | BPScript Library Loader |
+| `parser.js` | 7935 | 6 | 2 | BPScript Parser |
+| `resolution.js` | 3091 | 6 | 1 | L'ÉTAGE QUI RÉSOUT — le troisième des quatre, et le seul qui n'avait pas de domicile. |
+| `libs.js` | 1211 | 3 | 7 | BPScript Library Loader |
 | `actorResolver.js` | 588 | 2 | 2 | BPScript Actor Resolver |
-| `bpxAst.js` | 516 | 9 | 2 | Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table |
+| `bpxAst.js` | 517 | 10 | 2 | Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table |
 | `tokenizer.js` | 514 | 0 | 2 | BPScript Tokenizer |
 | `librairies.js` | 347 | 1 | 1 | LA LECTURE DES LIBRAIRIES — une source écrite dans le langage devient un objet du registre. |
-| `index-des-objets.js` | 278 | 2 | 5 | L'INDEX DES OBJETS — ce que les librairies déclarent, rendu comme des objets, pour la porte |
+| `index-des-objets.js` | 278 | 2 | 6 | L'INDEX DES OBJETS — ce que les librairies déclarent, rendu comme des objets, pour la porte |
 | `librairies-jointes.js` | 144 | 1 | 1 | L'ARBRE JOINT LE CONTENU DES LIBRAIRIES QU'IL INVOQUE — décision de Romain, 2026-09-02. |
 | `orderTokens.js` | 123 | 0 | 0 | — |
 | `controlValidation.js` | 113 | 0 | 1 | Collecte récursivement toutes les paires de SettingBag de l'AST. |
 | `libs-champs.js` | 98 | 0 | 3 | LES CHAMPS DE FICHIER D'UNE LIBRAIRIE — déclarés UNE FOIS, pour tous mes lecteurs. |
 | `segmentation.js` | 81 | 0 | 1 | LA SEGMENTATION D'UN NOM COLLÉ — plus long préfixe, glouton, sans retour arrière. |
+| `vocabulaire.js` | 81 | 3 | 4 | LE VOCABULAIRE DU LANGAGE — la porte d'éditeur, DÉRIVÉE de la porte des objets. |
 | `syntaxe-data.js` *(généré)* | 79 | 0 | 2 | — |
 | `libs-bundle-check.js` | 76 | 0 | 0 | — |
 | `syntaxe-bundle.mjs` | 64 | 0 | 0 | GÉNÉRATEUR DE LA PORTE DU SCHÉMA DE SYNTAXE. |
@@ -68,12 +69,14 @@ flowchart LR
   syntaxe_bundle_mjs["syntaxe-bundle.mjs"]
   syntaxe_data_js["syntaxe-data.js"]
   tokenizer_js["tokenizer.js"]
+  vocabulaire_js["vocabulaire.js"]
   actorResolver_js --> libs_js
   actorResolver_js --> index_des_objets_js
   bpxAst_js --> tokenizer_js
   bpxAst_js --> parser_js
   bpxAst_js --> resolution_js
   bpxAst_js --> libs_js
+  bpxAst_js --> vocabulaire_js
   bpxAst_js --> libs_data_js
   bpxAst_js --> segmentation_js
   bpxAst_js --> actorResolver_js
@@ -82,7 +85,7 @@ flowchart LR
   index_des_objets_js --> libs_js
   index_des_objets_js --> libs_champs_js
   index_js --> bpxAst_js
-  index_js --> libs_js
+  index_js --> vocabulaire_js
   librairies_jointes_js --> index_des_objets_js
   librairies_js --> libs_champs_js
   libs_bundle_js --> index_js
@@ -90,13 +93,13 @@ flowchart LR
   libs_types_js --> libs_data_js
   libs_js --> librairies_js
   libs_js --> sources_js
-  libs_js --> syntaxe_data_js
   libs_js --> libs_champs_js
   objets_js --> bpxAst_js
   objets_js --> index_des_objets_js
   parser_js --> tokenizer_js
   parser_js --> index_des_objets_js
   parser_js --> libs_js
+  parser_js --> vocabulaire_js
   parser_js --> constants_js
   parser_js --> syntaxe_data_js
   resolution_js --> actorResolver_js
@@ -104,6 +107,10 @@ flowchart LR
   resolution_js --> libs_data_js
   resolution_js --> index_des_objets_js
   resolution_js --> libs_js
+  resolution_js --> vocabulaire_js
+  vocabulaire_js --> index_des_objets_js
+  vocabulaire_js --> libs_js
+  vocabulaire_js --> syntaxe_data_js
 ```
 
 ## Ce que la mesure trouve

@@ -20,7 +20,6 @@
 
 import { chargerLesLibrairies, placesDesLibrairies } from './librairies.js';
 import { sourcesDeLibrairie } from './sources.js';
-import { SYNTAXE } from './syntaxe-data.js';
 import { CHAMPS_DE_FICHIER } from './libs-champs.js';
 
 /**
@@ -588,13 +587,9 @@ function loadLibsFromDirectives(directives) {
     }
   }
 
-  // Fonctions DIGITALES/dispatcher (transpose, rotate, keyxpand…) — toujours disponibles,
-  // indépendantes de controls. Source : digital.json (générique — une fonction ajoutée = reconnue).
-  // ⛔ PAR LE MOT QUE LA LIBRAIRIE DÉCLARE, jamais par son nom de fichier. `digital` était le nom du
-  // FICHIER ; `function` est l'AXE qu'il sert, et c'est le mot que la scène écrit. Nommer le fichier
-  // faisait de mon rangement une interface : renommer `digital.json` cassait cette ligne en silence.
-  const digitalLib = loadJsonFile('function');
-  ctx.digitalFunctions = new Set(Object.keys((digitalLib && digitalLib.objects) || {}));
+  // Les fonctions digitales ne se chargent plus ici « quelle que soit l'invocation » (2026-09-03,
+  // principe 1) : le vocabulaire les lit par la porte des objets (`vocabulaire.js`), et la section de
+  // l'arbre les joint par l'index. Rien d'autre ne les lisait sur ce contexte.
 
   // Always load settings (engine defaults)
   const settingsLib = loadLib('settings');
@@ -1209,112 +1204,7 @@ function loadLibsFromDirectives(directives) {
   return ctx;
 }
 
-/**
- * VOCABULAIRE du langage — autorité UNIQUE, à destination de l'ÉDITEUR (Kanopi :
- * coloration syntaxique, autocomplétion, surlignage d'erreurs) ET du garde de
- * compilation (même agrégation, une seule source de vérité). Romain 2026-07-05.
- *
- * TOUT est agrégé depuis les libs chargées + le schéma @core — ZÉRO liste en dur,
- * ZÉRO lib nommée en dur. Une user library ajoutée = ses mots entrent ici
- * automatiquement (contrôles, valeurs, fonctions, entrées de catalogue).
- *
- * UNIVERS COMPLET : agrège TOUTES les librairies disponibles (registre = built-in +
- * user libs à venir), pas seulement celles que la scène invoque — un mot USABLE est
- * valide qu'on ait chargé sa lib ou non (principe Romain). `directives` est accepté
- * pour compat/future portée mais le vocabulaire renvoyé couvre tout le disponible.
- * @param {Array} [directives]  (optionnel) directives de la scène.
- * @returns {{
- *   keywords: string[],                       // mots du LANGAGE (réservés) — non des libs
- *   controls: Array<{name, args?, range?, values?, default?, description?, transportGroup?}>,
- *   values:   Array<{name, range?, unit?, values?, description?}>,
- *   functions: string[],                      // fonctions digitales (transpose…)
- *   components: { [axis:string]: string[] },  // entrées de catalogue par axe (alphabets, accordages…)
- *   addressKeys: string[],
- *   qualifierKeys: string[],                   // réglages réservés (mode/scan/weight/on_fail/tempx/meter), écrits en '()'
- *   directiveValues: { [directive:string]: {description?, values: [{name, description?}]} },  // enums (mode:…, scan:…)
- *   syntaxWords: { [word:string]: {kind, description?, syntax?} }                              // gate/trigger/cv/lambda, ->/<-/<>
- * }}
- */
-function describeVocabulary(directives = []) {
-  // DEUX QUESTIONS, DEUX PORTÉES — et la signature les distinguait déjà sans que le corps le fasse.
-  //
-  // · SANS directives : « quel est le vocabulaire du langage ? » — le CATALOGUE complet, toutes les
-  //   librairies du registre. C'est ce que Kanopi affiche à l'auteur, et c'est légitime.
-  // · AVEC directives : « qu'est-ce que CETTE scène a le droit d'écrire ? » — les seules librairies
-  //   qu'elle invoque.
-  //
-  // ⚠️ LE PARAMÈTRE EXISTAIT ET ÉTAIT IGNORÉ : le corps reconstruisait l'univers complet dans tous
-  // les cas. Une signature qui accepte un argument sans l'employer est pire qu'une absence — elle
-  // fait croire que la restriction est possible, et personne ne va vérifier. Le contrôle des
-  // références passait donc par ici sans rien restreindre, et son propre commentaire portait la
-  // règle inverse : « agrégat de TOUTES les libs disponibles. Un mot usable est valide. »
-  //
-  // Romain a tranché l'autre sens le 2026-08-08 : « invoquer commande, systématiquement — si un mot
-  // est inconnu dans le corpus invoqué, alors erreur ».
-  const aUneScene = Array.isArray(directives) && directives.length > 0;
-  const allDirs = aUneScene ? directives : Object.keys(leRegistre()).map((name) => ({ name }));
-  const ctx = loadLibsFromDirectives(allDirs);
-  const isEntry = (v) => v && typeof v === 'object' && !Array.isArray(v);
-  // ⛔ LA LISTE DES CHAMPS DE FICHIER NE SE RECOPIE PLUS ICI — celle qui vivait à cette ligne
-  // avait perdu `resolves`, `type`, `section` : elle ne tenait que parce que `isEntry` écarte
-  // déjà les valeurs simples. Une liste redondante est une liste qui périmera sans rougir.
-  const META = CHAMPS_DE_FICHIER;
-  const components = {};
-  for (const axis of ctx.catalogAxes) {
-    const file = loadLib(axis);
-    // DEUX FORMES DE FICHIER, ET LE CHOIX EST MESURÉ. Les librairies de DONNÉES posent leurs
-    // entrées à la RACINE (`alphabets.json` → western, sargam…) ; celles de CODE les groupent
-    // sous `objects` (`mod`, `voice`, et `eval` depuis le 2026-08-06). Aucun
-    // fichier ne fait les deux — vérifié sur les huit concernés avant d'écrire cette ligne, ce
-    // qui est la raison pour laquelle `objects` peut primer sans rien ambiguïser.
-    // Sans ce cas, un axe de catalogue dont les entrées vivent sous `objects` rendait une liste
-    // VIDE : tout nom y devenait inconnu, ou — pire, et c'est ce qui est arrivé — la déclaration
-    // de l'axe restait sans effet et n'importe quel nom passait en silence.
-    components[axis] = file
-      ? (file.objects && isEntry(file.objects)
-          ? Object.keys(file.objects).filter((k) => !k.startsWith('_'))
-          : Object.keys(file).filter((k) => !k.startsWith('_') && !META.has(k) && isEntry(file[k])))
-      : [];
-  }
-  const pick = (def, keys) => {
-    const o = {};
-    for (const k of keys) if (def[k] !== undefined) o[k] = def[k];
-    return o;
-  };
-  // ⛔ LE SCHÉMA DE SYNTAXE SE LIT PAR SA PROPRE PORTE — il a quitté `lib/` le 2026-08-21 (décision
-  // Romain du 2026-08-20). Ce n'est pas une librairie : aucune scène ne l'invoque, il ne déclare
-  // aucun mot d'invocation, et il porte ce que le LANGAGE EST. Passer par `loadJsonFile` le faisait
-  // dépendre du registre des librairies, donc de ce qu'une scène avait déclaré.
-  // ⚠️ ET LE `|| {}` EST PARTI AVEC : la porte REFUSE de se publier vide (`syntaxe-bundle.mjs`).
-  // Un repli sur l'objet vide publiait « zéro mot de syntaxe », qui a la graphie d'une mesure.
-  const langLib = SYNTAXE;
-  // Voix (LANG-SONS-2, catalogue du mot `voice` §3) : noms de BASE pour `voice.<nom>` — les clés
-  // La spécialisation par appareil vit dans le membre `for` de la voix (§5), plus dans son nom.
-  // Même geste : l'AXE `voice`, pas le fichier `voices`.
-  const voicesLib = loadJsonFile('voice');
-  // ⛔ LE NOM EST UN NOM — le repli sur une clé qui portait sa destination est retiré avec la donnée
-  // qui le rendait nécessaire (décision Romain, 2026-08-24).
-  const voiceNames = Object.keys((voicesLib && voicesLib.objects) || {});
-  return {
-    voices: voiceNames,
-    keywords: [...ctx.reservedDirectiveNames],
-    controls: Object.entries(ctx.controls).map(([name, def]) =>
-      ({ name, ...pick(def || {}, ['args', 'range', 'values', 'default', 'description', 'transportGroup']) })),
-    values: Object.entries(ctx.valueRegistry).map(([name, spec]) =>
-      ({ name, ...pick(spec || {}, ['range', 'unit', 'values', 'description']) })),
-    functions: [...ctx.digitalFunctions],
-    components,
-    addressKeys: [...ctx.addressKeys],
-    // Réglages RÉSERVÉS (mode/scan/weight/on_fail/tempx/meter) — écrits en PARENTHÈSES depuis la
-    // décision Romain 2026-08-02 (LANGUAGE.md:773-800). Exposé pour que le vocabulaire consommé
-    // par validateReferences() les reconnaisse comme des attributs `(k:v)` connus.
-    qualifierKeys: [...ctx.qualifierKeys],
-    directiveValues: langLib.directiveValues || {},
-    syntaxWords: langLib.syntaxWords || {},
-  };
-}
-
 export { placesDesLibrairies };
-export { leRegistre, versionDuRegistre, brancherLeCompilateur, loadLib, directiveDeclareeParLaLibrairie, librairiesQuiDeclarent, groupeDUnicite, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, registerLib, registerAll, clearRegistry,
+export { leRegistre, versionDuRegistre, brancherLeCompilateur, loadLib, directiveDeclareeParLaLibrairie, librairiesQuiDeclarent, groupeDUnicite, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, universeControlNames, registerLib, registerAll, clearRegistry,
   nomsDeTerminaux,
 };

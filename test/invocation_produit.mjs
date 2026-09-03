@@ -22,7 +22,7 @@
 // `lib/homomorphism.json` (clé `tables`), `lib/transcription.json` est SUPPRIMÉ, et les 13 scènes
 // de l'écosystème qui écrivaient l'ancien mot sont migrées. Ce garde suit le mot vivant.
 import { compileToBPxAST } from '../src/transpiler/index.js';
-import { describeVocabulary } from '../src/transpiler/libs.js';
+import { describeVocabulary } from '../src/transpiler/vocabulaire.js';
 
 let passe = 0;
 const echecs = [];

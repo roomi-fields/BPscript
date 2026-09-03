@@ -39,7 +39,7 @@ const listes = Object.entries(schema).filter(([k, v]) => !k.startsWith('_') && A
 ok(listes.length >= 4,
    `SOCLE : ${listes.length} liste(s) déclarée(s) dans lib/core.json schema — la donnée a changé de forme`);
 
-const FICHIERS = ['parser.js', 'tokenizer.js', 'bpxAst.js', 'libs.js', 'actorResolver.js'];
+const FICHIERS = ['parser.js', 'tokenizer.js', 'bpxAst.js', 'libs.js', 'vocabulaire.js', 'actorResolver.js'];
 const sources = FICHIERS.map((f) => {
   let texte = '';
   try { texte = readFileSync(path.join(SRC, f), 'utf-8'); } catch { /* absent : le socle le dira */ }
