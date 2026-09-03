@@ -539,9 +539,9 @@ function loadLibsFromDirectives(directives) {
 
   // SOCLE core — chargé en DONNÉE. `core.defaults` porte les valeurs/composants par défaut (la
   // cascade). ⛔ LE SCHÉMA DE `core` EST DISSOUS (Romain, 2026-09-03) : les mots de la grammaire
-  // viennent du schéma de SYNTAXE, les clés de crochet sont une portée `bracket` sur chaque
-  // contrôle, les axes de catalogue se dérivent à la porte des objets, les canaux sont les entrées
-  // de `destination`, les clés d'acteur les membres typés d'`actor`.
+  // viennent du schéma de SYNTAXE, les clés de crochet aussi — c'est une graphie, pas une propriété
+  // d'un contrôle. Les axes de catalogue se dérivent à la porte des objets, les canaux sont les
+  // exemplaires de `destination`, les clés d'acteur les membres typés d'`actor`.
   const coreLib = loadJsonFile('core') || {};
   // ⛔ CE QUE LA SCÈNE ACCEPTE EST CE QU'ELLE INVOQUE — principe 1, Romain 2026-09-02 : l'invocation
   // met en portée ce qu'une librairie déclare, et rien d'autre n'est en portée. Les mots de tête,
