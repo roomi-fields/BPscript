@@ -22,7 +22,7 @@
  * @returns {{
  *   voices: string[],
  *   keywords: string[],                       // mots de tête : le langage, et ce que les librairies invoquées déclarent en portée scène
- *   controls: Array<{name, args?, range?, values?, default?, description?, transportGroup?}>,
+ *   controls: Array<{name, args?, range?, values?, value?, description?, transportGroup?}>,   // `value` : ce que le contrôle vaut quand personne ne l'écrit
  *   values:   Array<{name, range?, unit?, values?, description?}>,
  *   functions: string[],
  *   components: { [axis:string]: string[] },  // les entrées de chaque axe de catalogue
@@ -67,7 +67,7 @@ export function describeVocabulary(directives = []) {
     voices: nomsDe('voice'),
     keywords: [...ctx.reservedDirectiveNames],
     controls: Object.entries(ctx.controls).map(([name, def]) =>
-      ({ name, ...pick(def || {}, ['args', 'range', 'values', 'default', 'description', 'transportGroup']) })),
+      ({ name, ...pick(def || {}, ['args', 'range', 'values', 'value', 'description', 'transportGroup']) })),
     values: Object.entries(ctx.valueRegistry).map(([name, spec]) =>
       ({ name, ...pick(spec || {}, ['range', 'unit', 'values', 'description']) })),
     functions: nomsDe('function'),

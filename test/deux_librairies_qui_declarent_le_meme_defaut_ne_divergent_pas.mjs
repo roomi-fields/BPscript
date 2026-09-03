@@ -33,13 +33,15 @@ const objets = LIBS.digital?.objects || {};
 
 /** Les valeurs par défaut d'une déclaration, à plat et dans l'ordre écrit. */
 const defautsTranspo = (nom) => {
-  const d = controles[nom]?.default;
+  const d = controles[nom]?.value;
   if (d === undefined) return [];
   return (d !== null && typeof d === 'object') ? Object.values(d) : [d];
 };
 const defautsDigital = (nom) => {
   const p = objets[nom]?.params;
   if (!p) return null;                       // la déclaration n'existe pas de ce côté
+  // Les paramètres d'une fonction digitale gardent `default` jusqu'à la frappe des fonctions
+  // (point 1 des cinq arbitrages) ; le contrôle, lui, porte `value` depuis le 2026-09-03.
   return Object.values(p).map((x) => x?.default).filter((x) => x !== undefined);
 };
 
@@ -71,7 +73,7 @@ const defautsDigital = (nom) => {
     compares++;
     ok(JSON.stringify(ici) === JSON.stringify(la),
       `2. '${nom}' : les deux librairies déclarent des défauts DIFFÉRENTS — transpo `
-      + `${JSON.stringify(ici)} (${JSON.stringify(controles[nom]?.default)}) · digital `
+      + `${JSON.stringify(ici)} (${JSON.stringify(controles[nom]?.value)}) · digital `
       + `${JSON.stringify(la)}. Elles décrivent le même geste : un écart y est une faute, jamais `
       + `une variante.`);
   }
@@ -89,8 +91,8 @@ const defautsDigital = (nom) => {
     ['chromashift', [], ['n']],
   ];
   for (const [nom, ici, la] of paires) {
-    const cIci = Object.keys(controles[nom]?.default && typeof controles[nom].default === 'object'
-      ? controles[nom].default : {});
+    const cIci = Object.keys(controles[nom]?.value && typeof controles[nom].value === 'object'
+      ? controles[nom].value : {});
     const cLa = Object.keys(objets[nom]?.params || {});
     ok(JSON.stringify(cIci) === JSON.stringify(ici),
       `3. '${nom}' · transpo doit nommer ${JSON.stringify(ici)} — reçu ${JSON.stringify(cIci)}`);

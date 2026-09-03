@@ -1161,42 +1161,36 @@ function loadLibsFromDirectives(directives) {
     if (dest) ctx.controlResolvedBy[nom] = dest;
   }
 
-  // ── LES VALEURS PAR DÉFAUT VIENNENT DE LEUR PROPRE LIBRAIRIE ────────────────────────────────
-  // Décision de Romain (2026-08-15) : « core.json doit appeler une librairie midi default qui
-  // stipule tout l'environnement par défaut », et « les défauts sont dans la librairie
-  // midi-default, ça sera modifié dans le live par les contrôles de volume de l'UI ».
+  // ── L'ENVIRONNEMENT SURCHARGE LA VALEUR D'UN CONTRÔLE PAR UNE LIGNE DE TÊTE ─────────────────
+  // Arbitrage de Romain, 2026-09-03 (points 3 et forme 4 des cinq arbitrages) : un contrôle porte
+  // sa valeur dans son membre `value` (`control vel (…, value:64)`) — ce qu'il vaut quand personne
+  // ne l'écrit ; une librairie d'environnement la surcharge en écrivant `volume:90` en tête de son
+  // fichier, comme une scène l'écrit en tête ; la scène, l'acteur et l'occurrence surchargent
+  // ensuite. Le principe 2 appliqué aux valeurs : le plus local gagne.
   //
   // DEUX QUESTIONS, DEUX FICHIERS. La déclaration d'un mot dit CE QU'IL EST — arguments, plage,
-  // portée, graphie native ; la librairie de défauts dit QUELLE VALEUR IL PORTE quand personne ne
-  // l'écrit. La première est une propriété du langage ; la seconde est un réglage d'environnement,
-  // que l'interface modifie en direct.
+  // portée, graphie native, valeur de départ ; la librairie d'environnement dit QUELLE VALEUR IL
+  // PORTE chez elle. Décision de Romain (2026-08-15) : « les défauts sont dans la librairie
+  // midi-default, ça sera modifié dans le live par les contrôles de volume de l'UI ».
   //
-  // ⚠️ LA SURFACE PUBLIÉE NE BOUGE PAS, ET C'EST LA CONDITION DU DÉPLACEMENT : la valeur est
-  // reversée ici sur `controls[…].default`, donc un consommateur qui lit le vocabulaire voit
-  // exactement ce qu'il voyait. Kanopi affiche ce champ dans l'aide de son éditeur — mesuré avant
-  // d'écrire (lang-bpscript.ts:48). C'est l'AUTORITÉ qui se déplace, pas la forme.
-  //
-  // AUCUN NOM DE LIBRAIRIE ICI : toute librairie du registre peut porter une section
-  // `controlDefaults`, et le jour où `audio-default` naîtra, elle sera lue sans une ligne de code.
+  // ⛔ SEULES LES LIBRAIRIES INVOQUÉES SURCHARGENT (principe 1), dans l'ordre de leur chargement —
+  // la dernière invoquée gagne. Le sac `controlDefaults`, lu sur TOUT le registre, est sorti avec
+  // cette forme. Aucun nom de librairie ici : toute librairie invoquée peut porter des réglages de
+  // tête, et le jour où `audio-default` naîtra, elle sera lue sans une ligne de code.
   //
   // ⚠️ CE BLOC PASSE APRÈS LA RÉSOLUTION DES INTERFACES, et l'ordre est mesuré. Placé avant, la
   // reprise de la forme nue vers l'interface ÉCRASAIT la valeur : `volume` nu ressortait sans
-  // défaut, alors qu'il en portait un la veille — une régression muette pour l'aide de l'éditeur.
-  //
-  // ⛔ ET LA QUESTION QUE CET ORDRE LAISSE OUVERTE, signalée : le défaut d'un mot GÉNÉRIQUE dépend
-  // du runtime actif, que le vocabulaire ne connaît pas. Aujourd'hui un seul environnement en
-  // déclare un, donc la lecture est sans ambiguïté ; le jour où `audio-default` donnera une autre
-  // valeur à `volume`, il faudra dire laquelle le vocabulaire publie.
-  for (const lib of Object.values(leRegistre())) {
-    const valeurs = lib && lib.controlDefaults;
-    if (!valeurs || typeof valeurs !== 'object' || Array.isArray(valeurs)) continue;
-    for (const [nom, valeur] of Object.entries(valeurs)) {
-      if (nom.startsWith('_')) continue;
+  // valeur, alors qu'il en portait une la veille — une régression muette pour l'aide de l'éditeur.
+  for (const dir of aCharger) {
+    const lib = dir && dir.name ? loadJsonFile(dir.name) : null;
+    const reglages = lib && lib.reglages;
+    if (!reglages || typeof reglages !== 'object' || Array.isArray(reglages)) continue;
+    for (const [nom, valeur] of Object.entries(reglages)) {
       const def = ctx.controls[nom];
       // Une valeur pour un mot que la scène n'a pas en portée n'est pas une faute : la librairie
-      // des défauts décrit l'environnement entier, la scène n'en invoque qu'une partie.
+      // d'environnement décrit l'environnement entier, la scène n'en invoque qu'une partie.
       if (!def || typeof def !== 'object') continue;
-      ctx.controls[nom] = { ...def, default: valeur };
+      ctx.controls[nom] = { ...def, value: valeur };
     }
   }
 

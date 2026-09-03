@@ -79,17 +79,17 @@ control volume (args(value), range(0, 127), description:"Volume d'une voix. MIDI
 // PORTEE ETENDUE A LA SCENE le 2026-08-15 pour `vel` et `pan` (Romain, « ok pour les extensions de
 // portee ») : DeftVelocity et DeftPanoramic sont des defauts de scene au moteur natif, et il ne
 // manquait que le mot `scene` dans leur portee pour qu ils s ecrivent en tete.
-control vel (bp3:_vel, args(value), range(0, 127), default:64, description:"Velocity (0-127). WebAudio: gain, MIDI: NoteOn velocity", scope(symbol, group, rule, flow, scene), transportGroup:expression)
+control vel (bp3:_vel, args(value), range(0, 127), value:64, description:"Velocity (0-127). WebAudio: gain, MIDI: NoteOn velocity", scope(symbol, group, rule, flow, scene), transportGroup:expression)
 
-control pan (bp3:_pan, args(value), range(0, 127), default:64, description:"Pan (0=left, 64=center, 127=right). WebAudio: StereoPanner, MIDI: CC10", scope(symbol, group, rule, flow, scene), transportGroup:expression)
+control pan (bp3:_pan, args(value), range(0, 127), value:64, description:"Pan (0=left, 64=center, 127=right). WebAudio: StereoPanner, MIDI: CC10", scope(symbol, group, rule, flow, scene), transportGroup:expression)
 
 control pancont (bp3:_pancont, description:"Panoramique en mode CONTINU — la valeur glisse PENDANT les notes, par messages intermédiaires. Ses deux frères discrets vivent dans la librairie variation ; leur destinataire se lit sur le champ resolvedBy de ce fichier-là, jamais ici.", scope(symbol, group, rule, flow), transportGroup:expression)
 
-control rndvel (bp3:_rndvel, args(range), default:0, description:"Random velocity +/-range", scope(symbol, group, rule, flow), transportGroup:expression)
+control rndvel (bp3:_rndvel, args(range), value:0, description:"Random velocity +/-range", scope(symbol, group, rule, flow), transportGroup:expression)
 
 control velcont (bp3:_velcont, description:"Vélocité en mode CONTINU — la valeur glisse PENDANT les notes, par messages intermédiaires. Ses deux frères discrets vivent dans la librairie variation ; leur destinataire se lit sur le champ resolvedBy de ce fichier-là, jamais ici. Mesuré sur le moteur natif v3.5.1-iso.2 : sur la vélocité, le continu rend des octets identiques aux paliers (FillPhaseDiagram.c porte 'not implemented' ligne 415).", scope(symbol, group, rule, flow), transportGroup:expression)
 
-control offvel (args(value), range(0, 127), default:64, description:"NoteOff velocity (0-127). Relevant for expressive controllers (Osmose, MPE)", scope(symbol, group, rule, flow), transportGroup:expression)
+control offvel (args(value), range(0, 127), value:64, description:"NoteOff velocity (0-127). Relevant for expressive controllers (Osmose, MPE)", scope(symbol, group, rule, flow), transportGroup:expression)
 
 control articulcont (bp3:_articulcont, description:"Articulation en mode CONTINU — la valeur glisse PENDANT les notes. Ses deux frères discrets, articulfixed et articulstep, vivent dans la librairie variation. Le comportement natif de ce mot n'est pas tranché : aucun témoin construit sur le moteur v3.5.1-iso.2 n'a fait bouger l'articulation, le mode fixe compris.", scope(symbol, group, rule, flow))
 
@@ -116,5 +116,5 @@ control step (bp3:_step, bpscript:false, args(param), description:"Geste NATIF :
 // ⚠️ LA VALEUR 0 EST ACCEPTEE PAR LE NATIF ET SUPPRIME LE FLUX CONTINU : un mode continu ecrit avec
 //    une cadence de 0 compile et ne module rien. Le fait est mesure, la declaration appartient a
 //    Romain — je porte le natif, je ne retranche pas de mon propre chef.
-control panrate (bp3:_panrate, args(hz), range(0, 1000), unit:"Hz", default:50, description:"Cadence des valeurs intermediaires du continu de panoramique, en valeurs par seconde. Defaut 50, comme le moteur natif.", scope(symbol, group, rule, flow), transportGroup:expression)
+control panrate (bp3:_panrate, args(hz), range(0, 1000), unit:"Hz", value:50, description:"Cadence des valeurs intermediaires du continu de panoramique, en valeurs par seconde. Defaut 50, comme le moteur natif.", scope(symbol, group, rule, flow), transportGroup:expression)
 

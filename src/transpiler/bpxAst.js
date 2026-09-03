@@ -430,7 +430,7 @@ export function resoudreSource(source, environnement) {
     // des librairies qui seul connaît la table (cf. l'en-tête de la fonction).
     poserLeDestinataireDesReglages(ast, libCtx);
     result.errors.push(...applySceneValues(ast, libCtx)); // SCENE_VALUES : pli acteur + validation 3 niveaux
-    result.errors.push(...validateReferences(ast, libCtx)); // fail-fast : références (valeur/composant) inexistantes → erreur (univers = describeVocabulary)
+    result.errors.push(...validateReferences(ast, libCtx, environnement)); // fail-fast : références (valeur/composant) inexistantes → erreur (univers = describeVocabulary)
     // Le nom d'une macro se vérifie ICI, avec les terminaux de règle : même question, même
     // définition, et les acteurs sont pliés à ce stade (avant, `ast.actors` est encore vide —
     // mesuré : une garde posée plus haut ne voyait AUCUN terminal, donc n'aurait jamais mordu).

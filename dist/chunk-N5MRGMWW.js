@@ -19,14 +19,14 @@ import {
   resolveActorAlphabetSource,
   universeControlNames,
   versionDuRegistre
-} from "./chunk-L5XT2CLN.js";
+} from "./chunk-S5BKBM2R.js";
 import {
   LexError,
   tokenize
 } from "./chunk-3Y64WDZ4.js";
 import {
   LIBS
-} from "./chunk-6IDJ6MK2.js";
+} from "./chunk-JY7J3DKR.js";
 
 // src/transpiler/actorResolver.js
 function expandAlphabetTerminals(alphabetLib, octavesOverride) {
@@ -1233,7 +1233,7 @@ function applySceneValues(ast, libCtx) {
   walkParams(ast.subgrammars);
   return errors;
 }
-function validateReferences(ast, libCtx = {}) {
+function validateReferences(ast, libCtx = {}, environnement = {}) {
   const errors = [];
   const porteesPermises = chargerPorteesPermises(ast);
   const horsInvocation = (cle, line, col) => {
@@ -1419,6 +1419,7 @@ function validateReferences(ast, libCtx = {}) {
     for (const d of ast.directives || []) {
       if (!d || !d.name) continue;
       if (d.type && d.type !== "Directive") continue;
+      if (environnement && environnement.librairie && (d.value != null || d.runtime != null)) continue;
       const clesEcrites = [];
       if (!loadLib(d.name)) clesEcrites.push(d.name);
       if (d.subkey && porteesPermises.has(d.subkey)) clesEcrites.push(d.subkey);
@@ -1521,6 +1522,7 @@ function validateReferences(ast, libCtx = {}) {
     };
     for (const d of ast.directives || []) {
       if (!d || d.type && d.type !== "Directive") continue;
+      if (environnement && environnement.librairie && (d.value != null || d.runtime != null)) continue;
       noter(d.name, d.line);
       for (const m of d.modifiers || []) noter(m && m.name, d.line);
     }
@@ -1993,7 +1995,7 @@ function resoudreSource(source, environnement) {
     const libCtx = loadLibsFromDirectives(directives);
     poserLeDestinataireDesReglages(ast, libCtx);
     result.errors.push(...applySceneValues(ast, libCtx));
-    result.errors.push(...validateReferences(ast, libCtx));
+    result.errors.push(...validateReferences(ast, libCtx, environnement));
     result.errors.push(...refuserNomsEnDouble(ast, libCtx));
     {
       const { terminaux, paquets } = terminauxEnPortee(ast);

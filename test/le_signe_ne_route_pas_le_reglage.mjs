@@ -63,7 +63,7 @@ ok(runtimeSample.length === 2, `0. l'échantillon runtime (vel, pan) doit être 
 
 function valeurExemple(spec) {
   if (spec && Array.isArray(spec.values) && spec.values.length) return spec.values[0];
-  if (spec && typeof spec.default === 'string') return spec.default;
+  if (spec && typeof spec.value === 'string') return spec.value;
   if (spec && Array.isArray(spec.range) && spec.range.length === 2) {
     return String(Math.min(spec.range[1], Math.max(spec.range[0], 10)));
   }

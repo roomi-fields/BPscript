@@ -9,7 +9,7 @@
 
 import { T } from './tokenizer.js';
 import { leSchema, famille } from './index-des-objets.js';
-import { loadLib, directiveDeclareeParLaLibrairie, loadLibsFromDirectives, librairiesQuiDeclarent } from './libs.js';
+import { loadLib, directiveDeclareeParLaLibrairie, loadLibsFromDirectives, librairiesQuiDeclarent, versionDuRegistre } from './libs.js';
 import { describeVocabulary } from './vocabulaire.js';
 import { BP3_OPERATORS } from './constants.js';
 // ⛔ LE SCHÉMA DE SYNTAXE N'EST PAS UNE LIBRAIRIE — il se lit par SA PROPRE PORTE, jamais par le
@@ -81,20 +81,33 @@ class ParseError extends Error {
  */
 const motReserve = (nom) => ((leSchema() || {}).reservedDirectives || []).includes(nom);
 
-let _actorKeys = null;
-function actorKeysData() {
-  if (_actorKeys) return _actorKeys;
-  // Sans objet `schema` au registre, aucune clé d'acteur n'est connue — rendu sans mémoriser (cf. les axes).
+/**
+ * ⛔ UNE TABLE DÉRIVÉE DU SCHÉMA SE MÉMORISE SOUS LA VERSION DU REGISTRE, jamais pour toujours.
+ * Mesuré le 2026-09-03 : `letring:true` en tête de `midi_default.bpsl` — compilée AVANT `core`,
+ * qui l'invoque — a fait lire le catalogue des canaux pendant l'amorçage, quand `schema` n'était
+ * pas encore au registre. La table vide s'est mémorisée, et `alphabet.western:midi` était refusé
+ * dans toute scène : « n'accepte que {audio, midi, osc} », midi compris. Même mécanisme que
+ * l'index des objets : ce qui a été lu sous une version périme à la suivante.
+ */
+const memoDuRegistre = (calcul) => {
+  let valeur = null, version = -1;
+  return () => {
+    const v = versionDuRegistre();
+    if (valeur === null || version !== v) { valeur = calcul(); version = v; }
+    return valeur;
+  };
+};
+
+const actorKeysData = memoDuRegistre(() => {
+  // Sans objet `schema` au registre, aucune clé d'acteur n'est connue (cf. les axes).
   const sch = leSchema();
   if (!sch) return { valides: new Set(), perimees: new Set(), toutes: new Set() };
   const valides = sch.actorKeys, perimees = sch.deprecatedActorKeys || [];
   if (!Array.isArray(valides) || valides.length === 0) {
     throw new Error("l'objet 'schema' ne déclare aucune clé d'acteur (actorKeys) — le parseur n'a plus de clés d'acteur");
   }
-  _actorKeys = { valides: new Set(valides), perimees: new Set(perimees),
-                 toutes: new Set([...valides, ...perimees]) };
-  return _actorKeys;
-}
+  return { valides: new Set(valides), perimees: new Set(perimees), toutes: new Set([...valides, ...perimees]) };
+});
 
 // ⛔ LES CONVENTIONS DE LECTURE NE SONT PLUS UNE LISTE — décision de Romain, 2026-09-02 : `signal`,
 // `pitch`, `phase` et `logic` sont des objets de `types`, `pitch`, `phase` et `logic` dérivant de
@@ -133,21 +146,18 @@ function actorKeysData() {
  * ⚠️ Et le défaut était MUET : la déclaration semblait posée, la garde ne mordait pas, et j'ai
  * conclu « configuration sans effet » sur une mesure qui ne mesurait pas ce que je croyais.
  */
-let _catalogAxisKeys = null;
-function catalogAxisKeys() {
-  if (_catalogAxisKeys) return _catalogAxisKeys;
+const catalogAxisKeys = memoDuRegistre(() => {
   // ⚠️ SANS `core` AU REGISTRE, IL N'Y A PAS D'AXE — et ce n'est pas une faute : aucun socle n'est
-  // implicite (Romain, 2026-09-02), et une librairie se lit avant que `core` soit chargé. On rend
-  // alors un ensemble vide SANS le mémoriser, pour que la table se lise dès que `core` arrive.
+  // implicite (Romain, 2026-09-02), et une librairie se lit avant que `core` soit chargé. La table
+  // vide se mémorise sous la version du registre, et se relit dès que `core` arrive.
   const sch = leSchema();
   if (!sch) return new Set();
   const axes = sch.catalogAxes;
   if (!Array.isArray(axes) || axes.length === 0) {
     throw new Error("l'objet 'schema' ne déclare aucun axe de catalogue (catalogAxes) — le parseur n'a plus d'axes de catalogue");
   }
-  _catalogAxisKeys = new Set(axes);
-  return _catalogAxisKeys;
-}
+  return new Set(axes);
+});
 
 /**
  * Noms de canal de sortie PÉRIMÉS → rejetés fail-loud au parse (décision 2026-07-16, Romain :
@@ -156,12 +166,7 @@ function catalogAxisKeys() {
  * Romain 2026-07-05). Mémoïsé. `browser`/`webaudio` = ancien modèle profils d'environnement
  * (routing.json, supprimé) ; le canal canonique {audio, midi, osc} s'écrit directement.
  */
-let _deprecatedTransports = null;
-function deprecatedTransports() {
-  if (_deprecatedTransports) return _deprecatedTransports;
-  _deprecatedTransports = new Set((leSchema() || {}).deprecatedTransports || []);
-  return _deprecatedTransports;
-}
+const deprecatedTransports = memoDuRegistre(() => new Set((leSchema() || {}).deprecatedTransports || []));
 
 /**
  * UN SEUL CATALOGUE des canaux, chacun portant les DIRECTIONS qu'il autorise (décision Romain
@@ -170,12 +175,7 @@ function deprecatedTransports() {
  * sous le même mot `transport` selon l'endroit où on l'écrivait. Source unique = `lib/core.json`
  * schema.channels (donnée, pas un hardcode). Mémoïsé.
  */
-let _channelCatalog = null;
-function channelCatalog() {
-  if (_channelCatalog) return _channelCatalog;
-  _channelCatalog = (leSchema() || {}).channels || {};
-  return _channelCatalog;
-}
+const channelCatalog = memoDuRegistre(() => (leSchema() || {}).channels || {});
 
 /**
  * LISTE POSITIVE FERMÉE des canaux de SORTIE (`out.<canal>` sur un @actor, ou le raccord
@@ -186,13 +186,10 @@ function channelCatalog() {
  * son refus à l'écriture est une question SÉPARÉE, portée par `writableChannels` (DIRECTION ≠
  * ÉCRITURE, voir plus bas). Dérivée du catalogue unifié, jamais recopiée en dur ici.
  */
-let _outChannels = null;
-function outChannels() {
-  if (_outChannels) return _outChannels;
+const outChannels = memoDuRegistre(() => {
   const cat = channelCatalog();
-  _outChannels = new Set(Object.keys(cat).filter((c) => cat[c] && cat[c].out));
-  return _outChannels;
-}
+  return new Set(Object.keys(cat).filter((c) => cat[c] && cat[c].out));
+});
 
 /**
  * LISTE POSITIVE FERMÉE des canaux d'ENTRÉE (`var <rôle> in.<canal>`) — DISTINCTE de celle des
@@ -289,13 +286,10 @@ function refuserModeInvalide(name, runtime, value, tok) {
   }
 }
 
-let _inChannels = null;
-function inChannels() {
-  if (_inChannels) return _inChannels;
+const inChannels = memoDuRegistre(() => {
   const cat = channelCatalog();
-  _inChannels = new Set(Object.keys(cat).filter((c) => cat[c] && cat[c].in));
-  return _inChannels;
-}
+  return new Set(Object.keys(cat).filter((c) => cat[c] && cat[c].in));
+});
 
 /**
  * DIRECTION ≠ ÉCRITURE (correction Romain 2026-08-04). `outChannels`/`inChannels` disent OÙ VA
@@ -307,13 +301,10 @@ function inChannels() {
  * sur les SIX canaux de `lib/core.json` (jamais déduit d'une absence, cf. `_writable_doc`) : la
  * forme se reproduira, un canal peut exister dans l'architecture avant d'avoir sa graphie.
  */
-let _writableChannels = null;
-function writableChannels() {
-  if (_writableChannels) return _writableChannels;
+const writableChannels = memoDuRegistre(() => {
   const cat = channelCatalog();
-  _writableChannels = new Set(Object.keys(cat).filter((c) => cat[c] && cat[c].writable));
-  return _writableChannels;
-}
+  return new Set(Object.keys(cat).filter((c) => cat[c] && cat[c].writable));
+});
 
 /**
  * Index des VOIX (catalogue du mot `voice`, LANG-SONS-2 [438], spec hub/projets/2026-06-24-lang-sons-spec/README.md §3-§5).
@@ -323,10 +314,8 @@ function writableChannels() {
  * (`js:…`/`faust:…` — spec §3 : compilé par le runtime comme la CV expr). Donnée non conforme
  * = signalée quand la voix est référencée (fail-loud, jamais de son muet inventé).
  */
-let _voicesIndex = null;
-function voicesIndex() {
-  if (_voicesIndex) return _voicesIndex;
-  _voicesIndex = new Map();
+const voicesIndex = memoDuRegistre(() => {
+  const _voicesIndex = new Map();
   // ⛔ PAR LE MOT DECLARE, jamais par le nom du fichier (Romain, 2026-08-17) : le catalogue
   // declare `voice`, et c est ce mot qui adresse la librairie partout ailleurs. Son FICHIER a
   // change d extension le 2026-08-24 sans qu une seule ligne d ici ne bouge — c est la preuve du
@@ -347,7 +336,7 @@ function voicesIndex() {
     _voicesIndex.set(name, { base: def, forDevices });
   }
   return _voicesIndex;
-}
+});
 
 /** Backtick TYPÉ : `js: …`, `faust: …` — le type nomme l'interpréteur (spec §3). */
 function isTypedBacktick(v) {

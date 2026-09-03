@@ -80,11 +80,11 @@ ok(feuilles >= 5000, `A. le balayage doit voir la donnée entière — ${feuille
 // ⛔ TÉMOIN DE PORTÉE, À VALEUR NON NULLE. Sans lui, une exclusion de prose trop large absoudrait
 // tout et le volet A serait vert sur une donnée entièrement fautive.
 {
-  const faux = { lib: { controls: { x: { default: '0,1' } } } };
+  const faux = { lib: { controls: { x: { value: '0,1' } } } };
   const avant = fautives.length;
   descendre(faux, 'témoin', 'témoin');
   ok(fautives.length === avant + 1,
-    `A-témoin. le balayage doit VOIR une virgule injectée dans un 'default' — il n'en a vu que `
+    `A-témoin. le balayage doit VOIR une virgule injectée dans un 'value' — il n'en a vu que `
     + `${fautives.length - avant}. Une exclusion trop large rendrait le volet A décoratif.`);
   fautives.length = avant;
 }

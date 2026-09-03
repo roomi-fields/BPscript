@@ -50,7 +50,7 @@ const implementationLib = (cible) => ({
   name: 'zzmidi', resolvedBy: 'runtime-ZZ',
   controls: {
     zzvolume: {
-      ...CONTROLE, bp3: '_zzvolume', default: 100, transportGroup: 'zzmidi',
+      ...CONTROLE, bp3: '_zzvolume', value: 100, transportGroup: 'zzmidi',
       ...(cible === null ? {} : { implements: cible }),
     },
   },
@@ -164,15 +164,15 @@ restaurer();
   // ⛔ L'INTERFACE NE PORTE PAS DE DÉFAUT, et la réalisation non plus le jour où `midi-default`
   // existera. Romain : « les défauts sont dans la librairie midi-default, ça sera modifié dans le
   // live par les contrôles de volume de l'UI ».
-  ok(ctx.controlsQualified['expression.volume'].default === undefined,
+  ok(ctx.controlsQualified['expression.volume'].value === undefined,
      "5e. la DÉCLARATION de l'interface ne porte AUCUNE valeur par défaut — elle décrit le mot, "
      + '`midi_default` donne la valeur');
   // ⚠️ 90, PAS 100. La declaration portait 100 depuis toujours ; la mesure de runtime-MIDI sur les
   // sources du moteur dit 90. Deplacer la valeur dans la librairie des defauts a ete l occasion de
   // la confronter — une valeur recopiee de proche en proche ne se verifie jamais toute seule.
-  ok(ctx.controls.volume && ctx.controls.volume.default === 90,
-     "5e. et la valeur arrive quand même à la forme nue, reversée par la librairie des défauts — "
-     + `sinon l'aide de l'éditeur perd un champ qu'elle affichait. Vu : ${ctx.controls.volume?.default}`);
+  ok(ctx.controls.volume && ctx.controls.volume.value === 90,
+     "5e. et la valeur arrive quand même à la forme nue, reversée par la ligne de tête de l'environnement — "
+     + `sinon l'aide de l'éditeur perd un champ qu'elle affichait. Vu : ${ctx.controls.volume?.value}`);
   ok(ctx.ambiguousControls.size === 0,
      `5f. et aucun nom n'est ambigu dans les librairies réelles — vus : ${[...ctx.ambiguousControls].join(', ')}`);
 }

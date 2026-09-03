@@ -58,8 +58,8 @@ control print (bp3:_print, bpscript:false, description:"Geste NATIF : affiche la
 // rythmique) que le frontal BP3 lit par un chemin dedie, pas par la table generique
 // bp3->controle. Leur inventer un nom '_xxx' serait une correspondance FAUSSE. Textes de
 // description repris tels quels de docs/spec/LANGUAGE.md:1024-1029 (spec gelee, non modifiee).
-control mode (args(mode), values(rnd, ord, sub, sub1, lin, tem, poslong), default:ord, description:"Mode de derivation du bloc/sous-grammaire (rnd, ord, sub, sub1, lin, tem, poslong) -- defaut : ord.", scope(subgrammar), section:engine)
-control scan (args(direction), values(left, right, rnd), default:rnd, description:"Sens du parcours par regle (left, right, rnd) -- defaut : rnd.", scope(scene, rule), section:engine)
+control mode (args(mode), values(rnd, ord, sub, sub1, lin, tem, poslong), value:ord, description:"Mode de derivation du bloc/sous-grammaire (rnd, ord, sub, sub1, lin, tem, poslong) -- defaut : ord.", scope(subgrammar), section:engine)
+control scan (args(direction), values(left, right, rnd), value:rnd, description:"Sens du parcours par regle (left, right, rnd) -- defaut : rnd.", scope(scene, rule), section:engine)
 control weight (args(value), description:"Poids de la regle -- un entier, 'inf' pour la priorite absolue, ou un K-param.", scope(rule), section:engine)
 // RESETWEIGHTS · LES POIDS REPARTENT DE LEUR VALEUR ECRITE. Cree le 2026-08-21 sur decision de
 // Romain (`trois-reglages-natifs-trouvent-leur-domicile`). Il vit ici parce que c est la
@@ -73,7 +73,7 @@ control weight (args(value), description:"Poids de la regle -- un entier, 'inf' 
 // `resetcontrols`/`keepcontrols`. La regle des paires est desormais sans exception.
 control resetweights (bp3:ResetWeights, bp3value:1, description:"Les poids des regles repartent de leur valeur ecrite dans la grammaire. Image de ResetWeights au moteur natif.", scope(scene), section:engine)
 control keepweights (bp3:ResetWeights, bp3value:0, description:"Les poids des regles gardent la valeur ou la derivation les a laisses. Image de ResetWeights au moteur natif.", scope(scene), section:engine)
-control on_fail (args(strategy), default:skip, description:"Gestion d'echec de derivation (skip, retry(N), fallback(X)) -- defaut : skip. PAS de 'values' enum (contrairement a mode/scan) : retry/fallback prennent un ARGUMENT ('retry(2)', 'fallback(Autre)'), que le validateur enum (controlValidation.js, comparaison EXACTE) rejetterait -- mesure par vocabulaire_appels.mjs section 2quinquies bis.", scope(scene, rule), section:engine)
+control on_fail (args(strategy), value:skip, description:"Gestion d'echec de derivation (skip, retry(N), fallback(X)) -- defaut : skip. PAS de 'values' enum (contrairement a mode/scan) : retry/fallback prennent un ARGUMENT ('retry(2)', 'fallback(Autre)'), que le validateur enum (controlValidation.js, comparaison EXACTE) rejetterait -- mesure par vocabulaire_appels.mjs section 2quinquies bis.", scope(scene, rule), section:engine)
 control meter (args(signature), description:"Signature rythmique -- (meter:7/8), (meter:4+4/4).", scope(scene, rule), section:engine)
 control repeat (bp3:_repeat, scope(rule), args(expr), description:"Controlled repetition. expr = K-param or K-param=value.", section:engine)
 control failed (bp3:_failed, scope(rule), args(subgrammar, rule), description:"Jump on derivation failure.", section:engine)

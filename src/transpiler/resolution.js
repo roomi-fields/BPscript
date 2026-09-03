@@ -2082,7 +2082,7 @@ export function applySceneValues(ast, libCtx) {
 }
 
 
-export function validateReferences(ast, libCtx = {}) {
+export function validateReferences(ast, libCtx = {}, environnement = {}) {
   const errors = [];
   // La table des places permises, sur les librairies que la scène invoque. Un réglage que deux
   // d'entre elles déclarent n'y a pas de place nu — c'est `signalerAmbiguite`, plus bas, qui le
@@ -2498,6 +2498,13 @@ export function validateReferences(ast, libCtx = {}) {
       // de la référence emploie). Mesuré le 2026-08-08 : après avoir retiré `mode` des clés de
       // scène, `mode` refusait bien — et `engine.mode` passait toujours. Deux graphies de la même
       // chose, une seule gardée : le refus se contournait en écrivant le nom complet.
+      // ⛔ DANS UNE LIBRAIRIE, UNE LIGNE DE TÊTE À VALEUR EST LA VALEUR D'UN OBJET, PAS UN USAGE —
+      // arbitrage de Romain, 2026-09-03 (forme 4) : l'environnement surcharge un contrôle en
+      // l'écrivant en tête de sa librairie, `volume:90`, comme une scène ; la place ne se juge pas,
+      // parce qu'elle dit OÙ un usage s'écrit, et qu'une valeur d'environnement n'est pas un usage.
+      // Mesuré : neuf des vingt-deux réglages de `midi_default` (chan, mod, pitchbend, pitchrange,
+      // pressure, volumerate, modrate, pitchrate, pressrate) n'ont pas la portée scène.
+      if (environnement && environnement.librairie && (d.value != null || d.runtime != null)) continue;
       const clesEcrites = [];
       if (!loadLib(d.name)) clesEcrites.push(d.name);   // nue ; une invocation de librairie n'en est pas une
       if (d.subkey && porteesPermises.has(d.subkey)) clesEcrites.push(d.subkey);  // qualifiée
@@ -2762,6 +2769,10 @@ export function validateReferences(ast, libCtx = {}) {
     };
     for (const d of ast.directives || []) {
       if (!d || (d.type && d.type !== 'Directive')) continue;
+      // Une librairie d'environnement donne une valeur à CHAQUE mot, `resetnotes:false` et
+      // `letring:true` compris — ce ne sont pas deux réglages d'une scène, ce sont deux valeurs
+      // d'objets (forme 4, Romain 2026-09-03). L'unicité se juge sur la scène qui les emploie.
+      if (environnement && environnement.librairie && (d.value != null || d.runtime != null)) continue;
       noter(d.name, d.line);
       for (const m of d.modifiers || []) noter(m && m.name, d.line);
     }

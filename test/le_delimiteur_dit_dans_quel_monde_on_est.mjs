@@ -41,7 +41,7 @@ console.log('[délimiteur] le délimiteur dit dans quel monde on est');
 for (const [ecrit, reecrit] of [
   ['def f (scope:symbol group)', 'scope(symbol, group'],
   ['def f (scope:symbol group rule flow)', 'scope(symbol, group'],
-  ['def f (default:0 1)', 'default(0, 1'],
+  ['def f (value:0 1)', 'value(0, 1'],
   ['def f (args:pivot factor)', 'args(pivot, factor'],
 ]) {
   const r = declaratif(ecrit);
@@ -86,13 +86,13 @@ for (const [ecrit, reecrit] of [
     ['scale', { name: 0, blockkey: 0 }],
     ['keyxpand', { pivot: 0, factor: 1 }],
   ]) {
-    ok(JSON.stringify(t[nom]?.default) === JSON.stringify(attendu),
-      `C. transpo.${nom}.default doit être ${JSON.stringify(attendu)} — un défaut par paramètre, `
-      + `jamais une chaîne à découper. Reçu ${JSON.stringify(t[nom]?.default)}`);
+    ok(JSON.stringify(t[nom]?.value) === JSON.stringify(attendu),
+      `C. transpo.${nom}.value doit être ${JSON.stringify(attendu)} — un défaut par paramètre, `
+      + `jamais une chaîne à découper. Reçu ${JSON.stringify(t[nom]?.value)}`);
     // Et les noms viennent d'`args`, qui les déclarait déjà : les deux doivent s'accorder.
-    ok(JSON.stringify(Object.keys(t[nom]?.default || {})) === JSON.stringify(t[nom]?.args),
+    ok(JSON.stringify(Object.keys(t[nom]?.value || {})) === JSON.stringify(t[nom]?.args),
       `C. et ses clés doivent être exactement ses 'args' (${JSON.stringify(t[nom]?.args)}) — reçu `
-      + `${JSON.stringify(Object.keys(t[nom]?.default || {}))}`);
+      + `${JSON.stringify(Object.keys(t[nom]?.value || {}))}`);
   }
 }
 

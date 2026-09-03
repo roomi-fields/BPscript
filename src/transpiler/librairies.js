@@ -159,10 +159,20 @@ function construireLaLibrairie(nom, fichier, ast, documente) {
   // ⛔ UNE LIBRAIRIE EN INVOQUE UNE AUTRE PAR UNE LIGNE NUE, ET C'EST `apporte` — décision Romain,
   // 2026-08-20. Ce n'est pas un champ de fichier : c'est l'invocation elle-même, à la tête du
   // fichier, exactement comme une scène invoque. L'ordre d'écriture est l'ordre de la liste.
+  // ⛔ ET UNE LIGNE DE TÊTE À VALEUR N'INVOQUE RIEN : ELLE SURCHARGE — arbitrage de Romain,
+  // 2026-09-03 (forme 4). `volume:90` en tête de `midi_default.bpsl` donne au contrôle `volume`, en
+  // portée de qui invoque cette librairie, la valeur 90 — comme une scène l'écrit en tête. Le
+  // registre la porte sous `reglages`, dans l'ordre d'écriture ; le chargeur l'applique par niveaux.
+  const aUneValeur = (d) => d.value != null || d.runtime != null;
   const invoquees = (ast.directives || [])
-    .filter((d) => d.name && !d.subkey)
+    .filter((d) => d.name && !d.subkey && !aUneValeur(d))
     .map((d) => d.name);
   if (invoquees.length) lib.apporte = invoquees;
+  const reglages = (ast.directives || []).filter((d) => d.name && !d.subkey && aUneValeur(d));
+  // Un mot après le deux-points est porté brut par le lecteur de tête ; `true` et `false` sont des
+  // booléens, comme dans un sac (`letring:true`).
+  const valeurDeTete = (d) => { const v = d.value != null ? d.value : d.runtime; return v === 'true' ? true : v === 'false' ? false : v; };
+  if (reglages.length) lib.reglages = Object.fromEntries(reglages.map((d) => [d.name, valeurDeTete(d)]));
   // ⛔ « DOCUMENTÉ » SE DIT EN COMMENTAIRE, JAMAIS DANS LA DONNÉE — décision de Romain, 2026-09-02 :
   // un catalogue entre dans l'aide publiée s'il porte la ligne `// @documented`, la même graphie que
   // les métadonnées de scène de kanopi. Ce n'est pas un membre de l'objet : c'est une information
@@ -286,7 +296,9 @@ export function chargerLesLibrairies(sources, compiler, registerLib) {
     const refus = [];
     for (const s of restants) {
       ecritesDansLeLangage.add(s.nom);
-      const r = compiler(s.texte);
+      // `librairie: true` : une ligne de tête à valeur y est la valeur d'un objet, pas un usage à
+      // juger par sa place (forme 4, Romain 2026-09-03).
+      const r = compiler(s.texte, { librairie: true });
       if ((r.errors || []).length) {
         encore.push(s);
         refus.push(`lib/${s.fichier} NE COMPILE PAS : ${r.errors[0].message}`);

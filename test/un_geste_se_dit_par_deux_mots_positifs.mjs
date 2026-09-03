@@ -65,7 +65,9 @@ for (const [groupe, mots] of gestesMidi) {
 }
 
 // ── 1. EXACTEMENT UN MOT PAR PAIRE EST VRAI DANS L'ENVIRONNEMENT ────────────────────────────
-const defauts = (LIBS.midi_default && LIBS.midi_default.controlDefaults) || {};
+// L'environnement écrit ses valeurs en LIGNES DE TÊTE (forme 4, Romain 2026-09-03) : le registre
+// les porte sous `reglages`, plus sous une entrée `controlDefaults`.
+const defauts = (LIBS.midi_default && LIBS.midi_default.reglages) || {};
 ok(Object.keys(defauts).length >= 20,
    `1. SOCLE : la librairie des défauts doit porter au moins vingt valeurs — lues `
    + `${Object.keys(defauts).length}`);
@@ -89,9 +91,9 @@ for (const [groupe, mots] of gestesMidi) {
   for (const [, mots] of gestesMidi) {
     for (const { nom } of mots) {
       const c = vocab.controls.find((x) => x.name === nom);
-      ok(c && c.default === defauts[nom],
+      ok(c && c.value === defauts[nom],
          `2. '${nom}' doit ressortir du vocabulaire avec sa valeur d'environnement `
-         + `(${defauts[nom]}) — vu ${c && c.default}`);
+         + `(${defauts[nom]}) — vu ${c && c.value}`);
     }
   }
 }
