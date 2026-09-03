@@ -190,6 +190,15 @@ function construireLaLibrairie(nom, fichier, ast, documente) {
       // sinon ça n'a aucun sens ». L'étage qui résout grave la dérivation dans l'arbre ; le registre
       // PORTE la structure et ne la recopie pas.
       if (p.herite) continue;
+      // ⛔ UN MEMBRE DÉCLARÉ PAR SON TYPE — `sound terminals()`, `alphabet alphabet` — arbitrage de
+      // Romain, 2026-09-03 : le type en tête, le nom ensuite, comme toute déclaration. Il se publie
+      // comme un EXEMPLAIRE VIDE qui dérive de son type (`{_derive: "sound"}`) : un nom nu vaut un
+      // objet vide, et le type voyage. Une collection typée qui porte des éléments les publie avec.
+      if (p.type) {
+        const contenu = (p.value && p.value.type === 'SettingBag') ? sacEnObjet(p.value, fichier, d.name) : {};
+        out[p.key] = { kind: 'value', value: { ...contenu, _derive: p.type } };
+        continue;
+      }
       out[p.key] = (p.value && p.value.type === 'SettingBag')
         ? (estUneSuite(p.value)
             ? { kind: 'suite', value: suite(p.value, fichier, d.name, p.key) }

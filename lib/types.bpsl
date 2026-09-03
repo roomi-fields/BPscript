@@ -35,16 +35,21 @@ scale degree
 degree directional
 scale composite
 
+// Un son : ce qu'on entend quand on l'émet. Déclaré AVANT l'alphabet, dont les terminaux en sont —
+// un prototype se déclare avant d'être nommé comme type.
+def sound
+
 // Un alphabet se déclare en tête de scène. Il porte l'octaviation par défaut : un alphabet qui
-// n'écrit pas la sienne hérite de celle-ci, et celui qui l'écrit la surcharge.
-def alphabet (scope(scene), octaves:western)
+// n'écrit pas la sienne hérite de celle-ci, et celui qui l'écrit la surcharge. Ses terminaux sont
+// des SONS — `sound terminals()` : le type en tête, le nom ensuite, une collection obligatoire dont
+// chaque alphabet donne les éléments (arbitrage Romain, 2026-09-03).
+def alphabet (scope(scene), octaves:western, sound terminals())
 
 // Les prototypes des catalogues qui declarent leurs entrees par leur type. Nus : ce qu une entree
 // porte, elle le porte ; aucune portee n est posee ici sans arbitrage.
 def temperament
 def tuning
 def octaves
-def sound
 def voice
 def midi_default
 

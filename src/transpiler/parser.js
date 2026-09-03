@@ -392,6 +392,7 @@ function assertAlphabetVoices(alphabetName, token) {
   const alpha = loadLib('alphabet', alphabetName);
   if (alpha) {
     for (const [terminal, def] of Object.entries(alpha.terminals || {})) {
+      if (terminal.startsWith('_')) continue;   // `_derive` : le type des éléments, pas un terminal
       if (def && def.voice) {
         assertVoiceRef(def.voice, `alphabet '${alphabetName}', terminal '${terminal}'`, token);
       }
@@ -5429,7 +5430,9 @@ function parse(tokens, opts = {}) {
     return `${neg}${a}`;
   }
 
-  function parseRuntimeQualifier() {
+  // `imbrique` : le sac est la valeur d'une clé (`terminals(…)`, `scope(…)`), pas le sac d'une
+  // déclaration — la forme « type en tête » ne s'y lit pas (voir plus bas).
+  function parseRuntimeQualifier({ imbrique = false } = {}) {
     // (vel:80, wave:sawtooth, velcont) → runtime qualifier AST.
     // v0.8 : accepte aussi `(sound.NAME)` — référence pointée comme valeur ;
     // équivalent sémantique à `(sound:NAME)` mais notation plus lisible.
@@ -5582,6 +5585,31 @@ function parse(tokens, opts = {}) {
       // manquante que ce matin sur les deux portees du doublon, au meme endroit de ma journee.
       let key = (at(T.STRING) && (peek(1).type === T.COLON || peek(1).type === T.LPAREN))
         ? advance().value : expect(T.IDENT).value;
+      // ── `<type> <nom>` — UN MEMBRE DÉCLARÉ PAR SON TYPE, LE TYPE EN TÊTE ─────────────────────
+      // Arbitrage de Romain, 2026-09-03 : « il ne doit y avoir aucune ambiguïté possible, le langage
+      // doit être explicite ». Un mot nu entre parenthèses est une VALEUR (`scope(scene)` contient
+      // `scene`) ; la NATURE d'un membre s'écrit comme toute déclaration, le type en tête :
+      //     def alphabet (scope(scene), octaves:western, sound terminals())
+      //     def actor (alphabet alphabet, tuning tuning, octaves octaves, destination out, eval eval)
+      // `sound terminals()` : une collection de sons, vide donc obligatoire ; `alphabet alphabet` : un
+      // membre de type alphabet, sans valeur — obligatoire au sens de la règle, refusé à l'USAGE.
+      // ⛔ TROIS BORNES, POUR QU'UNE VIRGULE OUBLIÉE NE DEVIENNE JAMAIS UN MEMBRE TYPÉ EN SILENCE :
+      //   · le premier mot est un TYPE EN PORTÉE — comme toute déclaration (`alphabet western (…)`
+      //     exige `alphabet` en portée) ; `scope(symbol group)` où `symbol` serait un type tombe par
+      //     la borne suivante ;
+      //   · la forme se lit dans le sac d'une DÉCLARATION, jamais dans un sac IMBRIQUÉ (la valeur
+      //     d'une clé) : `args(pivot factor)` reste « il manque la virgule », avec sa réécriture ;
+      //   · le déclaratif seulement — dans le flux, l'espace sépare les parties d'une valeur.
+      // Deux mots séparés par une espace ne disaient rien d'autre : ils étaient refusés.
+      if (enDeclaratif && !imbrique && at(T.IDENT) && current().spaceBefore && prototypesDeclares.has(key)) {
+        const type = key;
+        key = advance().value;
+        const pos = { line: keyTok.line, col: keyTok.col };
+        const valeur = (at(T.LPAREN) && !current().spaceBefore) ? parseRuntimeQualifier({ imbrique: true }) : true;
+        pairs.push({ key, type, value: valeur, ...(subject !== null ? { subject } : {}), ...pos });
+        finirTerme();
+        continue;
+      }
       // ── `<librairie>.<contrôle>` — LE PRÉFIXE SE CONSOMME ICI, AVANT TOUTE LECTURE ───────────
       // RÈGLE DE ROMAIN (2026-08-13), déjà écrite dans `EBNF.md:153` : « Le préfixe est optionnel :
       // un nom nu passe s'il vit dans une seule librairie invoquée. Porté par deux, la compilation
@@ -5633,7 +5661,7 @@ function parse(tokens, opts = {}) {
       //
       // Le collage est exigé : `range (16, 8000)` séparé par une espace n'appartient pas à `range`.
       if (at(T.LPAREN) && !current().spaceBefore) {
-        pairs.push({ key, value: parseRuntimeQualifier(), ...sub, ...pos });
+        pairs.push({ key, value: parseRuntimeQualifier({ imbrique: true }), ...sub, ...pos });
         finirTerme();
         continue;
       }

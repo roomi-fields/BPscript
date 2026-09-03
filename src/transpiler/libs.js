@@ -455,7 +455,9 @@ function estUneDeclarationDeControle(def) {
  */
 function nomsDeTerminaux(alphabetLib) {
   if (!alphabetLib || !alphabetLib.terminals || typeof alphabetLib.terminals !== 'object') return null;
-  return Object.keys(alphabetLib.terminals);
+  // `_derive` dit le TYPE des éléments (`sound terminals()` sur le prototype, Romain 2026-09-03) ;
+  // ce n'est pas un terminal. Une clé soulignée est une méta, jamais une entrée.
+  return Object.keys(alphabetLib.terminals).filter((k) => !k.startsWith('_'));
 }
 
 function loadLibsFromDirectives(directives) {
