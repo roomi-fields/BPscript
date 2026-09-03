@@ -8,6 +8,7 @@ import {
   leRegistre,
   leSchema,
   lesDefauts,
+  librairiesQuiDeclarent,
   loadLib,
   loadLibsFromDirectives,
   motsInvoques,
@@ -18,7 +19,7 @@ import {
   resolveActorAlphabetSource,
   universeControlNames,
   versionDuRegistre
-} from "./chunk-OHNHZE6Q.js";
+} from "./chunk-ESZD6XAI.js";
 import {
   LexError,
   tokenize
@@ -1235,6 +1236,16 @@ function applySceneValues(ast, libCtx) {
 function validateReferences(ast, libCtx = {}) {
   const errors = [];
   const porteesPermises = chargerPorteesPermises(ast);
+  const horsInvocation = (cle, line, col) => {
+    const declarants = librairiesQuiDeclarent(cle);
+    if (!declarants.length) return false;
+    errors.push({
+      message: `'${cle}' n'est pas en port\xE9e : aucune librairie invoqu\xE9e ne le d\xE9clare \u2014 l'invoquer en t\xEAte (${declarants.map((l) => `'${l}'`).join(" ou ")}).`,
+      line,
+      col
+    });
+    return true;
+  };
   const vocab = describeVocabulary([...ast.directives || [], ...ast.actors || []]);
   const controlNames = new Set(vocab.controls.map((c) => c.name));
   const registry = new Set(vocab.values.map((v) => v.name));
@@ -1314,6 +1325,7 @@ function validateReferences(ast, libCtx = {}) {
       }
       return;
     }
+    if (librairiesQuiDeclarent(key).length) return;
     const err = {
       message: `attribut '(${key}${ecritNu ? "" : ":\u2026"})' inconnu \u2014 ni contr\xF4le, ni valeur de librairie, ni adresse`,
       line,
@@ -1371,7 +1383,11 @@ function validateReferences(ast, libCtx = {}) {
         for (const p of sac.pairs) {
           const cle = String(p.key).split(".")[0];
           const permis = porteesPermises.get(cle, p.lib);
-          if (!permis || permis.includes(place)) continue;
+          if (!permis) {
+            if (!p.lib) horsInvocation(cle, p.line ?? node.line, p.col);
+            continue;
+          }
+          if (permis.includes(place)) continue;
           errors.push({
             message: `'${cle}' ne peut pas s'\xE9crire ${NOM_DE_PLACE[place]} \u2014 ` + (permis.length === 1 ? `il ne vaut QUE ${NOM_DE_PLACE[permis[0]] ?? permis[0]}` : `il vaut ${permis.slice(0, -1).map((s) => NOM_DE_PLACE[s] ?? s).join(", ")} ou ${NOM_DE_PLACE[permis[permis.length - 1]] ?? permis[permis.length - 1]}`) + `. Le d\xE9placer l\xE0, ou employer un r\xE9glage qui vaut ici.`,
             line: p.line ?? node.line,
@@ -1390,7 +1406,11 @@ function validateReferences(ast, libCtx = {}) {
   if (REFUS_HORS_PORTEE_ACTIF) {
     const dire = (cle, place, line) => {
       const permis = porteesPermises.get(cle);
-      if (!permis || permis.includes(place)) return;
+      if (!permis) {
+        horsInvocation(cle, line);
+        return;
+      }
+      if (permis.includes(place)) return;
       errors.push({
         message: `'${cle}' ne peut pas s'\xE9crire ${NOM_DE_PLACE[place]} \u2014 ` + (permis.length === 1 ? `il ne vaut QUE ${NOM_DE_PLACE[permis[0]] ?? permis[0]}` : `il vaut ${permis.slice(0, -1).map((x) => NOM_DE_PLACE[x] ?? x).join(", ")} ou ${NOM_DE_PLACE[permis[permis.length - 1]] ?? permis[permis.length - 1]}`) + `. Le d\xE9placer l\xE0, ou employer un r\xE9glage qui vaut ici.`,
         line
@@ -1470,11 +1490,12 @@ function validateReferences(ast, libCtx = {}) {
       checkComponent(d.name, d.subkey, d.line);
       continue;
     }
-    if (d.value != null && d.value !== true && !registry.has(d.name) && !reserved.has(d.name)) {
+    const declareAilleurs = librairiesQuiDeclarent(d.name).length > 0;
+    if (d.value != null && d.value !== true && !registry.has(d.name) && !reserved.has(d.name) && !declareAilleurs) {
       errors.push({ message: `valeur '${d.name}:\u2026' inconnue \u2014 non d\xE9clar\xE9e par une librairie charg\xE9e`, line: d.line });
       continue;
     }
-    if (d.subkey == null && d.runtime != null && !registry.has(d.name) && !reserved.has(d.name)) {
+    if (d.subkey == null && d.runtime != null && !registry.has(d.name) && !reserved.has(d.name) && !declareAilleurs) {
       errors.push({
         message: `'${d.name}:${d.runtime}' : '${d.name}' n'est d\xE9clar\xE9 par aucune librairie charg\xE9e. Une ligne de t\xEAte qu'aucune donn\xE9e ne porte ne r\xE8gle rien \u2014 elle serait lue, \xE9crite dans l'arbre, et sans effet.`,
         line: d.line
@@ -1482,7 +1503,7 @@ function validateReferences(ast, libCtx = {}) {
       continue;
     }
     if (d.type && d.type !== "Directive") continue;
-    if (d.value == null && !d.subkey && !d.runtime && !registry.has(d.name) && !reserved.has(d.name) && !loadLib(d.name)) {
+    if (d.value == null && !d.subkey && !d.runtime && !registry.has(d.name) && !reserved.has(d.name) && !loadLib(d.name) && !declareAilleurs) {
       errors.push({
         message: `'${d.name}' n'est d\xE9clar\xE9 par aucune librairie charg\xE9e \u2014 un mot de t\xEAte vient d'une librairie invoqu\xE9e, jamais de nulle part. Invoquer la librairie qui le porte, ou retirer la ligne.`,
         line: d.line
@@ -1583,7 +1604,7 @@ function chargerPorteesPermises(ast) {
     for (const [k, v] of Object.entries(o || {})) {
       if (!v || typeof v !== "object" || Array.isArray(v)) continue;
       if ("args" in v && "description" in v) {
-        if (Array.isArray(v.scope)) noter(mot, k, v.scope, v.implements);
+        if (Array.isArray(v.scope) && v.bpscript !== false) noter(mot, k, v.scope, v.implements);
       } else marcher(mot, v);
     }
   };

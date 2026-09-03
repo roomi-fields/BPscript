@@ -9,7 +9,7 @@
 
 import { T } from './tokenizer.js';
 import { leSchema, famille } from './index-des-objets.js';
-import { loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, universeAddressKeys } from './libs.js';
+import { loadLib, directiveDeclareeParLaLibrairie, loadLibsFromDirectives, describeVocabulary, librairiesQuiDeclarent } from './libs.js';
 import { BP3_OPERATORS } from './constants.js';
 // ⛔ LE SCHÉMA DE SYNTAXE N'EST PAS UNE LIBRAIRIE — il se lit par SA PROPRE PORTE, jamais par le
 // registre des librairies. Décision Romain, 2026-08-20.
@@ -30,25 +30,12 @@ class ParseError extends Error {
  * synonymes (forme courte/longue). Aligné sur les params de `out.<type>(…)` côté acteur.
  */
 /**
- * Clés d'ADRESSE — lues dans la DONNÉE, en UNION sur tout le registre.
- * ⚠️ Elles étaient codées en dur ICI en plus d'y être déclarées : deux exemplaires identiques,
- * donc un double qui n'attendait qu'une divergence. Retiré le 2026-08-06, dans le même geste que
- * les axes de catalogue, qui avaient déjà payé ce défaut le jour même.
- *
- * ⚠️ ET LA MÉMOÏSATION LOCALE EST PARTIE AVEC LE DOMICILE (2026-08-15). Elle ne se réinitialisait
- * JAMAIS : un registre rechargé — ce que fait tout banc qui fabrique une librairie — laissait le
- * parseur sur les clés de la toute première lecture. Tant qu'elles vivaient dans un fichier unique
- * et immuable, personne ne le voyait. `universeAddressKeys` mémoïse au bon endroit : là où le
- * registre sait qu'il a bougé.
+ * Clés d'ADRESSE — lues dans la DONNÉE, sur les librairies que la scène INVOQUE
+ * (`libCtx.addressKeys`, cf. splitAddress). Elles étaient codées en dur ici en plus d'y être
+ * déclarées (retiré le 2026-08-06), puis lues en union sur tout le registre « quelle que soit
+ * l'invocation » (retiré le 2026-09-03, principe 1 de Romain) : une scène sans `midi` ni `core` n'a
+ * pas de clé d'adresse, et `(ch:5)` y est refusé en nommant `midi`.
  */
-function addressKeys() {
-  const keys = universeAddressKeys();
-  if (!keys || keys.size === 0) {
-    throw new Error("aucune clé d'adresse déclarée dans les librairies — le parseur ne peut plus "
-      + "distinguer une adresse d'un contrôle (elles vivent dans `midi`, section schema.addressKeys)");
-  }
-  return keys;
-}
 
 /**
  * CONVENTION — les quatre lectures d'un flux de nombres qu'un `var` typé peut nommer
@@ -458,7 +445,16 @@ function parse(tokens, opts = {}) {
     qualifierKeys: new Set(), sceneNames: new Set(),
     controlMap: {}, controls: {}, symbols: {}, transcriptions: {}, actors: {},
     controlsQualified: {}, controlQualifiedResolvedBy: {}, ambiguousControls: new Set(),
+    // ⛔ CE QUE LA SCÈNE A EN PORTÉE SE LIT ICI, ET NULLE PART AILLEURS — principe 1 de Romain
+    // (2026-09-02) : l'invocation met en portée ce qu'une librairie déclare, rien d'autre. Le
+    // contexte se RECHARGE à chaque ligne de tête qui invoque (voir la boucle de tête), donc un
+    // mot n'est connu qu'après la ligne qui l'apporte. Les sept « univers » du registre entier
+    // que le parseur lisait avant ce chargement n'existent plus.
+    addressKeys: new Set(), reservedDirectiveNames: new Set(), portees: new Map(),
+    componentControls: new Set(), ruleScopeControls: new Set(), ruleAllowedControls: new Set(),
+    engineBagControls: new Set(), runtimeBagControls: new Set(),
   };
+  let directivesChargees = 0;   // combien de directives le contexte courant a lues
   /** Les noms qu'une scène a déclarés par `def` — les SEULS qui puissent être appelés.
    *  Vide tant que la directive n'est pas implémentée ; cf. `estUneDefinitionDeclaree`. */
   const definitionsDeclarees = new Set();
@@ -945,6 +941,15 @@ function parse(tokens, opts = {}) {
         for (const d of parseProductionBlock()) scene.directives.push(d);
       } else {
         scene.backticks.push(parseBacktickOrphan());
+      }
+      // ⛔ LE CONTEXTE SUIT LES INVOCATIONS LIGNE À LIGNE. Une ligne de tête est lue avec ce que
+      // les lignes PRÉCÉDENTES ont mis en portée : `transpose:700c` lit un intervalle si `transpo`
+      // (ou `core`) est déjà écrit, `ch:5` se range en adresse si `midi` l'est. Le recharger à
+      // chaque directive nouvelle coûte quelques millisecondes par ligne de tête, et retire le
+      // dernier prétexte des univers : « libCtx n'est pas encore chargé ».
+      if (scene.directives.length !== directivesChargees) {
+        directivesChargees = scene.directives.length;
+        libCtx = loadLibsFromDirectives(scene.directives);
       }
       premiereLigne = false;
       skipNewlines();
@@ -1745,7 +1750,7 @@ function parse(tokens, opts = {}) {
     let hasA = false;
     let hasC = false;
     for (const [k, v] of Object.entries(params)) {
-      if (addressKeys().has(k)) { address[k] = v; hasA = true; }
+      if (libCtx.addressKeys.has(k)) { address[k] = v; hasA = true; }
       else { controls[k] = v; hasC = true; }
     }
     return { address: hasA ? address : null, controls: hasC ? controls : null };
@@ -1787,8 +1792,8 @@ function parse(tokens, opts = {}) {
   function parseDirectiveColonValue(dirName) {
     let value = null, runtime = null;
     // Directive interval-typée (ex. @transpose global) : lire un littéral d'INTERVALLE et le porter
-    // BRUT (chaîne), comme la forme inline. Univers du registre car libCtx n'est pas encore chargé.
-    if (dirName && universeIntervalControls().has(dirName)) {
+    // BRUT (chaîne), comme la forme inline — si la librairie qui le déclare est déjà invoquée.
+    if (dirName && libCtx.intervalControls.has(dirName)) {
       return { value: readIntervalLiteral(dirName), runtime: null };
     }
     // Handle negative values: @transpose:-24
@@ -2015,7 +2020,7 @@ function parse(tokens, opts = {}) {
     if (!outChannels().has(canal) || !writableChannels().has(canal)) return null;
     // Un mot que le vocabulaire déclare garde sa lecture de réglage — `eval:X`, `sound:X`… La
     // question se pose dans les deux sens, donc les deux lecteurs sont interrogés.
-    if (porteesDeclarees(nom) !== null || motReserve(nom)) return null;
+    if (libCtx.portees.has(nom) || motReserve(nom)) return null;
     advance(); advance(); advance();               // nom : canal
     // ⛔ C'EST LA PRÉSENCE DE CETTE ENTRÉE QUI CONFÈRE LE STATUT DE TERMINAL D'ALPHABET, et son
     // absence est MUETTE. Mesuré le 2026-08-18 : une écriture qui ne la posait pas faisait maigrir
@@ -2060,7 +2065,7 @@ function parse(tokens, opts = {}) {
     // de BPx la refusait, le type publié de runtime-in la déclarait impossible, et son code
     // l'ignorait en silence — un `null` n'apparie aucun canal. La forme traversait trois frontières
     // pour mourir sans un mot à la quatrième.
-    if (mot === 'in' && peek(1).type === T.IDENT && !motReserve('in') && porteesDeclarees('in') === null) {
+    if (mot === 'in' && peek(1).type === T.IDENT && !motReserve('in') && !libCtx.portees.has('in')) {
       throw new ParseError(`'in ${peek(1).value}' est refusé — une entrée déclare son CANAL : `
         + `'in.<canal> ${peek(1).value}'. Les canaux d'entrée sont ${[...inChannels()].join(', ')}. `
         + `Sans lui, aucun runtime n'est adressé et rien ne déclenche.`, tok);
@@ -2172,7 +2177,7 @@ function parse(tokens, opts = {}) {
       const formeDeDeclaration = apresLeNom === T.NEWLINE || apresLeNom === T.EOF
         || apresLeNom === T.COMMENT || (apresLeNom === T.COLON && !peek(2).spaceBefore);
       if (peek(1).type === T.IDENT && formeDeDeclaration && !motReserve(mot)
-          && porteesDeclarees(mot) === null) {
+          && !libCtx.portees.has(mot)) {
         // ⚠️ CE REFUS ÉNUMÉRAIT LE CATALOGUE DE MODULES, et il l'a perdu avec lui : un refus qui
         // nomme une forme la ressuscite pour son lecteur. C'est le troisième domicile d'un mot
         // retiré, après le parseur et les librairies — et aucun garde ne compile un message.
@@ -2447,7 +2452,14 @@ function parse(tokens, opts = {}) {
     // les directives déclarées), donc elle poursuit intacte. Un préfixe qui ne résout rien n'est
     // pas avalé non plus : il tombe dans le refus nommé de `bpxAst`, qui dit quelle entrée manque
     // et dans quelle librairie.
+    // ⛔ ET LE PRÉFIXE RESTE DANS L'ARBRE, PARCE QU'IL INVOQUE. `time.tempo:120` nomme `time` :
+    // « les catégories du cœur s'invoquent directement » (LIBRAIRIES.md, Atlas). Rabattu sans
+    // trace, le préfixe était perdu, et depuis que la portée suit l'invocation (2026-09-03) la
+    // scène aurait été refusée pour un mot qu'elle nomme pourtant avec sa librairie. Le nœud porte
+    // `lib`, comme une paire de sac préfixée ; le chargeur et l'index y lisent une invocation.
+    let libDuPrefixe = null;
     if (subkey && directiveDeclareeParLaLibrairie(name, subkey)) {
+      libDuPrefixe = name;
       name = subkey;
       subkey = null;
     }
@@ -3725,12 +3737,15 @@ function parse(tokens, opts = {}) {
       while (!at(T.RPAREN) && !atEnd()) {
         const tokModName = current();
         const modName = expect(T.IDENT).value;
-        const portees = porteesDeclarees(modName);
+        const portees = libCtx.portees.get(modName) || null;
         if (!portees) {
+          const declarants = librairiesQuiDeclarent(modName);
           throw new ParseError(
             `'mode:${runtime || '…'}(${modName})' : '${modName}' n'est déclaré par aucune `
-            + `librairie chargée. Un modificateur de sous-grammaire est un mot de librairie comme `
-            + `un autre — invoquer celle qui le porte, ou retirer le mot.`, tokModName);
+            + `librairie invoquée. Un modificateur de sous-grammaire est un mot de librairie comme `
+            + `un autre — ${declarants.length
+                ? `invoquer en tête celle qui le porte (${declarants.map((l) => `'${l}'`).join(' ou ')})`
+                : 'aucune librairie du registre ne le déclare : retirer le mot'}.`, tokModName);
         }
         if (!portees.includes('subgrammar')) {
           throw new ParseError(
@@ -3832,7 +3847,8 @@ function parse(tokens, opts = {}) {
       refuserCanalDeSortieInconnu(name, subkey, tok);
       refuserModeInvalide(name, runtime, value, tok);
       const dirNode = { type: 'Directive', name, subkey, runtime, value, aliases, modifiers,
-                        ...(directiveParams ? { params: directiveParams } : {}), line: tok.line };
+                        ...(directiveParams ? { params: directiveParams } : {}),
+                        ...(libDuPrefixe ? { lib: libDuPrefixe } : {}), line: tok.line };
       if (assignments.length > 0) {
         // On retourne un nœud composite : le caller détecte AlphabetSoundAssignments
         // et l'ajoute à scene.soundAssignments tout en gardant la Directive.
@@ -3855,7 +3871,8 @@ function parse(tokens, opts = {}) {
     refuserCanalDeSortieInconnu(name, subkey, tok);
     refuserModeInvalide(name, runtime, value, tok);
     return { type: 'Directive', name, subkey, runtime, value, aliases, modifiers,
-             ...(directiveParams ? { params: directiveParams } : {}), line: tok.line };
+             ...(directiveParams ? { params: directiveParams } : {}),
+             ...(libDuPrefixe ? { lib: libDuPrefixe } : {}), line: tok.line };
   }
 
   // ⛔ `parseDeclaration`, `isCVModulatorBody` ET `parseCVModulator` SONT SORTIES LE 2026-08-18.
@@ -4269,7 +4286,7 @@ function parse(tokens, opts = {}) {
           // message du réglage et lui retirait le sien. Un mot peut être les deux ; ce qui décide
           // est qu'il soit DÉCLARABLE, et la donnée le dit par `catalogAxes`.
           const axes = new Set((leSchema() || {}).catalogAxes || []);
-          const porteesDuMot = porteesDeclarees(dirNom);
+          const porteesDuMot = libCtx.portees.get(dirNom) || null;
           if (porteesDuMot && !porteesDuMot.includes('scene') && !axes.has(dirNom)) {
             const PLACE = { subgrammar: 'en tête de sous-grammaire, dans la parenthèse du mode '
                             + '(`mode:<mode>(<réglage>)`)', rule: 'sur une règle', group: 'sur un groupe',
@@ -4604,10 +4621,11 @@ function parse(tokens, opts = {}) {
     // LES VALEURS VALIDES VIENNENT DE LA DONNÉE (`engine.scan.values`, lib/engine.bpsl) — le
     // parseur nommait `left`/`right`/`rnd` lui-même (un doublon EXACT de cet enum) ; il lit
     // désormais celui que la librairie déclare, comme tout contrôle à `values` (étape 3, règle 5).
-    const scanValues = (universeSacs().specs.scan && universeSacs().specs.scan.values) || [];
+    const scanValues = (libCtx.controls.scan && libCtx.controls.scan.values) || [];
     let ruleMode = null;
     for (const pair of (settings ? settings.pairs : [])) {
       if (pair.key === 'scan') {
+        if (!libCtx.controls.scan) continue;   // hors portée : refusé en aval, en nommant sa librairie
         if (scanValues.includes(pair.value)) {
           ruleMode = pair.value;
         } else {
@@ -4665,7 +4683,7 @@ function parse(tokens, opts = {}) {
    * dans une liste de clés de crochet.
    * Il ne reste donc qu'une famille légitime ici, et la donnée la nomme sans qu'on l'écrive.
    */
-  const estProcedureNue = (mot) => universeRuleScopeControls().has(mot);
+  const estProcedureNue = (mot) => libCtx.ruleScopeControls.has(mot);
 
   function isFlagBracket() {
     // Lookahead: [ followed by IDENT then = + - , ] (NOT IDENT:value which is a qualifier)
@@ -5612,7 +5630,7 @@ function parse(tokens, opts = {}) {
       // savait pas en désigner un QUELCONQUE, et c'est ce trou que la forme positionnelle
       // `cc(98,45)` bouchait de travers — en fabriquant du flux sans le point d'exclamation.
       // Déclaratif : `component:"number"` dans la lib, aucun nom de contrôle en dur ici.
-      if (at(T.PERIOD) && universeComponentControls().has(key)) {
+      if (at(T.PERIOD) && libCtx.componentControls.has(key)) {
         advance(); // .
         if (!at(T.INT)) {
           throw new ParseError(
@@ -5803,10 +5821,9 @@ function parse(tokens, opts = {}) {
         // MONO-valeur, `readQualifierValue` ne lit qu'un seul jeton et laisse pendre le reste
         // (`Expected IDENT, got INT`). Ces clés tombent donc dans le lecteur générique
         // multi-parties plus bas (celui qui sert déjà `keyxpand`), piloté par la DONNÉE
-        // (`args.length`), jamais par un nom en dur — et lu à l'échelle de l'UNIVERS
-        // (`universeSacs().specs`) pour rester disponible sans `controls`, comme tout réglage
-        // réservé.
-        const specReglage = universeSacs().specs && universeSacs().specs[key];
+        // (`args.length`), jamais par un nom en dur — lu sur le contexte des librairies
+        // invoquées, comme tout réglage.
+        const specReglage = libCtx.controls[key];
         const reglageMultiPartie = specReglage && Array.isArray(specReglage.args) && specReglage.args.length > 1;
         if (libCtx.qualifierKeys.has(key) && !reglageMultiPartie) {
           const { value, decrement } = readQualifierValue();
@@ -5836,9 +5853,7 @@ function parse(tokens, opts = {}) {
           continue;
         }
         // Contrôle interval-typé (transpose…) : lire un littéral d'intervalle, porté brut.
-        // Univers du registre (pas seulement le libCtx de la scène) : un mot USABLE est valide
-        // qu'on ait chargé controls ou non — cohérent avec la directive globale et le garde des `[]`.
-        if ((libCtx.intervalControls && libCtx.intervalControls.has(key)) || universeIntervalControls().has(key)) {
+        if (libCtx.intervalControls.has(key)) {
           pairs.push({ key, value: readIntervalLiteral(key), ...sub, ...pos });
           finirTerme();
           continue;
@@ -6301,11 +6316,15 @@ function parse(tokens, opts = {}) {
       if (at(T.LBRACKET) && peek(1).type === T.IDENT) {
         const nom = peek(1).value;
         const CROCHET_EN_FLUX = new Set(['seed']);   // graphie ratifiée : `![seed:N]` (Romain)
-        if (CROCHET_EN_FLUX.has(nom) && porteesDeclarees(nom) === null && !motReserve(nom)) {
+        if (CROCHET_EN_FLUX.has(nom) && !libCtx.portees.has(nom) && !motReserve(nom)) {
+          const declarants = librairiesQuiDeclarent(nom);
           throw new ParseError(
-            `'![${nom}:…]' : '${nom}' n'est plus déclaré par la librairie 'engine'. La re-semence en `
-            + `flux traduit le '_srand(N)' natif, et le mot qui la porte vient d'une librairie `
-            + `comme tous les autres.`, current());
+            declarants.length
+              ? `'![${nom}:…]' : '${nom}' n'est pas en portée : aucune librairie invoquée ne le déclare — `
+                + `l'invoquer en tête (${declarants.map((l) => `'${l}'`).join(' ou ')}).`
+              : `'![${nom}:…]' : '${nom}' n'est déclaré par aucune librairie. La re-semence en flux `
+                + `traduit le '_srand(N)' natif, et le mot qui la porte vient d'une librairie comme `
+                + `tous les autres.`, current());
         }
         if (CROCHET_EN_FLUX.has(nom)) {
           const ouvre = current();
@@ -6362,7 +6381,7 @@ function parse(tokens, opts = {}) {
         // pouvait pas les distinguer. Le refus nommé est donc REMONTÉ ici, avant le refus
         // générique, où il ne dépend plus de la vie d'un bloc voisin.
         const q = parseQualifier('relative');
-        const procedure = (q.pairs || []).find((p) => p && universeRuleScopeControls().has(p.key));
+        const procedure = (q.pairs || []).find((p) => p && libCtx.ruleScopeControls.has(p.key));
         if (procedure) {
           throw new ParseError(
             `'![${procedure.key}: …]' : '${procedure.key}' est une procédure de niveau RÈGLE, elle `
@@ -6821,8 +6840,8 @@ function parse(tokens, opts = {}) {
       let value;
       // Argument d'un contrôle interval-typé (transpose) : soit `transpose(3/2)` (callee interval-typé,
       // arg positionnel), soit `Sym(transpose:3/2)` (clé interval-typée). Lu comme INTERVALLE, porté brut.
-      const intervalHere = (key && universeIntervalControls().has(key))
-                        || (!key && universeIntervalControls().has(name));
+      const intervalHere = (key && libCtx.intervalControls.has(key))
+                        || (!key && libCtx.intervalControls.has(name));
       if (intervalHere) {
         value = { type: 'Literal', value: readIntervalLiteral(key || name) };
       } else if (at(T.BACKTICK)) {
@@ -6902,7 +6921,7 @@ function parse(tokens, opts = {}) {
     // Contrôle interval-typé (transpose) : l'unique argument est un INTERVALLE, lu proprement
     // (fraction/cents/décimal) et porté brut — sans la jointure de tokens qui insérerait un espace
     // parasite ("1100 c" au lieu de "1100c"), ce que la résolution (normalizeRatio) rejetterait.
-    if (universeIntervalControls().has(name)) {
+    if (libCtx.intervalControls.has(name)) {
       args.push(readIntervalLiteral(name));
       expect(T.RPAREN);
       return { type: 'Control', name, args };
@@ -7621,7 +7640,7 @@ function parse(tokens, opts = {}) {
     // DISPATCHER, JAMAIS par le moteur », qui se qualifie elle-même de règle établie).
     // Mesuré au corpus : 76 emplois étaient du mauvais côté, et la MAJORITÉ se trompait pour deux
     // d'entre eux — l'arbitre est la déclaration, jamais le nombre.
-    if (universeSacs().runtime.has(key)) {
+    if (libCtx.runtimeBagControls.has(key)) {
       // NOMMER LA BONNE RÉÉCRITURE. `[scale:2]` — valeur unique et numérique — n'est pas la gamme
       // microtonale mal rangée : c'est le contrôle moteur SUPPRIMÉ le 2026-07-26, subsumé par la
       // DURÉE COLLÉE. Renvoyer vers `(scale:2)` enverrait l'utilisateur écrire une gamme dont le
@@ -7659,12 +7678,12 @@ function parse(tokens, opts = {}) {
     // deux-points. `[vel]` nu reste un DRAPEAU nommé « vel », exactement comme `[monDrapeau]` —
     // mesuré. Un drapeau porte le nom qu'on veut ; le confondre avec un contrôle homonyme
     // confisquerait des noms d'état à leurs scènes.
-    if (universeControlNames().has(key)) {
-      if (universeRuleScopeControls().has(key)) return;
+    if (libCtx.controlNames.has(key)) {
+      if (libCtx.ruleScopeControls.has(key)) return;
       // Un contrôle HORS de sa portée est déjà refusé en aval, avec un message qui donne sa
       // vraie place. Ne pas doubler ce refus par un message plus vague — mesuré : sans cette
       // ligne, `[mode:…]` perdait sa réécriture `mode:…` en tête de sous-grammaire.
-      if (!universeRuleAllowedControls().has(key)) return;
+      if (!libCtx.ruleAllowedControls.has(key)) return;
       throw new ParseError(
         `'[${key}:…]' : le crochet ne porte que ce qui gouverne la DÉRIVATION — un test de drapeau `
         + `('[flag]', '[flag==1]'), une affectation ('[flag=1]'), une procédure de dérivation `
@@ -7826,8 +7845,8 @@ function parse(tokens, opts = {}) {
 
       // --- Standard qualifier value parsing ---
       // Ce chemin ne sert plus les clés réservées (`mode`, `weight`… REFUSÉES plus haut par
-      // checkQualifierKey) : il reste pour un contrôle du REGISTRE non chargé par cette scène
-      // (`universeControlNames()` sans `libCtx.controlNames`), cf. commentaire de checkQualifierKey.
+      // checkQualifierKey) : il reste pour un mot que la scène n'a pas en portée, refusé en aval
+      // en nommant la librairie qui le déclare.
       const gardeElement = () => {
         if (at(T.IDENT) && peek(1).type === T.COLON) {
           throw new ParseError(

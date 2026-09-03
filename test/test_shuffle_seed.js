@@ -45,14 +45,16 @@ console.log('\n=== brassage / graine orthogonaux ===');
 
 // ![seed:N] dans le flux → _srand(N)
 {
-  const r = compileToBPxAST('alphabet.simple\nmode:lin\n-----\nS -> a ![seed:2] b');
+  // `seed` est un mot d'`engine` : la scène l'invoque (principe 1, 2026-09-02 — rien n'est en
+  // portée sans invocation).
+  const r = compileToBPxAST('engine\nalphabet.simple\nmode:lin\n-----\nS -> a ![seed:2] b');
   assert('![seed:2] : 0 erreur', r.errors.length === 0, r.errors);
   // ⚠️ ASSERTION DE TEXTE BP3 RETIRÉE le 2026-07-19 (émission `_srand(2)`).
 }
 
 // ![@<autre>] dans le flux → erreur (seul seed a un sens en flux)
 {
-  const r = compileToBPxAST('alphabet.simple\nmode:lin\n-----\nS -> a ![maxitems:3] b');
+  const r = compileToBPxAST('engine\nalphabet.simple\nmode:lin\n-----\nS -> a ![maxitems:3] b');
   assert('![maxitems] : erreur (hors seed)', r.errors.length > 0, r.errors);
 }
 

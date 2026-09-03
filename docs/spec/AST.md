@@ -264,6 +264,7 @@ Directive {
   subkey: string | null           // l'entrée, après le point
   binding: string | null          // la valeur après le `:` — sur un alphabet, le runtime de sortie
   value: string | number | null   // 120, "7/8", -24…
+  lib?: string                    // la librairie nommée en préfixe d'un réglage : `time.tempo:120` → "time"
   line: number
 }
 ```
@@ -271,6 +272,11 @@ Directive {
 Une librairie s'invoque par son nom, l'entrée après le point. Un réglage s'écrit par sa catégorie,
 l'entrée après le point. Le deux-points affecte une valeur ; sur un alphabet et ses terminaux, c'est
 le runtime de sortie, pris parmi `audio`, `midi`, `osc` et `dmx`.
+
+Un réglage écrit avec sa catégorie en préfixe porte le réglage en `name` et la catégorie en `lib` :
+la catégorie est une librairie, et la nommer l'invoque. Ce qu'une scène a en portée est ce que ses
+invocations déclarent ; un réglage qu'aucune librairie invoquée ne déclare est refusé, en nommant
+la librairie à invoquer.
 
 **Le préfixe est optionnel** : un nom nu passe s'il vit dans une seule librairie invoquée. La
 résolution est **statique**, et la compilation nomme les deux candidats.

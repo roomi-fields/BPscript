@@ -52,7 +52,8 @@ const actors = (src) => compileToBPxAST(src).ast.actors;
 // veut dire. Ce n'est pas une concession au garde — c'était une scène incomplète, et le
 // compilateur le disait à personne.
 {
-  const a = actors('tempo:60\nalphabet.solfege\n-----\nGamme -> do4 re4 mi4');
+  // `tempo` est un mot de `time` : la scène l'invoque (principe 1, 2026-09-02).
+  const a = actors('time\ntempo:60\nalphabet.solfege\n-----\nGamme -> do4 re4 mi4');
   assert('acteur implicite injecté même avec directives', a.length === 1 && a[0].name === 'scene', JSON.stringify(a));
   assert('alphabet de scène hérité par l acteur implicite', a[0].properties?.alphabet === 'solfege');
 }

@@ -1919,13 +1919,6 @@ function registerLib(name, data) {
   cache[name] = data;
   _version++;
   _universeControls = null;
-  _universeComponentControls = null;
-  _universeRuleScope = null;
-  _universeRuleAllowed = null;
-  _universeSacs = null;
-  _universeIntervalControls = null;
-  _universeAddressKeys = null;
-  _universeReservedDirectives = null;
 }
 var _universeControls = null;
 function universeControlNames() {
@@ -1934,56 +1927,6 @@ function universeControlNames() {
     _universeControls = loadLibsFromDirectives(allDirs).controlNames;
   }
   return _universeControls;
-}
-var _universeIntervalControls = null;
-function universeIntervalControls() {
-  if (!_universeIntervalControls) {
-    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
-    _universeIntervalControls = loadLibsFromDirectives(allDirs).intervalControls;
-  }
-  return _universeIntervalControls;
-}
-var _universeComponentControls = null;
-function universeComponentControls() {
-  if (!_universeComponentControls) {
-    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
-    _universeComponentControls = loadLibsFromDirectives(allDirs).componentControls;
-  }
-  return _universeComponentControls;
-}
-var _universeAddressKeys = null;
-var _universeReservedDirectives = null;
-function universeAddressKeys() {
-  if (!_universeAddressKeys) {
-    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
-    _universeAddressKeys = loadLibsFromDirectives(allDirs).addressKeys;
-  }
-  return _universeAddressKeys;
-}
-var _universeSacs = null;
-function universeSacs() {
-  if (!_universeSacs) {
-    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
-    const c = loadLibsFromDirectives(allDirs);
-    _universeSacs = { moteur: c.engineBagControls, runtime: c.runtimeBagControls, specs: c.controls };
-  }
-  return _universeSacs;
-}
-var _universeRuleScope = null;
-function universeRuleScopeControls() {
-  if (!_universeRuleScope) {
-    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
-    _universeRuleScope = loadLibsFromDirectives(allDirs).ruleScopeControls;
-  }
-  return _universeRuleScope;
-}
-var _universeRuleAllowed = null;
-function universeRuleAllowedControls() {
-  if (!_universeRuleAllowed) {
-    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
-    _universeRuleAllowed = loadLibsFromDirectives(allDirs).ruleAllowedControls;
-  }
-  return _universeRuleAllowed;
 }
 function motsDInvocation() {
   const table = /* @__PURE__ */ new Map();
@@ -2031,17 +1974,26 @@ function loadLib(name, subkey) {
   }
   return loadJsonFile(name);
 }
-function porteesDeclarees(nom) {
-  if (!nom) return null;
-  for (const lib of Object.values(leRegistre())) {
-    if (!lib || typeof lib !== "object") continue;
-    for (const section of Object.values(lib)) {
-      if (!section || typeof section !== "object" || Array.isArray(section)) continue;
-      const def = section[nom];
-      if (def && typeof def === "object" && Array.isArray(def.scope)) return def.scope;
-    }
+function librairiesQuiDeclarent(nom) {
+  if (!nom) return [];
+  const mots = [];
+  for (const [cle, lib] of Object.entries(leRegistre())) {
+    if (!lib || typeof lib !== "object" || cle.includes("/")) continue;
+    const mot = typeof lib.resolves === "string" && lib.resolves || cle;
+    let declare = false;
+    const marcher = (o) => {
+      for (const [k, v] of Object.entries(o || {})) {
+        if (k.startsWith("_") || !v || typeof v !== "object" || Array.isArray(v)) continue;
+        if (k === nom && Array.isArray(v.scope) && v.bpscript !== false) declare = true;
+        else marcher(v);
+      }
+    };
+    marcher(lib);
+    const adresses = lib.schema && lib.schema.addressKeys;
+    if (adresses && !Array.isArray(adresses) && typeof adresses === "object" && Object.prototype.hasOwnProperty.call(adresses, nom)) declare = true;
+    if (declare && !mots.includes(mot)) mots.push(mot);
   }
-  return null;
+  return mots;
 }
 function groupeDUnicite(nom) {
   if (!nom) return null;
@@ -2213,20 +2165,7 @@ function loadLibsFromDirectives(directives) {
   const nomsReserves = (rd) => Array.isArray(rd) ? rd : [];
   ctx.reservedDirectiveNames = new Set(nomsReserves(schema.reservedDirectives));
   ctx.addressKeys = /* @__PURE__ */ new Set();
-  for (const lib of Object.values(leRegistre())) {
-    const s = lib && lib.schema;
-    if (s && s.reservedDirectives) for (const n of nomsReserves(s.reservedDirectives)) ctx.reservedDirectiveNames.add(n);
-    for (const section of Object.values(lib || {})) {
-      if (!section || typeof section !== "object" || Array.isArray(section)) continue;
-      for (const [nom, def] of Object.entries(section)) {
-        if (nom.startsWith("_") || !def || typeof def !== "object") continue;
-        if (Array.isArray(def.scope) && def.scope.includes("scene")) ctx.reservedDirectiveNames.add(nom);
-      }
-    }
-    if (s && s.addressKeys) {
-      for (const n of Array.isArray(s.addressKeys) ? s.addressKeys : Object.keys(s.addressKeys)) ctx.addressKeys.add(n);
-    }
-  }
+  ctx.portees = /* @__PURE__ */ new Map();
   ctx.qualifierKeys = new Set(schema.qualifierKeys || []);
   ctx.catalogAxes = Array.isArray(schema.catalogAxes) ? schema.catalogAxes.slice() : [];
   ctx.defaultComponents = coreLib.defaults && coreLib.defaults.components || {};
@@ -2253,9 +2192,15 @@ function loadLibsFromDirectives(directives) {
   ctx.digitalFunctions = new Set(Object.keys(digitalLib && digitalLib.objects || {}));
   const settingsLib = loadLib("settings");
   if (settingsLib) ctx._libs["settings"] = settingsLib;
-  const invoquees = new Set((directives || []).map((d) => d && d.name).filter(Boolean));
+  const invoquees = new Set((directives || []).flatMap((d) => d ? [d.name, d.lib] : []).filter(Boolean));
   const apportees = [];
   const aTraiter = [...directives || []];
+  for (const d of directives || []) {
+    if (!d || !d.lib || (directives || []).some((x) => x && x.name === d.lib && !x.lib)) continue;
+    const nommee = { type: "Directive", name: d.lib, subkey: null };
+    apportees.push(nommee);
+    aTraiter.push(nommee);
+  }
   while (aTraiter.length) {
     const d = aTraiter.shift();
     const socle = d && d.name ? loadJsonFile(d.name) : null;
@@ -2268,6 +2213,30 @@ function loadLibsFromDirectives(directives) {
     }
   }
   const aCharger = apportees.length ? [...apportees, ...directives || []] : directives || [];
+  for (const dir of aCharger) {
+    const lib = dir && dir.name ? loadJsonFile(dir.name) : null;
+    if (!lib || typeof lib !== "object") continue;
+    const s = lib.schema;
+    if (s && s.reservedDirectives) for (const n of nomsReserves(s.reservedDirectives)) ctx.reservedDirectiveNames.add(n);
+    if (s && s.addressKeys) {
+      const cles = Array.isArray(s.addressKeys) ? s.addressKeys : Object.keys(s.addressKeys);
+      for (const n of cles) {
+        if (n.startsWith("_")) continue;
+        ctx.addressKeys.add(n);
+        const def = Array.isArray(s.addressKeys) ? null : s.addressKeys[n];
+        if (def && Array.isArray(def.scope) && !ctx.portees.has(n)) ctx.portees.set(n, def.scope);
+      }
+    }
+    for (const section of Object.values(lib)) {
+      if (!section || typeof section !== "object" || Array.isArray(section)) continue;
+      for (const [nom, def] of Object.entries(section)) {
+        if (nom.startsWith("_") || !def || typeof def !== "object" || !Array.isArray(def.scope)) continue;
+        if (def.bpscript === false) continue;
+        if (def.scope.includes("scene")) ctx.reservedDirectiveNames.add(nom);
+        if (!ctx.portees.has(nom)) ctx.portees.set(nom, def.scope);
+      }
+    }
+  }
   const provenance = /* @__PURE__ */ new Map();
   const declarer = (nom, origine) => {
     if (!provenance.has(nom)) provenance.set(nom, /* @__PURE__ */ new Set());
@@ -2676,7 +2645,7 @@ function motsInvoques(ast) {
     for (const a of Array.isArray(lib.apporte) ? lib.apporte : []) apportePar.get(mot).add(a);
   }
   const vus = /* @__PURE__ */ new Set();
-  const file = (ast && ast.directives || []).map((d) => d && d.name).filter(Boolean);
+  const file = (ast && ast.directives || []).flatMap((d) => d ? [d.name, d.lib] : []).filter(Boolean);
   while (file.length) {
     const mot = file.shift();
     if (vus.has(mot)) continue;
@@ -2702,13 +2671,6 @@ var ParseError = class extends Error {
     this.token = token;
   }
 };
-function addressKeys() {
-  const keys = universeAddressKeys();
-  if (!keys || keys.size === 0) {
-    throw new Error("aucune cl\xE9 d'adresse d\xE9clar\xE9e dans les librairies \u2014 le parseur ne peut plus distinguer une adresse d'un contr\xF4le (elles vivent dans `midi`, section schema.addressKeys)");
-  }
-  return keys;
-}
 var motReserve = (nom) => ((leSchema() || {}).reservedDirectives || []).includes(nom);
 var _actorKeys = null;
 function actorKeysData() {
@@ -2873,8 +2835,22 @@ function parse(tokens, opts = {}) {
     actors: {},
     controlsQualified: {},
     controlQualifiedResolvedBy: {},
-    ambiguousControls: /* @__PURE__ */ new Set()
+    ambiguousControls: /* @__PURE__ */ new Set(),
+    // ⛔ CE QUE LA SCÈNE A EN PORTÉE SE LIT ICI, ET NULLE PART AILLEURS — principe 1 de Romain
+    // (2026-09-02) : l'invocation met en portée ce qu'une librairie déclare, rien d'autre. Le
+    // contexte se RECHARGE à chaque ligne de tête qui invoque (voir la boucle de tête), donc un
+    // mot n'est connu qu'après la ligne qui l'apporte. Les sept « univers » du registre entier
+    // que le parseur lisait avant ce chargement n'existent plus.
+    addressKeys: /* @__PURE__ */ new Set(),
+    reservedDirectiveNames: /* @__PURE__ */ new Set(),
+    portees: /* @__PURE__ */ new Map(),
+    componentControls: /* @__PURE__ */ new Set(),
+    ruleScopeControls: /* @__PURE__ */ new Set(),
+    ruleAllowedControls: /* @__PURE__ */ new Set(),
+    engineBagControls: /* @__PURE__ */ new Set(),
+    runtimeBagControls: /* @__PURE__ */ new Set()
   };
+  let directivesChargees = 0;
   const definitionsDeclarees = /* @__PURE__ */ new Set();
   const nomsDeclaresLocalement = /* @__PURE__ */ new Set();
   const acteursDeclares = /* @__PURE__ */ new Set();
@@ -3134,6 +3110,10 @@ function parse(tokens, opts = {}) {
         for (const d of parseProductionBlock()) scene.directives.push(d);
       } else {
         scene.backticks.push(parseBacktickOrphan());
+      }
+      if (scene.directives.length !== directivesChargees) {
+        directivesChargees = scene.directives.length;
+        libCtx = loadLibsFromDirectives(scene.directives);
       }
       premiereLigne = false;
       skipNewlines();
@@ -3516,7 +3496,7 @@ function parse(tokens, opts = {}) {
     let hasA = false;
     let hasC = false;
     for (const [k, v] of Object.entries(params)) {
-      if (addressKeys().has(k)) {
+      if (libCtx.addressKeys.has(k)) {
         address[k] = v;
         hasA = true;
       } else {
@@ -3535,7 +3515,7 @@ function parse(tokens, opts = {}) {
   }
   function parseDirectiveColonValue(dirName) {
     let value = null, runtime = null;
-    if (dirName && universeIntervalControls().has(dirName)) {
+    if (dirName && libCtx.intervalControls.has(dirName)) {
       return { value: readIntervalLiteral(dirName), runtime: null };
     }
     let negative = false;
@@ -3641,7 +3621,7 @@ function parse(tokens, opts = {}) {
     const nom = tok.value;
     const canal = peek(2).value;
     if (!outChannels().has(canal) || !writableChannels().has(canal)) return null;
-    if (porteesDeclarees(nom) !== null || motReserve(nom)) return null;
+    if (libCtx.portees.has(nom) || motReserve(nom)) return null;
     advance();
     advance();
     advance();
@@ -3651,7 +3631,7 @@ function parse(tokens, opts = {}) {
     if (!at(T.IDENT)) return null;
     const tok = current();
     const mot = tok.value;
-    if (mot === "in" && peek(1).type === T.IDENT && !motReserve("in") && porteesDeclarees("in") === null) {
+    if (mot === "in" && peek(1).type === T.IDENT && !motReserve("in") && !libCtx.portees.has("in")) {
       throw new ParseError(`'in ${peek(1).value}' est refus\xE9 \u2014 une entr\xE9e d\xE9clare son CANAL : 'in.<canal> ${peek(1).value}'. Les canaux d'entr\xE9e sont ${[...inChannels()].join(", ")}. Sans lui, aucun runtime n'est adress\xE9 et rien ne d\xE9clenche.`, tok);
     }
     if (mot === "in" && peek(1).type === T.PERIOD && !peek(1).spaceBefore && peek(2).type === T.IDENT) {
@@ -3702,7 +3682,7 @@ function parse(tokens, opts = {}) {
     if (!prototypesDeclares.has(mot)) {
       const apresLeNom = peek(2).type;
       const formeDeDeclaration = apresLeNom === T.NEWLINE || apresLeNom === T.EOF || apresLeNom === T.COMMENT || apresLeNom === T.COLON && !peek(2).spaceBefore;
-      if (peek(1).type === T.IDENT && formeDeDeclaration && !motReserve(mot) && porteesDeclarees(mot) === null) {
+      if (peek(1).type === T.IDENT && formeDeDeclaration && !motReserve(mot) && !libCtx.portees.has(mot)) {
         throw new ParseError(`'${mot} ${peek(1).value}' : '${mot}' n'est pas un type en port\xE9e. Un type en t\xEAte est un objet en port\xE9e \u2014 d\xE9clar\xE9 par la sc\xE8ne, ou apport\xE9 par une librairie invoqu\xE9e en t\xEAte (le socle vit dans 'types') \u2014 ou in.<canal>.`, tok);
       }
       return null;
@@ -3812,7 +3792,9 @@ function parse(tokens, opts = {}) {
       advance();
       subkey = lireNomDEntree(tok);
     }
+    let libDuPrefixe = null;
     if (subkey && directiveDeclareeParLaLibrairie(name, subkey)) {
+      libDuPrefixe = name;
       name = subkey;
       subkey = null;
     }
@@ -4382,10 +4364,11 @@ function parse(tokens, opts = {}) {
       while (!at(T.RPAREN) && !atEnd()) {
         const tokModName = current();
         const modName = expect(T.IDENT).value;
-        const portees = porteesDeclarees(modName);
+        const portees = libCtx.portees.get(modName) || null;
         if (!portees) {
+          const declarants = librairiesQuiDeclarent(modName);
           throw new ParseError(
-            `'mode:${runtime || "\u2026"}(${modName})' : '${modName}' n'est d\xE9clar\xE9 par aucune librairie charg\xE9e. Un modificateur de sous-grammaire est un mot de librairie comme un autre \u2014 invoquer celle qui le porte, ou retirer le mot.`,
+            `'mode:${runtime || "\u2026"}(${modName})' : '${modName}' n'est d\xE9clar\xE9 par aucune librairie invoqu\xE9e. Un modificateur de sous-grammaire est un mot de librairie comme un autre \u2014 ${declarants.length ? `invoquer en t\xEAte celle qui le porte (${declarants.map((l) => `'${l}'`).join(" ou ")})` : "aucune librairie du registre ne le d\xE9clare : retirer le mot"}.`,
             tokModName
           );
         }
@@ -4476,6 +4459,7 @@ function parse(tokens, opts = {}) {
         aliases,
         modifiers,
         ...directiveParams ? { params: directiveParams } : {},
+        ...libDuPrefixe ? { lib: libDuPrefixe } : {},
         line: tok.line
       };
       if (assignments.length > 0) {
@@ -4499,6 +4483,7 @@ function parse(tokens, opts = {}) {
       aliases,
       modifiers,
       ...directiveParams ? { params: directiveParams } : {},
+      ...libDuPrefixe ? { lib: libDuPrefixe } : {},
       line: tok.line
     };
   }
@@ -4729,7 +4714,7 @@ function parse(tokens, opts = {}) {
           currentModifiers = blockModifiers;
         } else if (dir.name !== "mode") {
           const axes = new Set((leSchema() || {}).catalogAxes || []);
-          const porteesDuMot = porteesDeclarees(dirNom);
+          const porteesDuMot = libCtx.portees.get(dirNom) || null;
           if (porteesDuMot && !porteesDuMot.includes("scene") && !axes.has(dirNom)) {
             const PLACE = {
               subgrammar: "en t\xEAte de sous-grammaire, dans la parenth\xE8se du mode (`mode:<mode>(<r\xE9glage>)`)",
@@ -4912,10 +4897,11 @@ function parse(tokens, opts = {}) {
       }
       break;
     }
-    const scanValues = universeSacs().specs.scan && universeSacs().specs.scan.values || [];
+    const scanValues = libCtx.controls.scan && libCtx.controls.scan.values || [];
     let ruleMode = null;
     for (const pair of settings ? settings.pairs : []) {
       if (pair.key === "scan") {
+        if (!libCtx.controls.scan) continue;
         if (scanValues.includes(pair.value)) {
           ruleMode = pair.value;
         } else {
@@ -4945,7 +4931,7 @@ function parse(tokens, opts = {}) {
     }
     return { type: "Rule", guard, contexts, lhs, arrow, rhs, flags, qualifiers, settings, mode: ruleMode, line: tok.line, warnings };
   }
-  const estProcedureNue = (mot) => universeRuleScopeControls().has(mot);
+  const estProcedureNue = (mot) => libCtx.ruleScopeControls.has(mot);
   function isFlagBracket() {
     if (!at(T.LBRACKET)) return false;
     const t1 = peek(1);
@@ -5450,7 +5436,7 @@ function parse(tokens, opts = {}) {
         finirTerme();
         continue;
       }
-      if (at(T.PERIOD) && universeComponentControls().has(key)) {
+      if (at(T.PERIOD) && libCtx.componentControls.has(key)) {
         advance();
         if (!at(T.INT)) {
           throw new ParseError(
@@ -5551,7 +5537,7 @@ function parse(tokens, opts = {}) {
             current()
           );
         }
-        const specReglage = universeSacs().specs && universeSacs().specs[key];
+        const specReglage = libCtx.controls[key];
         const reglageMultiPartie = specReglage && Array.isArray(specReglage.args) && specReglage.args.length > 1;
         if (libCtx.qualifierKeys.has(key) && !reglageMultiPartie) {
           const { value, decrement } = readQualifierValue();
@@ -5572,7 +5558,7 @@ function parse(tokens, opts = {}) {
           finirTerme();
           continue;
         }
-        if (libCtx.intervalControls && libCtx.intervalControls.has(key) || universeIntervalControls().has(key)) {
+        if (libCtx.intervalControls.has(key)) {
           pairs.push({ key, value: readIntervalLiteral(key), ...sub, ...pos2 });
           finirTerme();
           continue;
@@ -5767,9 +5753,10 @@ function parse(tokens, opts = {}) {
       if (at(T.LBRACKET) && peek(1).type === T.IDENT) {
         const nom = peek(1).value;
         const CROCHET_EN_FLUX = /* @__PURE__ */ new Set(["seed"]);
-        if (CROCHET_EN_FLUX.has(nom) && porteesDeclarees(nom) === null && !motReserve(nom)) {
+        if (CROCHET_EN_FLUX.has(nom) && !libCtx.portees.has(nom) && !motReserve(nom)) {
+          const declarants = librairiesQuiDeclarent(nom);
           throw new ParseError(
-            `'![${nom}:\u2026]' : '${nom}' n'est plus d\xE9clar\xE9 par la librairie 'engine'. La re-semence en flux traduit le '_srand(N)' natif, et le mot qui la porte vient d'une librairie comme tous les autres.`,
+            declarants.length ? `'![${nom}:\u2026]' : '${nom}' n'est pas en port\xE9e : aucune librairie invoqu\xE9e ne le d\xE9clare \u2014 l'invoquer en t\xEAte (${declarants.map((l) => `'${l}'`).join(" ou ")}).` : `'![${nom}:\u2026]' : '${nom}' n'est d\xE9clar\xE9 par aucune librairie. La re-semence en flux traduit le '_srand(N)' natif, et le mot qui la porte vient d'une librairie comme tous les autres.`,
             current()
           );
         }
@@ -5812,7 +5799,7 @@ function parse(tokens, opts = {}) {
       }
       if (at(T.LBRACKET)) {
         const q = parseQualifier("relative");
-        const procedure = (q.pairs || []).find((p) => p && universeRuleScopeControls().has(p.key));
+        const procedure = (q.pairs || []).find((p) => p && libCtx.ruleScopeControls.has(p.key));
         if (procedure) {
           throw new ParseError(
             `'![${procedure.key}: \u2026]' : '${procedure.key}' est une proc\xE9dure de niveau R\xC8GLE, elle ne se pose pas dans le flux \u2014 elle vaut pour la r\xE8gle enti\xE8re. \xC9crire '[${procedure.key}:${procedure.value === true ? "\u2026" : procedure.value}]' en suffixe de r\xE8gle. Dans le flux, elle n'atteint jamais la r\xE8gle et laisse un jeton de contr\xF4le inerte dans la production`,
@@ -6013,7 +6000,7 @@ function parse(tokens, opts = {}) {
         advance();
       }
       let value;
-      const intervalHere = key && universeIntervalControls().has(key) || !key && universeIntervalControls().has(name);
+      const intervalHere = key && libCtx.intervalControls.has(key) || !key && libCtx.intervalControls.has(name);
       if (intervalHere) {
         value = { type: "Literal", value: readIntervalLiteral(key || name) };
       } else if (at(T.BACKTICK)) {
@@ -6056,7 +6043,7 @@ function parse(tokens, opts = {}) {
   function parseControl(name, tok) {
     expect(T.LPAREN);
     const args = [];
-    if (universeIntervalControls().has(name)) {
+    if (libCtx.intervalControls.has(name)) {
       args.push(readIntervalLiteral(name));
       expect(T.RPAREN);
       return { type: "Control", name, args };
@@ -6421,7 +6408,7 @@ function parse(tokens, opts = {}) {
         tok
       );
     }
-    if (universeSacs().runtime.has(key)) {
+    if (libCtx.runtimeBagControls.has(key)) {
       const valeurNumerique = (at(T.INT) || at(T.FLOAT)) && (peek(1).type === T.RBRACKET || peek(1).type === T.COMMA || peek(1).type === T.SLASH);
       if (key === "scale" && valeurNumerique) {
         throw new ParseError(
@@ -6434,9 +6421,9 @@ function parse(tokens, opts = {}) {
         tok
       );
     }
-    if (universeControlNames().has(key)) {
-      if (universeRuleScopeControls().has(key)) return;
-      if (!universeRuleAllowedControls().has(key)) return;
+    if (libCtx.controlNames.has(key)) {
+      if (libCtx.ruleScopeControls.has(key)) return;
+      if (!libCtx.ruleAllowedControls.has(key)) return;
       throw new ParseError(
         `'[${key}:\u2026]' : le crochet ne porte que ce qui gouverne la D\xC9RIVATION \u2014 un test de drapeau ('[flag]', '[flag==1]'), une affectation ('[flag=1]'), une proc\xE9dure de d\xE9rivation ('[goto:\u2026]', '[repeat:\u2026]', '[failed:\u2026]', '[stop]') ou le rang d'une forme de gabarit ('[3]'). '${key}' d\xE9crit ce que la d\xE9rivation PRODUIT : il s'\xE9crit entre PARENTH\xC8SES (d\xE9cision Romain 2026-08-08, LANGUAGE.md \xA7\xAB Le crochet \xBB).`,
         tok
@@ -6608,6 +6595,7 @@ export {
   leRegistre,
   universeControlNames,
   loadLib,
+  librairiesQuiDeclarent,
   groupeDUnicite,
   resolveActorAlphabet,
   resolveActorAlphabetSource,

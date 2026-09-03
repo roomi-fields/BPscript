@@ -24,7 +24,7 @@
  * trop large, et elle est ici la plus fournie.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
-import { universeReservedDirectives } from '../src/transpiler/libs.js';
+import { loadLibsFromDirectives, leRegistre } from '../src/transpiler/libs.js';
 import { LIBS } from '../src/transpiler/libs-data.js';
 
 let passe = 0;
@@ -126,11 +126,12 @@ const DECLARATIONS_DE_TETE = new Set([
   'pedalrelease', 'rate', 'resetcontrols', 'resetnotes', 'resetweights', 'smooth', 'striated',
   'strikeagain', 'sustain', 'syncdelay', 'tempo', 'vel', 'volume', 'volumecontrol', ]);
 
-// ⛔ L'UNION SE LIT PAR LA PORTE, PLUS PAR UN CHEMIN DU PAQUET. Depuis le 2026-09-02 la table
+// ⛔ L'UNION SE LIT PAR LE CHARGEUR, PLUS PAR UN CHEMIN DU PAQUET. Depuis le 2026-09-02 la table
 // réservée d'`engine` est sortie : un mot de tête est un objet qui déclare `scope(scene)`, dans
-// n'importe quelle place du registre, et c'est `universeReservedDirectives` qui en fait l'union —
-// la même que celle du compilateur. Une mesure ad hoc contournerait la porte que le code expose.
-const UNION = [...universeReservedDirectives()].sort();
+// n'importe quelle place du registre. Depuis le 2026-09-03 le compilateur ne relève ce mot que sur
+// les librairies INVOQUÉES ; ce garde, qui décrit le vocabulaire entier, invoque donc tout le
+// registre — la même lecture que le compilateur, sur la scène la plus large possible.
+const UNION = [...loadLibsFromDirectives(Object.keys(leRegistre()).map((name) => ({ name }))).reservedDirectiveNames].sort();
 const DECLARATIONS = [...DECLARATIONS_DE_TETE].sort().map((m) => [m, FORME[m] || m]);
 
 console.log(`[declaration apres regles] union ${UNION.length} mots · ${DECLARATIONS.length} declarations `
@@ -250,7 +251,7 @@ ok(err(`${S}S -> C4\n-----\nT -> D4\n`).length === 0,
 // vocabulaire RÉEL du langage n'a pas rétréci, il s'est redistribué — c'est l'UNION, pas la seule
 // part de `core`, que ce témoin doit garder. `reservedDirectives` porte deux formes (array plat
 // ou objet {nom:{description,scope}}) ; les deux se comptent par leurs noms.
-// ⛔ 2026-09-02 : L'UNION SE LIT PAR LA PORTE (`universeReservedDirectives`), et elle porte tout mot
+// ⛔ 2026-09-02 : L'UNION SE LIT PAR LE CHARGEUR (tout le registre invoqué), et elle porte tout mot
 // de portée scène du registre — la table objet d'`engine` est sortie, ses mots de portée règle ou
 // flux avec elle, et les contrôles de tête des autres librairies (vel, pan, tempo, letring…) y
 // sont comptés comme le compilateur les compte. Mesuré à la frappe : 51 mots.

@@ -256,7 +256,9 @@ export function motsInvoques(ast) {
     for (const a of (Array.isArray(lib.apporte) ? lib.apporte : [])) apportePar.get(mot).add(a);
   }
   const vus = new Set();
-  const file = ((ast && ast.directives) || []).map((d) => d && d.name).filter(Boolean);
+  // Le nom de chaque directive, et le PRÉFIXE d'une directive de tête préfixée (`time.tempo:120`
+  // porte `lib:'time'`) : le préfixe nomme la librairie, donc il l'invoque.
+  const file = ((ast && ast.directives) || []).flatMap((d) => (d ? [d.name, d.lib] : [])).filter(Boolean);
   while (file.length) {
     const mot = file.shift();
     if (vus.has(mot)) continue;

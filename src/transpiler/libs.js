@@ -85,14 +85,7 @@ function registerLib(name, data) {
   leRegistre()[name] = data;
   cache[name] = data;  // also populate cache
   _version++;
-  _universeControls = null;  // le registre a bougé → recalculer l'univers
-  _universeComponentControls = null;
-  _universeRuleScope = null;
-  _universeRuleAllowed = null;
-  _universeSacs = null;
-  _universeIntervalControls = null;
-  _universeAddressKeys = null;
-  _universeReservedDirectives = null;
+  _universeControls = null;  // le registre a bougé → recalculer le vocabulaire du registre
 }
 
 /**
@@ -112,13 +105,6 @@ function clearRegistry() {
   for (const k of Object.keys(leRegistre())) delete leRegistre()[k];
   for (const k of Object.keys(cache)) delete cache[k];
   _universeControls = null;
-  _universeComponentControls = null;
-  _universeRuleScope = null;
-  _universeRuleAllowed = null;
-  _universeSacs = null;
-  _universeIntervalControls = null;
-  _universeAddressKeys = null;
-  _universeReservedDirectives = null;
 }
 
 /**
@@ -136,99 +122,13 @@ function universeControlNames() {
   return _universeControls;
 }
 
-// Contrôles interval-typés de l'UNIVERS (marqués `argType:"interval"` dans une lib). Sert au parseur
-// AVANT que le libCtx de la scène soit chargé : une directive globale `transpose:-2400c` doit lire
-// une valeur d'INTERVALLE (chaîne brute) dès l'analyse des directives, avant tout consommateur.
-let _universeIntervalControls = null;
-function universeIntervalControls() {
-  if (!_universeIntervalControls) {
-    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
-    _universeIntervalControls = loadLibsFromDirectives(allDirs).intervalControls;
-  }
-  return _universeIntervalControls;
-}
-
-// Univers des contrôles désignés par un NUMÉRO DE COMPOSANT (`cc.98:45`). Même mécanisme que
-// les deux ci-dessus : la donnée déclare, le code ne nomme aucun contrôle.
-let _universeComponentControls = null;
-function universeComponentControls() {
-  if (!_universeComponentControls) {
-    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
-    _universeComponentControls = loadLibsFromDirectives(allDirs).componentControls;
-  }
-  return _universeComponentControls;
-}
-
-// Univers des CLÉS D'ADRESSE — elles vivent dans la librairie du canal qui les porte (`midi`
-// depuis le 2026-08-15, décision Romain), et le parseur les lit AVANT que le libCtx de la scène
-// soit chargé : `E4(ch:5)` doit se ranger dans le tiroir adresse dès l'analyse, quelle que soit
-// l'invocation de la scène. Même mécanisme que les univers ci-dessus — la donnée déclare.
-let _universeAddressKeys = null;
-let _universeReservedDirectives = null;
-/**
- * TOUS LES MOTS DE DIRECTIVE DU LANGAGE, quelle que soit la librairie qui les déclare.
- *
- * ⛔ LA PORTE EXISTE PARCE QUE LA LISTE A DEUX DOMICILES, ET DEUX FORMES. `core` la porte en LISTE
- * PLATE, `engine` en OBJET `{nom: {description, scope}}`. Un lecteur qui vise l'un des deux par son
- * nom n'obtient pas l'autre — et n'obtient même pas la même STRUCTURE. Mesuré le 2026-08-19 : un
- * lecteur écrit sur `core` seul traitait les vingt-sept mots d'`engine` comme des mots inconnus, et
- * leur rendait « aucune librairie ne sert cet axe » — c'est-à-dire le refus d'un mot inventé, pour
- * des mots du langage.
- *
- * Le nombre de domiciles est une affaire de DONNÉE, jamais de lecteur : cette porte fait l'union.
- */
-function universeReservedDirectives() {
-  if (!_universeReservedDirectives) {
-    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
-    _universeReservedDirectives = loadLibsFromDirectives(allDirs).reservedDirectiveNames;
-  }
-  return _universeReservedDirectives;
-}
-
-function universeAddressKeys() {
-  if (!_universeAddressKeys) {
-    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
-    _universeAddressKeys = loadLibsFromDirectives(allDirs).addressKeys;
-  }
-  return _universeAddressKeys;
-}
-
-// Univers des SACS — quel contrôle s'écrit entre crochets, lequel entre parenthèses. La donnée
-// le déclare par sa STRUCTURE (section `engine` contre section `runtime.*`), pas par un champ.
-let _universeSacs = null;
-function universeSacs() {
-  if (!_universeSacs) {
-    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
-    const c = loadLibsFromDirectives(allDirs);
-    // `specs` : la déclaration COMPLÈTE (args, values, range…) de l'UNIVERS, indépendante de
-    // `controls` — un réglage réservé (qualifierKeys) est un mot du LANGAGE, il doit savoir
-    // combien de PARTIES sa valeur porte (`goto`/`failed` : 2 ; `weight`/`rotate`… : 1) que la
-    // scène ait chargé `controls` ou non. Même principe que les univers ci-dessus.
-    _universeSacs = { moteur: c.engineBagControls, runtime: c.runtimeBagControls, specs: c.controls };
-  }
-  return _universeSacs;
-}
-
-// Univers des PROCÉDURES DE NIVEAU RÈGLE (`scope:"rule"`). La nature vient de la DONNÉE : le
-// parseur ne connaît aucun nom de procédure, il lit le registre.
-let _universeRuleScope = null;
-function universeRuleScopeControls() {
-  if (!_universeRuleScope) {
-    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
-    _universeRuleScope = loadLibsFromDirectives(allDirs).ruleScopeControls;
-  }
-  return _universeRuleScope;
-}
-
-// Univers des contrôles dont la portée déclarée INCLUT la règle.
-let _universeRuleAllowed = null;
-function universeRuleAllowedControls() {
-  if (!_universeRuleAllowed) {
-    const allDirs = Object.keys(leRegistre()).map((name) => ({ name }));
-    _universeRuleAllowed = loadLibsFromDirectives(allDirs).ruleAllowedControls;
-  }
-  return _universeRuleAllowed;
-}
+// ⛔ IL N'Y A PLUS D'AUTRE UNIVERS. Sept lecteurs à l'échelle du registre entier — intervalles,
+// composants, clés d'adresse, mots de tête, sacs, procédures de règle, portées incluant la règle —
+// servaient au parseur « avant que le contexte de la scène soit chargé » et « quelle que soit
+// l'invocation ». Principe 1 de Romain (2026-09-02) : l'invocation met en portée ce qu'une
+// librairie déclare, et rien d'autre. Le parseur lit le contexte de ses invocations, rechargé à
+// chaque ligne de tête qui invoque ; ce qu'un mot hors portée obtient est un refus qui nomme la
+// librairie à invoquer (`librairiesQuiDeclarent`).
 
 
 /**
@@ -373,28 +273,36 @@ function loadLib(name, subkey) {
  * DEUX maillons de distance. `vus` protège d'un cycle d'`apporte` mal formé.
  */
 /**
- * LES PORTÉES DÉCLARÉES d'un mot, cherchées dans TOUTES les librairies du registre et dans TOUTES
- * leurs sections — ou `null` si aucune ne le déclare.
- *
- * ⚠️ LA PORTÉE FAIT FOI, PAS LA SECTION OÙ LE MOT EST RANGÉ. Le même principe tient déjà la
- * reconnaissance des mots de tête (voir `loadLibsFromDirectives`) : un mot rangé sous `subgrammar`
- * mais portant `scope:["scene"]` s'écrit en tête, et l'inverse est vrai aussi. Chercher par section
- * reviendrait à faire dire à un classement ce que la donnée dit déjà.
- *
- * Sert au parseur là où une POSITION doit être validée — les modificateurs de sous-grammaire, qui
- * n'étaient confrontés à rien avant le 2026-08-10.
+ * LES LIBRAIRIES QUI DÉCLARENT UN MOT — cherchées dans TOUT le registre, toutes sections, par la
+ * portée déclarée ou par une clé d'adresse. Ce lecteur sert aux MESSAGES, jamais à l'acceptation :
+ * un mot hors portée se refuse en nommant la librairie qui le déclare, et c'est ici qu'on la
+ * trouve. Ce qu'une scène ACCEPTE se lit sur le contexte de ses invocations
+ * (`loadLibsFromDirectives`, champs `portees`, `addressKeys`, `reservedDirectiveNames`), nulle
+ * part ailleurs — principe 1 de Romain, 2026-09-02 : l'invocation met en portée ce qu'une
+ * librairie déclare, et rien d'autre n'est en portée.
  */
-function porteesDeclarees(nom) {
-  if (!nom) return null;
-  for (const lib of Object.values(leRegistre())) {
-    if (!lib || typeof lib !== 'object') continue;
-    for (const section of Object.values(lib)) {
-      if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
-      const def = section[nom];
-      if (def && typeof def === 'object' && Array.isArray(def.scope)) return def.scope;
-    }
+function librairiesQuiDeclarent(nom) {
+  if (!nom) return [];
+  const mots = [];
+  for (const [cle, lib] of Object.entries(leRegistre())) {
+    if (!lib || typeof lib !== 'object' || cle.includes('/')) continue;
+    const mot = (typeof lib.resolves === 'string' && lib.resolves) || cle;
+    let declare = false;
+    const marcher = (o) => {
+      for (const [k, v] of Object.entries(o || {})) {
+        if (k.startsWith('_') || !v || typeof v !== 'object' || Array.isArray(v)) continue;
+        // `bpscript:false` sort l'entrée du vocabulaire : elle n'est déclarée par personne.
+        if (k === nom && Array.isArray(v.scope) && v.bpscript !== false) declare = true;
+        else marcher(v);
+      }
+    };
+    marcher(lib);
+    const adresses = lib.schema && lib.schema.addressKeys;
+    if (adresses && !Array.isArray(adresses) && typeof adresses === 'object'
+        && Object.prototype.hasOwnProperty.call(adresses, nom)) declare = true;
+    if (declare && !mots.includes(mot)) mots.push(mot);
   }
-  return null;
+  return mots;
 }
 
 /**
@@ -639,46 +547,17 @@ function loadLibsFromDirectives(directives) {
   // portée du 2026-08-10 au 2026-09-02 est sortie avec sa table : chaque mot y est désormais un
   // `control` qui déclare sa portée (Romain, 2026-09-02 : « le rangement ne type pas »).
   const nomsReserves = (rd) => (Array.isArray(rd) ? rd : []);
-  // UNION sur TOUTES les librairies du REGISTRE, pas seulement `core` — sinon une clé qui ne vit
-  // QUE dans `engine`/`time` (mode, seed, tempo…) redevient « inconnue » en forme nue dès que
-  // `core.json` ne la duplique plus (2026-08-10, solde des 15 collisions core/engine : une clé ne
-  // vit que dans UNE librairie). Conforme à LIBRAIRIES.md:34 : « les catégories du cœur s'invoquent
-  // directement, sans nommer la librairie qui les porte » — donc TOUJOURS résolues, quelle que soit
-  // l'invocation de la scène, comme `core` l'était déjà seul avant ce chantier.
-  // ⛔ ET LA PORTÉE FAIT FOI, PAS LA TABLE : un mot de tête de scène est un objet qui déclare
-  // `scope(scene)`, dans n'importe quelle place de n'importe quelle librairie du registre. C'est la
-  // même lecture que `porteesDeclarees` et `directiveDeclareeParLaLibrairie`.
+  // ⛔ CE QUE LA SCÈNE ACCEPTE EST CE QU'ELLE INVOQUE — principe 1, Romain 2026-09-02 : l'invocation
+  // met en portée ce qu'une librairie déclare, et rien d'autre n'est en portée. Les mots de tête,
+  // les clés d'adresse et les portées se relèvent sur les librairies INVOQUÉES, chaîne `apporte`
+  // comprise — plus bas, une fois la chaîne résolue. Cette ligne portait une UNION sur tout le
+  // registre (« toujours résolues, quelle que soit l'invocation ») : c'est elle qui laissait
+  // `tempo:120` passer en tête sans `time` ni `core`, et `ch:5` sans `midi`.
+  // Seuls les MOTS DU LANGAGE — la liste plate du schéma, qu'aucune librairie ne déclare — sont
+  // en portée sans invocation.
   ctx.reservedDirectiveNames = new Set(nomsReserves(schema.reservedDirectives));
   ctx.addressKeys = new Set();
-  for (const lib of Object.values(leRegistre())) {
-    const s = lib && lib.schema;
-    if (s && s.reservedDirectives) for (const n of nomsReserves(s.reservedDirectives)) ctx.reservedDirectiveNames.add(n);
-    for (const section of Object.values(lib || {})) {
-      if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
-      for (const [nom, def] of Object.entries(section)) {
-        if (nom.startsWith('_') || !def || typeof def !== 'object') continue;
-        if (Array.isArray(def.scope) && def.scope.includes('scene')) ctx.reservedDirectiveNames.add(nom);
-      }
-    }
-    // ── LES CLÉS D'ADRESSE VIVENT CHEZ LE CANAL QUI LES PORTE ────────────────────────────────
-    // Décision de Romain (2026-08-15) : `ch`, `channel`, `device`, `port` et `note` quittent le
-    // socle pour `midi`. Le destinataire cesse donc d'être écrit dans une légende du schéma — il
-    // se lit sur le `resolvedBy` de la librairie qui les déclare, comme pour tout le reste.
-    // Même UNION que les directives réservées, et pour la même raison : une clé qui ne vit que
-    // dans `midi` doit rester résolue quelle que soit l'invocation de la scène.
-    // `addressKeys` est un OBJET `{nom: {…}}` — chaque clé porte sa portée — et se lit par ses noms.
-    if (s && s.addressKeys) {
-      for (const n of (Array.isArray(s.addressKeys) ? s.addressKeys : Object.keys(s.addressKeys))) ctx.addressKeys.add(n);
-    }
-    // ⚠️ ET LA PORTÉE FAIT FOI, PAS LA SECTION OÙ LE MOT EST RANGÉ. Règle 3 de Romain : « tous les
-    // contrôles acceptés AVEC LEURS PORTÉES sont définis dans les librairies uniquement ». Un
-    // contrôle qui déclare `scope` contenant `scene` s'écrit donc en tête, et doit y être reconnu.
-    //
-    // MESURÉ le 2026-08-10 : `striated` et `smooth` portent `scope:["subgrammar","scene"]` dans la
-    // section `subgrammar` de `engine`, et restaient INCONNUS en tête — 24 sources du corpus les
-    // écrivent. Les recopier dans `schema.reservedDirectives` aurait fait DEUX domiciles pour un
-    // nom ; c'est la résolution qui devait apprendre à lire la portée.
-  }
+  ctx.portees = new Map();   // mot → portées déclarées, sur les librairies invoquées
   // Clés réservées de `[]` (docs/spec/LANGUAGE.md §« Clés reservees de [] ») : elles ne sont
   // pas des contrôles de librairie, le compilateur les comprend lui-même. Toute autre clé
   // dans `[]` est une erreur de compilation (ibid.) — cf. checkQualifierKey() du parser.
@@ -772,9 +651,19 @@ function loadLibsFromDirectives(directives) {
   // `controls` (qui ne porte plus aucun contrôle, juste sa propre chaîne `apporte`) SANS
   // atteindre les quatre destinataires réels. `invoquees` sert de garde anti-cycle : un nom
   // déjà vu ne se retraite pas, quelle que soit la profondeur d'où il revient.
-  const invoquees = new Set((directives || []).map((d) => d && d.name).filter(Boolean));
+  // ⛔ LE PRÉFIXE D'UNE DIRECTIVE DE TÊTE EST UNE INVOCATION — `time.tempo:120` nomme `time`, et
+  // « les catégories du cœur s'invoquent directement » (LIBRAIRIES.md, Atlas). Le parseur rabat
+  // `tempo` en nom et garde le préfixe dans `lib` ; la librairie nommée se charge comme si elle
+  // était écrite seule sur sa ligne.
+  const invoquees = new Set((directives || []).flatMap((d) => (d ? [d.name, d.lib] : [])).filter(Boolean));
   const apportees = [];
   const aTraiter = [...(directives || [])];
+  for (const d of (directives || [])) {
+    if (!d || !d.lib || (directives || []).some((x) => x && x.name === d.lib && !x.lib)) continue;
+    const nommee = { type: 'Directive', name: d.lib, subkey: null };
+    apportees.push(nommee);
+    aTraiter.push(nommee);
+  }
   while (aTraiter.length) {
     const d = aTraiter.shift();
     const socle = d && d.name ? loadJsonFile(d.name) : null;
@@ -787,6 +676,37 @@ function loadLibsFromDirectives(directives) {
     }
   }
   const aCharger = apportees.length ? [...apportees, ...(directives || [])] : (directives || []);
+
+  // ── CE QUE LES LIBRAIRIES INVOQUÉES METTENT EN PORTÉE : mots de tête, clés d'adresse, portées ──
+  // ⚠️ LA PORTÉE FAIT FOI, PAS LA SECTION OÙ LE MOT EST RANGÉ. Règle 3 de Romain : « tous les
+  // contrôles acceptés AVEC LEURS PORTÉES sont définis dans les librairies uniquement ». Un mot qui
+  // déclare `scope` contenant `scene` s'écrit en tête — mesuré le 2026-08-10 : `striated` et
+  // `smooth` sous la section `subgrammar` d'`engine`, 24 sources du corpus. Les clés d'adresse
+  // vivent chez le canal qui les porte (`midi`, décision du 2026-08-15) : chacune porte sa portée.
+  for (const dir of aCharger) {
+    const lib = dir && dir.name ? loadJsonFile(dir.name) : null;
+    if (!lib || typeof lib !== 'object') continue;
+    const s = lib.schema;
+    if (s && s.reservedDirectives) for (const n of nomsReserves(s.reservedDirectives)) ctx.reservedDirectiveNames.add(n);
+    if (s && s.addressKeys) {
+      const cles = Array.isArray(s.addressKeys) ? s.addressKeys : Object.keys(s.addressKeys);
+      for (const n of cles) {
+        if (n.startsWith('_')) continue;
+        ctx.addressKeys.add(n);
+        const def = Array.isArray(s.addressKeys) ? null : s.addressKeys[n];
+        if (def && Array.isArray(def.scope) && !ctx.portees.has(n)) ctx.portees.set(n, def.scope);
+      }
+    }
+    for (const section of Object.values(lib)) {
+      if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
+      for (const [nom, def] of Object.entries(section)) {
+        if (nom.startsWith('_') || !def || typeof def !== 'object' || !Array.isArray(def.scope)) continue;
+        if (def.bpscript === false) continue;   // sorti du vocabulaire par la donnée
+        if (def.scope.includes('scene')) ctx.reservedDirectiveNames.add(nom);
+        if (!ctx.portees.has(nom)) ctx.portees.set(nom, def.scope);
+      }
+    }
+  }
 
   // ⛔ DEUX DÉCLARATIONS D'UN MÊME CONTRÔLE SONT PERMISES — ET L'APPEL SE PRÉFIXE ALORS.
   //
@@ -1395,6 +1315,6 @@ function describeVocabulary(directives = []) {
 }
 
 export { placesDesLibrairies };
-export { leRegistre, versionDuRegistre, brancherLeCompilateur, loadLib, directiveDeclareeParLaLibrairie, porteesDeclarees, groupeDUnicite, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, universeIntervalControls, universeComponentControls, universeRuleScopeControls, universeRuleAllowedControls, universeSacs, universeAddressKeys, universeReservedDirectives, registerLib, registerAll, clearRegistry,
+export { leRegistre, versionDuRegistre, brancherLeCompilateur, loadLib, directiveDeclareeParLaLibrairie, librairiesQuiDeclarent, groupeDUnicite, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, describeVocabulary, universeControlNames, registerLib, registerAll, clearRegistry,
   nomsDeTerminaux,
 };

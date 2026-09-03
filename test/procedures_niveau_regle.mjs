@@ -18,14 +18,16 @@
  * écrite ici : une procédure ajoutée demain est gardée sans qu'on touche ce fichier.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
-import { universeRuleScopeControls } from '../src/transpiler/libs.js';
+import { loadLibsFromDirectives, leRegistre } from '../src/transpiler/libs.js';
 import { importerArtefact } from './artefact_voisin.mjs';
 
 let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-const FAMILLE = [...universeRuleScopeControls()].sort();
+// La famille se lit sur le contexte de TOUT le registre — ce garde décrit le vocabulaire, il ne
+// juge pas une scène. Le compilateur, lui, ne lit que les librairies invoquées (2026-09-03).
+const FAMILLE = [...loadLibsFromDirectives(Object.keys(leRegistre()).map((name) => ({ name }))).ruleScopeControls].sort();
 
 // TÉMOIN ANTI-RÉTRÉCISSEMENT. La famille vient de la donnée — c'est voulu — mais une garde qui
 // n'itère QUE la donnée disparaît avec elle : retirer `scope:"rule"` d'un contrôle retirait

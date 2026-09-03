@@ -5,7 +5,7 @@
 > vit dans le document d'architecture, chez Atlas, qui cite celui-ci.
 ## Ce qui est mesuré
 
-- **25 modules** dans `src/transpiler/`, **15773 lignes**.
+- **25 modules** dans `src/transpiler/`, **15738 lignes**.
 - Le **rôle** est lu dans l'en-tête de chaque fichier, verbatim — jamais interprété.
 - Les **arêtes** sont les imports d'un module vers un voisin du même dossier.
 
@@ -13,14 +13,14 @@
 
 | Module | Lignes | Importe | Importé par | Rôle (lu dans l'en-tête) |
 | --- | ---: | ---: | ---: | --- |
-| `parser.js` | 7915 | 5 | 2 | BPScript Parser |
-| `resolution.js` | 3066 | 5 | 1 | L'ÉTAGE QUI RÉSOUT — le troisième des quatre, et le seul qui n'avait pas de domicile. |
-| `libs.js` | 1401 | 4 | 7 | BPScript Library Loader |
+| `parser.js` | 7934 | 5 | 2 | BPScript Parser |
+| `resolution.js` | 3090 | 5 | 1 | L'ÉTAGE QUI RÉSOUT — le troisième des quatre, et le seul qui n'avait pas de domicile. |
+| `libs.js` | 1321 | 4 | 7 | BPScript Library Loader |
 | `actorResolver.js` | 588 | 2 | 2 | BPScript Actor Resolver |
 | `bpxAst.js` | 516 | 9 | 2 | Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table |
 | `tokenizer.js` | 514 | 0 | 2 | BPScript Tokenizer |
 | `librairies.js` | 347 | 1 | 1 | LA LECTURE DES LIBRAIRIES — une source écrite dans le langage devient un objet du registre. |
-| `index-des-objets.js` | 276 | 2 | 5 | L'INDEX DES OBJETS — ce que les librairies déclarent, rendu comme des objets, pour la porte |
+| `index-des-objets.js` | 278 | 2 | 5 | L'INDEX DES OBJETS — ce que les librairies déclarent, rendu comme des objets, pour la porte |
 | `librairies-jointes.js` | 144 | 1 | 1 | L'ARBRE JOINT LE CONTENU DES LIBRAIRIES QU'IL INVOQUE — décision de Romain, 2026-09-02. |
 | `orderTokens.js` | 123 | 0 | 0 | — |
 | `controlValidation.js` | 113 | 0 | 1 | Collecte récursivement toutes les paires de SettingBag de l'AST. |

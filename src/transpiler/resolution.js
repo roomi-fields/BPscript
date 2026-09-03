@@ -55,7 +55,7 @@ import { sortieHeritee, alphabetHerite, octavesHerite, tuningHerite, evalHerite 
 import { parse, ParseError } from './parser.js';
 import { LIBS } from './libs-data.js';
 import { leSchema, lesDefauts, motsInvoques, familles } from './index-des-objets.js';
-import { universeControlNames, resolveActorAlphabet, nomsDeTerminaux, loadLib, leRegistre, versionDuRegistre } from './libs.js';
+import { universeControlNames, resolveActorAlphabet, nomsDeTerminaux, loadLib, leRegistre, versionDuRegistre, librairiesQuiDeclarent } from './libs.js';
 import { expandAlphabetTerminals } from './actorResolver.js';
 import { resolveActorAlphabetSource } from './libs.js';
 import { describeVocabulary, groupeDUnicite } from './libs.js';
@@ -2087,6 +2087,19 @@ export function validateReferences(ast, libCtx = {}) {
   // d'entre elles déclarent n'y a pas de place nu — c'est `signalerAmbiguite`, plus bas, qui le
   // refuse en nommant les préfixes ; préfixé, il est jugé à la place que SA librairie déclare.
   const porteesPermises = chargerPorteesPermises(ast);
+  // ⛔ UN MOT QU'AUCUNE LIBRAIRIE INVOQUÉE NE DÉCLARE N'EST PAS EN PORTÉE — principe 1, Romain
+  // 2026-09-02. S'il est déclaré ailleurs au registre, le refus est positionnel et NOMME la
+  // librairie à invoquer ; un mot que personne ne déclare est refusé par les lecteurs de vocabulaire.
+  const horsInvocation = (cle, line, col) => {
+    const declarants = librairiesQuiDeclarent(cle);
+    if (!declarants.length) return false;
+    errors.push({
+      message: `'${cle}' n'est pas en portée : aucune librairie invoquée ne le déclare — l'invoquer en `
+        + `tête (${declarants.map((l) => `'${l}'`).join(' ou ')}).`,
+      line, col,
+    });
+    return true;
+  };
   // ⛔ LE VOCABULAIRE D'UNE SCÈNE EST CELUI QU'ELLE INVOQUE (Romain, 2026-08-08) : « invoquer
   // commande, systématiquement — si un mot est inconnu dans le corpus invoqué, alors erreur ».
   //
@@ -2306,6 +2319,9 @@ export function validateReferences(ast, libCtx = {}) {
     // et « ne pas le lire », il y a **empreindre l'objet entier** — une issue que ma lettre n'avait pas.
     // Deuxième faute de périmètre sur le même sujet en deux jours : l'instrument mesure une graphie et
     // la conclusion porte sur un contrat.
+    // Un mot qu'une librairie NON invoquée déclare n'est pas inconnu : il est hors portée, et le
+    // refus qui nomme la librairie à invoquer est rendu par le contrôle de place (`horsInvocation`).
+    if (librairiesQuiDeclarent(key).length) return;
     const err = { message: `attribut '(${key}${ecritNu ? '' : ':…'})' inconnu — ni contrôle, ni valeur de librairie, ni adresse`,
       line, col };
     vus.set(key, err);
@@ -2414,7 +2430,8 @@ export function validateReferences(ast, libCtx = {}) {
         for (const p of sac.pairs) {
           const cle = String(p.key).split('.')[0];
           const permis = porteesPermises.get(cle, p.lib);
-          if (!permis || permis.includes(place)) continue;
+          if (!permis) { if (!p.lib) horsInvocation(cle, p.line ?? node.line, p.col); continue; }
+          if (permis.includes(place)) continue;
           errors.push({
             message: `'${cle}' ne peut pas s'écrire ${NOM_DE_PLACE[place]} — `
               + (permis.length === 1
@@ -2448,7 +2465,8 @@ export function validateReferences(ast, libCtx = {}) {
   if (REFUS_HORS_PORTEE_ACTIF) {
     const dire = (cle, place, line) => {
       const permis = porteesPermises.get(cle);
-      if (!permis || permis.includes(place)) return;
+      if (!permis) { horsInvocation(cle, line); return; }
+      if (permis.includes(place)) return;
       errors.push({
         message: `'${cle}' ne peut pas s'écrire ${NOM_DE_PLACE[place]} — `
           + (permis.length === 1
@@ -2653,7 +2671,11 @@ export function validateReferences(ast, libCtx = {}) {
   // 3. Directives de scène : invocation de composant (axis.X) OU override de valeur (X:v).
   for (const d of ast.directives || []) {
     if (d.subkey && catalogAxes.includes(d.name)) { checkComponent(d.name, d.subkey, d.line); continue; }
-    if (d.value != null && d.value !== true && !registry.has(d.name) && !reserved.has(d.name)) {
+    // ⛔ UN MOT QU'UNE LIBRAIRIE NON INVOQUÉE DÉCLARE N'EST PAS INCONNU : il est hors portée, et son
+    // refus — qui nomme la librairie à invoquer — est rendu par le contrôle de place (`dire`, dans
+    // `validateReferences`). Ces trois refus ne visent que les mots que PERSONNE ne déclare.
+    const declareAilleurs = librairiesQuiDeclarent(d.name).length > 0;
+    if (d.value != null && d.value !== true && !registry.has(d.name) && !reserved.has(d.name) && !declareAilleurs) {
       errors.push({ message: `valeur '${d.name}:…' inconnue — non déclarée par une librairie chargée`, line: d.line });
       continue;
     }
@@ -2674,7 +2696,7 @@ export function validateReferences(ast, libCtx = {}) {
     // porte un `subkey` et sort deux lignes plus haut. La forme visée n'a pas de sous-clé — un nom
     // seul, suivi d'un mot, que rien ne déclare.
     if (d.subkey == null && d.runtime != null
-        && !registry.has(d.name) && !reserved.has(d.name)) {
+        && !registry.has(d.name) && !reserved.has(d.name) && !declareAilleurs) {
       errors.push({
         message: `'${d.name}:${d.runtime}' : '${d.name}' n'est déclaré par aucune librairie chargée. `
                + `Une ligne de tête qu'aucune donnée ne porte ne règle rien — elle serait lue, `
@@ -2702,7 +2724,7 @@ export function validateReferences(ast, libCtx = {}) {
     // et je l'ai inscrit au backlog ; c'était la garde qui ne savait pas distinguer.
     if (d.type && d.type !== 'Directive') continue;
     if (d.value == null && !d.subkey && !d.runtime
-        && !registry.has(d.name) && !reserved.has(d.name) && !loadLib(d.name)) {
+        && !registry.has(d.name) && !reserved.has(d.name) && !loadLib(d.name) && !declareAilleurs) {
       errors.push({
         message: `'${d.name}' n'est déclaré par aucune librairie chargée — un mot de tête vient `
                + `d'une librairie invoquée, jamais de nulle part. Invoquer la librairie qui le `
@@ -2868,8 +2890,10 @@ export function chargerPorteesPermises(ast) {
   const marcher = (mot, o) => {
     for (const [k, v] of Object.entries(o || {})) {
       if (!v || typeof v !== 'object' || Array.isArray(v)) continue;
-      if ('args' in v && 'description' in v) { if (Array.isArray(v.scope)) noter(mot, k, v.scope, v.implements); }
-      else marcher(mot, v);
+      if ('args' in v && 'description' in v) {
+        // `bpscript:false` sort l'entrée du vocabulaire : elle n'a pas de portée.
+        if (Array.isArray(v.scope) && v.bpscript !== false) noter(mot, k, v.scope, v.implements);
+      } else marcher(mot, v);
     }
   };
   for (const [cle, lib] of Object.entries(registre)) {
