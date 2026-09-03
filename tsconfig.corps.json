@@ -1,0 +1,22 @@
+{
+  "//": "Chaine TS d'AUTHORING — les CORPS de librairie, extraits de leurs backticks tagues `ts` par scripts/typer-les-corps.mjs (Romain, 2026-09-03 : le corps s'ecrit entre backticks, comme partout ailleurs dans le langage).",
+  "//2": "BPScript reste JS pur ; ce tsconfig ne type-check QUE les corps extraits, contre le SDK @kairos/core. Le dossier .corps-types est JETABLE : il nait, il se type, il meurt — jamais une seconde autorite.",
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@kairos/core": [
+        "./node_modules/@kairos/core/dist/index.d.ts",
+        "../kairos/dist/index.d.ts"
+      ]
+    },
+    "types": [],
+    "skipLibCheck": true
+  },
+  "include": [
+    ".corps-types/**/*.ts"
+  ]
+}

@@ -37,3 +37,4 @@ src/transpiler/libs-data.js.tmp
 src/transpiler/libs-data.d.ts.tmp
 src/transpiler/syntaxe-data.js.tmp
 src/transpiler/gabarits-data.js.tmp
+.corps-types/
