@@ -85,3 +85,33 @@
 ## Archive
 
 [LIRE-MOI.md](archive/LIRE-MOI.md) — documents retirés du corpus vivant. **Aucun ne fait autorité.**
+
+## lib/notes/ — la cause derrière chaque librairie
+
+La source d'une librairie porte ce qu'elle EST ; sa note porte le reste — la cause d'une
+valeur, l'histoire d'une forme, la borne d'une mesure. Une note par librairie, du nom de
+sa source.
+
+| Note | Sa librairie | Quand la lire |
+|------|--------------|---------------|
+| [alphabets.md](../lib/notes/alphabets.md) | `lib/alphabets.bpsl` | Avant de changer une valeur de `alphabets` — la note dit pourquoi elle est là |
+| [audio.md](../lib/notes/audio.md) | `lib/audio.bpsl` | Avant de changer une valeur de `audio` — la note dit pourquoi elle est là |
+| [core.md](../lib/notes/core.md) | `lib/core.bpsl` | Avant de changer une valeur de `core` — la note dit pourquoi elle est là |
+| [engine.md](../lib/notes/engine.md) | `lib/engine.bpsl` | Avant de changer une valeur de `engine` — la note dit pourquoi elle est là |
+| [eval.md](../lib/notes/eval.md) | `lib/eval.bpsl` | Avant de changer une valeur de `eval` — la note dit pourquoi elle est là |
+| [expression.md](../lib/notes/expression.md) | `lib/expression.bpsl` | Avant de changer une valeur de `expression` — la note dit pourquoi elle est là |
+| [homomorphism.md](../lib/notes/homomorphism.md) | `lib/homomorphism.bpsl` | Avant de changer une valeur de `homomorphism` — la note dit pourquoi elle est là |
+| [midi.md](../lib/notes/midi.md) | `lib/midi.bpsl` | Avant de changer une valeur de `midi` — la note dit pourquoi elle est là |
+| [midi_default.md](../lib/notes/midi_default.md) | `lib/midi_default.bpsl` | Avant de changer une valeur de `midi_default` — la note dit pourquoi elle est là |
+| [octaves.md](../lib/notes/octaves.md) | `lib/octaves.bpsl` | Avant de changer une valeur de `octaves` — la note dit pourquoi elle est là |
+| [scales.md](../lib/notes/scales.md) | `lib/scales.bpsl` | Avant de changer une valeur de `scales` — la note dit pourquoi elle est là |
+| [settings.md](../lib/notes/settings.md) | `lib/settings.bpsl` | Avant de changer une valeur de `settings` — la note dit pourquoi elle est là |
+| [sounds.md](../lib/notes/sounds.md) | `lib/sounds.bpsl` | Avant de changer une valeur de `sounds` — la note dit pourquoi elle est là |
+| [temperaments.md](../lib/notes/temperaments.md) | `lib/temperaments.bpsl` | Avant de changer une valeur de `temperaments` — la note dit pourquoi elle est là |
+| [test_alphabets.md](../lib/notes/test_alphabets.md) | `lib/test_alphabets.bpsl` | Avant de changer une valeur de `test_alphabets` — la note dit pourquoi elle est là |
+| [time.md](../lib/notes/time.md) | `lib/time.bpsl` | Avant de changer une valeur de `time` — la note dit pourquoi elle est là |
+| [transpo.md](../lib/notes/transpo.md) | `lib/transpo.bpsl` | Avant de changer une valeur de `transpo` — la note dit pourquoi elle est là |
+| [tunings.md](../lib/notes/tunings.md) | `lib/tunings.bpsl` | Avant de changer une valeur de `tunings` — la note dit pourquoi elle est là |
+| [types.md](../lib/notes/types.md) | `lib/types.bpsl` | Avant de changer une valeur de `types` — la note dit pourquoi elle est là |
+| [variation.md](../lib/notes/variation.md) | `lib/variation.bpsl` | Avant de changer une valeur de `variation` — la note dit pourquoi elle est là |
+| [voices.md](../lib/notes/voices.md) | `lib/voices.bpsl` | Avant de changer une valeur de `voices` — la note dit pourquoi elle est là |
