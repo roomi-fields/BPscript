@@ -2861,6 +2861,7 @@ function parse(tokens, opts = {}) {
     return courant;
   };
   const nomsVariables = /* @__PURE__ */ new Set();
+  const membresDesVariables = /* @__PURE__ */ new Map();
   function warn(message, line) {
     if (opts.onWarning) opts.onWarning({ message, line });
   }
@@ -3030,6 +3031,8 @@ function parse(tokens, opts = {}) {
           for (const n of dir.names) {
             nomsDeclaresLocalement.add(n);
             nomsVariables.add(n);
+            const paires = dir.settings && Array.isArray(dir.settings.pairs) ? dir.settings.pairs : [];
+            membresDesVariables.set(n, Object.fromEntries(paires.filter((p) => p && p.key).map((p) => [p.key, p.value])));
           }
           if (dir.varType?.kind === "type") {
             for (const n of dir.names) {
@@ -3351,10 +3354,14 @@ function parse(tokens, opts = {}) {
       const { address, controls } = splitAddress(params);
       const nomPorte = typeof el.symbol === "string" ? el.symbol : el.name;
       const estVariable = nomsVariables.has(nomPorte);
+      const estUnSon = estVariable && racineDe(nomPorte) === "sound";
+      const membres = estUnSon ? membresDesVariables.get(nomPorte) || {} : null;
+      const paramsPortes = estUnSon ? { ...membres, ...controls || {} } : controls;
+      const aDesParams = paramsPortes !== null && Object.keys(paramsPortes).length > 0;
       el.payload = {
-        nature: estVariable ? "var" : "sounding",
+        nature: estVariable && !estUnSon ? "var" : "sounding",
         ...actor !== void 0 ? { actor } : {},
-        ...controls !== null ? { params: controls } : {},
+        ...aDesParams ? { params: paramsPortes } : {},
         ...address !== null ? { address } : {},
         ...controls !== null || address !== null ? { occurrence: true } : {}
         // flux absent (override d'occurrence, pas de propagation)
@@ -5564,13 +5571,19 @@ function parse(tokens, opts = {}) {
         let jetons = 0;
         let texteSeul = null;
         let backtickSeul = null;
+        let sautDeLigne = false;
         while (!at(T.RPAREN) && !at(T.COMMA) && !atEnd()) {
+          if (at(T.NEWLINE) || at(T.COMMENT)) {
+            sautDeLigne = true;
+            advance();
+            continue;
+          }
           if (monoPartie && parts.length > 0 && at(T.IDENT) && libCtx.controlNames.has(current().value)) {
             elementAvale = current();
             break;
           }
           if (at(T.COLON) && !deuxPointsEnTrop) deuxPointsEnTrop = current();
-          if (parts.length > 0 && current().spaceBefore) {
+          if (parts.length > 0 && (current().spaceBefore || sautDeLigne)) {
             if (enDeclaratif) {
               throw new ParseError(
                 `'${key}:${parts.join("")} ${current().value}\u2026' : dans la partie D\xC9CLARATIVE, seule la virgule s\xE9pare \u2014 l'espace n'y s\xE9pare rien. Une valeur n'a qu'UNE partie ; plusieurs parties sont plusieurs valeurs, et elles s'\xE9crivent par une parenth\xE8se et des noms : '${key}(${parts.join("")}, ${current().value}\u2026)'. Dans le FLUX, apr\xE8s le d\xE9limiteur, l'espace s\xE9pare les termes comme avant.`,

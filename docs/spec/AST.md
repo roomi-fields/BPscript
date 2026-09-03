@@ -186,8 +186,10 @@ Un flag porte sa valeur initiale en même temps que lui-même, et une règle s'y
 entier. Le champ `states` reste dans le contrat, TOUJOURS VIDE : un consommateur qui le lisait avant
 le 2026-08-22 continue de le lire sans casser, et sa vacuité dit que rien ne le remplit plus. Une entrée nomme un **rôle** ; l'appareil qui le remplit s'y associe hors de la scène.
 
-**Une variable sans type porte la nature `var` dans le flux.** L'aval la porte opaquement, et la
-résolution la laisse telle quelle.
+**Une variable porte la nature `var` dans le flux**, sauf si la racine de son type est `sound` :
+elle est alors un objet sonore, de nature `sounding`, et ses membres déclarés voyagent dans
+`payload.params` (`sound metro (vel:120)` → `params: {vel: 120}`, l'occurrence gagnant sur le
+membre). L'aval la porte opaquement, et la résolution la laisse telle quelle.
 
 ### `DefDirective`
 
@@ -479,8 +481,8 @@ Le champ `actor` est rempli par le point explicite — `sitar.sa` —, ou par la
 seul acteur porte ce symbole. Il vaut `null` pour un non-terminal, qui n'a pas d'acteur.
 
 **La nature dit ce que le jeton est pour le temps**, et la liste est fermée : `sounding` pour ce qui
-sonne, `var` pour une variable sans type, `wait` pour un point d'attente. Elle vit dans `payload`,
-sur le nœud posé dans le flux.
+sonne — une note, ou un objet déclaré par un type dont la racine est `sound` —, `var` pour une
+variable, `wait` pour un point d'attente. Elle vit dans `payload`, sur le nœud posé dans le flux.
 
 **Le rôle** vaut `homomorphism` sur le symbole dont le nom est celui d'une section chargée, et
 `null` sur tout autre symbole.
@@ -532,7 +534,10 @@ SimultaneousGroup {
   secondaries: RhsElement[]
 }
 
-OutTimeObject  { type: "OutTimeObject", name: string }
+OutTimeObject  { type: "OutTimeObject", name: string,
+                 payload: { nature: "sounding" | "var", params?: { [membre: string]: valeur } } }
+// `!metro` seul : sonnant si `metro` est déclaré par un type dont la racine est `sound`, avec les
+// membres de sa déclaration dans `params` ; variable sinon.
 
 InstantControl {
   type: "InstantControl"

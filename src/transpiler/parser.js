@@ -512,6 +512,12 @@ function parse(tokens, opts = {}) {
   // VARIABLES DE TRAVAIL déclarées par `var`. Sous-ensemble du précédent, tenu à part parce
   // qu'elles font plus que gagner sur un homonyme : elles portent leur PROPRE NATURE dans l'arbre.
   const nomsVariables = new Set();
+  /**
+   * LES MEMBRES DÉCLARÉS DE CHAQUE VARIABLE — le sac de sa ligne de tête (`sound metro (vel:120)`).
+   * Un objet dont la racine est `sound` SONNE (Romain, 2026-09-03, point 4 des cinq arbitrages) :
+   * posé dans le flux, il porte ses membres dans `payload.params`, le tiroir d'une note.
+   */
+  const membresDesVariables = new Map();
   // Avertissements non fatals (ex. dépréciation des @-formes de production).
   // Canal séparé des erreurs : remonté via opts.onWarning (compileBPS →
   // result.warnings), jamais dans l'AST (contrat BPx : AST inchangé).
@@ -796,7 +802,11 @@ function parse(tokens, opts = {}) {
           scene.vars = [...(scene.vars || []), dir];
           // Une variable de travail est un nom que LA SCÈNE possède : elle gagne donc, comme une
           // macro, sur un mot homonyme du vocabulaire (cascade, le plus local l'emporte).
-          for (const n of dir.names) { nomsDeclaresLocalement.add(n); nomsVariables.add(n); }
+          for (const n of dir.names) {
+            nomsDeclaresLocalement.add(n); nomsVariables.add(n);
+            const paires = dir.settings && Array.isArray(dir.settings.pairs) ? dir.settings.pairs : [];
+            membresDesVariables.set(n, Object.fromEntries(paires.filter((p) => p && p.key).map((p) => [p.key, p.value])));
+          }
           // ⛔ ET UN `object` DEVIENT UN PROTOTYPE DONT ON DÉRIVE — le type en tête porte la
           // dérivation. Le registre se remplit ICI, à la lecture, pour la même raison que celui
           // des acteurs : un corps de déclaration est lu PENDANT la phase des directives, donc une
@@ -1489,14 +1499,28 @@ function parse(tokens, opts = {}) {
       // d'opacité : les consommateurs portent, ils ne fabriquent pas). Deux valeurs seulement —
       // un nom déclaré comme variable de travail, tout le reste sonnant.
       //
+      // ⛔ ET UN OBJET DONT LA RACINE EST `sound` SONNE — arbitrage de Romain, 2026-09-03 (point 4
+      // des cinq arbitrages) : `sound metro (vel:120)` puis `!metro` est l'objet hors-temps SONNANT,
+      // et ses membres déclarés voyagent dans `payload.params`, sous l'occurrence qui gagne. La
+      // racine décide, pas le mot écrit : `click metro (…)` sonne si `click` dérive de `sound`.
+      // Un nom déclaré par `def`, ou par tout autre type, reste une variable : c'est ce que `def`
+      // dit depuis que les déclarations n'ont qu'un mot (3447e05) — BPx l'avait lu comme un effet
+      // de bord, c'est la forme.
+      const estUnSon = estVariable && racineDe(nomPorte) === 'sound';
+      const membres = estUnSon ? (membresDesVariables.get(nomPorte) || {}) : null;
+      const paramsPortes = estUnSon
+        ? { ...membres, ...(controls || {}) }
+        : controls;
+      const aDesParams = paramsPortes !== null && Object.keys(paramsPortes).length > 0;
+      //
       // ⚠️ ET UNE NATURE QUI CONTREDIT UN AUTRE DE MES SIGNAUX COÛTE UN TEMPS ENTIER DE MUSIQUE :
       // publier un nom HORS de `noteTerminals` — donc dire qu'il ne sonne pas — tout en posant
       // `sounding` dessus a fait émettre un terminal de 500 ms là où rien ne devait durer.
       // Les deux signaux se lisent ensemble ; l'aval n'a pas à départager mes contradictions.
       el.payload = {
-        nature: estVariable ? 'var' : 'sounding',
+        nature: estVariable && !estUnSon ? 'var' : 'sounding',
         ...(actor !== undefined ? { actor } : {}),
-        ...(controls !== null ? { params: controls } : {}),
+        ...(aDesParams ? { params: paramsPortes } : {}),
         ...(address !== null ? { address } : {}),
         ...((controls !== null || address !== null) ? { occurrence: true } : {}),
         // flux absent (override d'occurrence, pas de propagation)
@@ -5894,7 +5918,15 @@ function parse(tokens, opts = {}) {
         let jetons = 0;
         let texteSeul = null;
         let backtickSeul = null;
+        // ⛔ UN RETOUR À LA LIGNE EST DE LA MISE EN FORME, comme l'indentation (décision Romain,
+        // 2026-08-19 : dans le déclaratif, seule la virgule sépare). Une déclaration se plie sur
+        // plusieurs lignes pour se lire ; le jeton de fin de ligne n'entre pas dans la valeur.
+        // Mesuré le 2026-09-03 : `pan:64` suivi d'une parenthèse fermante sur SA ligne rendait la
+        // chaîne « 64\n ». Un saut de ligne entre deux parties vaut une espace : il tombe sur le
+        // même refus qu'elle — la virgule qui manque est nommée.
+        let sautDeLigne = false;
         while (!at(T.RPAREN) && !at(T.COMMA) && !atEnd()) {
+          if (at(T.NEWLINE) || at(T.COMMENT)) { sautDeLigne = true; advance(); continue; }
           // Un contrôle qui n'attend QU'UNE partie ne peut pas en avaler une seconde : ce qui suit
           // est un autre ÉLÉMENT du sac, et il lui manque sa virgule.
           if (monoPartie && parts.length > 0 && at(T.IDENT) && libCtx.controlNames.has(current().value)) {
@@ -5905,7 +5937,7 @@ function parse(tokens, opts = {}) {
           // cherchant à désigner un composant sans connaître le point : elle doit tomber, sinon
           // elle fabrique la valeur muette « 98:45 » que personne en aval ne sait relire.
           if (at(T.COLON) && !deuxPointsEnTrop) deuxPointsEnTrop = current();
-          if (parts.length > 0 && current().spaceBefore) {
+          if (parts.length > 0 && (current().spaceBefore || sautDeLigne)) {
             // ⛔ UNE VALEUR N'A QU'UNE PARTIE DANS LE DÉCLARATIF. Plusieurs parties sont plusieurs
             // valeurs, et plusieurs valeurs s'écrivent par une parenthèse et des noms. Le refus
             // porte sa RÉÉCRITURE : un mot hors de sa place se refuse avec la forme qui le remplace.
