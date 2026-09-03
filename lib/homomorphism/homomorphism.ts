@@ -1,5 +1,7 @@
-// Corps de la fonction d'HOMOMORPHISME `substitute` — AUTHORING F1 (vrai .ts TYPÉ contre le SDK Kairos).
-// Source de vérité : ce fichier ; libs-bundle.js greffe ce SOURCE sur l'entrée `objects.substitute`
+// Corps du PROTOTYPE `homomorphism` — l'applicateur, AUTHORING F1 (vrai .ts TYPÉ contre le SDK Kairos).
+// Source de vérité : ce fichier. Le chargeur le greffe sur le prototype de la famille, dont CHAQUE
+// table hérite (Romain, 2026-09-03) : la section de l'arbre joint donc l'applicateur avec la table
+// qui l'emploie. `substitute` n'est plus un objet à part — une manipulation est un mot, pas une entrée
 // déclarée dans lib/homomorphism.bpsl → libs-data.js.
 // Kairos transpile (sucrase, qui STRIPE l'`import type`) puis exécute au load, en BAC À SABLE déterministe.
 // ⚠️ SUBSTITUTION DE SYMBOLE (homomorphisme BP3 `-ho`/`-al`) sortie de BPx → RÉSOLUTION Kairos, VIA

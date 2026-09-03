@@ -37,6 +37,15 @@ const RACINE = join(ICI, '..');
  * périme chez mes voisins et je les ai prévenus ».
  */
 const RETRAITS_ASSUMES = [
+  { cle: 'digital', date: '2026-09-03',
+    pourquoi: "une manipulation est un MOT du langage, et son corps se rattache à l'objet qui le "
+            + "porte (arbitrage Romain 2026-09-03, après sa question « pourquoi le code n'est pas "
+            + 'exactement au même endroit que la déclaration ? »). Les quatre fonctions sont les '
+            + 'contrôles `transpo.transpose|scaleshift|chromashift|keyxpand`, qui portent désormais '
+            + '`rank`, `params` et `body` ; les corps `.ts` ont suivi dans `lib/transpo/`. '
+            + "L'applicateur d'homomorphisme est le corps du PROTOTYPE `homomorphism`, dont chaque "
+            + 'table hérite — ce que kairos demandait (3676). Kairos et kanopi préavisés avec les '
+            + 'deux chemins exacts avant la frappe.' },
   { cle: 'language', date: '2026-08-21',
     pourquoi: "le schéma de syntaxe n'est pas une librairie (décision Romain 2026-08-20) — il a sa "
             + "propre porte, `src/transpiler/syntaxe-data.js`, déclarée dans les exports. Atlas "

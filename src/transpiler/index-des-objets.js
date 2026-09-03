@@ -159,6 +159,21 @@ function index() {
       }
     }
   }
+  // ⛔ LA RACINE D'UNE FAMILLE EST SON PROTOTYPE — et ses membres descendent sur ses entrées, comme
+  // ceux de tout prototype. C'est ce qui fait qu'un corps rattaché à la racine (`lib/<x>/<x>.ts`)
+  // voyage avec chaque entrée : l'applicateur d'homomorphisme part avec la table qui l'emploie
+  // (Romain, 2026-09-03 ; demande de kairos, 3676). Ce qu'une entrée écrit gagne, toujours.
+  // `documented` reste lu chez le contributeur de CHAQUE entrée : il ne descend pas d'ici.
+  for (const fam of familles.values()) {
+    for (const o of fam.entrees) {
+      for (const [k, v] of Object.entries(fam.membres)) {
+        // `documented` se lit chez le contributeur de chaque entrée ; `apporte` dit ce que le
+        // FICHIER invoque, pas ce que l'objet porte. Ni l'un ni l'autre ne descend.
+        if (k === 'documented' || k === 'apporte' || CHAMPS_DE_FICHIER.has(k)) continue;
+        if (!(k in o.membres)) o.membres[k] = v;
+      }
+    }
+  }
   _index = { familles, objets };
   _versionIndexee = version;
   return _index;

@@ -1,5 +1,5 @@
 {
-  "//": "Chaîne TS d'AUTHORING — SCOPED aux corps de fonctions digitales (lib/digital/**/*.ts).",
+  "//": "Chaîne TS d'AUTHORING — SCOPED aux corps des MANIPULATIONS (lib/transpo/**/*.ts). Une manipulation est un mot du langage, et son corps se rattache au contrôle qui le porte (Romain, 2026-09-03).",
   "//2": "BPScript reste JS pur ; ce tsconfig ne type-check QUE les corps .ts, contre le SDK @kairos/core.",
   "compilerOptions": {
     "noEmit": true,
@@ -13,5 +13,5 @@
     "types": [],
     "skipLibCheck": true
   },
-  "include": ["lib/digital/**/*.ts"]
+  "include": ["lib/transpo/**/*.ts"]
 }

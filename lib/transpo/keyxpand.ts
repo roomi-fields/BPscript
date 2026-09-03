@@ -1,6 +1,6 @@
-// Corps de la fonction digitale `keyxpand` — AUTHORING F1 (vrai .ts TYPÉ contre le SDK Kairos).
-// Source de vérité : ce fichier ; libs-bundle.js greffe ce SOURCE sur l'entrée `objects.keyxpand`
-// déclarée dans lib/digital.bpsl → libs-data.js.
+// Corps de la MANIPULATION `keyxpand` — AUTHORING F1 (vrai .ts TYPÉ contre le SDK Kairos).
+// Source de vérité : ce fichier. Le chargeur le greffe sur le CONTRÔLE `keyxpand` de `transpo`, qui
+// porte le mot — arbitrage de Romain, 2026-09-03 : le corps se rattache à l'objet qui le nomme.
 // Kairos transpile (sucrase, qui STRIPE l'`import type`) puis exécute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.
 import type { DigitalFn } from '@kairos/core';
 

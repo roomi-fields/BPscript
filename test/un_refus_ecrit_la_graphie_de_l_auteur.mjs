@@ -122,7 +122,9 @@ for (const [quoi, ecrit] of [
 // table des contrôles qualifiés, dont le parseur dérivait ses préfixes connus. Une scène qui
 // l'invoque en tête s'entendait répondre qu'elle ne l'était pas.
 {
-  const SOCLE2 = 'core\nalphabet.western:midi\ndigital\n';
+  // `digital` est sortie le 2026-09-03 (une manipulation est un contrôle, son corps se rattache à
+  // lui) ; `settings` porte la même forme : une librairie invoquée qui ne déclare aucun contrôle.
+  const SOCLE2 = 'core\nalphabet.western:midi\nsettings\n';
   const refusSac = (ecrit) => {
     try {
       const r = compileToBPxAST(`${SOCLE2}-----\nS -> C4 !(${ecrit})\n`);
@@ -131,11 +133,11 @@ for (const [quoi, ecrit] of [
     } catch (x) { return `EXCEPTION ${x.message}`; }
   };
   // Le mot DÉCLARÉ d'une librairie invoquée sans contrôle.
-  const m = refusSac('function.transpose:2');
-  ok(m !== null, "INVOQUÉE — « function.transpose:2 » doit être REFUSÉ : cette librairie ne porte "
+  const m = refusSac('settings.transpose:2');
+  ok(m !== null, "INVOQUÉE — « settings.transpose:2 » doit être REFUSÉ : cette librairie ne porte "
     + 'aucun contrôle. Si elle passe, ce volet ne mesure plus aucun message.');
   ok(m === null || !/n'est ni une librairie invoquée/.test(m),
-    `⛔ INVOQUÉE — le refus dit que « function » n'est PAS une librairie invoquée, alors qu'elle est `
+    `⛔ INVOQUÉE — le refus dit que « settings » n'est PAS une librairie invoquée, alors qu'elle est `
     + `écrite en tête de la scène. Il accuse le mauvais fait, et celui qui lit un refus apprend la `
     + `règle par lui. Reçu : ${m}`);
   // ⚠️ LE TÉMOIN QUI DISCRIMINE : un préfixe que RIEN n'invoque doit garder l'ancien diagnostic,

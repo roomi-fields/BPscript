@@ -77,7 +77,10 @@ ok(enDur.length === 0,
 // NOM DE FICHIER. Les inscrire parmi les réparés affirmerait un branchement qui n'existe pas ; le
 // volet `enDur` ci-dessus les laisse passer parce qu'un axe les porte, ce qui est vrai. Le
 // branchement appartient au chantier des noms de librairies en dur, et il s'y fera.
-for (const [fichier, axe] of [['digital', 'function'], ['voices', 'voice']]) {
+// `digital`/`function` est sorti le 2026-09-03 : une manipulation est un contrôle du langage, et
+// son corps se rattache à lui. Le couple `voices`/`voice` porte la même règle — le chargeur nomme
+// l'AXE, jamais le fichier.
+for (const [fichier, axe] of [['voices', 'voice']]) {
   ok(!appels.some((a) => a.nom === fichier), `'${fichier}' ne doit plus être chargé par son nom de fichier — l'axe est '${axe}'`);
   ok(AXES.has(axe), `l'axe '${axe}' doit être déclaré par une librairie — sans lui la réparation ne tient pas`);
 }
@@ -87,7 +90,7 @@ for (const [nom, raison] of ADMIS) {
   ok(!AXES.has(nom), `'${nom}' est admis comme nom de fichier (${raison}) — mais un axe le porte maintenant : le brancher dessus et le retirer d'ADMIS`);
 }
 
-const ATTENDU = 2 + 1 + 4 + ADMIS.size;
+const ATTENDU = 1 + 1 + 3 + ADMIS.size;   // un couple fichier/axe depuis la sortie de `digital`
 ok(p + e.length === ATTENDU, `le garde doit éprouver ${ATTENDU} cas — ${p + e.length} seulement`);
 
 if (e.length) { console.error(`[chargeur] ${e.length} ÉCHEC(S) :`); for (const x of e) console.error('  ✗ ' + x); process.exit(1); }

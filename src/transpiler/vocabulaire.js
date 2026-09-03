@@ -32,7 +32,7 @@
  *   syntaxWords: { [word:string]: {kind, description?, syntax?} }
  * }}
  */
-import { famille, axesDeCatalogue } from './index-des-objets.js';
+import { famille, axesDeCatalogue, objets } from './index-des-objets.js';
 import { loadLibsFromDirectives, leRegistre } from './libs.js';
 // ⛔ LE SCHÉMA DE SYNTAXE SE LIT PAR SA PROPRE PORTE — il a quitté `lib/` le 2026-08-21 (décision
 // Romain du 2026-08-20) : ce n'est pas une librairie, il porte ce que le LANGAGE EST, et sa porte
@@ -70,7 +70,15 @@ export function describeVocabulary(directives = []) {
       ({ name, ...pick(def || {}, ['args', 'range', 'values', 'value', 'description', 'transportGroup']) })),
     values: Object.entries(ctx.valueRegistry).map(([name, spec]) =>
       ({ name, ...pick(spec || {}, ['range', 'unit', 'values', 'description']) })),
-    functions: nomsDe('function'),
+    // ⛔ UNE FONCTION EST UN MOT QUI PORTE SON CORPS — arbitrage de Romain, 2026-09-03 : une
+    // manipulation est un contrôle du langage, et son corps se rattache à lui (`lib/transpo/
+    // transpose.ts`). La famille `function` a disparu avec cette forme ; l'éditeur propose donc
+    // les mots qui portent une réalisation, quelle que soit la librairie qui les déclare.
+    // Une manipulation porte SES PARAMÈTRES avec son corps ; une table d'homomorphisme hérite le
+    // corps de son applicateur sans en être une — elle est la donnée sur laquelle il travaille.
+    functions: objets()
+      .filter((o) => o.documented && typeof o.membres.body === 'string' && o.membres.params)
+      .map((o) => o.nom),
     components,
     addressKeys: [...ctx.addressKeys],
     qualifierKeys: [...ctx.qualifierKeys],

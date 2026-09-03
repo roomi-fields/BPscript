@@ -326,15 +326,24 @@ export function chargerLesLibrairies(sources, compiler, registerLib) {
     }
     restants = encore;
   }
-  // Les corps de FONCTIONS DIGITALES : lib/<nom>/<fonction>.ts → <nom>.objects.<fonction>.body.
-  // L'authoring est un VRAI .ts typé ; le registre en porte le SOURCE, que Kairos transpile.
+  // ⛔ UN CORPS SE RATTACHE À L'OBJET QUI PORTE LE MOT — arbitrage de Romain, 2026-09-03 : « le code
+  // n'est pas exactement au même endroit que la déclaration », comme un `.h` et son `.c`. Le nom du
+  // fichier dit l'objet : `lib/transpo/transpose.ts` va sur le CONTRÔLE `transpose` de `transpo`,
+  // `lib/homomorphism/homomorphism.ts` sur le PROTOTYPE de la famille, dont chaque table hérite.
+  // L'objet se cherche à la RACINE (le nom du fichier de librairie) puis dans chaque place — aucune
+  // section n'est nommée ici, et la famille `function` a disparu avec cette forme.
   for (const s of sources) {
     if (s.format !== 'ts') continue;
     const lib = construites[s.nom];
-    if (!lib || !lib.objects || !lib.objects[s.fonction]) {
-      throw new FauteDeLibrairie(`lib/${s.fichier} : aucun objet '${s.fonction}' dans la librairie '${s.nom}'`);
+    const cible = !lib ? null
+      : s.fonction === s.nom ? lib
+        : Object.values(lib).find((place) => place && typeof place === 'object' && !Array.isArray(place)
+            && place[s.fonction] && typeof place[s.fonction] === 'object')?.[s.fonction];
+    if (!cible) {
+      throw new FauteDeLibrairie(`lib/${s.fichier} : aucun objet '${s.fonction}' dans la librairie '${s.nom}' — `
+        + `un corps se rattache à l'objet qui porte son nom, à la racine ou dans une place`);
     }
-    lib.objects[s.fonction].body = s.texte;
+    cible.body = s.texte;
   }
 }
 

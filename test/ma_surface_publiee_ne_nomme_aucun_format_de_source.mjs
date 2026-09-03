@@ -48,7 +48,9 @@ console.log(`[surface] ${fichiersDeLib.length} fichiers de lib, ${formats.length
   const presents = new Set(Object.keys(LIBS));
   for (const a of attendus) ok(presents.has(a), `1. la librairie '${a}' existe en fichier et MANQUE au bundle`);
   for (const p of presents) ok(attendus.has(p), `1. le bundle porte '${p}', qui n'a aucun fichier source`);
-  ok(attendus.size >= 25, `1. le garde doit avoir EXAMINÉ des librairies (${attendus.size} trouvée(s))`);
+  // 25 → 24 le 2026-09-03 : `digital` sort, ses quatre manipulations sont les contrôles de `transpo`
+  // qui les nommaient déjà, et leurs corps ont suivi leur objet (arbitrage Romain).
+  ok(attendus.size >= 24, `1. le garde doit avoir EXAMINÉ des librairies (${attendus.size} trouvée(s))`);
   // ⛔ ET UNE CLÉ PRÉSENTE NE PROUVE PAS UN CONTENU. Ce volet comptait les clés du bundle et
   // n'aurait pas vu une librairie SORTIE VIDE — le mode d'échec exact de la réécriture des neuf
   // fichiers : le générateur ne lisait qu'une des deux graphies de déclaration, donc réécrire un

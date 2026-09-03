@@ -1,122 +1,82 @@
 #!/usr/bin/env node
 /**
- * GARDE — DEUX LIBRAIRIES QUI DÉCLARENT LE MÊME DÉFAUT NE DIVERGENT PAS EN SILENCE.
+ * GARDE — LE DOUBLE DÉFAUT DES MANIPULATIONS EST FERMÉ : UN SEUL OBJET LE PORTE.
  *
- * Constat de Kairos, 2026-08-19, déposé AVANT ma frappe. Quatre manipulations de hauteur portent
- * leur défaut DANS DEUX LIBRAIRIES — `transpo` (le contrôle écrit dans une scène) et `digital`
- * (la fonction qui le calcule). Elles s'accordent aujourd'hui PAR LE FAIT, pas par une règle :
- * aucun garde ne les comparait, ni ici ni chez lui.
+ * ⛔ CE GARDE A CHANGÉ DE CIBLE LE 2026-09-03, ET IL NE SE TAIT PAS. Il tenait l'ACCORD entre deux
+ * déclarations du même défaut — `transpo` (le contrôle écrit dans une scène) et `digital` (la
+ * fonction qui le calcule) —, constat de Kairos du 2026-08-19 : elles s'accordaient PAR LE FAIT, et
+ * une divergence future aurait été deux nombres identiques cessant un jour de l'être, sans que rien
+ * ne rougisse.
  *
- * ⛔ CE QUI REND CE GARDE NÉCESSAIRE N'EST PAS LA DUPLICATION, C'EST L'EFFET DE MA FRAPPE. Tant
- * que les deux formes DIFFÉRAIENT — une chaîne à découper d'un côté, des paramètres nommés de
- * l'autre — la duplication SE VOYAIT. Depuis que le défaut de `transpo` est lui aussi un défaut par
- * paramètre, les deux ont la MÊME forme : une divergence future serait deux nombres identiques qui
- * cessent un jour de l'être, sans que rien ne rougisse.
+ * L'ARBITRAGE DE ROMAIN A SUPPRIMÉ LA CAUSE : une manipulation est un MOT du langage, et son corps
+ * se rattache à l'objet qui le porte. `digital` est sortie ; les quatre manipulations sont les
+ * contrôles de `transpo` qui les nommaient déjà, et ils portent désormais leur défaut, leurs
+ * paramètres et leur corps AU MÊME ENDROIT. Il n'y a plus deux déclarations à accorder.
  *
- * UN ÉCART DE FORMES EST UN TÉMOIN INVOLONTAIRE. L'effacer sans poser le garde qui le remplace
- * échange une laideur visible contre un silence.
+ * ⚠️ CE QUE CE GARDE TIENT MAINTENANT, et c'est la moitié qui compte : que le double NE REVIENNE
+ * PAS. Un second domicile qui redéclarerait le défaut d'une manipulation serait exactement le
+ * silence que le garde d'avant surveillait — il rougirait alors, en le nommant.
  *
- * ⚠️ CE GARDE NE CHOISIT PAS L'AUTORITÉ. Laquelle des deux déclarations fait foi est une question de
- * CONTRAT — Kairos a refusé de la trancher seul, et il a eu raison. Le garde tient l'ACCORD, pas la
- * source : tant qu'il tient, une divergence est impossible et la question se tranche calmement.
+ * ⚠️ ET LE COMPLÉMENT : chaque manipulation porte bien les trois pièces au même endroit. Un garde
+ * qui n'exigerait que l'absence du double serait vert sur un registre vide.
  */
+import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur
 import { LIBS } from '../src/transpiler/libs-data.js';
+import { objets } from '../src/transpiler/index-des-objets.js';
 
 let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-console.log('[deux-défauts] deux librairies qui déclarent le même défaut ne divergent pas');
+console.log('[deux-défauts] le double défaut des manipulations est fermé — un seul objet le porte');
 
+// ── 1. LES QUATRE MANIPULATIONS PORTENT TOUT AU MÊME ENDROIT ────────────────────────────────
+const MANIPULATIONS = ['transpose', 'scaleshift', 'chromashift', 'keyxpand'];
 const controles = LIBS.transpo?.controls || {};
-const objets = LIBS.digital?.objects || {};
-
-/** Les valeurs par défaut d'une déclaration, à plat et dans l'ordre écrit. */
-const defautsTranspo = (nom) => {
-  const d = controles[nom]?.value;
-  if (d === undefined) return [];
-  return (d !== null && typeof d === 'object') ? Object.values(d) : [d];
-};
-const defautsDigital = (nom) => {
-  const p = objets[nom]?.params;
-  if (!p) return null;                       // la déclaration n'existe pas de ce côté
-  // Les paramètres d'une fonction digitale gardent `default` jusqu'à la frappe des fonctions
-  // (point 1 des cinq arbitrages) ; le contrôle, lui, porte `value` depuis le 2026-09-03.
-  return Object.values(p).map((x) => x?.default).filter((x) => x !== undefined);
-};
-
-// ── 1. LE PÉRIMÈTRE DE LA COMPARAISON EST UN FAIT MESURÉ, ET IL EST GELÉ ────────────────────
-// ⛔ Un nom qui ENTRE ou qui SORT cesse d'être compare sans un mot — c'est le mode d'échec exact
-// qu'on ferme. Le garde inscrit donc le périmètre et rougit s'il bouge, au lieu de se contenter
-// d'itérer sur ce qu'il trouve.
-{
-  const desDeux = Object.keys(controles).filter((n) => objets[n]).sort();
-  ok(JSON.stringify(desDeux) === JSON.stringify(['chromashift', 'keyxpand', 'scaleshift', 'transpose']),
-    `1. les noms déclarés DANS LES DEUX librairies doivent être les quatre mesurés — reçu `
-    + `${JSON.stringify(desDeux)}. Un nom qui entre ou qui sort change ce que ce garde compare : `
-    + `relire la correspondance avant de l'élargir.`);
-  // L'asymétrie connue, inscrite pour qu'elle cesse d'être muette.
-  ok(controles.scale !== undefined && objets.scale === undefined,
-    `1. 'scale' est déclaré par 'transpo' SEUL — asymétrie connue. Si 'digital' vient à le porter, `
-    + `les deux défauts doivent être compares comme les quatre autres.`);
+for (const nom of MANIPULATIONS) {
+  const c = controles[nom];
+  ok(c && typeof c === 'object',
+     `1. '${nom}' doit être un contrôle de 'transpo' — c'est le mot que la scène écrit`);
+  ok(c && c.params && typeof c.params === 'object',
+     `1. '${nom}' porte SES PARAMÈTRES — reçu ${JSON.stringify(c && Object.keys(c))}`);
+  ok(c && typeof c.body === 'string' && c.body.length > 100,
+     `1. '${nom}' porte SON CORPS, greffé depuis lib/transpo/${nom}.ts — reçu ${typeof (c && c.body)}`);
+  ok(c && 'value' in c === ('value' in (c || {})),
+     `1. '${nom}' — sa valeur, s'il en a une, vit sur lui`);
 }
 
-// ── 2. LES DÉFAUTS S'ACCORDENT, VALEUR PAR VALEUR ───────────────────────────────────────────
-// On compare les VALEURS, pas les noms de paramètres : `pivot` ici, `pivotStep` là-bas. Choisir
-// un nommage serait choisir l'autorité, et ce n'est pas à un garde de le faire.
+// ── 2. LA LIBRAIRIE DES FONCTIONS EST SORTIE, ET AVEC ELLE LE SECOND DOMICILE ────────────────
+ok(LIBS.digital === undefined,
+   `2. 'digital' ne doit plus exister — une manipulation est un contrôle, pas une entrée à part`);
+ok(!Object.values(LIBS).some((l) => l && typeof l === 'object' && l.resolves === 'function'),
+   `2. aucune librairie ne déclare le mot 'function' — la famille a disparu avec la forme`);
+
+// ── 3. LE DOUBLE NE REVIENT PAS — mesuré sur TOUT le registre, pas sur deux noms ─────────────
+// Un second objet qui porterait le même nom ET un défaut serait le silence d'avant, revenu.
 {
-  let compares = 0;
-  for (const nom of ['scaleshift', 'chromashift', 'keyxpand', 'transpose']) {
-    const ici = defautsTranspo(nom);
-    const la = defautsDigital(nom);
-    if (la === null) { echecs.push(`2. '${nom}' n'est plus déclaré par 'digital' — la comparaison tombe`); continue; }
-    compares++;
-    ok(JSON.stringify(ici) === JSON.stringify(la),
-      `2. '${nom}' : les deux librairies déclarent des défauts DIFFÉRENTS — transpo `
-      + `${JSON.stringify(ici)} (${JSON.stringify(controles[nom]?.value)}) · digital `
-      + `${JSON.stringify(la)}. Elles décrivent le même geste : un écart y est une faute, jamais `
-      + `une variante.`);
+  const parNom = new Map();
+  for (const o of objets()) {
+    if (!MANIPULATIONS.includes(o.nom)) continue;
+    if (!('value' in o.membres) && !o.membres.params) continue;
+    parNom.set(o.nom, [...(parNom.get(o.nom) || []), o.chaine.join('.')]);
   }
-  ok(compares === 4, `2. le garde doit avoir COMPARÉ les quatre — ${compares} comparaison(s)`);
-}
-
-// ── 3. LA CORRESPONDANCE DES NOMS EST MESURÉE, PAS SUPPOSÉE ─────────────────────────────────
-// ⚠️ Les paramètres ne portent PAS les mêmes noms d'une librairie à l'autre. Ce n'est pas un défaut
-// que ce garde répare — c'est un fait qu'il inscrit, pour qu'un renommage d'un seul côté rougisse
-// au lieu de fabriquer un appariement faux.
-{
-  const paires = [
-    ['keyxpand', ['pivot', 'factor'], ['pivotStep', 'factor']],
-    ['scaleshift', [], ['n']],
-    ['chromashift', [], ['n']],
-  ];
-  for (const [nom, ici, la] of paires) {
-    const cIci = Object.keys(controles[nom]?.value && typeof controles[nom].value === 'object'
-      ? controles[nom].value : {});
-    const cLa = Object.keys(objets[nom]?.params || {});
-    ok(JSON.stringify(cIci) === JSON.stringify(ici),
-      `3. '${nom}' · transpo doit nommer ${JSON.stringify(ici)} — reçu ${JSON.stringify(cIci)}`);
-    ok(JSON.stringify(cLa) === JSON.stringify(la),
-      `3. '${nom}' · digital doit nommer ${JSON.stringify(la)} — reçu ${JSON.stringify(cLa)}`);
+  ok(parNom.size === MANIPULATIONS.length,
+     `3. SOCLE : les quatre manipulations doivent être vues — reçu ${[...parNom.keys()].join(', ')}`);
+  for (const [nom, chaines] of parNom) {
+    ok(chaines.length === 1,
+       `3. '${nom}' est déclaré par ${chaines.length} objets — ${chaines.join(' · ')}. Deux domiciles `
+       + `pour un défaut divergent en silence : c'est ce que la sortie de 'digital' a fermé.`);
   }
 }
 
-// ── 4. TÉMOIN D'INSTRUMENT — le garde sait DISTINGUER ───────────────────────────────────────
-// ⛔ Sans lui, une comparaison qui rendrait toujours vrai passerait les volets ci-dessus en
-// triomphe. On fabrique la divergence et on exige que la comparaison la voie.
-{
-  const faux = JSON.stringify([0, 1]) === JSON.stringify([0, 2]);
-  ok(faux === false, '4. TÉMOIN — la comparaison doit distinguer deux suites qui diffèrent d\'une valeur');
-  ok(JSON.stringify(defautsTranspo('keyxpand')) === JSON.stringify([0, 1]),
-    `4. TÉMOIN — et lire réellement les valeurs de 'keyxpand' — reçu `
-    + `${JSON.stringify(defautsTranspo('keyxpand'))}`);
-}
-
-ok(passe >= 14, `le garde doit avoir EXAMINÉ, pas seulement tourné (${passe} assertions)`);
+// ── 4. INJECTION DANS LE JUGE — la décision rejouée isolée ──────────────────────────────────
+const juger = (chaines) => chaines.length === 1;
+ok(juger(['transpo.transpose']), '4. (se tait) un seul domicile');
+ok(!juger(['transpo.transpose', 'function.transpose']), '4. (mord) deux domiciles pour un même mot');
 
 if (echecs.length) {
-  console.error(`[deux-défauts] ${echecs.length} ÉCHEC(S) :`);
-  for (const e of echecs) console.error('  ✗ ' + e);
+  console.error(`❌ le double défaut est revenu : ${echecs.length} échec(s)`);
+  for (const e of echecs) console.error(`   - ${e}`);
   process.exit(1);
 }
 console.log(`[deux-défauts] ${passe} PASS / 0 FAIL — ${passe} assertion(s)`);

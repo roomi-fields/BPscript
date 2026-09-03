@@ -160,9 +160,11 @@ ok(parMot > 0, `aucune entrée par un mot de réglage sur ${scenes} scènes — 
      `'alphabet.tabla' fait entrer ses voix par 'terminals.<t>.voice' — reçu ${JSON.stringify(voix)}`);
   // Et une fonction digitale entre AVEC son corps.
   const digitale = compileToBPxAST('core\n-----\nS -> C4(scaleshift:2)\n', {});
-  const f = digitale.ast && digitale.ast.librairies && digitale.ast.librairies['function.scaleshift'];
+  // La famille `function` a disparu le 2026-09-03 : une manipulation est le CONTRÔLE qui la nomme,
+  // et son corps se rattache à lui (`lib/transpo/scaleshift.ts`).
+  const f = digitale.ast && digitale.ast.librairies && digitale.ast.librairies['transpo.scaleshift'];
   ok(f && typeof f.membres.body === 'string' && f.membres.body.length > 0,
-     `'scaleshift:2' fait entrer 'function.scaleshift' AVEC son corps — reçu ${JSON.stringify(f && Object.keys(f.membres))}`);
+     `'scaleshift:2' fait entrer 'transpo.scaleshift' AVEC son corps — reçu ${JSON.stringify(f && Object.keys(f.membres))}`);
 }
 
 ok(scenes >= 150, `SOCLE : ${scenes} scène(s) compilée(s) — sous 150 le corpus ne mesure rien`);

@@ -110,7 +110,11 @@ for (const [ecrit, reecrit] of [
       return;
     }
     if (!o || typeof o !== 'object') return;
-    for (const [k, v] of Object.entries(o)) descendre(v, `${chemin}.${k}`, Array.isArray(o) ? cle : k);
+    for (const [k, v] of Object.entries(o)) {
+      // Un CORPS est du code, pas une valeur du langage : il porte des espaces par nature.
+      if (k === 'body') continue;
+      descendre(v, `${chemin}.${k}`, Array.isArray(o) ? cle : k);
+    }
   };
   for (const nom of reecrites) descendre(LIBS[nom], nom, nom);
   ok(examinees >= 40, `D. le balayage doit voir les valeurs des librairies réécrites — ${examinees} vue(s)`);
