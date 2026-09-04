@@ -19,6 +19,7 @@
  * `mot\n(sac)` refusé : le pli était traité autrement que l'espace, ce que la deuxième décision
  * interdit. Les deux colonnes doivent rendre le même verdict.
  */
+import { readFileSync } from 'node:fs';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 
 const B = String.fromCharCode(96);
@@ -30,6 +31,12 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const refus = (decl) => {
   const r = compileToBPxAST(`${TETE}${decl}\n-----\nS -> a\n`, { librairie: true });
   return (r.errors || []).map((e) => e.message);
+};
+// Le CODE, jamais la prose : deux refus du même motif ne diffèrent que par la colonne citée, et une
+// comparaison de messages appellerait « deux refus » ce qui est le même.
+const codesDe = (decl) => {
+  const r = compileToBPxAST(`${TETE}${decl}\n-----\nS -> a\n`, { librairie: true });
+  return (r.errors || []).map((e) => e.code);
 };
 
 // ── 1. L'ESPACE ET LE PLI SONT REFUSÉS, aux deux sortes de déclaration, avec la RÉÉCRITURE ───────
@@ -93,7 +100,40 @@ for (const [quoi, decl, attendu] of [
   ok(r.ast === null, '5. et elle ne livre aucun arbre');
 }
 
-const ATTENDU = 4 + 2 + 8 + 1 + 4 + 2;
+// ── 6. LA MATRICE DES MOTS DÉCLARANTS, DÉRIVÉE DU PARSEUR ────────────────────────────────────────
+//
+// ⛔ CE VOLET EXISTE PARCE QUE LES VOLETS 1 À 3 ONT LAISSÉ PASSER DEUX MOTS. Ils éprouvaient `def` et
+// le type en tête ; `terminal a (vel:100)` et `actor x (out.midi(ch:1))` étaient ACCEPTÉS, chacun sur
+// un site de lecture que la règle n'avait pas atteint. Une liste écrite à la main nomme les mots
+// qu'on avait en tête ; celle-ci se relit dans le parseur, donc un mot ajouté demain entre au garde
+// le jour même.
+//
+// Chaque mot rend l'un des deux verdicts, et aucun troisième :
+//   · il PORTE un sac  ⇒ l'espace est refusée EN LA NOMMANT, et la forme collée passe ;
+//   · il n'en porte pas ⇒ il rend le MÊME refus avec et sans espace — le sac ne le concerne pas.
+// Un mot qui accepte l'espace, ou qui refuse pour une autre raison d'un seul côté, tombe ici.
+let motsDeclarants = [];
+{
+  const source = readFileSync(new URL('../src/transpiler/parser.js', import.meta.url), 'utf8');
+  const mots = motsDeclarants = [...new Set([...source.matchAll(/name === '([a-z_]+)'/g)].map((m) => m[1]))].sort();
+  ok(mots.length >= 8, `6. la liste des mots se dérive du parseur — ${mots.length} trouvé(s), c'est trop peu pour être la sienne`);
+  const SACS = { actor: 'out.midi(ch:1)' };
+  for (const mot of mots) {
+    const sac = SACS[mot] || 'vel:100';
+    const avecEspace = refus(`${mot} zz (${sac})`);
+    const colle = refus(`${mot} zz(${sac})`);
+    const nommeLEspace = avecEspace.some((m) => /space/i.test(m) && m.includes(`${mot} zz(`));
+    if (colle.length === 0) {
+      ok(nommeLEspace, `6. « ${mot} » porte un sac (la forme collée passe) : l'espace doit être refusée en nommant la réécriture — reçu ${JSON.stringify(avecEspace)}`);
+    } else {
+      const [cEspace, cColle] = [codesDe(`${mot} zz (${sac})`)[0], codesDe(`${mot} zz(${sac})`)[0]];
+      ok(cEspace !== undefined && cEspace === cColle,
+        `6. « ${mot} » ne porte pas de sac : le refus doit porter le MÊME code avec et sans espace — espace ${JSON.stringify(cEspace)}, collé ${JSON.stringify(cColle)}`);
+    }
+  }
+}
+
+const ATTENDU = 4 + 2 + 8 + 1 + 4 + 2 + 1 + motsDeclarants.length;
 ok(passe + echecs.length === ATTENDU,
   `le garde doit éprouver ${ATTENDU} cas — ${passe + echecs.length} seulement`);
 

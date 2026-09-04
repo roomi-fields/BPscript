@@ -25,7 +25,7 @@
  * non-lus : le crochet rend 1, la bascule rend 0.** Ce garde existe pour que ça reste vrai, pas pour
  * constater que ça l'est.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 
 const RACINE = new URL('..', import.meta.url).pathname;
 let passe = 0;
@@ -84,6 +84,11 @@ const porteLeDrapeau = (t) => /--fenetres/.test(t);
   const ailleurs = [];
   for (const f of suivis) {
     if (AUTORISES.has(f)) continue;
+    // ⛔ SUIVI N'EST PAS PRÉSENT. Une reconstruction retire des morceaux de `dist/` avant qu'ils
+    // soient enregistrés : ils restent SUIVIS et n'existent plus sur le disque. Le garde tombait
+    // alors en exception — donc il DISPARAISSAIT du portillon au lieu d'y rougir, et c'est le
+    // compte de gardes qui l'a rattrapé. Un fichier absent ne porte aucun drapeau ; il sort.
+    if (!existsSync(`${RACINE}${f}`)) continue;
     const t = texte(f);
     if (atteintLeGarde(t) && porteLeDrapeau(t)) ailleurs.push(f);
   }

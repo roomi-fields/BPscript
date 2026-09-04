@@ -15,7 +15,7 @@ import { BP3_OPERATORS } from './constants.js';
 // ⛔ LE SCHÉMA DE SYNTAXE N'EST PAS UNE LIBRAIRIE — il se lit par SA PROPRE PORTE, jamais par le
 // registre des librairies. Décision Romain, 2026-08-20.
 import { SYNTAXE } from './syntaxe-data.js';
-import { texteDuDiagnostic } from './diagnostics.js';
+import { texteDuDiagnostic, diagnostic } from './diagnostics.js';
 
 /**
  * Erreur d'ANALYSE — et elle porte un CODE depuis le 2026-09-04.
@@ -2781,6 +2781,14 @@ function parse(tokens, opts = {}) {
       const apresLeNom = current();
       // La parenthèse porte ce qui appartient à ce qui la précède — ici les clés du terminal. Elle
       // s'ajoute aux deux corps que `def` lit déjà (même ligne, bloc indenté) ; aucun ne change.
+      // ⛔ ET L'ESPACE Y EST INTERDITE COMME PARTOUT — câblée le 2026-09-04, mesurée par atlas :
+      //   `def fort (vel:100)` était refusé, `terminal a (vel:100)` passait. *Un refus fait autorité
+      //   autant qu'une spec* : la règle habitait trois surfaces — la bible, le message, le garde —
+      //   et la troisième disait autre chose que les deux premières.
+      // ⚠️ ET LE COMPLÉMENT A DONNÉ UN SECOND MOT : `actor x (…)` passait aussi. Atlas n'avait mesuré
+      //   que `terminal`. *Réparer l'espace où le défaut peut vivre, jamais l'endroit où il s'est
+      //   montré.*
+      if (motDeclarant === 'terminal') refuserEspaceAvantLeSac(`${motDeclarant} ${defName}`, tok);
       const clesParenthesees = motDeclarant === 'terminal' && at(T.LPAREN);
       if (clesParenthesees) advance();
       refuserLeSigneEgal('def', defName);
@@ -3210,6 +3218,9 @@ function parse(tokens, opts = {}) {
         throw new ParseError('PARSE_ACTOR_SUBKEY_ACTOR_WORD', { subkey, p1: forme ? ` — it is written '${forme}'` : '' }, current());
       }
       let actorName = lireNomDEntree(tok);
+      // ⛔ L'ESPACE EST INTERDITE ICI AUSSI — voir la note sur `terminal` : c'est le complément de la
+      //   mesure d'atlas, trouvé en cherchant où d'autre la règle n'était pas câblée.
+      refuserEspaceAvantLeSac(`actor ${actorName}`, tok);
       // Le POINT porte la dérivation — `extends` a été effacé pour ça (même décision, « ce qui
       // s'efface »). Le nom qualifié voyage TEL QUEL dans `name`, comme le langage l'écrit : aucun
       // champ neuf, donc aucun contrat déplacé chez qui lit l'arbre.
@@ -4570,8 +4581,8 @@ function parse(tokens, opts = {}) {
     if (countAnchorsLhs !== countAnchorsRhs && (countAnchorsLhs > 0 || countAnchorsRhs > 0)) {
       warnings.push({
         type: 'warning',
-        message: `ancres de gabarit asymétriques : LHS a ${countAnchorsLhs}, RHS a ${countAnchorsRhs}`,
-        line: tok.line,
+        ...diagnostic('PARSE_TEMPLATE_ANCHORS_ASYMMETRIC',
+          { gauche: countAnchorsLhs, droite: countAnchorsRhs }, { line: tok.line }),
       });
     }
 

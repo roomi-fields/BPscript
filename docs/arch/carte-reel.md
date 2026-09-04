@@ -5,7 +5,7 @@
 > vit dans le document d'architecture, chez Atlas, qui cite celui-ci.
 ## Ce qui est mesuré
 
-- **23 modules** dans `src/transpiler/`, **16138 lignes**.
+- **24 modules** dans `src/transpiler/`, **15655 lignes**.
 - Le **rôle** est lu dans l'en-tête de chaque fichier, verbatim — jamais interprété.
 - Les **arêtes** sont les imports d'un module vers un voisin du même dossier.
 
@@ -13,22 +13,23 @@
 
 | Module | Lignes | Importe | Importé par | Rôle (lu dans l'en-tête) |
 | --- | ---: | ---: | ---: | --- |
-| `parser.js` | 8095 | 6 | 2 | BPScript Parser |
-| `resolution.js` | 3123 | 5 | 1 | L'ÉTAGE QUI RÉSOUT — le troisième des quatre, et le seul qui n'avait pas de domicile. |
-| `libs.js` | 1221 | 4 | 6 | BPScript Library Loader |
-| `actorResolver.js` | 588 | 2 | 2 | BPScript Actor Resolver |
-| `tokenizer.js` | 543 | 0 | 2 | BPScript Tokenizer |
+| `parser.js` | 7694 | 7 | 2 | BPScript Parser |
+| `resolution.js` | 2979 | 6 | 1 | L'ÉTAGE QUI RÉSOUT — le troisième des quatre, et le seul qui n'avait pas de domicile. |
+| `libs.js` | 1220 | 5 | 6 | BPScript Library Loader |
+| `actorResolver.js` | 582 | 3 | 2 | BPScript Actor Resolver |
 | `librairies.js` | 537 | 1 | 1 | LA LECTURE DES LIBRAIRIES — une source écrite dans le langage devient un objet du registre. |
-| `bpxAst.js` | 516 | 9 | 2 | Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table |
+| `tokenizer.js` | 535 | 1 | 2 | BPScript Tokenizer |
+| `bpxAst.js` | 519 | 9 | 2 | Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table |
 | `index-des-objets.js` | 390 | 3 | 6 | L'INDEX DES OBJETS — ce que les librairies déclarent, rendu comme des objets, pour la porte |
-| `librairies-jointes.js` | 144 | 1 | 1 | L'ARBRE JOINT LE CONTENU DES LIBRAIRIES QU'IL INVOQUE — décision de Romain, 2026-09-02. |
+| `librairies-jointes.js` | 145 | 2 | 1 | L'ARBRE JOINT LE CONTENU DES LIBRAIRIES QU'IL INVOQUE — décision de Romain, 2026-09-02. |
 | `syntaxe-data.js` *(généré)* | 126 | 0 | 4 | — |
 | `orderTokens.js` | 123 | 0 | 0 | — |
-| `controlValidation.js` | 113 | 0 | 1 | Collecte récursivement toutes les paires de SettingBag de l'AST. |
+| `controlValidation.js` | 107 | 1 | 1 | Collecte récursivement toutes les paires de SettingBag de l'AST. |
 | `libs-champs.js` | 98 | 0 | 3 | LES CHAMPS DE FICHIER D'UNE LIBRAIRIE — déclarés UNE FOIS, pour tous mes lecteurs. |
 | `vocabulaire.js` | 89 | 3 | 4 | LE VOCABULAIRE DU LANGAGE — la porte d'éditeur, DÉRIVÉE de la porte des objets. |
 | `syntaxe-bundle.mjs` | 88 | 0 | 0 | GÉNÉRATEUR DE LA PORTE DU SCHÉMA DE SYNTAXE. |
 | `segmentation.js` | 81 | 0 | 1 | LA SEGMENTATION D'UN NOM COLLÉ — plus long préfixe, glouton, sans retour arrière. |
+| `diagnostics.js` | 79 | 0 | 7 | LES DIAGNOSTICS — UN CODE STABLE, UN TEXTE QUI VIT AILLEURS. |
 | `gabarits-bundle.mjs` | 57 | 0 | 0 | GÉNÉRATEUR DE LA PORTE DES GABARITS DE RÉGLAGES NATIFS. |
 | `libs-bundle-check.js` | 50 | 0 | 0 | — |
 | `sources.js` | 48 | 0 | 1 | LES SOURCES DE LIBRAIRIE — ce que `lib/` contient, rendu comme du texte. |
@@ -45,6 +46,7 @@ flowchart LR
   bpxAst_js["bpxAst.js"]
   constants_js["constants.js"]
   controlValidation_js["controlValidation.js"]
+  diagnostics_js["diagnostics.js"]
   gabarits_bundle_mjs["gabarits-bundle.mjs"]
   gabarits_data_js["gabarits-data.js"]
   index_des_objets_js["index-des-objets.js"]
@@ -64,6 +66,7 @@ flowchart LR
   syntaxe_data_js["syntaxe-data.js"]
   tokenizer_js["tokenizer.js"]
   vocabulaire_js["vocabulaire.js"]
+  actorResolver_js --> diagnostics_js
   actorResolver_js --> libs_js
   actorResolver_js --> index_des_objets_js
   bpxAst_js --> tokenizer_js
@@ -75,13 +78,16 @@ flowchart LR
   bpxAst_js --> actorResolver_js
   bpxAst_js --> controlValidation_js
   bpxAst_js --> librairies_jointes_js
+  controlValidation_js --> diagnostics_js
   index_des_objets_js --> libs_js
   index_des_objets_js --> libs_champs_js
   index_des_objets_js --> syntaxe_data_js
   index_js --> bpxAst_js
   index_js --> vocabulaire_js
+  librairies_jointes_js --> diagnostics_js
   librairies_jointes_js --> index_des_objets_js
   librairies_js --> libs_champs_js
+  libs_js --> diagnostics_js
   libs_js --> librairies_js
   libs_js --> sources_js
   libs_js --> libs_champs_js
@@ -94,11 +100,14 @@ flowchart LR
   parser_js --> vocabulaire_js
   parser_js --> constants_js
   parser_js --> syntaxe_data_js
+  parser_js --> diagnostics_js
+  resolution_js --> diagnostics_js
   resolution_js --> actorResolver_js
   resolution_js --> parser_js
   resolution_js --> index_des_objets_js
   resolution_js --> libs_js
   resolution_js --> vocabulaire_js
+  tokenizer_js --> diagnostics_js
   vocabulaire_js --> index_des_objets_js
   vocabulaire_js --> libs_js
   vocabulaire_js --> syntaxe_data_js
