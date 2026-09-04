@@ -21,7 +21,9 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
 let passe = 0;
@@ -116,8 +118,12 @@ for (const rel of exportes) {
 
 // ── 3. TÉMOIN NON NUL — le garde sait LIRE un en-tête, sinon tout ce fichier ment ───────────
 {
-  const tete = readFileSync(join(RACINE, 'src/transpiler/libs-data.js'), 'utf-8')
-    .split('\n').filter((l) => l.trim().startsWith('//'));
+  // ⛔ LE TÉMOIN A CHANGÉ DE FICHIER LE 2026-09-04, PAS D'OBJET. `libs-data.js`, la surface que ce
+  //   garde lisait, est sorti avec le bundle (Romain : « ça sort »). La surface publiée qui sert la
+  //   même donnée est la PORTE DES OBJETS — c'est elle qu'un voisin lit désormais, et c'est donc
+  //   son en-tête qui peut mentir sur le format de mes sources. Le défaut est intact, il a déménagé.
+  const tete = readFileSync(join(RACINE, 'src/transpiler/objets.js'), 'utf-8')
+    .split('\n').filter((l) => l.trim().startsWith('//') || l.trim().startsWith('*'));
   ok(tete.length >= 2, '3. TÉMOIN — le garde doit trouver un en-tête de commentaire à lire');
   ok(tete.join(' ').length > 40, '3. TÉMOIN — et cet en-tête doit porter du texte');
 }

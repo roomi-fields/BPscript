@@ -74,9 +74,10 @@ try {
     + 'def piece(cordes(mi, la, re), bourdon:do, args(un, deux))\n');
 
   const regenerer = () => {
-    const brut = execFileSync('node', ['src/transpiler/libs-bundle.js'], { cwd: bac, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
-    const ligne = brut.split('\n').find((l) => l.startsWith('LIBS["temoin_forme"] ='));
-    return ligne ? JSON.parse(ligne.replace('LIBS["temoin_forme"] = ', '').replace(/;\s*$/, '')) : null;
+        // ⛔ LE REGISTRE S'IMPRIME EN JSON — `libs-bundle.js` et son artefact sont sortis le
+    // 2026-09-04 (Romain). On lit la donnée DU BAC, où la source témoin vient d'être écrite.
+    const brut = execFileSync('node', ['scripts/imprimer-le-registre.mjs'], { cwd: bac, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    return JSON.parse(brut)['temoin_forme'] ?? null;
   };
   const piece = (regenerer() || {}).piece;
   ok(piece && typeof piece === 'object',

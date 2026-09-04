@@ -37,7 +37,11 @@ import { registerLib, clearRegistry, registerAll } from '../src/transpiler/libs.
 import { describeVocabulary } from '../src/transpiler/vocabulaire.js';
 
 const require = createRequire(import.meta.url);
-const { LIBS } = require('../src/transpiler/libs-data.js');
+require('../src/transpiler/index.js');
+// ⛔ UN INSTANTANÉ, PAS LA RÉFÉRENCE VIVANTE — ce garde vide et re-remplit le registre, et
+// `leRegistre()` rend l'objet que `clearRegistry()` VIDE EN PLACE. Le bundle retiré le
+// 2026-09-04 donnait une copie figée sans le dire ; ici on la prend, en la nommant.
+const LIBS = structuredClone(require('../src/transpiler/libs.js').leRegistre());
 
 let passe = 0;
 const echecs = [];

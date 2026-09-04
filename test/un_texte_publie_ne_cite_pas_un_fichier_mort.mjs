@@ -29,7 +29,9 @@
  */
 import { readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 const LIB = new URL('../lib/', import.meta.url).pathname;
 

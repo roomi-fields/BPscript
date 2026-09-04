@@ -155,9 +155,27 @@ function universeControlNames() {
  * fichiers porteraient le même nom, cette boucle rendrait LE PREMIER TROUVÉ sans un mot, et rien ne
  * distinguerait à l'arrivée une entrée unique d'une entrée qui en a écrasé une autre.
  */
+/**
+ * ⛔ LE TRI PAR NOM EST CE QUI REND L'AUTORITÉ D'UN AXE STABLE, ET IL VIVAIT AILLEURS.
+ *
+ * Deux catalogues peuvent servir un même mot — `alphabets` et `test_alphabets` — et le PREMIER est
+ * l'autorité de l'axe. « Premier » selon quel ordre ? Jusqu'au 2026-09-04, celui du bundle, que son
+ * générateur TRIAIT par nom. Le bundle est sorti, le registre s'ordonne par passes de dépendances,
+ * et « premier » a changé de sens sans qu'une ligne de cette fonction bouge.
+ *
+ * ⚠️ MESURÉ CE JOUR-LÀ : les vingt mots gardaient le même contributeur — l'autorité n'a PAS bougé.
+ * C'est exactement ce qui rend le défaut dangereux : rien n'aurait rougi, et le jour où une source
+ * gagne une dépendance qui la fait charger plus tôt, un catalogue de TEST redeviendrait l'autorité
+ * de `alphabet`. C'est arrivé le 2026-08-24, ça a coûté sept gardes de cascade, et la preuve
+ * d'égalité ne l'avait pas vu parce qu'elle comparait les VALEURS et jamais leur RANG.
+ *
+ * ⇒ Le tri se pose donc ICI, là où l'autorité se DÉCIDE, et non dans un artefact qui la précède.
+ *   Un ordre de chargement reste libre de changer : il ne décide plus de rien.
+ */
 function motsDInvocation() {
   const table = new Map();
-  for (const [fichier, lib] of Object.entries(leRegistre())) {
+  for (const fichier of Object.keys(leRegistre()).sort()) {
+    const lib = leRegistre()[fichier];
     const mot = lib && typeof lib === 'object' ? lib.resolves : null;
     if (!mot) continue;
     if (!table.has(mot)) table.set(mot, []);

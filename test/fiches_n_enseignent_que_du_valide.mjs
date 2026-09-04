@@ -22,7 +22,9 @@
  * `(clé:valeur)`). Une prose qui décrit une forme invalide sans l'écrire lui échappe. Elle
  * prouve qu'aucune fiche ne MONTRE d'exemple mort — rien d'autre.
  */
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { universeControlNames } from '../src/transpiler/libs.js';
 

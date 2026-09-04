@@ -21,7 +21,12 @@
  */
 import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur (2026-09-02)
 import { registerLib, loadLibsFromDirectives, clearRegistry, registerAll } from '../src/transpiler/libs.js';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+// ⛔ UN INSTANTANÉ, PAS LA RÉFÉRENCE VIVANTE — ce garde vide et re-remplit le registre, et
+// `leRegistre()` rend l'objet que `clearRegistry()` VIDE EN PLACE. Le bundle retiré le
+// 2026-09-04 donnait une copie figée sans le dire ; ici on la prend, en la nommant.
+const LIBS = structuredClone(leRegistre());
 
 let passe = 0;
 const echecs = [];

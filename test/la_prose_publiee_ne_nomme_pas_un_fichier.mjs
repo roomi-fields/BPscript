@@ -18,7 +18,9 @@
  * ⚠️ SON PORTILLON N'EN AVAIT NOMMÉ QUE DEUX SUR SEPT chez lui. « Un garde qui nomme deux défauts
  * sur sept dit surtout où il ne regarde pas » — d'où celui-ci, qui balaye le paquet ENTIER.
  */
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 let passe = 0;
 const echecs = [];

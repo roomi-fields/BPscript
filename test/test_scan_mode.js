@@ -17,7 +17,9 @@ import { tokenize } from '../src/transpiler/tokenizer.js';
 import { parse } from '../src/transpiler/parser.js';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { registerAll } from '../src/transpiler/libs.js';
-import { LIBS as BUNDLED } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const BUNDLED = leRegistre();
 import { readFileSync } from 'fs';
 import { bpsPath, grPath } from './corpus.mjs';
 

@@ -20,7 +20,9 @@
  * qu'elle teste ne prouve rien, et le volet A la vérifie insegmentable avant de s'en servir.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 import { segmenter } from '../src/transpiler/segmentation.js';
 
 let passe = 0;

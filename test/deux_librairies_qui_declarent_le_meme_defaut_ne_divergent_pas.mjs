@@ -21,7 +21,9 @@
  * qui n'exigerait que l'absence du double serait vert sur un registre vide.
  */
 import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 import { objets } from '../src/transpiler/index-des-objets.js';
 
 let passe = 0;

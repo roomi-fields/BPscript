@@ -30,7 +30,9 @@
  * l'appliquait nulle part. Romain l'a supprimée ; l'axe est parti avec elle. **Un champ conçu pour
  * un seul cas meurt avec ce cas.**
  */
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 let passe = 0;
 const echecs = [];

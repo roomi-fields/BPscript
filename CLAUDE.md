@@ -260,21 +260,24 @@ de ce tableau se lit là-bas**, jamais dans un résumé.
 | `#` | contexte négatif · `#?` apparie la frontière de la chaîne |
 | `//` | commentaire |
 
-## Librairies — toute édition passe par le bundle
+## Librairies — la source est l'autorité, il n'y a rien à régénérer
 
-`src/transpiler/libs-data.js` est le bundle que **tous les consommateurs chargent** ; `lib/*.bpsl`,
-`lib/*.json` et `lib/digital/*.ts` en sont les sources. Éditer une source et régénérer le bundle se
-font **dans le même mouvement** — sinon le code lit l'ancienne valeur en silence.
+Le compilateur **lit ses librairies dans leurs sources** — `lib/*.bpsl`, `lib/*.json`,
+`lib/digital/*.ts` — et en construit son **registre**. Éditer une source suffit : rien à régénérer,
+rien qui se périme.
 
 Une librairie de **vocabulaire** s'écrit en BPScript (`.bpsl`), lue par le compilateur ; un
 **catalogue de données** reste en JSON. Une **scène** garde `.bps`.
 
 - **Le format d'un fichier n'est pas une information utile à qui veut la donnée.** Un lecteur qui
   énumère `lib/` par extension devient aveugle à une bascule **sans casser** : il continue sur moins
-  de données et son portillon reste vert. Cinq lecteurs s'y sont pris le même jour.
-- **Ce que j'expose est déclaré** dans `exports` : le compilateur, le bundle, `orderTokens`, l'appui
-  d'éditeur. Mes sources de librairie ne sont pas importables — sans quoi ma structure de fichiers
-  est une interface publique que je ne contrôle pas.
+  de données et son portillon reste vert. Neuf lecteurs s'y sont pris.
+- **Ce que j'expose est déclaré** dans `exports` : le compilateur, la **porte des objets**,
+  `orderTokens`, l'appui d'éditeur. Mes sources de librairie ne sont pas importables — sans quoi ma
+  structure de fichiers est une interface publique que je ne contrôle pas.
+- **L'autorité d'un axe se décide par le TRI, jamais par l'ordre d'arrivée.** Deux catalogues peuvent
+  servir un même mot ; le premier PAR SON NOM fait autorité, et `libs.js:motsDInvocation` est le seul
+  endroit où cela se tranche. Un ordre de chargement suit les dépendances et bouge sans prévenir.
 
 
 ## Backlog

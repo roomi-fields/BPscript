@@ -21,7 +21,8 @@
  */
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const { LIBS } = require('../src/transpiler/libs-data.js');
+require('../src/transpiler/index.js');
+const LIBS = require('../src/transpiler/libs.js').leRegistre();
 
 let ok = 0; let ko = 0;
 const verifier = (cond, quoi) => { if (cond) { ok += 1; } else { ko += 1; console.error(`FAIL — ${quoi}`); } };

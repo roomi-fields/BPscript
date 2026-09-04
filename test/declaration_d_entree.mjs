@@ -23,7 +23,9 @@ import { compileToBPxAST } from '../src/transpiler/index.js';
 // L'étage de résolution — le module INTERNE, jamais la porte publiée : la surface expose le verdict,
 // pas les étages. Ce banc vit dans le dépôt, donc il y a accès.
 import { resoudreSource } from '../src/transpiler/bpxAst.js';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 let passe = 0;
 const echecs = [];

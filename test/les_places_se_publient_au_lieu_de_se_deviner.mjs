@@ -32,7 +32,11 @@
  *   C. aucune place n'est un champ de fichier, et réciproquement
  *   D. ce que la porte ferme : on FABRIQUE le cas que la forme seule rate
  */
-import { LIBS, PLACES } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { placesDesLibrairies } from '../src/transpiler/librairies.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
+const PLACES = placesDesLibrairies(leRegistre());
 import { CHAMPS_DE_FICHIER } from '../src/transpiler/libs-champs.js';
 
 let p = 0;

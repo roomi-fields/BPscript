@@ -83,7 +83,8 @@ ok(nus.length === 0,
 
 // ── ET LE MOTIF LIT BIEN LES SCRIPTS, pas une liste que j'aurais recopiee ────────────────────
 {
-  const attendus = ['baseline-status.json.tmp', 'src/transpiler/libs-data.js.tmp'];
+  // ⛔ `libs-data.js.tmp` est sorti le 2026-09-04 avec le bundle et son générateur (Romain).
+  const attendus = ['baseline-status.json.tmp'];
   const manques = attendus.filter((a) => !cibles.has(a));
   ok(manques.length === 0,
     `le motif doit retrouver les cibles connues dans package.json — manque(nt) : ${manques.join(', ')}. `

@@ -26,7 +26,9 @@
  * le mauvais résolveur) puis dans le JUGE (les deux comparaisons rejouées isolées).
  */
 import { universeControlNames } from '../src/transpiler/libs.js';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 import { compileToBPxAST } from '../src/transpiler/index.js';
 
 let passe = 0;

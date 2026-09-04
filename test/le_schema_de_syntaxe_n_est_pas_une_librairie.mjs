@@ -26,7 +26,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { SYNTAXE } from '../src/transpiler/syntaxe-data.js';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 let p = 0;
 const e = [];

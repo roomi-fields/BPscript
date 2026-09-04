@@ -16,7 +16,9 @@
  * vivante il y a un jour ; un refus qui ne lui donne pas `scope(symbol, group)` le laisse deviner.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 let passe = 0;
 const echecs = [];

@@ -26,7 +26,9 @@
 // de l'écosystème qui écrivaient l'ancien mot sont migrées. Ce garde suit le mot vivant.
 import { canaux, clesDActeur, axesDeCatalogue } from '../src/transpiler/index-des-objets.js';
 import { compileToBPxAST } from '../src/transpiler/index.js';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 import { CHAMPS_DE_FICHIER } from '../src/transpiler/libs-champs.js';
 
 let passe = 0;

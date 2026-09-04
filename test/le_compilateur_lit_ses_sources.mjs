@@ -10,7 +10,7 @@
  *      bac reste celui d'avant, et une scène qui écrit ce contrôle compile.
  * Et la contre-épreuve : le même contrôle, ABSENT de la source, est refusé.
  */
-import { readFileSync, writeFileSync, mkdtempSync, rmSync, mkdirSync, cpSync, lstatSync, appendFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdtempSync, rmSync, mkdirSync, cpSync, lstatSync, appendFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -58,15 +58,22 @@ try {
   const avant = compiler();
   ok(avant.length > 0 && /zorglubtemoin/.test(avant.join(' ')),
      `2-témoin. 'zorglubtemoin' doit être REFUSÉ tant que la source ne le déclare pas — reçu ${JSON.stringify(avant)}`);
-  // La source reçoit le témoin ; le paquet du bac n'est PAS régénéré.
-  const paquetAvant = readFileSync(join(bac, 'src/transpiler/libs-data.js'), 'utf8');
+  // ⛔ LA PREUVE A CHANGÉ DE FORME LE 2026-09-04, ET ELLE EST DEVENUE PLUS FORTE. Ce garde montrait
+  //   que le compilateur lit ses sources en vérifiant que le PAQUET n'avait pas bougé — une preuve
+  //   par l'absence de mouvement, qui suppose que le paquet existe. `libs-data.js` est sorti
+  //   (Romain : « ça sort ») : il n'y a plus d'artefact de librairie du tout, donc la lecture ne
+  //   PEUT venir que des sources. On l'éprouve, au lieu de le supposer.
   appendFileSync(join(bac, 'lib/audio.bpsl'),
     '\ncontrol zorglubtemoin(args(value), description:"témoin de ce garde", scope(scene), section:controls)\n');
   const apres = compiler();
   ok(apres.length === 0,
      `2. une entrée ajoutée à la SOURCE doit atteindre le compilateur sans régénérer le paquet — reçu ${JSON.stringify(apres)}`);
-  ok(readFileSync(join(bac, 'src/transpiler/libs-data.js'), 'utf8') === paquetAvant && !/zorglubtemoin/.test(paquetAvant),
-     '2. et le paquet du bac ne doit pas avoir bougé — sinon la preuve mesurerait une régénération');
+  const artefacts = ['src/transpiler/libs-data.js', 'src/transpiler/libs-data.d.ts',
+                     'src/transpiler/libs-bundle.js', 'src/transpiler/libs-types.js'];
+  const survivants = artefacts.filter((f) => existsSync(join(bac, f)));
+  ok(survivants.length === 0,
+     `2. aucun artefact de librairie ne doit subsister — ${survivants.join(', ')} vit encore, et un `
+     + `artefact figé à côté du registre vivant fait deux autorités pour une seule donnée`);
 } finally {
   rmSync(bac, { recursive: true, force: true });
 }

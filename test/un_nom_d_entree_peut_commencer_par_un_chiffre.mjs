@@ -26,7 +26,9 @@
  * le volet D garde ce partage, parce que deux lecteurs d'un même nom divergent au premier ajout.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 let passe = 0;
 const echecs = [];

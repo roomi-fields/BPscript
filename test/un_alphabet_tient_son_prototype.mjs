@@ -29,7 +29,9 @@
  * et les 4 sont exactement ceux qui déclarent ne résoudre aucune hauteur. L'invariant tient
  * aujourd'hui ; rien ne le gardait.
  */
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 let passe = 0;
 const echecs = [];

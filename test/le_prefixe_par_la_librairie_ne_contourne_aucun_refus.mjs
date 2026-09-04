@@ -24,7 +24,9 @@
 // pas « les deux échouent » (ce serait vrai de deux refus sans rapport) mais l'identité du message,
 // aux positions près : c'est ce qui distingue « le préfixe se résout » de « le préfixe casse ».
 
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 import { compileToBPxAST } from '../src/transpiler/index.js';
 
 let echecs = 0;

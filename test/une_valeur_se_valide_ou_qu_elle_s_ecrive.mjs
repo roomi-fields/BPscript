@@ -110,7 +110,8 @@ ok(erreursDe('core\n-----\nS -> C4(panrate:64)\n').length === 0,
 
 // ── B3. LES DEUX FAMILLES SONT TENUES SÉPARÉMENT DANS LA DONNÉE ─────────────────────────────
 {
-  const { LIBS } = await import('../src/transpiler/libs-data.js');
+  await import('../src/transpiler/index.js');
+const LIBS = (await import('../src/transpiler/libs.js')).leRegistre();
   const controle = LIBS.expression?.controls?.pan;
   // QUI D'AUTRE PORTE LE NOM `pan` AVEC UNE PORTÉE ? On balaie TOUTE la donnée, sans nommer un
   // fichier : c'est ce balayage qui ferait crier le retour d'un homonyme, pas une liste écrite ici.

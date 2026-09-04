@@ -53,7 +53,6 @@
 import { sortieHeritee, alphabetHerite, octavesHerite, tuningHerite, evalHerite }
   from './actorResolver.js';
 import { parse, ParseError } from './parser.js';
-import { LIBS } from './libs-data.js';
 import { lesDefauts, motsInvoques, familles, canaux, clesDActeur, motReserve, formeDuMot } from './index-des-objets.js';
 import { universeControlNames, resolveActorAlphabet, nomsDeTerminaux, loadLib, leRegistre, versionDuRegistre, librairiesQuiDeclarent } from './libs.js';
 import { expandAlphabetTerminals } from './actorResolver.js';
@@ -2557,7 +2556,7 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
   // ⛔ CE JUGE LIT DONC LES MOTS DÉCLARÉS, jamais le registre des fichiers. Un mot qu'aucune
   // librairie ne DÉCLARE n'est pas un axe, même si un fichier porte ce nom.
   const motsDeclares = () => new Set(
-    Object.values(LIBS).map((l) => l && typeof l === 'object' ? l.resolves : null).filter(Boolean));
+    Object.values(leRegistre()).map((l) => l && typeof l === 'object' ? l.resolves : null).filter(Boolean));
   const libExiste = (nom) => motsDeclares().has(nom);
   // Un mot réservé : la grammaire, ou le mot d'une famille du registre (le schéma est dissous).
   const motsDuLangage = { has: (nom) => motReserve(nom) };
@@ -2586,7 +2585,7 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
   for (const d of ast.directives || []) {
     if (!d || !d.name) continue;
     if (!d.subkey) {
-      const fichierNu = LIBS[d.name];
+      const fichierNu = leRegistre()[d.name];
       const motNu = fichierNu && typeof fichierNu === 'object' ? fichierNu.resolves : null;
       if (motNu && motNu !== d.name) {
         errors.push({
@@ -2647,7 +2646,7 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
       // ⛔ ET LE REFUS NOMME LE MOT A ECRIRE quand l axe est un NOM DE FICHIER. Sans ça, l auteur
       // de `voices.bayan_open` lit « aucune librairie ne sert cet axe » devant un fichier qui
       // existe, et il cherche une donnee manquante au lieu de changer un mot.
-      const fichier = LIBS[d.name];
+      const fichier = leRegistre()[d.name];
       const motAEcrire = fichier && typeof fichier === 'object' ? fichier.resolves : null;
       errors.push({
         message: motAEcrire

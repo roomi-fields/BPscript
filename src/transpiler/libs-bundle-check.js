@@ -1,46 +1,20 @@
-// Garde de FRAÎCHEUR du bundle de librairies — OUTILLAGE (gate pré-push).
+// Garde de FRAÎCHEUR des artefacts dérivés — OUTILLAGE (gate pré-push).
 //
-// Invariant gardé : `libs-data.js` (bundle COMMITTÉ, consommé par libs.js) doit être IDENTIQUE à la
-// sortie de `libs-bundle.js` (régénération depuis lib/*.json + lib/digital/*.ts). Un bundle PÉRIMÉ
-// (édition d'une lib SANS régénérer) est alors REJETÉ au portillon → péremption (a) rendue IMPOSSIBLE.
-// Câblé à `npm run arch`. Sources : trou [215] (kanopi), décision deps-fraîches
-// `hub/decisions/2026-06-30-deps-fraiches-source-unique-serveur.md` point 3 (garde « compilé pas en
-// retard sur source »). Cf. l'avertissement de l'en-tête `libs.js` (« regenerate the bundle »).
+// Invariant gardé : chaque artefact COMMITTÉ doit être IDENTIQUE à la sortie de son générateur. Un
+// artefact PÉRIMÉ — source éditée sans régénérer — est REJETÉ au portillon. Câblé à `npm run arch`.
+// Décision deps-fraîches `hub/decisions/2026-06-30-deps-fraiches-source-unique-serveur.md` point 3.
+//
+// ⛔ DEUX ARTEFACTS ONT QUITTÉ CE GARDE LE 2026-09-04, avec le bundle des librairies : `libs-data.js`
+// et `libs-data.d.ts`. Le compilateur lit ses SOURCES depuis le 2026-09-02, donc le bundle figé était
+// devenu une seconde autorité sur la même donnée — et un garde de fraîcheur sur une voie parallèle
+// entretient la voie au lieu de la fermer. Le registre vivant n'a pas de fraîcheur à garder : il EST
+// la source. Décision de Romain, 2026-09-04.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const generator = join(__dirname, 'libs-bundle.js');
-const bundlePath = join(__dirname, 'libs-data.js');
-
-const fresh = execFileSync(process.execPath, [generator], { encoding: 'utf-8' });
-const committed = readFileSync(bundlePath, 'utf-8');
-
-if (fresh !== committed) {
-  console.error(
-    '[bundle:check] ✗ src/transpiler/libs-data.js est PÉRIMÉ vs lib/*.json + lib/digital/*.ts.\n' +
-    '               Régénère : `npm run bundle:libs` (puis commit).',
-  );
-  process.exit(1);
-}
-// ⛔ LE TYPE PUBLIÉ SE VÉRIFIE COMME LA DONNÉE — posé le 2026-08-14 avec `libs-data.d.ts`.
-// Kanopi a demandé que la porte officielle publie sa FORME, et il a refusé de la recopier chez lui :
-// « une surface publiée se DÉRIVE, jamais ne se recopie ». Un type dérivé qu'on ne vérifie pas
-// dérive exactement comme la copie qu'on voulait éviter — il décrirait une donnée d'hier en ayant
-// l'air d'être la source de vérité, et le contrôle de types du voisin passerait au vert sur du faux.
-const typesGen = join(__dirname, 'libs-types.js');
-const typesPath = join(__dirname, 'libs-data.d.ts');
-const typesFresh = execFileSync(process.execPath, [typesGen], { encoding: 'utf-8' });
-const typesCommitted = readFileSync(typesPath, 'utf-8');
-if (typesFresh !== typesCommitted) {
-  console.error(
-    '[bundle:check] ✗ src/transpiler/libs-data.d.ts est PÉRIMÉ vs le paquet.\n' +
-    '               Régénère : `npm run bundle:libs` (puis commit).',
-  );
-  process.exit(1);
-}
 // ⛔ ET LA PORTE DU SCHÉMA DE SYNTAXE SE VÉRIFIE COMME LE BUNDLE — posée le 2026-08-21 quand le
 // schéma a quitté `lib/`. C'est un SECOND artefact dérivé, et un artefact dérivé sans garde de
 // fraîcheur dérive en silence : le bundle l'a déjà fait, et son garde est né de cette dérive.
@@ -72,4 +46,4 @@ if (gabaritsFresh !== gabaritsCommitted) {
   );
   process.exit(1);
 }
-console.log('[bundle:check] ✓ libs-data.js, libs-data.d.ts, syntaxe-data.js et gabarits-data.js à jour.');
+console.log('[bundle:check] ✓ syntaxe-data.js et gabarits-data.js à jour.');

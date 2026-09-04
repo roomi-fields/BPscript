@@ -21,7 +21,9 @@
  * aucun mot d'invocation, donc aucun mot ne peut les désigner, et leur sort est une décision ouverte.
  */
 import { readFileSync } from 'node:fs';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 let p = 0;
 const e = [];

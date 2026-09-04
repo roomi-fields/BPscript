@@ -44,7 +44,8 @@ try {
   writeFileSync(p, t.replace(m[0], 'new Set([])', 1));
 
   const { compileToBPxAST } = await import(`${bac}/src/transpiler/index.js`);
-  const { LIBS } = await import(`${bac}/src/transpiler/libs-data.js`);
+  await import(`${bac}/src/transpiler/index.js`);
+const LIBS = (await import(`${bac}/src/transpiler/libs.js`)).leRegistre();
   const { CHAMPS_DE_FICHIER } = await import(`${bac}/src/transpiler/libs-champs.js`);
   console.log(`TÉMOIN — la liste portait ${noms.length} nom(s) : ${noms.join(', ')}`);
   console.log(`         elle en porte ${CHAMPS_DE_FICHIER.size} dans le bac.`);

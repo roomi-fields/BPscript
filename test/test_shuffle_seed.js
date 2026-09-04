@@ -1,4 +1,6 @@
-import { LIBS as BUNDLED } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const BUNDLED = leRegistre();
 /**
  * Test : orthogonalité brassage / graine (décision 2026-06-14-shuffle-seed-orthogonaux).
  *

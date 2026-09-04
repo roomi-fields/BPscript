@@ -6,7 +6,9 @@
  * Run: node test/test_v08_parser.js
  */
 
-import { LIBS as BUNDLED } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const BUNDLED = leRegistre();
 import { readFileSync } from 'fs';
 import { tokenize } from '../src/transpiler/tokenizer.js';
 import { parse } from '../src/transpiler/parser.js';

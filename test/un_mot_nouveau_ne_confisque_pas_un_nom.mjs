@@ -26,7 +26,9 @@
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { loadLibsFromDirectives } from '../src/transpiler/libs.js';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 import { nomsBps, lireBps, exigerCorpus } from './corpus.mjs';
 import { readdirSync, readFileSync } from 'node:fs';
 

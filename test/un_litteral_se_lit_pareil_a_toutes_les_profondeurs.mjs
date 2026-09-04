@@ -61,13 +61,13 @@ try {
     `cd ${JSON.stringify(RACINE)} && tar cf - --exclude=node_modules --exclude=.git lib src scripts package.json | (cd ${JSON.stringify(bac)} && tar xf -)`],
   { encoding: 'utf8' });
   writeFileSync(join(bac, 'lib', 'zz_temoin.bpsl'), SOURCE);
-  const js = execFileSync(process.execPath, [join(bac, 'src', 'transpiler', 'libs-bundle.js')],
+  // ⛔ LE REGISTRE S'IMPRIME, IL NE SE BUNDLE PLUS — `libs-data.js` et son générateur sont sortis le
+  // 2026-09-04 (Romain). La donnée publiée est celle que le compilateur construit en lisant ses
+  // sources ; on la lit DANS LE BAC, jamais dans mon propre arbre, sans quoi le témoin ne verrait
+  // pas la source qu'on vient d'y écrire.
+  const brut = execFileSync(process.execPath, [join(bac, 'scripts', 'imprimer-le-registre.mjs')],
     { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
-  writeFileSync(join(bac, 'sortie.mjs'), js);
-  const lu = execFileSync(process.execPath, ['--input-type=module', '-e',
-    `const { LIBS } = await import(${JSON.stringify(join(bac, 'sortie.mjs'))});\n`
-    + 'process.stdout.write(JSON.stringify(LIBS.zz_temoin ?? null));'], { encoding: 'utf8' });
-  publie = JSON.parse(lu);
+  publie = JSON.parse(brut).zz_temoin ?? null;
 } catch (x) {
   sortie = `EXCEPTION ${(x.stderr || x.message || '').slice(0, 220)}`;
 } finally {

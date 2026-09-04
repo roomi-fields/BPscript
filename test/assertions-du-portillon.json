@@ -1,5 +1,5 @@
 {
- "assertions": 19636,
+ "assertions": 19608,
  "gardes": [
   "alias_est_sorti_du_langage.mjs",
   "anti-vacuité [interne]",
@@ -130,7 +130,6 @@
   "test_eval_transport_reject.js",
   "test_interval_arg.js",
   "test_library.js",
-  "test_libs_bundle.js",
   "test_meta_garde.mjs",
   "test_modulation_validation.js",
   "test_octaves_actor.js",

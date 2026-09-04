@@ -31,6 +31,8 @@
  */
 import { readdirSync, existsSync, lstatSync, realpathSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 
@@ -404,14 +406,21 @@ for (const c of CONSOMMATEURS) {
 
   // ⚠️ ET LE PAQUET DOIT DIRE TOUTES MES LIBRAIRIES, quel que soit leur format — sinon la lecture
   // au paquet déplace le silence d'un cran au lieu de le fermer(témoin posé par bp3-frontend).
+  // ⛔ ET LE FILTRE ÉTAIT AVEUGLE À `.bpsl`, comme celui que ce garde dénonce vingt lignes plus haut.
+  //   `/\.(json|bps)$/` exclut `.bpsl` par sa fin de chaîne : le témoin ne voyait plus que les
+  //   catalogues JSON, sur un dossier qui porte vingt-deux sources. Le NEUVIÈME lecteur trompé par
+  //   l'extension, et cette fois dans le garde même qui existe pour nommer ce défaut.
   const surDisque = readdirSync(path.join(MOI, 'lib'))
-    .filter((f) => /\.(json|bps)$/.test(f)).map((f) => f.replace(/\.(json|bps)$/, ''));
-  const _p = createRequire(import.meta.url)('../src/transpiler/libs-data.js');
-  const paquet = _p.LIBS || _p.default || _p;
-  const manquantes = surDisque.filter((n) => !(n in paquet));
+    .filter((f) => /\.(json|bps|bpsl)$/.test(f)).map((f) => f.replace(/\.(json|bps|bpsl)$/, ''));
+  // ⛔ LE REGISTRE A REMPLACÉ LE PAQUET, le 2026-09-04 (Romain : « ça sort »). `libs-data.js` était
+  //   une impression FIGÉE de ce que le compilateur construit en lisant ses sources — donc une
+  //   seconde autorité sur la même donnée. Ce témoin garde son objet : ce que je sers doit porter
+  //   TOUTES mes librairies, quel que soit le format de leur source. Il l'éprouve à la source.
+  const registre = leRegistre();
+  const manquantes = surDisque.filter((n) => !(n in registre));
   ok(manquantes.length === 0,
-    `le PAQUET ne porte pas ${manquantes.length} librairie(s) présente(s) sur disque `
-    + `(${manquantes.join(', ')}) : qui lit le paquet lirait une autorité amputée, sans un rouge`);
+    `le REGISTRE ne porte pas ${manquantes.length} librairie(s) présente(s) sur disque `
+    + `(${manquantes.join(', ')}) : qui lit mes librairies lirait une autorité amputée, sans un rouge`);
 }
 
 // ── CHAQUE VOISIN DIT CE QU'IL PREND, ET PAR QUEL AXE ────────────────────────

@@ -21,7 +21,9 @@
 import { SYNTAXE } from '../src/transpiler/syntaxe-data.js';
 import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur (2026-09-02)
 import { universeControlNames } from '../src/transpiler/libs.js';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 let passe = 0;
 const echecs = [];

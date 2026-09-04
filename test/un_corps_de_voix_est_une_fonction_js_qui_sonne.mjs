@@ -36,7 +36,9 @@
  *    zéro — et on garde ce qui est à moi : que chacune des quinze valeurs publiées soit une
  *    fonction qui produit le son attendu.
  */
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 // ⛔ LA CONVENTION DE MESURE SE NOMME, SANS QUOI LE NIVEAU NE VEUT RIEN DIRE. Un rms ne se compare
 //    qu'à convention égale : la même voix rend 0.2164 sur une fenêtre de 0,24 s et 0.1108 sur une

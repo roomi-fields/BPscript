@@ -21,7 +21,8 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 const require = createRequire(import.meta.url);
-const { LIBS } = require('../src/transpiler/libs-data.js');
+require('../src/transpiler/index.js');
+const LIBS = require('../src/transpiler/libs.js').leRegistre();
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 
 let ok = 0; let ko = 0;

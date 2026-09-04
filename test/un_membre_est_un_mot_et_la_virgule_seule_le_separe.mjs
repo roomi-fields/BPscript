@@ -22,7 +22,9 @@
  * ni l'autre — c'est pourquoi ce garde lit ce qui SORT, jamais seulement ce qui est refusé.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 let passe = 0;
 const echecs = [];

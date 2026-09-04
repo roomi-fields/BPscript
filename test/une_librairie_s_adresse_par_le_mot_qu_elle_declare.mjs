@@ -31,7 +31,9 @@ import { createRequire } from 'node:module';
 
 const RACINE = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const SRC = path.join(RACINE, 'src', 'transpiler');
-const LIBS = createRequire(import.meta.url)(path.join(SRC, 'libs-data.js')).LIBS;
+const _req = createRequire(import.meta.url);
+_req(path.join(SRC, 'index.js'));
+const LIBS = _req(path.join(SRC, 'libs.js')).leRegistre();
 
 let passe = 0;
 const echecs = [];

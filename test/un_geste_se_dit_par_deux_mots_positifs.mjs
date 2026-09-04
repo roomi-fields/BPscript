@@ -31,7 +31,8 @@ import { createRequire } from 'node:module';
 import { compileToBPxAST } from '../src/transpiler/index.js';
 
 const require = createRequire(import.meta.url);
-const { LIBS } = require('../src/transpiler/libs-data.js');
+require('../src/transpiler/index.js');
+const LIBS = require('../src/transpiler/libs.js').leRegistre();
 
 let passe = 0;
 const echecs = [];

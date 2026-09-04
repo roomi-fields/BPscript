@@ -23,7 +23,9 @@
  * un jeu de contributeurs qui se marchent dessus et exige que le détecteur le voie. Sans lui, ce
  * garde resterait vert le jour où sa propre boucle cesserait de parcourir quoi que ce soit.
  */
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 let p = 0;
 const e = [];

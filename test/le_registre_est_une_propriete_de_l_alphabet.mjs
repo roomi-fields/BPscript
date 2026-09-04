@@ -25,7 +25,9 @@
  * ⛔ LE VOLET B EST LE COMPLÉMENT : la règle dit où le registre VIT, pas seulement où il ne vit pas.
  * Un garde qui n'interdit que l'accordage resterait vert le jour où les alphabets le perdraient tous.
  */
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 let p = 0;
 const e = [];

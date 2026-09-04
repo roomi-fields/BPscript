@@ -45,7 +45,11 @@
  */
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { LIBS, PLACES } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { placesDesLibrairies } from '../src/transpiler/librairies.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
+const PLACES = placesDesLibrairies(leRegistre());
 
 const REFERENCE = new URL('./ordres-du-paquet.json', import.meta.url);
 
@@ -83,6 +87,30 @@ function empreinteDuPaquet() {
 }
 
 const courant = empreinteDuPaquet();
+
+// ⛔ ET L'AUTORITÉ PAR MOT SE COMPARE À PART, PARCE QU'ELLE EST CE QUE LE RANG PROTÈGE.
+//
+// Le 2026-09-04, le retrait de `libs-data.js` a fait bouger `#racine` : le générateur du bundle
+// TRIAIT ses clés, le registre suit l'ordre de CHARGEMENT (par passes de dépendances). Un ordre
+// réordonné, donc — exactement ce que ce garde refuse — alors qu'aucune autorité n'avait changé.
+//
+// ⇒ Ce garde ne se contente donc plus de l'empreinte du rang. Ce que le rang du 2026-08-23 avait
+//   cassé, c'est qu'un catalogue de TEST est devenu l'autorité de l'axe `alphabet` : la chose à
+//   voir n'est pas « des clés ont bougé », c'est « QUI déclare quoi en premier ». L'empreinte le
+//   dit indirectement, et seulement quand elle rougit pour une autre raison. Ici on le dit
+//   directement — et le rang reste gardé, à côté.
+{
+  const premier = {};
+  for (const [cle, lib] of Object.entries(LIBS)) {
+    const mot = lib && typeof lib === 'object' ? lib.resolves : null;
+    if (typeof mot === 'string' && !(mot in premier)) premier[mot] = cle;
+  }
+  ok(Object.keys(premier).length >= 15,
+     `SOCLE : ${Object.keys(premier).length} mot(s) déclaré(s) — sous ce seuil, l'autorité par mot `
+     + `ne se mesure plus et « rien n'a changé » ne veut plus rien dire.`);
+  courant['#autorite-par-mot'] = empreinte(
+    Object.entries(premier).sort(([a], [b]) => a.localeCompare(b)).map(([m, c]) => `${m}=${c}`).join('|'));
+}
 
 // ── MISE À JOUR EXPLICITE — jamais automatique ───────────────────────────────────────────────
 // ⛔ UNE RÉFÉRENCE QUI SE MET À JOUR TOUTE SEULE NE GARDE RIEN : elle enregistre ce qui vient de

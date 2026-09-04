@@ -27,9 +27,6 @@ import {
   LexError,
   tokenize
 } from "./chunk-HYO3M635.js";
-import {
-  LIBS
-} from "./chunk-BPWJHLKE.js";
 
 // src/transpiler/actorResolver.js
 function expandAlphabetTerminals(alphabetLib, octavesOverride) {
@@ -1443,14 +1440,14 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
     errors.push({ message: `${axis} '${name}' not found in the catalog (reference does not exist)`, line });
   };
   const motsDeclares = () => new Set(
-    Object.values(LIBS).map((l) => l && typeof l === "object" ? l.resolves : null).filter(Boolean)
+    Object.values(leRegistre()).map((l) => l && typeof l === "object" ? l.resolves : null).filter(Boolean)
   );
   const libExiste = (nom) => motsDeclares().has(nom);
   const motsDuLangage = { has: (nom) => motReserve(nom) };
   for (const d of ast.directives || []) {
     if (!d || !d.name) continue;
     if (!d.subkey) {
-      const fichierNu = LIBS[d.name];
+      const fichierNu = leRegistre()[d.name];
       const motNu = fichierNu && typeof fichierNu === "object" ? fichierNu.resolves : null;
       if (motNu && motNu !== d.name) {
         errors.push({
@@ -1471,7 +1468,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
         });
         continue;
       }
-      const fichier = LIBS[d.name];
+      const fichier = leRegistre()[d.name];
       const motAEcrire = fichier && typeof fichier === "object" ? fichier.resolves : null;
       errors.push({
         message: motAEcrire ? `'${d.name}.${d.subkey}': '${d.name}' is the FILE NAME, not the word that invokes it. Write '${motAEcrire}.${d.subkey}'. A library is invoked by the word it DECLARES: the logical name is separate from the physical one, and a file can be renamed without any scene changing.` : `'${d.name}.${d.subkey}': no library serves the axis '${d.name}'. An invocation whose axis no data carries loads NOTHING, and nothing tells that silence apart from a scene that declared nothing.`,

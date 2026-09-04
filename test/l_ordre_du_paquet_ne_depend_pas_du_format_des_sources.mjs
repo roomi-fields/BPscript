@@ -21,13 +21,28 @@
  * soit le générateur lui-même. Le format d'une source n'est jamais une information utile à qui veut
  * la donnée — y compris pour la RANGER.
  */
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre, fichierDeLAxe } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 let passe = 0;
 const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
-/** La table des axes, lue EXACTEMENT comme `libs.js` la construit — l'ordre d'insertion décide. */
+/**
+ * ⛔ CE QUI EST GARDÉ A CHANGÉ DE PLACE LE 2026-09-04, PAS DE NATURE. Ce garde exigeait que le
+ * PAQUET soit rangé par nom : c'était vrai du bundle, dont le générateur triait. Le bundle est
+ * sorti (Romain : « ça sort ») et le registre s'ordonne par passes de dépendances — donc l'ordre
+ * brut n'est plus la propriété à tenir.
+ *
+ * ⇒ CE QU'IL FALLAIT VRAIMENT TENIR, et que le tri du générateur donnait par ricochet : **l'autorité
+ *   d'un axe ne dépend d'aucun ordre d'arrivée**. Elle est désormais posée là où elle se décide —
+ *   `libs.js:motsDInvocation` trie ses fichiers — et c'est ÇA que ce garde éprouve.
+ * ⚠️ Le volet C ne bouge pas d'une ligne : il vérifiait déjà que le catalogue de référence de chaque
+ *   axe est le premier PAR SON NOM. C'est lui qui mord si le tri disparaît, à n'importe quel étage.
+ */
+
+/** La table des axes, lue EXACTEMENT comme `libs.js` la construit — le TRI décide, plus l'insertion. */
 const motsDInvocation = (noms) => {
   const table = new Map();
   for (const f of noms) {
@@ -49,10 +64,51 @@ const axes = motsDInvocation(noms);
 ok(axes.size > 0, `A2. ZÉRO axe déclaré dans le paquet — la table des axes n'a rien à dire.`);
 
 // ── B. L'ORDRE DU PAQUET EST CELUI DES NOMS ──────────────────────────────────────────────────
-ok(noms.join('|') === parNom.join('|'),
-   `B. l'ordre du paquet n'est PAS celui des noms — il dépend donc d'autre chose, et le format des `
- + `sources est ce « autre chose » qui a mordu. Premier écart : `
- + `${noms.find((n, i) => n !== parNom[i]) || '?'} au rang ${noms.findIndex((n, i) => n !== parNom[i])}.`);
+{
+  // L'autorité que le REGISTRE sert, contre celle qu'un ordre PAR NOM servirait. Les deux doivent
+  // dire la même chose : sinon un ordre d'arrivée décide encore de qui fait autorité.
+  // ⛔⛔ OBSERVER NE DISCRIMINE PAS — IL FAUT FABRIQUER LE CAS. Deux écritures de ce volet sont
+  //   restées VERTES sous injection, le tri retiré de `libs.js` : la première recalculait la table
+  //   ici même (elle éprouvait sa propre arithmétique — un banc qui appelle sa propre porte prouve
+  //   la porte, jamais le branchement) ; la seconde appelait bien `fichierDeLAxe`, mais l'état
+  //   ACTUEL du registre donne le bon résultat des deux façons — `alphabets` y arrive au rang 9,
+  //   `test_alphabets` au rang 19. Le tri ne change rien AUJOURD'HUI, et un garde qui regarde
+  //   aujourd'hui ne peut pas voir ce qui protège demain.
+  //
+  // ⇒ On fabrique donc l'état où la question se POSE : un registre où le catalogue de TEST arrive
+  //   avant celui de référence. C'est l'état exact du 2026-08-24, celui qui a coûté sept gardes de
+  //   cascade. `fichierDeLAxe` doit rendre `alphabets` quand même — sinon un ordre d'arrivée décide
+  //   encore de l'autorité, et il suffira qu'une source gagne une dépendance pour que ça bascule.
+  const parLeNom = motsDInvocation(parNom);
+  ok(parLeNom.size >= 15,
+     `B-socle. ${parLeNom.size} axe(s) lus — sous ce seuil, ce volet ne mesure plus rien.`);
+  const partages = [...parLeNom.entries()].filter(([, f]) => f.length > 1);
+  ok(partages.length > 0,
+     `B-socle. AUCUN axe n'est servi par deux catalogues — l'ordre ne peut alors rien décider, et la `
+   + `fabrication ci-dessous ne prouve rien. Le cas existait le 2026-08-24 (alphabets/test_alphabets).`);
+
+  const registre = leRegistre();
+  const original = Object.keys(registre);
+  const inverse = [...original].sort((a, b) => (a < b ? 1 : a > b ? -1 : 0));
+  const copie = Object.fromEntries(original.map((k) => [k, registre[k]]));
+  for (const [axe, fichiers] of partages) {
+    const attendu = [...fichiers].sort()[0];
+    for (const k of original) delete registre[k];
+    for (const k of inverse) registre[k] = copie[k];
+    let rendu;
+    try { rendu = fichierDeLAxe(axe); } finally {
+      for (const k of inverse) delete registre[k];
+      for (const k of original) registre[k] = copie[k];
+    }
+    ok(rendu === attendu,
+       `B. ⛔ l'axe « ${axe} » change d'AUTORITÉ quand l'ordre d'arrivée s'inverse : ${rendu} au lieu `
+     + `de ${attendu}. L'ordre de chargement suit les dépendances et bouge sans prévenir ; l'autorité, `
+     + `non. Le tri se pose dans 'libs.js:motsDInvocation', là où l'autorité se DÉCIDE.`);
+  }
+  ok(Object.keys(registre).join('|') === original.join('|'),
+     `B. et le registre doit être RENDU intact après la fabrication — sinon ce garde en casse d'autres.`)
+;
+}
 
 // ── C. CHAQUE AXE A UN CATALOGUE DE RÉFÉRENCE, ET C'EST LE PREMIER PAR SON NOM ───────────────
 for (const [axe, fichiers] of axes) {

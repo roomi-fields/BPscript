@@ -66,7 +66,9 @@ import { compileToBPxAST } from '../src/transpiler/index.js';
 import { resoudreSource } from '../src/transpiler/bpxAst.js';
 import { expandAlphabetTerminals } from '../src/transpiler/actorResolver.js';
 import { resolveActorAlphabet } from '../src/transpiler/libs.js';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 const GRAINE = 12345;   // fixe : deux dérivations ne sont comparables qu'à tirage identique.
 

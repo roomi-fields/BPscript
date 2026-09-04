@@ -28,7 +28,9 @@
  * s'ajoute — ce qui est exactement comment ces quatre-là sont arrivés.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 import { CHAMPS_DE_FICHIER } from '../src/transpiler/libs-champs.js';
 
 let p = 0;

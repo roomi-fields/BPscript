@@ -35,7 +35,9 @@
  * seule est ma part.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 import path from 'node:path';
 
 const LIB = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', 'lib');

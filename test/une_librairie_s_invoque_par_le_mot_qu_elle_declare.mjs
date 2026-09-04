@@ -30,7 +30,9 @@
  * dont le nom ÉGALE son mot n'y entre jamais — c'est la donnée qui le dit, pas une liste.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 
 let p = 0;
 const e = [];

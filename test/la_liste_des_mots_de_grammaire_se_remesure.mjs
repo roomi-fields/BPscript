@@ -28,7 +28,9 @@
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { readFileSync } from 'node:fs';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 import { SYNTAXE } from '../src/transpiler/syntaxe-data.js';
 
 let p = 0;

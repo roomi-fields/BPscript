@@ -70,7 +70,8 @@ function catalaguesDeBase() {
   // `lib/<axe>.json` : le jour ou un catalogue est passe en `.bpsl`, il a casse net. Le bundle est
   // la surface publiee — il rend la meme donnee quel que soit le format de la source.
   return Object.fromEntries(FICHIERS_HAUTEUR.map((n) => {
-    const { LIBS } = require('../src/transpiler/libs-data.js');
+    require('../src/transpiler/index.js');
+const LIBS = require('../src/transpiler/libs.js').leRegistre();
     const lib = LIBS[n];
     if (!lib) throw new Error(`kairos_bridge : l'axe '${n}' est absent du bundle des librairies.`);
     return [n, lib];
@@ -121,7 +122,8 @@ export async function resoudreViaKairos(session, opts = {}) {
   const { projeter } = await importerArtefact('kairos');
   const pitchLib = unirCatalogues(catalaguesDeBase(), opts.apport);
   // Le BUNDLE, pas le JSON du disque : lui seul porte les corps (cf. en-tête).
-  const { LIBS } = require('../src/transpiler/libs-data.js');
+  require('../src/transpiler/index.js');
+const LIBS = require('../src/transpiler/libs.js').leRegistre();
   const digitalLib = LIBS.digital;
   // ⚠️ UNE SCÈNE QUI INVOQUE UN FICHIER DE LIBRAIRIE LE FAIT CHERCHER DANS LE CATALOGUE, PAS DANS
   // UNE CLÉ DE CONTEXTE À PART. Kairos porte deux mécanismes distincts qui lisent la MÊME librairie

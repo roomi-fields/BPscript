@@ -173,10 +173,10 @@ const compile = (src) => {
     // ce membre, écrit dans sa source, et il a toute raison d'être publié. Un juge qui ne distingue
     // pas le prototype de son exemplaire accuse la donnée correcte.
     const regenerer = () => {
-      const brut = execFileSync('node', ['src/transpiler/libs-bundle.js'], { cwd: bac, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
-      const ligne = brut.split('\n').find((l) => l.startsWith('LIBS["temoin_derivation"] ='));
-      if (!ligne) return null;
-      return JSON.parse(ligne.replace('LIBS["temoin_derivation"] = ', '').replace(/;\s*$/, ''));
+            // ⛔ LE REGISTRE S'IMPRIME EN JSON — `libs-bundle.js` et son artefact sont sortis le
+      // 2026-09-04 (Romain). On lit la donnée DU BAC, où la source témoin vient d'être écrite.
+      const brut = execFileSync('node', ['scripts/imprimer-le-registre.mjs'], { cwd: bac, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+      return JSON.parse(brut)['temoin_derivation'] ?? null;
     };
     const avec = regenerer();
     const entree = (lib) => lib && lib.exemplaire_temoin;

@@ -54,7 +54,8 @@ import { GABARITS } from '../src/transpiler/gabarits-data.js';
 
 // Le bundle que TOUS les consommateurs chargent — la seule assiette qui dise le vocabulaire réel.
 const _req = createRequire(import.meta.url);
-const _d = _req('../src/transpiler/libs-data.js');
+_req('../src/transpiler/index.js');
+const _d = { LIBS: _req('../src/transpiler/libs.js').leRegistre() };
 const BUNDLE = _d.LIBS || _d.default || _d;
 
 let passe = 0;

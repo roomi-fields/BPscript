@@ -15,7 +15,9 @@
  * pour une question de forme. La donnée porte le mot, elle ne le décline pas.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 import { CHAMPS_DE_FICHIER } from '../src/transpiler/libs-champs.js';
 
 let passe = 0;

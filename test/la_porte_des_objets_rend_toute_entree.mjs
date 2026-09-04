@@ -9,7 +9,11 @@
  *   3. un nom porté par plusieurs familles rend la liste des candidats, jamais l'un d'eux en silence.
  * Et il compte ce qu'il a examiné : sous le plancher, il refuse d'avoir examiné.
  */
-import { LIBS, PLACES } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { placesDesLibrairies } from '../src/transpiler/librairies.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
+const PLACES = placesDesLibrairies(leRegistre());
 import { entreesDe } from '../src/transpiler/libs-champs.js';
 import { familles, famille, objet, objets } from '../src/transpiler/objets.js';
 

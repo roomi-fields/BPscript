@@ -57,7 +57,9 @@
 // `lib/homomorphism.json` (clé `tables`), `lib/transcription.json` est SUPPRIMÉ, et les 13 scènes
 // de l'écosystème qui écrivaient l'ancien mot sont migrées. Ce garde suit le mot vivant.
 import { compileToBPxAST } from '../src/transpiler/index.js';
-import { LIBS } from '../src/transpiler/libs-data.js';
+import '../src/transpiler/index.js';
+import { leRegistre } from '../src/transpiler/libs.js';
+const LIBS = leRegistre();
 import { fichierDeLAxe } from '../src/transpiler/libs.js';
 import { nomsBps, lireBps, exigerCorpus } from './corpus.mjs';
 

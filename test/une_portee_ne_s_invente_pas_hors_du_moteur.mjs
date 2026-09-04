@@ -42,7 +42,8 @@ const ICI = path.dirname(fileURLToPath(import.meta.url));
 // mais DEUX seulement en OUVRENT un. Les 52 autres le citent en commentaire — une mention n'est pas
 // un lien, et corriger les 54 aurait été réparer 52 choses qui ne cassent pas.
 const _req = createRequire(import.meta.url);
-const _d = _req('../src/transpiler/libs-data.js');
+_req('../src/transpiler/index.js');
+const _d = { LIBS: _req('../src/transpiler/libs.js').leRegistre() };
 const LIB = (_d.LIBS || _d.default || _d).engine;
 
 let passe = 0;
