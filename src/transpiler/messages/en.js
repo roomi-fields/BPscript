@@ -565,4 +565,127 @@ export const MESSAGES = {
     + 'in the flow, or \'{contenance}\' as containment. The colon ASSIGNS the value, the space '
     + 'separates its parts (\'[goto:3 0]\'), the comma separates the elements of the bag '
     + '(\'(vel:80, pan:64)\')',
+  ACTOR_ALPHABET_FOUND_ACTOR:
+    'Alphabet "{alphabetKey}" not found for actor "{name}"',
+  ACTOR_AMBIGUOUS_SYMBOL_OWNED_ACTORS:
+    'Ambiguous symbol "{p1}" — owned by actors: {actorList}. Use dot notation (e.g. {p2}.{p1}) or '
+    + 'declare with gate {p1}:<actor>',
+  ACTOR_UNKNOWN_ACTOR_DOTTED_REFERENCE:
+    'unknown actor \'{p1}\' in \'{p1}.{p2}\' — a dotted reference must name an actor declared by '
+    + 'actor. {connus}',
+  RESOLVE_ALPHABET_INCONSISTENT_TUNING_WHICH:
+    'alphabet \'{alphaName}\' is inconsistent with tuning \'{tuningName}\' (which belongs to '
+    + 'alphabet \'{ta}\') — a tuning combines only with its own alphabet',
+  RESOLVE_BACKTICK_LANGUAGE_MUST_KNOWN:
+    'Backtick with no language — it must be known, never guessed. The language comes from the '
+    + 'nearest place that names it: a TAG inside the block (\\`js: …\\`), an ACTOR qualifying the '
+    + 'block with a dot (\'actor drums eval.<engine>\' then \\`drums.\\`…\\`\\`), an '
+    + '\'eval.<engine>\' line at the top of the scene, or the base library \'core\' — which carries '
+    + '\'js\'. None of the four answered: the \'core\' catalog does not expose '
+    + '\'defaults.components.eval\'.',
+  RESOLVE_COMPOUND_SOUND_OBJECT_DECLARED:
+    'in the compound sound object \'|[…]\': \'{part}\' is declared nowhere — absent from the '
+    + 'alphabets in scope',
+  RESOLVE_DECLARED_LIBRARIES_CANNOT_WRITTEN:
+    '\'{key}\' is declared by {p1} libraries and cannot be written BARE — it does not say which '
+    + '\'{key}\' is meant, and the recipient of the setting depends on it. Write {p2}.',
+  RESOLVE_DECLARED_LOADED_LIBRARY_TOP:
+    '\'{p1}:{p2}\': \'{p1}\' is declared by no loaded library. A top-of-scene line that no data '
+    + 'carries settles nothing — it would be read, written into the tree, and have no effect.',
+  RESOLVE_DECLARED_LOADED_LIBRARY_TOP_2:
+    '\'{p1}\' is declared by no loaded library — a top-of-scene word comes from an invoked '
+    + 'library, never from nowhere. Invoke the library that carries it, or remove the line.',
+  RESOLVE_ENTRY_DOES_EXIST_LIBRARY:
+    '\'{p1}.{p2}\': entry \'{p2}\' does not exist in library \'{p1}\'. An invocation that '
+    + 'resolves to nothing is indistinguishable, on the consumer side, from a scene that declared '
+    + 'nothing — it therefore cannot be accepted silently.',
+  RESOLVE_EXPECTS_VALUE_NAME:
+    '\'{p1}\' expects a VALUE (e.g. @{p1}:440) — not a name',
+  RESOLVE_FILE_NAME_WORD_INVOKES:
+    '\'{p1}\': \'{p1}\' is the FILE NAME, not the word that invokes it. Write \'{motNu}\'. A '
+    + 'library is invoked by the word it DECLARES: the logical name is separate from the physical '
+    + 'one, and a file can be renamed without any scene changing.',
+  RESOLVE_FOUND_CATALOG_REFERENCE_DOES:
+    '{axis} \'{name}\' not found in the catalog (reference does not exist)',
+  RESOLVE_GENERIC_WORD_EVERY_OUTPUT:
+    '\'{key}\' is a GENERIC word: every output declares how it implements it, and {p1} do{p2} '
+    + 'not. Written here, it would do nothing. Implemented today by: {p3}.',
+  RESOLVE_MODE_LONGER_BELONGS_RULE:
+    '\'(mode:…)\' no longer belongs on a rule: the mode holds for a BLOCK and does not change '
+    + 'mid-derivation. Write it \'mode:{p1}\' at the top of the sub-grammar concerned — on a line '
+    + 'of its own, before its rules.',
+  RESOLVE_NAMES_EVALUATOR_DECLARED_BACKTICK:
+    '\'\\`{tag}: …\\`\' names an evaluator that is not declared. A backtick tag says WHO runs the '
+    + 'code, and the list lives in the \'eval\' library: {p1}. A typo there would create a phantom '
+    + 'interpreter, and the scene would compile while the code went nowhere.',
+  RESOLVE_NEITHER_PARAMETER_NOR_DECLARED:
+    '\'{axis}.{p1}({k}:…)\': \'{k}\' is neither a parameter of \'{p2}\' nor a declared value '
+    + '(base library @core or an invoked library)',
+  RESOLVE_NUMBER_EXPECTED:
+    '\'{name}\': \'{v}\' is not a number (expected: {p1}..{p2}{p3})',
+  RESOLVE_OUTPUTS_SAME_SCENE_OUT:
+    'two outputs for the same scene: \'out.{p1}\' and the binding \'alphabet.{p2}:{p3}\' name '
+    + 'different channels — both spellings say the SAME thing, keep only one',
+  RESOLVE_OUT_RANGE:
+    '\'{name}\': {v} out of range [{p1}..{p2}]{p3}',
+  RESOLVE_OVERLAPPING_ACTORS_OUTPUT_BINDING:
+    'overlapping actors: an output binding on the alphabet (alphabet.{p1}:{p2}) names an implicit '
+    + 'actor, which cannot coexist with an explicit \'actor\' — keep one OR the other',
+  RESOLVE_SCOPE_INVOKED_LIBRARY_DECLARES:
+    '\'{cle}\' is not in scope: no invoked library declares it — invoke it at the top ({p1}).',
+  RESOLVE_SETTING_SUBJECT_NAMES_TERMINAL:
+    'setting subject \'{s}:…\': \'{s}\' names no terminal — absent from the alphabets in scope '
+    + 'and from the declared names. A subject targets the terminals bearing its name; \'*\' targets '
+    + 'every terminal in scope, and no subject targets the whole scope',
+  RESOLVE_TERMINAL:
+    'terminal \'{p1}\': {cause}',
+  RESOLVE_UNKNOWN_VALUE_ALLOWED:
+    '\'{name}\': unknown value \'{v}\' (allowed: {p1})',
+  RESOLVE_UNKNOWN_VALUE_DECLARED_ANY:
+    'unknown value \'{p1}:…\' — not declared by any loaded library',
+  RESOLVE_AXIS_IS_FILE_NAME:
+    '\'{name}.{subkey}\': \'{name}\' is the FILE NAME, not the word that invokes it. Write '
+    + '\'{motAEcrire}.{subkey}\'. A library is invoked by the word it DECLARES: the logical name is '
+    + 'separate from the physical one, and a file can be renamed without any scene changing.',
+  RESOLVE_AXIS_SERVED_BY_NONE:
+    '\'{name}.{subkey}\': no library serves the axis \'{name}\'. An invocation whose axis no data '
+    + 'carries loads NOTHING, and nothing tells that silence apart from a scene that declared '
+    + 'nothing.',
+  RESOLVE_CALL_CONTROL_NOT_INVOKED:
+    'call \'{appel}\': \'{name}\' is a control of the registry, but this scene has not invoked it '
+    + '— it was therefore reclassified as a SOUNDING TERMINAL, that is, a note. Invoke the base '
+    + 'library at the top of the scene (\'core\')',
+  RESOLVE_CALL_DOES_NOT_EXIST:
+    'call \'{appel}\': \'{name}\' does not exist — neither a control of the registry, nor a '
+    + 'terminal of the alphabets in scope, nor a declared symbol. A generic function is not part of '
+    + 'the language: every intent carries its own name (\'[]\' for the engine, \'()\' for the '
+    + 'runtime, as \'key:value\')',
+  RESOLVE_GROUP_SET_TWICE:
+    '\'{groupe}\' is set {fois} times ({mots}) — it is set only once per scene. {remede} The '
+    + 'native engine rejects the whole grammar in this case.',
+  RESOLVE_KEY_WRONG_PLACE:
+    '\'{cle}\' cannot be written {place} — {permis}. Move it there, or use a setting that holds here.',
+  RESOLVE_LANGUAGE_WORD_NOT_QUALIFIED:
+    '\'{name}.{subkey}\': \'{name}\' is a word of the LANGUAGE, it is not qualified by a '
+    + 'dot{forme} A line that no data serves is read, written into the tree, and has no effect.',
+  RESOLVE_MAPPING_TABLE_UNDECLARED:
+    '\'in {name} … mapping.{mapping}\': table \'{mapping}\' is declared by no loaded library — '
+    + 'none carries one today. An input invoking a table that does not exist would believe it '
+    + 'translates and would translate nothing. Write the input alone and use bare addresses '
+    + '(\'<!{name}.60\').',
+  RESOLVE_TERMINAL_DECL_CHANNEL:
+    '\'{name}:{runtime}\' declares a terminal, and {cause} The declaration is written '
+    + '\'<name>:<channel>\' — the terminal itself is not at fault.',
+  RESOLVE_TERMINAL_NO_ALPHABET:
+    'terminal \'{name}\' undeclared — no alphabet in scope: invoke \'core\', which declares the '
+    + 'default alphabet, or declare an alphabet',
+  RESOLVE_TERMINAL_SEGMENTATION_STOPPED:
+    'terminal \'{name}\' undeclared — segmentation stopped at \'{reste}\', absent from the '
+    + 'alphabets in scope',
+  RESOLVE_TERMINAL_UNDECLARED:
+    'terminal \'{name}\' undeclared — absent from the alphabets in scope',
+  CONTROL_VALUE_ALLOWED_CONTROL_ALLOWED:
+    'value \'{p1}\' is not allowed for control \'{p2}\' (allowed: {p3})',
+  CONTROL_VALUE_OUT_RANGE_CONTROL:
+    'value {p1} is out of range for control \'{p2}\' ({min}..{max})',
 };

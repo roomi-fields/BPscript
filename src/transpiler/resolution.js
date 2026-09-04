@@ -50,6 +50,7 @@
  * donne porte ce que la place exige.
  */
 
+import { texteDuDiagnostic, diagnostic } from './diagnostics.js';
 import { sortieHeritee, alphabetHerite, octavesHerite, tuningHerite, evalHerite }
   from './actorResolver.js';
 import { parse, ParseError } from './parser.js';
@@ -369,10 +370,7 @@ export function applyDefaultActor(ast) {
   const alphaBinding = (ast.directives || []).find((d) => d.name === 'alphabet' && d.runtime);
   if ((ast.actors || []).length > 0) {
     if (alphaBinding) {
-      errors.push({
-        message: `overlapping actors: an output binding on the alphabet (alphabet.${alphaBinding.subkey}:${alphaBinding.runtime}) names an implicit actor, which cannot coexist with an explicit 'actor' — keep one OR the other`,
-        line: alphaBinding.line || 0,
-      });
+      errors.push(diagnostic('RESOLVE_OVERLAPPING_ACTORS_OUTPUT_BINDING', { p1: alphaBinding.subkey, p2: alphaBinding.runtime }, { line: alphaBinding.line || 0 }));
     }
     return errors; // au moins un actor déclaré → pas d'acteur implicite (pas de chevauchement)
   }
@@ -384,12 +382,7 @@ export function applyDefaultActor(ast) {
   // définie une seule fois, à côté des trois autres axes, et pas reconstituée à chaque appelant.
   const sortie = sortieHeritee(ast);
   if (sortie.conflit) {
-    errors.push({
-      message: `two outputs for the same scene: 'out.${sortie.conflit.ecrite}' and the binding `
-             + `'alphabet.${sortie.conflit.alphabet}:${sortie.conflit.raccord}' name different `
-             + `channels — both spellings say the SAME thing, keep only one`,
-      line: sortie.conflit.line,
-    });
+    errors.push(diagnostic('RESOLVE_OUTPUTS_SAME_SCENE_OUT', { p1: sortie.conflit.ecrite, p2: sortie.conflit.alphabet, p3: sortie.conflit.raccord }, { line: sortie.conflit.line }));
   }
   const transportKey = sortie.key;
   const transport = { type: 'TransportRef', key: transportKey, params: sortie.params };
@@ -785,17 +778,9 @@ export function validateCallVocabulary(ast, known, declared, codeVoice, anyAlpha
         // Mesuré le 2026-07-26 sur le témoin de bpx : `ins(12)` sans `core` dégénérait en
         // note, et mon premier message affirmait « 'ins' n'existe pas », ce qui est FAUX.
         const auRegistre = universeControlNames().has(n.name);
-        errors.push({
-          message: auRegistre
-            ? `call '${citer(n)}': '${n.name}' is a control of the registry, but this scene has `
-              + `not invoked it — it was therefore reclassified as a SOUNDING TERMINAL, that is, a `
-              + `note. Invoke the base library at the top of the scene ('core')`
-            : `call '${citer(n)}': '${n.name}' does not exist — neither a control of the registry, `
-              + `nor a terminal of the alphabets in scope, nor a declared symbol. A generic `
-              + `function is not part of the language: every intent carries its own name ('[]' for `
-              + `the engine, '()' for the runtime, as 'key:value')`,
-          line: n.line,
-        });
+        errors.push(diagnostic(
+          auRegistre ? 'RESOLVE_CALL_CONTROL_NOT_INVOKED' : 'RESOLVE_CALL_DOES_NOT_EXIST',
+          { appel: citer(n), name: n.name }, { line: n.line }));
       }
     }
     for (const k in n) { const v = n[k]; if (v && typeof v === 'object') visiter(v); }
@@ -959,11 +944,7 @@ export function validateTerminals(ast) {
         if (/^[-_.]+$/.test(part) || /[{},]/.test(part)) continue;
         if (known.has(part) || declared.has(part) || seen.has(part)) continue;
         seen.add(part);
-        errors.push({
-          message: `in the compound sound object '|[…]': '${part}' is declared nowhere — `
-                 + `absent from the alphabets in scope`,
-          line: el.line,
-        });
+        errors.push(diagnostic('RESOLVE_COMPOUND_SOUND_OBJECT_DECLARED', { part }, { line: el.line }));
       }
       return;
     }
@@ -1004,18 +985,15 @@ export function validateTerminals(ast) {
       const ligne = (ast.directives || []).find((d) =>
         d && d.type === 'Directive' && d.name === el.name && typeof d.runtime === 'string');
       const cause = ligne && canalFautif(ligne.runtime);
-      errors.push({
-        message: cause
-          ? `'${el.name}:${ligne.runtime}' declares a terminal, and ${cause} The declaration is `
-            + `written '<name>:<channel>' — the terminal itself is not at fault.`
-          : !anyAlphabet
-            ? `terminal '${el.name}' undeclared — no alphabet in scope: invoke 'core', which `
-              + `declares the default alphabet, or declare an alphabet`
-            : reste && reste !== el.name
-              ? `terminal '${el.name}' undeclared — segmentation stopped at '${reste}', absent from the alphabets in scope`
-              : `terminal '${el.name}' undeclared — absent from the alphabets in scope`,
-        line: el.line,
-      });
+      // ⛔ QUATRE CAUSES, QUATRE CODES — 2026-09-04. Elles ne se distinguaient que par leur phrase :
+      // un consommateur qui voulait savoir POURQUOI un terminal est refusé n'avait que la prose. Le
+      // code est la surface, et il doit dire ce que la phrase disait.
+      errors.push(diagnostic(
+        cause ? 'RESOLVE_TERMINAL_DECL_CHANNEL'
+          : !anyAlphabet ? 'RESOLVE_TERMINAL_NO_ALPHABET'
+            : reste && reste !== el.name ? 'RESOLVE_TERMINAL_SEGMENTATION_STOPPED'
+              : 'RESOLVE_TERMINAL_UNDECLARED',
+        { name: el.name, runtime: ligne && ligne.runtime, cause, reste }, { line: el.line }));
     }
     for (const k of COMPOSITES) if (el[k]) verifier(el[k]);
   };
@@ -1045,12 +1023,7 @@ export function validateTerminals(ast) {
         && !codeVoice.has(s)
         && !known.has(s) && !declared.has(s) && !sujetsVus.has(s)) {
       sujetsVus.add(s);
-      errors.push({
-        message: `setting subject '${s}:…': '${s}' names no terminal — absent from the alphabets `
-               + `in scope and from the declared names. A subject targets the terminals bearing its `
-               + `name; '*' targets every terminal in scope, and no subject targets the whole scope`,
-        line: n.line,
-      });
+      errors.push(diagnostic('RESOLVE_SETTING_SUBJECT_NAMES_TERMINAL', { s }, { line: n.line }));
     }
     for (const v of Object.values(n)) if (v && typeof v === 'object') verifierLesSujets(v);
   };
@@ -1450,15 +1423,7 @@ export function annotateBackticks(ast) {
     for (const el of els || []) {
       if (!el || typeof el !== 'object') continue;
       if (isBt(el) && el.payload && el.payload.interp === 'auto') {
-        errors.push({
-          message: `Backtick with no language — it must be known, never guessed. The language comes `
-                 + `from the nearest place that names it: a TAG inside the block (\`js: …\`), an `
-                 + `ACTOR qualifying the block with a dot ('actor drums eval.<engine>' then `
-                 + `\`drums.\`…\`\`), an 'eval.<engine>' line at the top of the scene, or the base `
-                 + `library 'core' — which carries 'js'. None of the four answered: the 'core' `
-                 + `catalog does not expose 'defaults.components.eval'.`,
-          line: el.line,
-        });
+        errors.push(diagnostic('RESOLVE_BACKTICK_LANGUAGE_MUST_KNOWN', {}, { line: el.line }));
       }
       if (el.elements) scanOrphans(el.elements);
       if (el.voices) for (const v of el.voices) scanOrphans(v);
@@ -1940,16 +1905,16 @@ export function applySceneValues(ast, libCtx) {
 
   const checkDomain = (name, spec, v, line) => {
     if (Array.isArray(spec.range) && typeof v !== 'number') {
-      errors.push({ message: `'${name}': '${v}' is not a number (expected: ${spec.range[0]}..${spec.range[1]}${spec.unit ? ' ' + spec.unit : ''})`, line });
+      errors.push(diagnostic('RESOLVE_NUMBER_EXPECTED', { name, v, p1: spec.range[0], p2: spec.range[1], p3: spec.unit ? ' ' + spec.unit : '' }, { line }));
       return false;
     }
     if (typeof v === 'number' && Array.isArray(spec.range) && spec.range.length === 2
         && (v < spec.range[0] || v > spec.range[1])) {
-      errors.push({ message: `'${name}': ${v} out of range [${spec.range[0]}..${spec.range[1]}]${spec.unit ? ' ' + spec.unit : ''}`, line });
+      errors.push(diagnostic('RESOLVE_OUT_RANGE', { name, v, p1: spec.range[0], p2: spec.range[1], p3: spec.unit ? ' ' + spec.unit : '' }, { line }));
       return false;
     }
     if (Array.isArray(spec.values) && !spec.values.includes(v)) {
-      errors.push({ message: `'${name}': unknown value '${v}' (allowed: ${spec.values.join(', ')})`, line });
+      errors.push(diagnostic('RESOLVE_UNKNOWN_VALUE_ALLOWED', { name, v, p1: spec.values.join(', ') }, { line }));
       return false;
     }
     return true;
@@ -1961,7 +1926,7 @@ export function applySceneValues(ast, libCtx) {
     const spec = registry[d.name];
     if (!spec) continue;
     if (d.value == null) {
-      errors.push({ message: `'${d.name}' expects a VALUE (e.g. @${d.name}:440) — not a name`, line: d.line });
+      errors.push(diagnostic('RESOLVE_EXPECTS_VALUE_NAME', { p1: d.name }, { line: d.line }));
       continue;
     }
     const valeur = versNombre(spec, d.value);
@@ -2039,9 +2004,7 @@ export function applySceneValues(ast, libCtx) {
       for (const k of Object.keys(params)) {
         if (propres && propres[k] !== undefined) continue;   // propre à l'entrée : accepté
         if (!registry[k]) {
-          errors.push({ message: `'${axis}.${entree ?? '…'}(${k}:…)': '${k}' is neither a parameter `
-            + `of '${entree ?? axis}' nor a declared value (base library @core or an invoked library)`,
-            line: actor.line });
+          errors.push(diagnostic('RESOLVE_NEITHER_PARAMETER_NOR_DECLARED', { axis, p1: entree ?? '…', k, p2: entree ?? axis }, { line: actor.line }));
         }
       }
     }
@@ -2093,11 +2056,7 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
   const horsInvocation = (cle, line, col) => {
     const declarants = librairiesQuiDeclarent(cle);
     if (!declarants.length) return false;
-    errors.push({
-      message: `'${cle}' is not in scope: no invoked library declares it — invoke it at the top `
-        + `(${declarants.map((l) => `'${l}'`).join(' or ')}).`,
-      line, col,
-    });
+    errors.push(diagnostic('RESOLVE_SCOPE_INVOKED_LIBRARY_DECLARES', { cle, p1: declarants.map((l) => `'${l}'`).join(' or ') }, { line, col }));
     return true;
   };
   // ⛔ LE VOCABULAIRE D'UNE SCÈNE EST CELUI QU'ELLE INVOQUE (Romain, 2026-08-08) : « invoquer
@@ -2203,13 +2162,7 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
     if (!ambigus.has(key) || vusAmbigus.has(key)) return;
     vusAmbigus.add(key);
     const choix = prefixesDe(key);
-    errors.push({
-      message: `'${key}' is declared by ${choix.length} libraries and cannot be written BARE — `
-        + `it does not say which '${key}' is meant, and the recipient of the setting depends on it. `
-        + `Write ${choix.map((c) => `'${c}:…'`).join(' or ')}.`,
-      line,
-      col,
-    });
+    errors.push(diagnostic('RESOLVE_DECLARED_LIBRARIES_CANNOT_WRITTEN', { key, p1: choix.length, p2: choix.map((c) => `'${c}:…'`).join(' or ') }, { line, col }));
   };
 
   // ── UN MOT GÉNÉRIQUE ÉCRIT POUR UNE SORTIE QUI NE LE RÉALISE PAS ────────────────────────────
@@ -2245,14 +2198,7 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
     const orphelines = sortiesActives.filter((s) => !canaux.has(s));
     if (orphelines.length === 0) return;
     vusSansRealisation.add(key);
-    errors.push({
-      message: `'${key}' is a GENERIC word: every output declares how it implements it, and `
-        + `${orphelines.map((s) => `'${s}'`).join(' and ')} do${orphelines.length > 1 ? '' : 'es'} `
-        + `not. Written here, it would do nothing. Implemented today by: `
-        + `${[...canaux].sort().map((c) => `'${c}.${key}'`).join(', ')}.`,
-      line,
-      col,
-    });
+    errors.push(diagnostic('RESOLVE_GENERIC_WORD_EVERY_OUTPUT', { key, p1: orphelines.map((s) => `'${s}'`).join(' and '), p2: orphelines.length > 1 ? '' : 'es', p3: [...canaux].sort().map((c) => `'${c}.${key}'`).join(', ') }, { line, col }));
   };
 
   // ── UN TAG DE BACKTICK NOMME UN ÉVALUATEUR DÉCLARÉ, PAS N'IMPORTE QUEL MOT ──────────────────
@@ -2270,14 +2216,7 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
   const verifierTag = (tag, line, col) => {
     if (typeof tag !== 'string' || !tag || evaluateurs.has(tag) || tagsVus.has(tag)) return;
     tagsVus.add(tag);
-    errors.push({
-      message: `'\`${tag}: …\`' names an evaluator that is not declared. A backtick tag says `
-        + `WHO runs the code, and the list lives in the 'eval' library: `
-        + `${[...evaluateurs].sort().join(', ')}. A typo there would create a phantom interpreter, `
-        + `and the scene would compile while the code went nowhere.`,
-      line,
-      col,
-    });
+    errors.push(diagnostic('RESOLVE_NAMES_EVALUATOR_DECLARED_BACKTICK', { tag, p1: [...evaluateurs].sort().join(', ') }, { line, col }));
   };
 
   const vus = new Map();
@@ -2391,12 +2330,7 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
         // accolade fermante. Une garde écrite pour la position qui s'est montrée laisserait vivre
         // les cinq autres.
         if (p.key === 'mode') {
-          errors.push({
-            message: `'(mode:…)' no longer belongs on a rule: the mode holds for a BLOCK and does `
-              + `not change mid-derivation. Write it 'mode:${p.value ?? '<value>'}' at the top of `
-              + `the sub-grammar concerned — on a line of its own, before its rules.`,
-            line: p.line, col: p.col,
-          });
+          errors.push(diagnostic('RESOLVE_MODE_LONGER_BELONGS_RULE', { p1: p.value ?? '<value>' }, { line: p.line, col: p.col }));
         }
       }
     }
@@ -2431,15 +2365,13 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
           const permis = porteesPermises.get(cle, p.lib);
           if (!permis) { if (!p.lib) horsInvocation(cle, p.line ?? node.line, p.col); continue; }
           if (permis.includes(place)) continue;
-          errors.push({
-            message: `'${cle}' cannot be written ${NOM_DE_PLACE[place]} — `
-              + (permis.length === 1
-                  ? `it holds ONLY ${NOM_DE_PLACE[permis[0]] ?? permis[0]}`
-                  : `it holds ${permis.slice(0, -1).map((s) => NOM_DE_PLACE[s] ?? s).join(', ')}`
-                    + ` or ${NOM_DE_PLACE[permis[permis.length - 1]] ?? permis[permis.length - 1]}`)
-              + `. Move it there, or use a setting that holds here.`,
-            line: p.line ?? node.line, col: p.col,
-          });
+          errors.push(diagnostic('RESOLVE_KEY_WRONG_PLACE', {
+            cle, place: NOM_DE_PLACE[place],
+            permis: permis.length === 1
+              ? `it holds ONLY ${NOM_DE_PLACE[permis[0]] ?? permis[0]}`
+              : `it holds ${permis.slice(0, -1).map((s) => NOM_DE_PLACE[s] ?? s).join(', ')}`
+                + ` or ${NOM_DE_PLACE[permis[permis.length - 1]] ?? permis[permis.length - 1]}`,
+          }, { line: p.line ?? node.line, col: p.col }));
         }
       }
     }
@@ -2466,15 +2398,13 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
       const permis = porteesPermises.get(cle);
       if (!permis) { horsInvocation(cle, line); return; }
       if (permis.includes(place)) return;
-      errors.push({
-        message: `'${cle}' cannot be written ${NOM_DE_PLACE[place]} — `
-          + (permis.length === 1
-              ? `it holds ONLY ${NOM_DE_PLACE[permis[0]] ?? permis[0]}`
-              : `it holds ${permis.slice(0, -1).map((x) => NOM_DE_PLACE[x] ?? x).join(', ')}`
-                + ` or ${NOM_DE_PLACE[permis[permis.length - 1]] ?? permis[permis.length - 1]}`)
-          + `. Move it there, or use a setting that holds here.`,
-        line,
-      });
+      errors.push(diagnostic('RESOLVE_KEY_WRONG_PLACE', {
+        cle, place: NOM_DE_PLACE[place],
+        permis: permis.length === 1
+          ? `it holds ONLY ${NOM_DE_PLACE[permis[0]] ?? permis[0]}`
+          : `it holds ${permis.slice(0, -1).map((x) => NOM_DE_PLACE[x] ?? x).join(', ')}`
+            + ` or ${NOM_DE_PLACE[permis[permis.length - 1]] ?? permis[permis.length - 1]}`,
+      }, { line }));
     };
     // ⚠️ UNE DIRECTIVE DE TÊTE N'EST PAS TOUJOURS UN RÉGLAGE — et l'homonymie est réelle.
     // `mod` INVOQUE la librairie `lib/mod.json` ; elle ne pose pas le contrôle MIDI `mod`.
@@ -2525,7 +2455,7 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
     // question que la résolution — sinon elle refuse un nom que le resolveur sait charger, et on
     // a deux vérités sur « cet alphabet existe-t-il ».
     if (axis === 'alphabet' && resolveActorAlphabet(name, ast.directives)) return;
-    errors.push({ message: `${axis} '${name}' not found in the catalog (reference does not exist)`, line });
+    errors.push(diagnostic('RESOLVE_FOUND_CATALOG_REFERENCE_DOES', { axis, name }, { line }));
   };
 
   // 3bis. LIBRAIRIE SANS CATALOGUE — une ENTRÉE INCONNUE y crie aussi (arbitrage architecte
@@ -2586,13 +2516,7 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
       const fichierNu = leRegistre()[d.name];
       const motNu = fichierNu && typeof fichierNu === 'object' ? fichierNu.resolves : null;
       if (motNu && motNu !== d.name) {
-        errors.push({
-          message: `'${d.name}': '${d.name}' is the FILE NAME, not the word that invokes it. `
-            + `Write '${motNu}'. A library is invoked by the word it DECLARES: the logical name is `
-            + `separate from the physical one, and a file can be renamed without any scene `
-            + `changing.`,
-          line: d.line,
-        });
+        errors.push(diagnostic('RESOLVE_FILE_NAME_WORD_INVOKES', { p1: d.name, motNu }, { line: d.line }));
       }
       continue;
     }
@@ -2632,13 +2556,10 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
       if (motsDuLangage.has(d.name)) {
         if (clesDActeur().has(d.name)) continue;   // `out.<canal>` : la sous-clé est sa forme
         const forme = formeDuMot(d.name);
-        errors.push({
-          message: `'${d.name}.${d.subkey}': '${d.name}' is a word of the LANGUAGE, it is not `
-            + `qualified by a dot`
-            + (forme ? ` — it is written '${forme}'.` : '.')
-            + ` A line that no data serves is read, written into the tree, and has no effect.`,
-          line: d.line,
-        });
+        errors.push(diagnostic('RESOLVE_LANGUAGE_WORD_NOT_QUALIFIED', {
+          name: d.name, subkey: d.subkey,
+          forme: forme ? ` — it is written '${forme}'.` : '.',
+        }, { line: d.line }));
         continue;
       }
       // ⛔ ET LE REFUS NOMME LE MOT A ECRIRE quand l axe est un NOM DE FICHIER. Sans ça, l auteur
@@ -2646,27 +2567,13 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
       // existe, et il cherche une donnee manquante au lieu de changer un mot.
       const fichier = leRegistre()[d.name];
       const motAEcrire = fichier && typeof fichier === 'object' ? fichier.resolves : null;
-      errors.push({
-        message: motAEcrire
-          ? `'${d.name}.${d.subkey}': '${d.name}' is the FILE NAME, not the word that invokes it. `
-            + `Write '${motAEcrire}.${d.subkey}'. A library is invoked by the word it DECLARES: the `
-            + `logical name is separate from the physical one, and a file can be renamed without `
-            + `any scene changing.`
-          : `'${d.name}.${d.subkey}': no library serves the axis '${d.name}'. An invocation whose `
-            + `axis no data carries loads NOTHING, and nothing tells that silence apart from a `
-            + `scene that declared nothing.`,
-        line: d.line,
-      });
+      errors.push(diagnostic(
+        motAEcrire ? 'RESOLVE_AXIS_IS_FILE_NAME' : 'RESOLVE_AXIS_SERVED_BY_NONE',
+        { name: d.name, subkey: d.subkey, motAEcrire }, { line: d.line }));
       continue;
     }
     if (loadLib(d.name, d.subkey)) continue;
-    errors.push({
-      message: `'${d.name}.${d.subkey}': entry '${d.subkey}' does not exist in library `
-             + `'${d.name}'. An invocation that resolves to nothing is indistinguishable, on the `
-             + `consumer side, from a scene that declared nothing — it therefore cannot be accepted `
-             + `silently.`,
-      line: d.line,
-    });
+    errors.push(diagnostic('RESOLVE_ENTRY_DOES_EXIST_LIBRARY', { p1: d.name, p2: d.subkey }, { line: d.line }));
   }
 
   // LA TABLE D'UNE ENTRÉE (`mapping.<table>`) EST SOUMISE AU MÊME CRI — sans exemption (arbitrage
@@ -2687,11 +2594,8 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
       // et le message envoyait l'auteur « ajouter la table dans la librairie 'mapping' », c'est-à-dire
       // dans un fichier supprimé. Le refus est le domicile où l'auteur apprend la règle : il dit
       // désormais ce qui EST, à savoir qu'aucune librairie ne déclare de table.
-      message: `'in ${e.name} … mapping.${e.mapping}': table '${e.mapping}' is declared by no `
-             + `loaded library — none carries one today. An input invoking a table that does not `
-             + `exist would believe it translates and would translate nothing. Write the input `
-             + `alone and use bare addresses ('<!${e.name}.60').`,
-      line: e.line,
+      ...diagnostic('RESOLVE_MAPPING_TABLE_UNDECLARED', { name: e.name, mapping: e.mapping },
+        { line: e.line }),
     });
   }
 
@@ -2703,7 +2607,7 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
     // `validateReferences`). Ces trois refus ne visent que les mots que PERSONNE ne déclare.
     const declareAilleurs = librairiesQuiDeclarent(d.name).length > 0;
     if (d.value != null && d.value !== true && !registry.has(d.name) && !reserved.has(d.name) && !declareAilleurs) {
-      errors.push({ message: `unknown value '${d.name}:…' — not declared by any loaded library`, line: d.line });
+      errors.push(diagnostic('RESOLVE_UNKNOWN_VALUE_DECLARED_ANY', { p1: d.name }, { line: d.line }));
       continue;
     }
     // ⛔ ET LA TROISIÈME GRAPHIE — `<clé>:<mot>` — TOMBAIT DANS UN TROISIÈME SILENCE.
@@ -2724,12 +2628,7 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
     // seul, suivi d'un mot, que rien ne déclare.
     if (d.subkey == null && d.runtime != null
         && !registry.has(d.name) && !reserved.has(d.name) && !declareAilleurs) {
-      errors.push({
-        message: `'${d.name}:${d.runtime}': '${d.name}' is declared by no loaded library. `
-               + `A top-of-scene line that no data carries settles nothing — it would be read, `
-               + `written into the tree, and have no effect.`,
-        line: d.line,
-      });
+      errors.push(diagnostic('RESOLVE_DECLARED_LOADED_LIBRARY_TOP', { p1: d.name, p2: d.runtime }, { line: d.line }));
       continue;
     }
     // ⚠️ ET LA FORME NUE AUSSI — c'est la moitié qui avait régressé. Le refus ci-dessus ne mordait
@@ -2752,12 +2651,7 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
     if (d.type && d.type !== 'Directive') continue;
     if (d.value == null && !d.subkey && !d.runtime
         && !registry.has(d.name) && !reserved.has(d.name) && !loadLib(d.name) && !declareAilleurs) {
-      errors.push({
-        message: `'${d.name}' is declared by no loaded library — a top-of-scene word comes from `
-               + `an invoked library, never from nowhere. Invoke the library that carries it, or `
-               + `remove the line.`,
-        line: d.line,
-      });
+      errors.push(diagnostic('RESOLVE_DECLARED_LOADED_LIBRARY_TOP_2', { p1: d.name }, { line: d.line }));
     }
   }
 
@@ -2801,15 +2695,11 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
     for (const [groupe, vus] of groupes) {
       if (vus.length < 2) continue;
       const mots = [...new Set(vus.map((v) => v.mot))];
-      errors.push({
-        message: `'${groupe}' is set ${vus.length} times (${mots.map((m) => `'${m}'`).join(', ')}) `
-               + `— it is set only once per scene. `
-               + (mots.length > 1
-                 ? `These words set THE SAME THING: keep only one.`
-                 : `Remove the extra occurrences.`)
-               + ` The native engine rejects the whole grammar in this case.`,
-        line: vus[vus.length - 1].line,
-      });
+      errors.push(diagnostic('RESOLVE_GROUP_SET_TWICE', {
+        groupe, fois: vus.length, mots: mots.map((m) => `'${m}'`).join(', '),
+        remede: mots.length > 1 ? 'These words set THE SAME THING: keep only one.'
+                                : 'Remove the extra occurrences.',
+      }, { line: vus[vus.length - 1].line }));
     }
   }
 
@@ -2823,7 +2713,7 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
     if (!alphaName || !tuningName) return;
     const ta = tuningAlphabet(tuningName);
     if (ta && ta !== alphaName) {
-      errors.push({ message: `alphabet '${alphaName}' is inconsistent with tuning '${tuningName}' (which belongs to alphabet '${ta}') — a tuning combines only with its own alphabet`, line: line || 0 });
+      errors.push(diagnostic('RESOLVE_ALPHABET_INCONSISTENT_TUNING_WHICH', { alphaName, tuningName, ta }, { line: line || 0 }));
     }
   };
   checkCoherence(sceneComp('alphabet'), sceneComp('tuning'), 0);
@@ -2864,7 +2754,7 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
       if (catalogAxes.includes(axe)) { checkComponent(axe, ref.value, def.line); continue; }
       if (!clesDeSortie.has(axe)) continue;
       const cause = canalFautif(ref.value);
-      if (cause) errors.push({ message: `terminal '${def.name}': ${cause}`, line: def.line });
+      if (cause) errors.push(diagnostic('RESOLVE_TERMINAL', { p1: def.name, cause }, { line: def.line }));
     }
   }
 

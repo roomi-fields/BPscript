@@ -18,6 +18,8 @@
  * Collecte récursivement toutes les paires de SettingBag de l'AST.
  * Chaque paire porte { key, value, line, col } (posé par le parser).
  */
+import { diagnostic } from './diagnostics.js';
+
 function collectQualifierPairs(node, out) {
   if (!node || typeof node !== 'object') return;
   if (Array.isArray(node)) { for (const el of node) collectQualifierPairs(el, out); return; }
@@ -85,11 +87,7 @@ export function validateControls(ast, controls, qualifies = {}) {
     if (Array.isArray(def.values)) {
       const v = String(p.value);
       if (!def.values.includes(v)) {
-        errors.push({
-          message: `value '${p.value}' is not allowed for control '${p.key}' `
-                 + `(allowed: ${def.values.join(', ')})`,
-          ...where,
-        });
+        errors.push(diagnostic('CONTROL_VALUE_ALLOWED_CONTROL_ALLOWED', { p1: p.value, p2: p.key, p3: def.values.join(', ') }, { ...where }));
       }
       continue;
     }
@@ -98,11 +96,7 @@ export function validateControls(ast, controls, qualifies = {}) {
     if (Array.isArray(def.range) && typeof p.value === 'number') {
       const [min, max] = def.range;
       if (p.value < min || p.value > max) {
-        errors.push({
-          message: `value ${p.value} is out of range for control '${p.key}' `
-                 + `(${min}..${max})`,
-          ...where,
-        });
+        errors.push(diagnostic('CONTROL_VALUE_OUT_RANGE_CONTROL', { p1: p.value, p2: p.key, min, max }, { ...where }));
       }
     }
   }

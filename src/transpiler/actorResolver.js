@@ -11,6 +11,7 @@
  * Called between parser and encoder. If no actors are declared, returns empty tables.
  */
 
+import { texteDuDiagnostic, diagnostic } from './diagnostics.js';
 import { loadLib, resolveActorAlphabet, nomsDeTerminaux} from './libs.js';
 import { lesDefauts, objet, famille } from './index-des-objets.js';
 
@@ -385,7 +386,7 @@ function resolveActors(ast) {
     if (alphabetKey) {
       const alphabetLib = resolveActorAlphabet(alphabetKey, ast.directives);
       if (!alphabetLib) {
-        errors.push({ message: `Alphabet "${alphabetKey}" not found for actor "${name}"`, line: actor.line });
+        errors.push(diagnostic('ACTOR_ALPHABET_FOUND_ACTOR', { alphabetKey, name }, { line: actor.line }));
         continue;
       }
       // props.octaves surcharge la convention de registre de l'alphabet (décision cles-acteur-six).
@@ -498,11 +499,7 @@ function verifierActeursReferences(ast, errors) {
         const connus = declares.size
           ? `Declared actors: ${[...declares].join(', ')}.`
           : "This scene declares no actor.";
-        errors.push({
-          message: `unknown actor '${el.actor}' in '${el.actor}.${el.name}'`
-            + ` — a dotted reference must name an actor declared by actor. ${connus}`,
-          line: el.line,
-        });
+        errors.push(diagnostic('ACTOR_UNKNOWN_ACTOR_DOTTED_REFERENCE', { p1: el.actor, p2: el.name, connus }, { line: el.line }));
       }
       // Un acteur peut se nicher dans une voix polymétrique ou un groupe.
       if (el.voices) for (const voix of el.voices) visiter(voix);
@@ -557,10 +554,7 @@ function resolveSymbolsInRhs(elements, symbolActorMap, actorTable, terminalActor
           // Ambiguous — check if declaration resolved it
           if (!terminalActorMap[el.name]) {
             const actorList = [...actors].join(', ');
-            errors.push({
-              message: `Ambiguous symbol "${el.name}" — owned by actors: ${actorList}. Use dot notation (e.g. ${[...actors][0]}.${el.name}) or declare with gate ${el.name}:<actor>`,
-              line: el.line,
-            });
+            errors.push(diagnostic('ACTOR_AMBIGUOUS_SYMBOL_OWNED_ACTORS', { p1: el.name, actorList, p2: [...actors][0] }, { line: el.line }));
           } else {
             // Declaration resolved it — propagate to element
             assignActor(el, terminalActorMap[el.name]);

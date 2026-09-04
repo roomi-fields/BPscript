@@ -1,5 +1,5 @@
 {
- "assertions": 19601,
+ "assertions": 19630,
  "gardes": [
   "alias_est_sorti_du_langage.mjs",
   "anti-vacuité [interne]",
@@ -186,6 +186,7 @@
   "un_refus_de_prefixe_accuse_le_nom_fautif.mjs",
   "un_refus_ecrit_la_graphie_de_l_auteur.mjs",
   "un_refus_ne_prescrit_pas_une_forme_morte.mjs",
+  "un_refus_porte_son_code_et_sa_prose_vit_ailleurs.mjs",
   "un_reglage_separe_apres_un_bloc_regle_la_regle.mjs",
   "un_reglage_unique_ne_se_pose_pas_deux_fois.mjs",
   "un_sac_en_fin_de_regle_enveloppe_la_regle.mjs",

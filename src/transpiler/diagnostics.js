@@ -60,6 +60,18 @@ export function texteDuDiagnostic(code, params = {}) {
   return texte;
 }
 
+/**
+ * UN DIAGNOSTIC PRÊT À POUSSER — `{ code, message, line }`, et ce qu'on veut de plus.
+ *
+ * ⛔ UNE SEULE FORME POUR LE CANAL COLLECTÉ. Sans elle, chaque site répétait le code DEUX fois — une
+ * pour le champ, une pour composer le texte — et un site qui choisit son code par une condition
+ * l'écrivait quatre fois. Deux écritures d'un même fait divergent : c'est la porte par où un `code`
+ * cesse de correspondre à son message, sans que rien ne rougisse.
+ */
+export function diagnostic(code, params, extra = {}) {
+  return { code, message: texteDuDiagnostic(code, params), ...extra };
+}
+
 /** Les codes que le catalogue déclare — pour qui inventorie, et pour les gardes. */
 export function codesDeDiagnostic() {
   return Object.keys(MESSAGES);
