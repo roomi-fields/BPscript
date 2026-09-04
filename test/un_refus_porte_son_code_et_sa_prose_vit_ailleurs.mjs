@@ -52,8 +52,14 @@ ok(codes.every((c) => /^[A-Z][A-Z0-9_]+$/.test(c)),
   const fautifs = [];
   let refusLus = 0;
   for (const chemin of fichiers) {
-    const texte = readFileSync(chemin, 'utf-8');
+    const brut = readFileSync(chemin, 'utf-8');
     const nom = chemin.split('/').pop();
+    // ⛔ LES COMMENTAIRES SORTENT AVANT LES DEUX BALAYAGES, pas entre eux. Ma première écriture ne
+    //   les retirait que pour le second : le premier accusait alors la DOCUMENTATION de ce garde,
+    //   qui cite forcément la graphie qu'il cherche. Un garde qui se nomme lui-même fautif apprend
+    //   à son lecteur à ignorer sa sortie.
+    const texte = brut.split('\n')
+      .map((l) => (/^\s*(\/\/|\*|\/\*)/.test(l) ? '' : l)).join('\n');
     // Un JET dont le premier argument n'est PAS un littéral de code entre apostrophes.
     // ⚠️ LE PREMIER ARGUMENT PEUT TENIR SUR DEUX LIGNES — un site qui CHOISIT son code par une
     //   condition écrit `new ParseError(\n  cond ? 'A' : 'B',`. Un motif borné à la ligne le
@@ -68,10 +74,17 @@ ok(codes.every((c) => /^[A-Z][A-Z0-9_]+$/.test(c)),
       if (codesCites.length > 0 && litteraux.length === codesCites.length * 2) continue;
       fautifs.push(`${nom} → ${m[0].replace(/\s+/g, ' ').slice(0, 80)}`);
     }
-    // Une POUSSÉE qui écrit `message:` au lieu de passer par le composeur.
-    for (const m of texte.matchAll(/errors\.push\(\{[^}]*?\bmessage:\s*([`'"])/g)) {
+    // ⛔ ET UNE TROISIÈME GRAPHIE, TROUVÉE LE 2026-09-04 PARCE QU'ELLE AVAIT TRAVERSÉ. Un refus peut
+    //   FABRIQUER son objet, le mémoriser, puis le pousser plus loin :
+    //       const err = { message: `…`, line, col };  vus.set(key, err);  errors.push(err);
+    //   Ni `new ParseError(` ni `errors.push({ message:` ne le nomment. Il est sorti SANS CODE
+    //   jusqu'à ce que je rende à kanopi les codes de ses onze refus, et que l'un d'eux soit vide.
+    //   ⇒ Le critère juste n'est donc pas la graphie de la POUSSÉE, c'est `message:` suivi d'un
+    //     LITTÉRAL, où qu'il soit. Un motif identifie une chaîne, pas une forme.
+    for (const m of texte.matchAll(/\bmessage:\s*[`'"]/g)) {
       refusLus++;
-      fautifs.push(`${nom} → errors.push({ message: … }) écrit sa prose au site`);
+      const ligne = texte.slice(0, m.index).split('\n').length;
+      fautifs.push(`${nom}:${ligne} → un message littéral écrit au site`);
     }
   }
   ok(refusLus >= 100,

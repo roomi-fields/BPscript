@@ -18,6 +18,7 @@
  *     node src/transpiler/libs-bundle.js > src/transpiler/libs-data.js
  */
 
+import { diagnostic } from './diagnostics.js';
 import { chargerLesLibrairies, placesDesLibrairies } from './librairies.js';
 import { sourcesDeLibrairie } from './sources.js';
 import { CHAMPS_DE_FICHIER } from './libs-champs.js';
@@ -585,9 +586,7 @@ function loadLibsFromDirectives(directives) {
     for (const [vname, spec] of Object.entries(file.values)) {
       if (vname.startsWith('_') || !spec || typeof spec !== 'object') continue;
       if (ctx.reservedDirectiveNames.has(vname) || ctx.controlNames.has(vname)) {
-        ctx.valueRegistryErrors.push({
-          message: `Valeur de librairie '${vname}' : nom réservé (directive moteur ou contrôle existant) — renommer dans la librairie`,
-        });
+        ctx.valueRegistryErrors.push(diagnostic('LIBS_VALUE_NAME_RESERVED', { vname }));
         continue;
       }
       ctx.valueRegistry[vname] = { ...spec, _axis: axis || null };

@@ -688,4 +688,55 @@ export const MESSAGES = {
     'value \'{p1}\' is not allowed for control \'{p2}\' (allowed: {p3})',
   CONTROL_VALUE_OUT_RANGE_CONTROL:
     'value {p1} is out of range for control \'{p2}\' ({min}..{max})',
+  RESOLVE_UNKNOWN_ATTRIBUTE:
+    'unknown attribute \'({key}{nu})\' — neither a control, nor a library value, nor an address',
+  // [À TRADUIRE]
+  LIBS_VALUE_NAME_RESERVED:
+    'Valeur de librairie \'{vname}\' : nom réservé (directive moteur ou contrôle existant) — '
+    + 'renommer dans la librairie',
+  // [À TRADUIRE]
+  PARSE_TEMPLATE_ANCHORS_ASYMMETRIC:
+    'ancres de gabarit asymétriques : LHS a {gauche}, RHS a {droite}',
+  RESOLVE_REPLAY_WITHOUT_MASTER:
+    '\'&{name}\' replays a template that nothing captures — no \'${name}\' in this scene. The '
+    + 'name is what pairs the master with the slave: with no master, the replay has no choice to '
+    + 'repeat. Write \'${name}\' where the pattern is captured.',
+  // [À TRADUIRE]
+  JOIN_OBJECT_AMBIGUOUS:
+    'librairies jointes : \'{chaine}\' désigne plusieurs objets — {ambigu}. Préfixer par sa '
+    + 'famille pour lever l\'ambiguïté.',
+  // [À TRADUIRE]
+  JOIN_OBJECT_NOT_SERVED:
+    'librairies jointes : \'{chaine}\' est invoqué par la scène et la porte des objets ne le rend '
+    + 'pas — l\'objet n\'existe pas, ou son nom a changé sans que la scène suive.',
+  RESOLVE_NAME_ALREADY_TAKEN:
+    'the name \'{nom}\' is already taken: {sortePrise} declared it{ou}, and {sorte} redeclares '
+    + 'it. A name designates only ONE thing in a scene — otherwise, reading it in a rule, one no '
+    + 'longer knows what it refers to. Choose another name.',
+  RESOLVE_NAME_SHADOWS_TERMINAL:
+    '\'{nom}\' is a TERMINAL of the active alphabet, and {sorte} makes it a name — a rule writing '
+    + '\'{nom}\' would no longer say whether it plays the note or the other thing. Choose another '
+    + 'name. The refusal falls at DECLARATION: the name need not be used for the ambiguity to '
+    + 'exist.',
+  RESOLVE_WAIT_UNDECLARED:
+    '\'<!{name}\' waits for a signal that nothing declares — no input, variable, gate or actor of '
+    + 'this scene bears the name \'{name}\'. Declare it: \'in.<channel> {name}\'. Without a '
+    + 'declaration, a typo builds a SECOND wait that nothing will ever satisfy, and the derivation '
+    + 'stops forever without a word.',
+  RESOLVE_FLAG_NAMES_RULE:
+    'flag \'{nom}\' bears the name of a RULE of the grammar{ou} — a name designates only ONE '
+    + 'thing in a scene. Choose another name for the flag.',
+  RESOLVE_FLAG_NAMES_SETTING:
+    'flag \'{nom}\' bears the name of a SETTING of the vocabulary — the flag bag would silently '
+    + 'turn it into a flag, and the setting would become unreachable under that name. Choose '
+    + 'another name for the flag.',
+  RESOLVE_FLAG_NAMES_TERMINAL:
+    'flag \'{nom}\' bears the name of a TERMINAL of the active alphabet — a name designates only '
+    + 'ONE thing in a scene, and a flag bears only a flag name. Choose another name for the flag.',
+  RESOLVE_FLAG_NAME_ALREADY_TAKEN:
+    'flag \'{nom}\' bears a name already taken by {sorte}{ou} — a name designates only ONE thing '
+    + 'in a scene. Choose another name for the flag.',
+  RESOLVE_RULE_NAME_ALREADY_TAKEN:
+    'rule \'{nom}\' bears a name already taken by {sorte} — reading \'{nom}\' in a sequence, one '
+    + 'no longer knows what it refers to. Choose another name for one of the two.',
 };

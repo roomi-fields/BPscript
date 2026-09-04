@@ -241,12 +241,7 @@ export function refuserEsclaveSansMaitre(ast) {
   for (const e of esclaves) {
     if (maitres.has(e.name) || vus.has(e.name)) continue;
     vus.add(e.name);
-    erreurs.push({
-      message: `'&${e.name}' replays a template that nothing captures — no '$${e.name}' in this `
-        + `scene. The name is what pairs the master with the slave: with no master, the replay has `
-        + `no choice to repeat. Write '$${e.name}' where the pattern is captured.`,
-      line: e.line,
-    });
+    erreurs.push(diagnostic('RESOLVE_REPLAY_WITHOUT_MASTER', { name: e.name }, { line: e.line }));
   }
   return erreurs;
 }
@@ -1567,13 +1562,7 @@ export function refuserAttenteNonDeclaree(ast) {
     if (n.type === 'Wait' && typeof n.name === 'string'
         && !connus.has(n.name) && !directions.has(n.name) && !vus.has(n.name)) {
       vus.add(n.name);
-      erreurs.push({
-        message: `'<!${n.name}' waits for a signal that nothing declares — no input, variable, `
-          + `gate or actor of this scene bears the name '${n.name}'. Declare it: `
-          + `'in.<channel> ${n.name}'. Without a declaration, a typo builds a SECOND wait that `
-          + `nothing will ever satisfy, and the derivation stops forever without a word.`,
-        line: n.line,
-      });
+      erreurs.push(diagnostic('RESOLVE_WAIT_UNDECLARED', { name: n.name }, { line: n.line }));
     }
     // ⚠️ L'ADRESSE NE SE VALIDE PAS ICI, ET C'EST UN ÉCART DE SPÉCIFICATION, PAS UN OUBLI.
     // `EBNF.md` § « Le point d'attente » écrit : « un identifiant est l'étiquette produite par la
@@ -1643,23 +1632,14 @@ export function refuserNomsEnDouble(ast, libCtx) {
     if (!nom || typeof nom !== 'string') return;
     if (creesParDeclaration.has(nom)) {
       const p = creesParDeclaration.get(nom);
-      erreurs.push({
-        message: `the name '${nom}' is already taken: ${p.sorte} declared it${p.line ? ` on line ${p.line}` : ''}, `
-          + `and ${sorte} redeclares it. A name designates only ONE thing in a scene — otherwise, `
-          + `reading it in a rule, one no longer knows what it refers to. Choose another name.`,
-        line,
-      });
+      erreurs.push(diagnostic('RESOLVE_NAME_ALREADY_TAKEN', {
+        nom, sortePrise: p.sorte, ou: p.line ? ` on line ${p.line}` : '', sorte,
+      }, { line }));
       return;
     }
     creesParDeclaration.set(nom, { cle, sorte, line });
     if (terminaux.has(nom)) {
-      erreurs.push({
-        message: `'${nom}' is a TERMINAL of the active alphabet, and ${sorte} makes it a name — a `
-          + `rule writing '${nom}' would no longer say whether it plays the note or the other thing. `
-          + `Choose another name. The refusal falls at DECLARATION: the name need not be used for `
-          + `the ambiguity to exist.`,
-        line,
-      });
+      erreurs.push(diagnostic('RESOLVE_NAME_SHADOWS_TERMINAL', { nom, sorte }, { line }));
     }
   };
   for (const e of ast.inputs || []) noter(e?.name, 'input', 'an input', e?.line);
@@ -1768,12 +1748,8 @@ export function refuserNomsEnDouble(ast, libCtx) {
         tetesVues.add(nom);
         const declare = creesParDeclaration.get(nom);
         if (declare && !LEVEES.has(declare.cle)) {
-          erreurs.push({
-            message: `rule '${nom}' bears a name already taken by ${declare.sorte} — `
-              + `reading '${nom}' in a sequence, one no longer knows what it refers to. `
-              + `Choose another name for one of the two.`,
-            line: r.line,
-          });
+          erreurs.push(diagnostic('RESOLVE_RULE_NAME_ALREADY_TAKEN',
+            { nom, sorte: declare.sorte }, { line: r.line }));
         }
       }
     }
@@ -1825,35 +1801,23 @@ export function refuserNomsEnDouble(ast, libCtx) {
   for (const nom of drapeaux) {
     const declare = creesParDeclaration.get(nom);
     if (declare && declare.cle !== 'flag') {
-      erreurs.push({
-        message: `flag '${nom}' bears a name already taken by ${declare.sorte}`
-          + `${declare.line ? ` on line ${declare.line}` : ''} — a name designates only ONE thing in `
-          + `a scene. Choose another name for the flag.`,
-      });
+      erreurs.push(diagnostic('RESOLVE_FLAG_NAME_ALREADY_TAKEN', {
+        nom, sorte: declare.sorte, ou: declare.line ? ` on line ${declare.line}` : '',
+      }));
       continue;
     }
     if (tetesDeRegle.has(nom)) {
-      erreurs.push({
-        message: `flag '${nom}' bears the name of a RULE of the grammar`
-          + `${tetesDeRegle.get(nom) ? ` on line ${tetesDeRegle.get(nom)}` : ''} — a name designates `
-          + `only ONE thing in a scene. Choose another name for the flag.`,
-      });
+      erreurs.push(diagnostic('RESOLVE_FLAG_NAMES_RULE', {
+        nom, ou: tetesDeRegle.get(nom) ? ` on line ${tetesDeRegle.get(nom)}` : '',
+      }));
       continue;
     }
     if (terminaux.has(nom)) {
-      erreurs.push({
-        message: `flag '${nom}' bears the name of a TERMINAL of the active alphabet — a name `
-          + `designates only ONE thing in a scene, and a flag bears only a flag name. `
-          + `Choose another name for the flag.`,
-      });
+      erreurs.push(diagnostic('RESOLVE_FLAG_NAMES_TERMINAL', { nom }));
       continue;
     }
     if (libCtx?.controlNames?.has(nom)) {
-      erreurs.push({
-        message: `flag '${nom}' bears the name of a SETTING of the vocabulary — the flag bag `
-          + `would silently turn it into a flag, and the setting would become unreachable under `
-          + `that name. Choose another name for the flag.`,
-      });
+      erreurs.push(diagnostic('RESOLVE_FLAG_NAMES_SETTING', { nom }));
       continue;
     }
   }
@@ -2261,8 +2225,12 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
     // Un mot qu'une librairie NON invoquée déclare n'est pas inconnu : il est hors portée, et le
     // refus qui nomme la librairie à invoquer est rendu par le contrôle de place (`horsInvocation`).
     if (librairiesQuiDeclarent(key).length) return;
-    const err = { message: `unknown attribute '(${key}${ecritNu ? '' : ':…'})' — neither a control, nor a library value, nor an address`,
-      line, col };
+    // ⛔ CE REFUS N'ÉTAIT PAS UNE POUSSÉE LITTÉRALE : il fabrique son objet, le MÉMORISE, puis le
+    //   pousse — donc ni `new ParseError(` ni `errors.push({ message:` ne le nommaient, et il a
+    //   traversé les deux balayages. Trouvé le 2026-09-04 en rendant à kanopi le code de ses onze
+    //   refus : celui-ci sortait SANS CODE. *Un motif identifie une chaîne, pas une forme.*
+    const err = diagnostic('RESOLVE_UNKNOWN_ATTRIBUTE',
+      { key, nu: ecritNu ? '' : ':…' }, { line, col });
     vus.set(key, err);
     errors.push(err);
   };

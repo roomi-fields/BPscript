@@ -30,6 +30,7 @@
  * et l'arbre partirait incomplet sous un vert. Mesuré le 2026-09-02 sur `settings.test1`, que la porte
  * rendait comme une famille `settings/test1` : le défaut s'est vu parce que ce point crie.
  */
+import { diagnostic } from './diagnostics.js';
 import { familles, famille, objet } from './index-des-objets.js';
 
 /**
@@ -127,10 +128,10 @@ export function joindreLesLibrairies(ast) {
     const o = objet(chaine);
     if (!o) {
       if (estUnePlaceOuUnMembre(chaine)) continue;
-      fautes.push({ message: `librairies jointes : '${chaine}' est invoqué par la scène et la porte des objets ne le rend pas` });
+      fautes.push(diagnostic('JOIN_OBJECT_NOT_SERVED', { chaine }));
       continue;
     }
-    if (o.ambigu) { fautes.push({ message: `librairies jointes : '${chaine}' désigne plusieurs objets — ${o.ambigu.join(', ')}` }); continue; }
+    if (o.ambigu) { fautes.push(diagnostic('JOIN_OBJECT_AMBIGUOUS', { chaine, ambigu: o.ambigu.join(', ') })); continue; }
     section[chaine] = o;
     // ⛔ À TOUTE PROFONDEUR — « une règle qui vaut à l'entrée et pas au fond d'un sac n'est pas une
     // règle ». Mesuré par kairos le 2026-09-02 : la voix d'un terminal vit sous `terminals.dha.voice`,
