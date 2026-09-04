@@ -10,12 +10,8 @@ def engine(
   version:1.0.0
 )
 
-// @description NATIVE gesture: reseeds the random generator DURING derivation. ⚠️ BPScript CARRIES THIS GESTURE, contrary to what this
-// field claimed until 2026-08-13: in-flow reseeding is written ![seed:42] (born 2026-08-10, commit 750d457, which removed its at-sign).
-// Measurement: it compiles and reaches the tree as an InstantControl carrying flux:true, distinct from the scene setting seed:42. The prose
-// here said BPScript exposed only the scene seed, which is not the same gesture -- that was FALSE, and this sentence is the reason this
-// word stayed out of the vocabulary. The bpscript field is NOT touched: declaring a word of the language is Romain's ruling, never a
-// consequence of my measurement.
+// @description NATIVE gesture: reseeds the random generator DURING derivation. In-flow reseeding is written ![seed:42] and reaches the tree
+// as an InstantControl carrying flux:true, distinct from the scene setting seed:42.
 control srand(
   bp3:_srand,
   bpscript:false,
@@ -66,9 +62,8 @@ control keepweights(
   scope(scene),
   section:engine
 )
-// @description Derivation failure handling (skip, retry(N), fallback(X)) -- default: skip. NO 'values' enum (unlike mode/scan):
-// retry/fallback take an ARGUMENT ('retry(2)', 'fallback(Autre)'), which the enum validator (controlValidation.js, EXACT comparison) would
-// reject -- measured by vocabulaire_appels.mjs section 2quinquies bis.
+// @description Derivation failure handling (skip, retry(N), fallback(X)) -- default: skip. No 'values' enum: retry and fallback take an
+// ARGUMENT ('retry(2)', 'fallback(Autre)').
 control on_fail(
   args(strategy),
   value:skip,
@@ -104,17 +99,15 @@ control goto(
   args(subgrammar, rule),
   section:engine
 )
-// @description Retrograde — reverse element order. flow SCOPE ONLY: the marker acts on what FOLLOWS. Measurement of the original engine
-// (Zouleb.c:95-175, BPx 2026-08-09): on a serial tool it moves FORWARD past the marker and targets what follows, and its loop stops dead on
-// a closing bracket -- no branch looks backwards. The form glued after a closing bracket was therefore accepted and SILENTLY INERT.
+// @description Retrograde — reverse element order. flow SCOPE ONLY: the marker acts on what FOLLOWS, and its reach stops on a closing
+// bracket.
 control retro(
   bp3:_retro,
   scope(flow),
   section:engine
 )
-// @description Shuffle — random reordering of sequence elements. seed arg → _srand(N) prefix. flow SCOPE ONLY: see retro. Measured corpus:
-// 32 occurrences of the tool BEFORE a block against 2 after a closing bracket, and those 2 act on what follows (S --> a b {_retro c d e}
-// _retro f g).
+// @description Shuffle — random reordering of sequence elements. seed arg → _srand(N) prefix. flow SCOPE ONLY: the marker acts on what
+// FOLLOWS, like retro.
 control shuffle(
   bp3:_rndseq,
   args(seed),
@@ -168,10 +161,8 @@ control destru(
   section:engine
 )
 
-// @description Random draw seed -- seed:N freezes the derivation; without it (or absent), the draw is random (Romain's decision
-// 2026-08-09). BP3 Seed. flow SCOPE ADDED 2026-08-10: the seed is ALSO written in the flow, ![seed:N] (form validated by Romain), where it
-// translates the native _srand(N). The flow convention is not new -- retro, shuffle, rotate, order and randomize already carry it; what was
-// missing was declaring it for seed, whose graphy the parser knew without the data saying so.
+// @description Random draw seed -- seed:N freezes the derivation; without it, the draw is random. BP3 Seed. Also written in the flow,
+// ![seed:N], where it translates the native _srand(N).
 control seed(
   args(value),
   scope(scene, flow),
@@ -201,10 +192,10 @@ control improvize(
   scope(scene),
   section:engine
 )
-// @description Placement tolerance in ms (BP3 Quantization). NOT a grid: measured on the native engine, no event boundary falls on a
-// multiple of this value. It is compared to the piece's internal step u and yields a grouping factor k = floor(value/u)+1, which the engine
-// reports (compression rate). k=1: output unchanged to the byte. k>1: instants are recast onto a coarser table -- distinct events share
-// boundaries, the piece lengthens, the start leaves zero.
+// @description Placement tolerance in ms (BP3 Quantization). Not a grid: no event boundary falls on a multiple of this value. It is
+// compared to the piece's internal step u and yields a grouping factor k = floor(value/u)+1, which the engine reports as its compression
+// rate. k=1 leaves the output unchanged to the byte. k>1 recasts instants onto a coarser table: distinct events share boundaries, the piece
+// lengthens, the start leaves zero.
 control quantization(
   args(value),
   unit:"ms",

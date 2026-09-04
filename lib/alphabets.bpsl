@@ -29,8 +29,7 @@ alphabet sargam(
   terminals(sa(), re(), ga(), ma(), pa(), dha(), ni())
 )
 
-// @description Sargam AS THE NATIVE BP3 ENGINE NAMES IT (INDIAN note convention) — BP3 test alphabet, alongside the others (Romain's ruling
-// 2026-07-19)
+// @description Sargam AS THE NATIVE BP3 ENGINE NAMES IT (INDIAN note convention) — BP3 test alphabet, alongside the others.
 alphabet bp3_indian(
   runtime:audio,
   tuning:bp3_indian_12TET,
@@ -43,8 +42,7 @@ alphabet bp3_indian(
   terminals(sa(), re(), ga(), ma(), pa(), dha(), ni())
 )
 
-// @description ENGLISH note convention of the native BP3 engine — BP3 test alphabet, alongside the others (Romain's decision 2026-07-29:
-// the mechanism uses only alphabets)
+// @description ENGLISH note convention of the native BP3 engine — BP3 test alphabet, alongside the others.
 alphabet bp3_english(
   runtime:audio,
   tuning:bp3_english_12TET,
@@ -57,7 +55,7 @@ alphabet bp3_english(
   terminals(C(), D(), E(), F(), G(), A(), B())
 )
 
-// @description FRENCH note convention of the native BP3 engine — BP3 test alphabet, alongside the others (Romain's decision 2026-07-29)
+// @description FRENCH note convention of the native BP3 engine — BP3 test alphabet, alongside the others.
 alphabet bp3_fr(
   runtime:audio,
   tuning:bp3_fr_12TET,

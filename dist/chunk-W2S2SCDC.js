@@ -373,303 +373,7 @@ function placesDesLibrairies(registre) {
 }
 
 // bpscript-sources:sources-de-librairie
-var SOURCES = [{ "nom": "alphabets", "format": "bpsl", "texte": `types
-
-// @documented
-def alphabets(resolvedBy:Kairos, resolves:alphabet)
-
-// @description Western chromatic \u2014 7 natural notes, 5 alteration levels
-alphabet western(
-  runtime:audio,
-  tuning:western_12TET,
-  octaves:western,
-  diapason:440,
-  resolvesPitch:true,
-  alterations(bb:-2, b:-1, "":0, "#":1, "##":2),
-  baseNote:A,
-  baseRegister:"4",
-  terminals(C(), D(), E(), F(), G(), A(), B())
-)
-
-// @description Indian sargam \u2014 7 svaras
-alphabet sargam(
-  runtime:audio,
-  tuning:sargam_12TET,
-  octaves:saptak,
-  diapason:240,
-  resolvesPitch:true,
-  alterations(komal:-1, "":0, tivra:1),
-  baseNote:sa,
-  baseRegister:madhya,
-  terminals(sa(), re(), ga(), ma(), pa(), dha(), ni())
-)
-
-// @description Sargam AS THE NATIVE BP3 ENGINE NAMES IT (INDIAN note convention) \u2014 BP3 test alphabet, alongside the others (Romain's ruling
-// 2026-07-19)
-alphabet bp3_indian(
-  runtime:audio,
-  tuning:bp3_indian_12TET,
-  octaves:bp3,
-  diapason:440,
-  resolvesPitch:true,
-  alterations(k:-1, "":0, "#":1),
-  baseNote:dha,
-  baseRegister:"4",
-  terminals(sa(), re(), ga(), ma(), pa(), dha(), ni())
-)
-
-// @description ENGLISH note convention of the native BP3 engine \u2014 BP3 test alphabet, alongside the others (Romain's decision 2026-07-29:
-// the mechanism uses only alphabets)
-alphabet bp3_english(
-  runtime:audio,
-  tuning:bp3_english_12TET,
-  octaves:bp3,
-  diapason:440,
-  resolvesPitch:true,
-  alterations(b:-1, "":0, "#":1),
-  baseNote:A,
-  baseRegister:"4",
-  terminals(C(), D(), E(), F(), G(), A(), B())
-)
-
-// @description FRENCH note convention of the native BP3 engine \u2014 BP3 test alphabet, alongside the others (Romain's decision 2026-07-29)
-alphabet bp3_fr(
-  runtime:audio,
-  tuning:bp3_fr_12TET,
-  octaves:bp3_fr,
-  diapason:440,
-  resolvesPitch:true,
-  alterations(b:-1, "":0, "#":1),
-  baseNote:la,
-  baseRegister:"3",
-  terminals(do(), re(), mi(), fa(), sol(), la(), si())
-)
-
-// @description Latin solf\xE8ge \u2014 do r\xE9 mi fa sol la si
-alphabet solfege(
-  runtime:audio,
-  tuning:solfege_12TET,
-  octaves:western,
-  diapason:440,
-  resolvesPitch:true,
-  alterations(bb:-2, b:-1, "":0, "#":1, "##":2),
-  baseNote:la,
-  baseRegister:"4",
-  terminals(do(), re(), mi(), fa(), sol(), la(), si())
-)
-
-// @description Arabic \u2014 7 perde (degree names) with quarter-tone alterations. rast\u2248do, sikah = neutral third, awj = neutral seventh.
-alphabet arabic(
-  runtime:audio,
-  tuning:arabic_24TET,
-  diapason:440,
-  resolvesPitch:true,
-  alterations(bb:-4, b:-2, half_b:-1, "":0, "half_#":1, "#":2, "##":4),
-  baseNote:husayni,
-  terminals(rast(), dukah(), sikah(), jaharkah(), nawa(), husayni(), awj())
-)
-
-// @description Turkish makam \u2014 note names from Ottoman/Turkish tradition
-alphabet turkish(
-  runtime:audio,
-  tuning:turkish_53TET,
-  octaves:turkish,
-  diapason:440,
-  resolvesPitch:true,
-  alterations(bakiye:4, kucuk_mucenneb:5, "":0, buyuk_mucenneb:8, tanini:9),
-  baseNote:neva,
-  baseRegister:"",
-  terminals(
-    kaba_cargah(),
-    yegah(),
-    huseyni_asiran(),
-    acem_asiran(),
-    irak(),
-    rast(),
-    dugah(),
-    segah(),
-    buselik(),
-    cargah(),
-    neva(),
-    huseyni(),
-    acem(),
-    evic(),
-    mahur(),
-    gerdaniye()
-  )
-)
-
-// @description Javanese gamelan pelog \u2014 7 tones
-alphabet gamelan_pelog(
-  runtime:audio,
-  tuning:gamelan_pelog,
-  diapason:282,
-  resolvesPitch:true,
-  alterations(),
-  baseNote:nem,
-  terminals(nem(), barang(), bem(), gulu(), lima(), enam(), pitu())
-)
-
-// @description Javanese gamelan slendro \u2014 5 tones
-alphabet gamelan_slendro(
-  runtime:audio,
-  tuning:gamelan_slendro,
-  diapason:282,
-  resolvesPitch:true,
-  alterations(),
-  baseNote:nem,
-  terminals(nem(), barang(), gulu(), dada(), lima())
-)
-
-// @description Shakuhachi \u2014 5 base fingerings (Kinko-ry\u016B)
-alphabet shakuhachi(
-  runtime:audio,
-  tuning:shakuhachi_12TET,
-  octaves:shakuhachi,
-  diapason:293.66,
-  resolvesPitch:true,
-  alterations(meri:-1, "":0, kari:1),
-  baseNote:ro,
-  baseRegister:otsu,
-  terminals(ro(), tsu(), re(), chi(), ri())
-)
-
-// @description Bohlen-Pierce \u2014 13 pitch classes in a tritave
-alphabet bohlen_pierce(
-  runtime:audio,
-  tuning:bohlen_pierce_equal,
-  diapason:440,
-  resolvesPitch:true,
-  alterations(),
-  baseNote:C,
-  terminals(C(), Db(), D(), E(), F(), Gb(), G(), H(), Jb(), J(), A(), Bb(), B())
-)
-
-// @description Tabla bols \u2014 the ATOMIC syllables, those that no other one composes
-alphabet tabla(
-  runtime:audio,
-  resolvesPitch:false,
-  alterations(),
-  terminals(
-    dha(voice:bayan_open),
-    ta(voice:dayan_tap),
-    dhin(voice:bayan_open),
-    tin(voice:dayan_ring),
-    dhee(),
-    tee(voice:dayan_open),
-    ge(voice:bayan_open),
-    ke(voice:bayan_muted),
-    ra(),
-    tr(),
-    kt(voice:dayan_dry),
-    ti(voice:dayan_tap),
-    ne(),
-    na(voice:dayan_ring),
-    tk(),
-    dhr(),
-    ng(),
-    gr(),
-    te(),
-    tt(),
-    ki(),
-    ka(voice:bayan_muted)
-  )
-)
-
-// @description Abstract symbols \u2014 single lowercase letters, no pitch. For structural test scenes.
-alphabet simple(
-  runtime:audio,
-  resolvesPitch:false,
-  alterations(),
-  terminals(
-    a(),
-    b(),
-    c(),
-    d(),
-    e(),
-    f(),
-    g(),
-    h(),
-    i(),
-    j(),
-    k(),
-    l(),
-    m(),
-    n(),
-    o(),
-    p(),
-    q(),
-    r(),
-    s(),
-    t(),
-    u(),
-    v(),
-    w(),
-    x(),
-    y(),
-    z(),
-    Z(),
-    filler(),
-    b1(),
-    c1(),
-    d1()
-  )
-)
-
-// @description 22-shruti as named by BP3 \u2014 23 microtonal degrees (sa, r1..r4, g1..g4, m1, m2, m3p1, m4p2, p3, p4, d1..d4, n1..n4). Names
-// verbatim from -to.tryShruti, tonic sa.
-alphabet shruti23(
-  runtime:audio,
-  tuning:shruti23_native,
-  octaves:saptak_us,
-  diapason:261.625,
-  resolvesPitch:true,
-  alterations("":0),
-  baseNote:sa,
-  baseRegister:"4",
-  terminals(
-    sa(),
-    r1(),
-    r2(),
-    r3(),
-    r4(),
-    g1(),
-    g2(),
-    g3(),
-    g4(),
-    m1(),
-    m2(),
-    m3p1(),
-    m4p2(),
-    p3(),
-    p4(),
-    d1(),
-    d2(),
-    d3(),
-    d4(),
-    n1(),
-    n2(),
-    n3(),
-    n4()
-  )
-)
-
-// @description Csound sound objects from the tryCsoundObjects test grammar (pitchless)
-alphabet tryCsoundObjects(
-  runtime:audio,
-  resolvesPitch:false,
-  alterations(),
-  terminals(
-    a(voice:dummy_csound_a),
-    b(voice:dummy_csound_b),
-    c(voice:dummy_csound_c),
-    d(voice:dummy_csound_d),
-    e(voice:dummy_csound_e),
-    f(voice:dummy_csound_f),
-    midiobject(voice:dummy_csound_midiobject)
-  )
-)
-`, "fichier": "alphabets.bpsl" }, { "nom": "audio", "format": "bpsl", "texte": `types
+var SOURCES = [{ "nom": "alphabets", "format": "bpsl", "texte": 'types\n\n// @documented\ndef alphabets(resolvedBy:Kairos, resolves:alphabet)\n\n// @description Western chromatic \u2014 7 natural notes, 5 alteration levels\nalphabet western(\n  runtime:audio,\n  tuning:western_12TET,\n  octaves:western,\n  diapason:440,\n  resolvesPitch:true,\n  alterations(bb:-2, b:-1, "":0, "#":1, "##":2),\n  baseNote:A,\n  baseRegister:"4",\n  terminals(C(), D(), E(), F(), G(), A(), B())\n)\n\n// @description Indian sargam \u2014 7 svaras\nalphabet sargam(\n  runtime:audio,\n  tuning:sargam_12TET,\n  octaves:saptak,\n  diapason:240,\n  resolvesPitch:true,\n  alterations(komal:-1, "":0, tivra:1),\n  baseNote:sa,\n  baseRegister:madhya,\n  terminals(sa(), re(), ga(), ma(), pa(), dha(), ni())\n)\n\n// @description Sargam AS THE NATIVE BP3 ENGINE NAMES IT (INDIAN note convention) \u2014 BP3 test alphabet, alongside the others.\nalphabet bp3_indian(\n  runtime:audio,\n  tuning:bp3_indian_12TET,\n  octaves:bp3,\n  diapason:440,\n  resolvesPitch:true,\n  alterations(k:-1, "":0, "#":1),\n  baseNote:dha,\n  baseRegister:"4",\n  terminals(sa(), re(), ga(), ma(), pa(), dha(), ni())\n)\n\n// @description ENGLISH note convention of the native BP3 engine \u2014 BP3 test alphabet, alongside the others.\nalphabet bp3_english(\n  runtime:audio,\n  tuning:bp3_english_12TET,\n  octaves:bp3,\n  diapason:440,\n  resolvesPitch:true,\n  alterations(b:-1, "":0, "#":1),\n  baseNote:A,\n  baseRegister:"4",\n  terminals(C(), D(), E(), F(), G(), A(), B())\n)\n\n// @description FRENCH note convention of the native BP3 engine \u2014 BP3 test alphabet, alongside the others.\nalphabet bp3_fr(\n  runtime:audio,\n  tuning:bp3_fr_12TET,\n  octaves:bp3_fr,\n  diapason:440,\n  resolvesPitch:true,\n  alterations(b:-1, "":0, "#":1),\n  baseNote:la,\n  baseRegister:"3",\n  terminals(do(), re(), mi(), fa(), sol(), la(), si())\n)\n\n// @description Latin solf\xE8ge \u2014 do r\xE9 mi fa sol la si\nalphabet solfege(\n  runtime:audio,\n  tuning:solfege_12TET,\n  octaves:western,\n  diapason:440,\n  resolvesPitch:true,\n  alterations(bb:-2, b:-1, "":0, "#":1, "##":2),\n  baseNote:la,\n  baseRegister:"4",\n  terminals(do(), re(), mi(), fa(), sol(), la(), si())\n)\n\n// @description Arabic \u2014 7 perde (degree names) with quarter-tone alterations. rast\u2248do, sikah = neutral third, awj = neutral seventh.\nalphabet arabic(\n  runtime:audio,\n  tuning:arabic_24TET,\n  diapason:440,\n  resolvesPitch:true,\n  alterations(bb:-4, b:-2, half_b:-1, "":0, "half_#":1, "#":2, "##":4),\n  baseNote:husayni,\n  terminals(rast(), dukah(), sikah(), jaharkah(), nawa(), husayni(), awj())\n)\n\n// @description Turkish makam \u2014 note names from Ottoman/Turkish tradition\nalphabet turkish(\n  runtime:audio,\n  tuning:turkish_53TET,\n  octaves:turkish,\n  diapason:440,\n  resolvesPitch:true,\n  alterations(bakiye:4, kucuk_mucenneb:5, "":0, buyuk_mucenneb:8, tanini:9),\n  baseNote:neva,\n  baseRegister:"",\n  terminals(\n    kaba_cargah(),\n    yegah(),\n    huseyni_asiran(),\n    acem_asiran(),\n    irak(),\n    rast(),\n    dugah(),\n    segah(),\n    buselik(),\n    cargah(),\n    neva(),\n    huseyni(),\n    acem(),\n    evic(),\n    mahur(),\n    gerdaniye()\n  )\n)\n\n// @description Javanese gamelan pelog \u2014 7 tones\nalphabet gamelan_pelog(\n  runtime:audio,\n  tuning:gamelan_pelog,\n  diapason:282,\n  resolvesPitch:true,\n  alterations(),\n  baseNote:nem,\n  terminals(nem(), barang(), bem(), gulu(), lima(), enam(), pitu())\n)\n\n// @description Javanese gamelan slendro \u2014 5 tones\nalphabet gamelan_slendro(\n  runtime:audio,\n  tuning:gamelan_slendro,\n  diapason:282,\n  resolvesPitch:true,\n  alterations(),\n  baseNote:nem,\n  terminals(nem(), barang(), gulu(), dada(), lima())\n)\n\n// @description Shakuhachi \u2014 5 base fingerings (Kinko-ry\u016B)\nalphabet shakuhachi(\n  runtime:audio,\n  tuning:shakuhachi_12TET,\n  octaves:shakuhachi,\n  diapason:293.66,\n  resolvesPitch:true,\n  alterations(meri:-1, "":0, kari:1),\n  baseNote:ro,\n  baseRegister:otsu,\n  terminals(ro(), tsu(), re(), chi(), ri())\n)\n\n// @description Bohlen-Pierce \u2014 13 pitch classes in a tritave\nalphabet bohlen_pierce(\n  runtime:audio,\n  tuning:bohlen_pierce_equal,\n  diapason:440,\n  resolvesPitch:true,\n  alterations(),\n  baseNote:C,\n  terminals(C(), Db(), D(), E(), F(), Gb(), G(), H(), Jb(), J(), A(), Bb(), B())\n)\n\n// @description Tabla bols \u2014 the ATOMIC syllables, those that no other one composes\nalphabet tabla(\n  runtime:audio,\n  resolvesPitch:false,\n  alterations(),\n  terminals(\n    dha(voice:bayan_open),\n    ta(voice:dayan_tap),\n    dhin(voice:bayan_open),\n    tin(voice:dayan_ring),\n    dhee(),\n    tee(voice:dayan_open),\n    ge(voice:bayan_open),\n    ke(voice:bayan_muted),\n    ra(),\n    tr(),\n    kt(voice:dayan_dry),\n    ti(voice:dayan_tap),\n    ne(),\n    na(voice:dayan_ring),\n    tk(),\n    dhr(),\n    ng(),\n    gr(),\n    te(),\n    tt(),\n    ki(),\n    ka(voice:bayan_muted)\n  )\n)\n\n// @description Abstract symbols \u2014 single lowercase letters, no pitch. For structural test scenes.\nalphabet simple(\n  runtime:audio,\n  resolvesPitch:false,\n  alterations(),\n  terminals(\n    a(),\n    b(),\n    c(),\n    d(),\n    e(),\n    f(),\n    g(),\n    h(),\n    i(),\n    j(),\n    k(),\n    l(),\n    m(),\n    n(),\n    o(),\n    p(),\n    q(),\n    r(),\n    s(),\n    t(),\n    u(),\n    v(),\n    w(),\n    x(),\n    y(),\n    z(),\n    Z(),\n    filler(),\n    b1(),\n    c1(),\n    d1()\n  )\n)\n\n// @description 22-shruti as named by BP3 \u2014 23 microtonal degrees (sa, r1..r4, g1..g4, m1, m2, m3p1, m4p2, p3, p4, d1..d4, n1..n4). Names\n// verbatim from -to.tryShruti, tonic sa.\nalphabet shruti23(\n  runtime:audio,\n  tuning:shruti23_native,\n  octaves:saptak_us,\n  diapason:261.625,\n  resolvesPitch:true,\n  alterations("":0),\n  baseNote:sa,\n  baseRegister:"4",\n  terminals(\n    sa(),\n    r1(),\n    r2(),\n    r3(),\n    r4(),\n    g1(),\n    g2(),\n    g3(),\n    g4(),\n    m1(),\n    m2(),\n    m3p1(),\n    m4p2(),\n    p3(),\n    p4(),\n    d1(),\n    d2(),\n    d3(),\n    d4(),\n    n1(),\n    n2(),\n    n3(),\n    n4()\n  )\n)\n\n// @description Csound sound objects from the tryCsoundObjects test grammar (pitchless)\nalphabet tryCsoundObjects(\n  runtime:audio,\n  resolvesPitch:false,\n  alterations(),\n  terminals(\n    a(voice:dummy_csound_a),\n    b(voice:dummy_csound_b),\n    c(voice:dummy_csound_c),\n    d(voice:dummy_csound_d),\n    e(voice:dummy_csound_e),\n    f(voice:dummy_csound_f),\n    midiobject(voice:dummy_csound_midiobject)\n  )\n)\n', "fichier": "alphabets.bpsl" }, { "nom": "audio", "format": "bpsl", "texte": `types
 
 // @documented
 // @description Controls specific to the Web Audio transport \u2014 EXACT match with LIBRAIRIES.md:173.
@@ -759,12 +463,8 @@ def engine(
   version:1.0.0
 )
 
-// @description NATIVE gesture: reseeds the random generator DURING derivation. \u26A0\uFE0F BPScript CARRIES THIS GESTURE, contrary to what this
-// field claimed until 2026-08-13: in-flow reseeding is written ![seed:42] (born 2026-08-10, commit 750d457, which removed its at-sign).
-// Measurement: it compiles and reaches the tree as an InstantControl carrying flux:true, distinct from the scene setting seed:42. The prose
-// here said BPScript exposed only the scene seed, which is not the same gesture -- that was FALSE, and this sentence is the reason this
-// word stayed out of the vocabulary. The bpscript field is NOT touched: declaring a word of the language is Romain's ruling, never a
-// consequence of my measurement.
+// @description NATIVE gesture: reseeds the random generator DURING derivation. In-flow reseeding is written ![seed:42] and reaches the tree
+// as an InstantControl carrying flux:true, distinct from the scene setting seed:42.
 control srand(
   bp3:_srand,
   bpscript:false,
@@ -815,9 +515,8 @@ control keepweights(
   scope(scene),
   section:engine
 )
-// @description Derivation failure handling (skip, retry(N), fallback(X)) -- default: skip. NO 'values' enum (unlike mode/scan):
-// retry/fallback take an ARGUMENT ('retry(2)', 'fallback(Autre)'), which the enum validator (controlValidation.js, EXACT comparison) would
-// reject -- measured by vocabulaire_appels.mjs section 2quinquies bis.
+// @description Derivation failure handling (skip, retry(N), fallback(X)) -- default: skip. No 'values' enum: retry and fallback take an
+// ARGUMENT ('retry(2)', 'fallback(Autre)').
 control on_fail(
   args(strategy),
   value:skip,
@@ -853,17 +552,15 @@ control goto(
   args(subgrammar, rule),
   section:engine
 )
-// @description Retrograde \u2014 reverse element order. flow SCOPE ONLY: the marker acts on what FOLLOWS. Measurement of the original engine
-// (Zouleb.c:95-175, BPx 2026-08-09): on a serial tool it moves FORWARD past the marker and targets what follows, and its loop stops dead on
-// a closing bracket -- no branch looks backwards. The form glued after a closing bracket was therefore accepted and SILENTLY INERT.
+// @description Retrograde \u2014 reverse element order. flow SCOPE ONLY: the marker acts on what FOLLOWS, and its reach stops on a closing
+// bracket.
 control retro(
   bp3:_retro,
   scope(flow),
   section:engine
 )
-// @description Shuffle \u2014 random reordering of sequence elements. seed arg \u2192 _srand(N) prefix. flow SCOPE ONLY: see retro. Measured corpus:
-// 32 occurrences of the tool BEFORE a block against 2 after a closing bracket, and those 2 act on what follows (S --> a b {_retro c d e}
-// _retro f g).
+// @description Shuffle \u2014 random reordering of sequence elements. seed arg \u2192 _srand(N) prefix. flow SCOPE ONLY: the marker acts on what
+// FOLLOWS, like retro.
 control shuffle(
   bp3:_rndseq,
   args(seed),
@@ -917,10 +614,8 @@ control destru(
   section:engine
 )
 
-// @description Random draw seed -- seed:N freezes the derivation; without it (or absent), the draw is random (Romain's decision
-// 2026-08-09). BP3 Seed. flow SCOPE ADDED 2026-08-10: the seed is ALSO written in the flow, ![seed:N] (form validated by Romain), where it
-// translates the native _srand(N). The flow convention is not new -- retro, shuffle, rotate, order and randomize already carry it; what was
-// missing was declaring it for seed, whose graphy the parser knew without the data saying so.
+// @description Random draw seed -- seed:N freezes the derivation; without it, the draw is random. BP3 Seed. Also written in the flow,
+// ![seed:N], where it translates the native _srand(N).
 control seed(
   args(value),
   scope(scene, flow),
@@ -950,10 +645,10 @@ control improvize(
   scope(scene),
   section:engine
 )
-// @description Placement tolerance in ms (BP3 Quantization). NOT a grid: measured on the native engine, no event boundary falls on a
-// multiple of this value. It is compared to the piece's internal step u and yields a grouping factor k = floor(value/u)+1, which the engine
-// reports (compression rate). k=1: output unchanged to the byte. k>1: instants are recast onto a coarser table -- distinct events share
-// boundaries, the piece lengthens, the start leaves zero.
+// @description Placement tolerance in ms (BP3 Quantization). Not a grid: no event boundary falls on a multiple of this value. It is
+// compared to the piece's internal step u and yields a grouping factor k = floor(value/u)+1, which the engine reports as its compression
+// rate. k=1 leaves the output unchanged to the byte. k>1 recasts instants onto a coarser table: distinct events share boundaries, the piece
+// lengthens, the start leaves zero.
 control quantization(
   args(value),
   unit:"ms",
@@ -995,7 +690,7 @@ control smooth(
   unicite:nature-du-temps,
   section:subgrammar
 )
-`, "fichier": "engine.bpsl" }, { "nom": "eval", "format": "bpsl", "texte": "// @documented\ndef eval(resolvedBy:runtime-codevoices, resolves:eval, name:eval, type:code, section:objects)\n\n// @description Patterns and samples, in the browser.\ndef strudel(\n  parameters(\n    // @description The sample bank the voice loads. Without it, a scene using sample names plays SILENT \u2014 measured at Kanopi: \xAB unknown\n    // bank \u2192 MUTE sound \xBB.\n    bank()\n  )\n)\n\n// @description Visual synthesis.\ndef hydra()\n\n// @description SuperCollider \u2014 audio synthesis, native backend.\ndef sc()\n\n// @description JavaScript evaluated by the runtime.\ndef js()\n\n// @description TypeScript \u2014 the language of library bodies, transpiled then executed by the resolver the library names.\ndef ts()\n\n// @description Croquis graphiques p5.js.\ndef p5()\n\n// @description Live coding minimal.\ndef mercury()\n\n// @description Csound \u2014 synthesis, native backend.\ndef csound()\n\n// @description TidalCycles \u2014 motifs, backend natif (SuperDirt).\ndef tidal()\n\n// @description Literal text, evaluated by no one. Carries a SENTENCE where the language has no escape character: a library description, a\n// label. Ratified by Romain on 2026-08-13 -- the tagged backtick is the only graphy in the repository that delimits free content, and\n// adding a tag to it costs less than inventing a sign.\ndef txt()\n", "fichier": "eval.bpsl" }, { "nom": "expression", "format": "bpsl", "texte": `types
+`, "fichier": "engine.bpsl" }, { "nom": "eval", "format": "bpsl", "texte": "// @documented\ndef eval(resolvedBy:runtime-codevoices, resolves:eval, name:eval, type:code, section:objects)\n\n// @description Patterns and samples, in the browser.\ndef strudel(\n  parameters(\n    // @description The sample bank the voice loads. Without it, a scene using sample names plays SILENT.\n    bank()\n  )\n)\n\n// @description Visual synthesis.\ndef hydra()\n\n// @description SuperCollider \u2014 audio synthesis, native backend.\ndef sc()\n\n// @description JavaScript evaluated by the runtime.\ndef js()\n\n// @description TypeScript \u2014 the language of library bodies, transpiled then executed by the resolver the library names.\ndef ts()\n\n// @description Croquis graphiques p5.js.\ndef p5()\n\n// @description Live coding minimal.\ndef mercury()\n\n// @description Csound \u2014 synthesis, native backend.\ndef csound()\n\n// @description TidalCycles \u2014 motifs, backend natif (SuperDirt).\ndef tidal()\n\n// @description Literal text, evaluated by no one. Carries a SENTENCE where the language has no escape character: a library description, a\n// label.\ndef txt()\n", "fichier": "eval.bpsl" }, { "nom": "expression", "format": "bpsl", "texte": `types
 
 // @documented
 // @description Controls describing HOW a note is played, valid for EVERY output \u2014 not one specific transport (LIBRAIRIES.md:171,217-219: \xAB
@@ -1053,8 +748,8 @@ control rndvel(
 )
 
 // @description Velocity in CONTINUOUS mode \u2014 the value glides DURING notes, through intermediate messages. Its two discrete siblings live
-// in the variation library; their recipient is read on that file's resolvedBy field, never here. Measured on native engine v3.5.1-iso.2: on
-// velocity, continuous yields bytes identical to steps (FillPhaseDiagram.c carries 'not implemented' at line 415).
+// in the variation library; their recipient is read on that file's resolvedBy field. On the native engine, continuous velocity yields bytes
+// identical to steps.
 control velcont(
   bp3:_velcont,
   scope(symbol, group, rule, flow),
@@ -1071,8 +766,8 @@ control offvel(
 )
 
 // @description Articulation in CONTINUOUS mode \u2014 the value glides DURING notes. Its two discrete siblings, articulfixed and articulstep,
-// live in the variation library. The native behaviour of this word is unsettled: no witness built on engine v3.5.1-iso.2 moved articulation
-// at all, fixed mode included.
+// live in the variation library. The native behaviour of this word is unsettled: on engine v3.5.1-iso.2 no mode moves articulation, fixed
+// included.
 control articulcont(
   bp3:_articulcont,
   scope(symbol, group, rule, flow)
@@ -1080,8 +775,7 @@ control articulcont(
 
 // @description Transposition in CONTINUOUS mode \u2014 the value glides DURING notes. Its two discrete siblings, transposefixed and
 // transposestep, live in the variation library; this one stays here because transposition is realized by the same resolver as its
-// parameter. Measured on native engine v3.5.1-iso.2: continuous yields bytes identical to steps (FillPhaseDiagram.c carries 'not
-// implemented' at line 608).
+// parameter. On the native engine, continuous transposition yields bytes identical to steps.
 control transposecont(
   bp3:_transposecont,
   scope(symbol, group, rule, flow),
@@ -1089,7 +783,7 @@ control transposecont(
 )
 
 // @description NATIVE gesture: gives a value to a named performance parameter. In BPScript the form is !(<param>:<value>), the parameter
-// being declared by its TYPE at the head -- signal <param> -- and it is the KEY, see the ruling of 2026-08-13.
+// being declared by its TYPE at the head -- signal <param> -- and it is the KEY.
 control value(
   bp3:_value,
   bpscript:false,
@@ -1179,14 +873,12 @@ homomorphism transposition(
   sections(TR(chains(C3(B3, F4, C6), B3(C3, B4, F6), F4(C6, F2, B5))))
 )
 
-// @description Ported from bp3-engine/test-data/-ho.Ruwet on 2026-08-13, section by section and link by link. Verified: unfolding into
-// consecutive pairs reproduces the native exactly.
+// @description Ruwet homomorphism, faithful to bp3-engine/test-data/-ho.Ruwet, section by section and link by link.
 homomorphism Ruwet(
   sections(m1(chains(la4(sib4))), m2(chains(la4(sol4))), mineur(chains(fa4(re4), la4(fa4))))
 )
 
-// @description Ported from bp3-engine/test-data/-ho.abc on 2026-08-13, section by section and link by link. Verified: unfolding into
-// consecutive pairs reproduces the native exactly.
+// @description Homomorphism faithful to bp3-engine/test-data/-ho.abc, section by section and link by link.
 homomorphism abc(
   sections(
     "*"(
@@ -1223,16 +915,13 @@ homomorphism abc(
   )
 )
 
-// @description Ported from bp3-engine/test-data/-ho.abc1 on 2026-08-13, section by section and link by link. Verified: unfolding into
-// consecutive pairs reproduces the native exactly.
+// @description Homomorphism faithful to bp3-engine/test-data/-ho.abc1, section by section and link by link.
 homomorphism abc1(
   sections(chik(chains(a("a'"), b("b'"), c("c'"), d("d'"))), e(chains(f("f'"), g("g'"))))
 )
 
-// @description Ported from bp3-engine/test-data/-ho.abc2 on 2026-08-13. \u26A0\uFE0F The section is \`sync\` and not \`*\`: the file writes \`*\` then
-// \`sync\` with no separator between them, and A LABEL FOLLOWING A LABEL REPLACES IT \u2014 the native opens a section only on a separator. I had
-// first read \`sync\` as a MODIFIER of the current section; that was an invention, the word \`sync\` exists nowhere in the engine source.
-// Corrected on a report from bp3-frontend, whose criterion comes from the engine.
+// @description Homomorphism faithful to bp3-engine/test-data/-ho.abc2. Its section is \`sync\`, not \`*\`: the file writes \`*\` then \`sync\` with
+// no separator, and a LABEL FOLLOWING A LABEL REPLACES IT \u2014 the native opens a section only on a separator.
 homomorphism abc2(
   sections(
     sync(
@@ -1268,8 +957,7 @@ homomorphism abc2(
   )
 )
 
-// @description Ported from bp3-engine/test-data/-ho.abc3 on 2026-08-13, section by section and link by link. Verified: unfolding into
-// consecutive pairs reproduces the native exactly.
+// @description Homomorphism faithful to bp3-engine/test-data/-ho.abc3, section by section and link by link.
 homomorphism abc3(
   sections(
     "*"(
@@ -1307,9 +995,7 @@ homomorphism abc3(
 )
 
 // @description Bells \u2014 CHAIN homomorphism, faithful to bp3-engine/test-data/-ho.cloches1 (section TR, 4 chains indexed by invocation
-// depth). \u26A0\uFE0F PORTED AGAIN ON 2026-08-10: the previous version FLATTENED the chains into pairs \u2014 it kept the first link of each line and
-// lost the following ones, 15 links out of 19. A chain does not say \xAB do3 becomes mib3 \xBB: it says \xAB on the first call mib3, on the second
-// fa#3, on the third la4 \xBB \u2014 flattening it changes the meaning, not just the quantity.
+// depth). A chain does not say \xAB do3 becomes mib3 \xBB: it says \xAB on the first call mib3, on the second fa#3, on the third la4 \xBB.
 homomorphism cloches1(
   sections(
     TR(
@@ -1332,12 +1018,11 @@ homomorphism dhin--(
 
 homomorphism tabla(default(dha:ta, dhin:tin, dhee:tee, ge:ke))
 
-// @description Ported from bp3-engine/test-data/-ho.trial.mohanam on 2026-08-13, section by section and link by link. Verified: unfolding
-// into consecutive pairs reproduces the native exactly.
+// @description Homomorphism faithful to bp3-engine/test-data/-ho.trial.mohanam, section by section and link by link.
 homomorphism trial_mohanam(
   sections(trn(chains(sa6(ga6), re6(pa6), ga6(dha6), pa6(sa7), dha6(re7), sa7(ga7))))
 )
-`, "fichier": "homomorphism.bpsl" }, { "nom": "midi", "format": "bpsl", "texte": 'types\n\n// @documented\n// @description Controls specific to the MIDI transport \u2014 EXACT match with LIBRAIRIES.md:172.\ndef midi(\n  resolves:midi,\n  resolvedBy:"runtime-MIDI",\n  name:midi,\n  section:controls\n)\n\n// @description Address channel, short form of channel.\ndef ch(\n  section:schema.addressKeys,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Address channel, long form of ch.\ndef channel(\n  section:schema.addressKeys,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Device targeted by the address.\ndef device(\n  section:schema.addressKeys,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Note number of an address \u2014 the source a wait point listens to, the event an occurrence targets.\ndef note(\n  section:schema.addressKeys,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Port targeted by the address.\ndef port(\n  section:schema.addressKeys,\n  scope(symbol, group, rule, flow)\n)\n\n// @description MIDI channel\ncontrol chan(\n  bp3:_chan,\n  args(channel),\n  range(1, 16),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description MIDI Program Change. The author writes the program number starting at 1, like the original engine; the byte transmitted is\n// that number minus one.\ncontrol ins(\n  bp3:_ins,\n  args(program),\n  range(1, 128),\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:midi\n)\n\n// @description MIDI Modulation (CC1)\ncontrol mod(\n  bp3:_mod,\n  args(value),\n  range(0, 127),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Enable continuous modulation interpolation (CC1)\ncontrol modcont(\n  bp3:_modcont,\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description MIDI Pitch Bend\ncontrol pitchbend(\n  bp3:_pitchbend,\n  args(value),\n  range(-8192, 8191),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Pitch bend range in cents\ncontrol pitchrange(\n  bp3:_pitchrange,\n  args(cents),\n  unit:"cents",\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Enable continuous pitch bend interpolation\ncontrol pitchcont(\n  bp3:_pitchcont,\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Key mapping \u2014 remap MIDI key range (p1,p2) to (q1,q2). Args are key numbers (0..127) or note names; p2 must be greater than\n// p1. BP3 _keymap \u2014 register of the native engine, bp3-engine `origin/wasm`: capture-run/console_strings.json carries \xAB 62 4 _keymap \xBB.\ncontrol keymap(\n  bp3:_keymap,\n  args(p1, q1, p2, q2),\n  range(0, 127),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Key map in CONTINUOUS mode \u2014 the map glides DURING notes, through intermediate messages. BP3 _mapcont \u2014 register of the\n// native engine, bp3-engine `origin/wasm`: capture-run/console_strings.json carries \xAB 44 0 _mapcont \xBB. Its two discrete siblings live in\n// the variation library; their recipient is read on that file\'s resolvedBy field, never here.\ncontrol mapcont(\n  bp3:_mapcont,\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description MIDI Channel Pressure (aftertouch)\ncontrol pressure(\n  bp3:_press,\n  args(value),\n  range(0, 127),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Enable continuous channel pressure interpolation\ncontrol presscont(\n  bp3:_presscont,\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description MIDI Volume (CC7)\ncontrol volume(\n  implements:expression.volume,\n  bp3:_volume,\n  args(value),\n  range(0, 127),\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:midi\n)\n\n// @description Enable continuous volume interpolation\ncontrol volumecont(\n  bp3:_volumecont,\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Enable MIDI switch channel\ncontrol switchon(\n  bp3:_switchon,\n  args(channel),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Disable MIDI switch channel\ncontrol switchoff(\n  bp3:_switchoff,\n  args(channel),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Mutes the sound. Bare, (mute), mutes everything sounding; per component, (mute.all) or (mute.lead), mutes the named target.\n// Named on 2026-07-26: replaces one of the families script(...) carried without a name.\ncontrol mute(\n  scope(flow),\n  bagOnly:true,\n  transportGroup:midi\n)\n\n// @description Restores the sound muted by mute. Same graphy: (unmute) or (unmute.lead).\ncontrol unmute(\n  scope(flow),\n  bagOnly:true,\n  transportGroup:midi\n)\n\n// @description Emergency stop: every note released, every controller reset flat. Image of MIDI all notes off. Takes no argument.\ncontrol panic(\n  scope(flow),\n  bagOnly:true,\n  transportGroup:midi\n)\n\n// @description Real-time system synchronization message: (sync:start), (sync:continue), (sync:stop). Image of the MIDI Start/Continue/Stop\n// messages. Replaces script(MIDI send Continue).\ncontrol sync(\n  args(message),\n  values(start, continue, stop),\n  scope(flow),\n  transportGroup:midi\n)\n\n// @description NUMBERED MIDI controller. Designated by its component number: (cc.98:45) in a container, !(cc.98:45) in flow. For\n// controllers with no named alias -- those that have one are written by their name (mod = CC1, volume = CC7). Graphy settled by Romain on\n// 2026-07-26: the dot CALLS the component (controller 98), the colon ASSIGNS the value.\ncontrol cc(\n  component:number,\n  args(value),\n  range(0, 127),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Rate of intermediate values for continuous volume, in values per second. Default 50, like the native engine.\ncontrol volumerate(\n  bp3:_volumerate,\n  args(hz),\n  range(0, 1000),\n  unit:"Hz",\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Rate of intermediate values for continuous modulation, in values per second. Default 50, like the native engine.\ncontrol modrate(\n  bp3:_modrate,\n  args(hz),\n  range(0, 1000),\n  unit:"Hz",\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Rate of intermediate values for continuous pitch, in values per second. Default 50, like the native engine.\ncontrol pitchrate(\n  bp3:_pitchrate,\n  args(hz),\n  range(0, 1000),\n  unit:"Hz",\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Rate of intermediate values for continuous pressure, in values per second. Default 50, like the native engine.\ncontrol pressrate(\n  bp3:_pressrate,\n  args(hz),\n  range(0, 1000),\n  unit:"Hz",\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Rate of intermediate values for ALL continuous streams, in emissions per second. Sets in one word what volumerate, modrate,\n// pitchrate and pressrate set separately. Image of SamplingRate in the native engine.\ncontrol rate(\n  bp3:SamplingRate,\n  args(hz),\n  range(0, 1000),\n  unit:"Hz",\n  scope(scene),\n  transportGroup:midi\n)\n\n// @description Number of the MIDI controller carrying volume. Image of VolumeController in the native engine. The channel is stated in the\n// same bag: !(chan:3, volumecontrol:11).\ncontrol volumecontrol(\n  bp3:_volumecontrol,\n  args(controller),\n  range(0, 127),\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:midi\n)\n\n// @description Number of the MIDI controller carrying panning. Image of PanoramicController in the native engine. The channel is stated in\n// the same bag: !(chan:3, pancontrol:11).\ncontrol pancontrol(\n  bp3:_pancontrol,\n  args(controller),\n  range(0, 127),\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:midi\n)\n\n// @description Sound fade-out at the end of the performance, in SECONDS. A value of zero or less removes the fade. Image of EndFadeOut in\n// the native engine.\ncontrol fadeout(\n  bp3:EndFadeOut,\n  args(duration),\n  unit:"s",\n  scope(scene),\n  transportGroup:midi\n)\n\n// @description At the end of the scene, silence whatever is still sounding.\ncontrol resetnotes(\n  bp3:ResetNotes,\n  bp3value:1,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:fin-de-scene,\n  transportGroup:midi\n)\n\n// @description At the end of the scene, let whatever is still sounding ring on.\ncontrol letring(\n  bp3:ResetNotes,\n  bp3value:0,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:fin-de-scene,\n  transportGroup:midi\n)\n\n// @description A note already held that is replayed is RETRIGGERED \u2014 a new NoteOn.\ncontrol strikeagain(\n  bp3:StrikeAgainDefault,\n  bp3value:1,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:note-rejouee,\n  transportGroup:midi\n)\n\n// @description A note already held that is replayed stays HELD \u2014 no new NoteOn.\ncontrol sustain(\n  bp3:StrikeAgainDefault,\n  bp3value:0,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:note-rejouee,\n  transportGroup:midi\n)\n\n// @description A switch already pressed that is re-actuated is released then pressed again.\ncontrol pedalrelease(\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:interrupteur-rejoue,\n  transportGroup:midi\n)\n\n// @description A switch already pressed that is re-actuated keeps its state.\ncontrol pedalhold(\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:interrupteur-rejoue,\n  transportGroup:midi\n)\n\n// @description At the end of the scene, reset the controllers flat.\ncontrol resetcontrols(\n  bp3:ResetControllers,\n  bp3value:1,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:fin-des-controleurs,\n  transportGroup:midi\n)\n\n// @description At the end of the scene, leave the controllers in the state the scene put them in.\ncontrol keepcontrols(\n  bp3:ResetControllers,\n  bp3value:0,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:fin-des-controleurs,\n  transportGroup:midi\n)\n', "fichier": "midi.bpsl" }, { "nom": "midi_default", "format": "bpsl", "texte": 'types\n\n// @documented\n// @description THE DEFAULT MIDI ENVIRONMENT \u2014 the value each word of `midi` carries until a scene writes another.\ndef midi_default(\n  resolvedBy:runtime-MIDI,\n  resolves:midi_default,\n  name:midi_default,\n  version:"0.2.0"\n)\n\nchan:1\nmod:0\npitchbend:0\npitchrange:200\npressure:0\nvolume:90\nvolumerate:50\nmodrate:50\npitchrate:50\npressrate:50\nrate:50\nvolumecontrol:7\npancontrol:10\nfadeout:2\nresetnotes:false\nletring:true\nstrikeagain:true\nsustain:false\npedalrelease:true\npedalhold:false\nresetcontrols:false\nkeepcontrols:true\n', "fichier": "midi_default.bpsl" }, { "nom": "octaves", "format": "bpsl", "texte": 'types\n\n// @documented\ndef octaves(resolvedBy:"Kairos", resolves:octaves)\n\noctaves western(\n  position:suffix,\n  separator:"",\n  registers("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"),\n  default:"4"\n)\n\noctaves arrows(position:suffix, separator:"_", registers(vv, v, "", "^", "^^"), default:"")\n\noctaves saptak(position:prefix, separator:"_", registers(mandra, madhya, taar), default:madhya)\n\noctaves turkish(position:prefix, separator:"_", registers("", tiz), default:"")\n\noctaves gamelan(position:prefix, separator:"_", registers(ageng, tengah, alit), default:tengah)\n\noctaves shakuhachi(position:prefix, separator:"_", registers(otsu, kan, daikan), default:otsu)\n\noctaves korean(position:prefix, separator:"_", registers(tak, jung, cheong), default:jung)\n\noctaves saptak_us(\n  position:suffix,\n  separator:"_",\n  registers("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"),\n  default:"4"\n)\n\noctaves bp3(\n  position:suffix,\n  separator:"",\n  registers("00", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"),\n  default:"4"\n)\n\noctaves bp3_fr(\n  position:suffix,\n  separator:"",\n  registers("000", "00", "0", "1", "2", "3", "4", "5", "6", "7", "8"),\n  default:"3"\n)\n', "fichier": "octaves.bpsl" }, { "nom": "scales", "format": "bpsl", "texte": `types
+`, "fichier": "homomorphism.bpsl" }, { "nom": "midi", "format": "bpsl", "texte": 'types\n\n// @documented\n// @description Controls specific to the MIDI transport \u2014 EXACT match with LIBRAIRIES.md:172.\ndef midi(\n  resolves:midi,\n  resolvedBy:"runtime-MIDI",\n  name:midi,\n  section:controls\n)\n\n// @description Address channel, short form of channel.\ndef ch(\n  section:schema.addressKeys,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Address channel, long form of ch.\ndef channel(\n  section:schema.addressKeys,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Device targeted by the address.\ndef device(\n  section:schema.addressKeys,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Note number of an address \u2014 the source a wait point listens to, the event an occurrence targets.\ndef note(\n  section:schema.addressKeys,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Port targeted by the address.\ndef port(\n  section:schema.addressKeys,\n  scope(symbol, group, rule, flow)\n)\n\n// @description MIDI channel\ncontrol chan(\n  bp3:_chan,\n  args(channel),\n  range(1, 16),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description MIDI Program Change. The author writes the program number starting at 1, like the original engine; the byte transmitted is\n// that number minus one.\ncontrol ins(\n  bp3:_ins,\n  args(program),\n  range(1, 128),\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:midi\n)\n\n// @description MIDI Modulation (CC1)\ncontrol mod(\n  bp3:_mod,\n  args(value),\n  range(0, 127),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Enable continuous modulation interpolation (CC1)\ncontrol modcont(\n  bp3:_modcont,\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description MIDI Pitch Bend\ncontrol pitchbend(\n  bp3:_pitchbend,\n  args(value),\n  range(-8192, 8191),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Pitch bend range in cents\ncontrol pitchrange(\n  bp3:_pitchrange,\n  args(cents),\n  unit:"cents",\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Enable continuous pitch bend interpolation\ncontrol pitchcont(\n  bp3:_pitchcont,\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Key mapping \u2014 remap MIDI key range (p1,p2) to (q1,q2). Args are key numbers (0..127) or note names; p2 must be greater than\n// p1. BP3 _keymap \u2014 register of the native engine, bp3-engine `origin/wasm`: capture-run/console_strings.json carries \xAB 62 4 _keymap \xBB.\ncontrol keymap(\n  bp3:_keymap,\n  args(p1, q1, p2, q2),\n  range(0, 127),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Key map in CONTINUOUS mode \u2014 the map glides DURING notes, through intermediate messages. BP3 _mapcont \u2014 register of the\n// native engine, bp3-engine `origin/wasm`: capture-run/console_strings.json carries \xAB 44 0 _mapcont \xBB. Its two discrete siblings live in\n// the variation library; their recipient is read on that file\'s resolvedBy field, never here.\ncontrol mapcont(\n  bp3:_mapcont,\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description MIDI Channel Pressure (aftertouch)\ncontrol pressure(\n  bp3:_press,\n  args(value),\n  range(0, 127),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Enable continuous channel pressure interpolation\ncontrol presscont(\n  bp3:_presscont,\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description MIDI Volume (CC7)\ncontrol volume(\n  implements:expression.volume,\n  bp3:_volume,\n  args(value),\n  range(0, 127),\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:midi\n)\n\n// @description Enable continuous volume interpolation\ncontrol volumecont(\n  bp3:_volumecont,\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Enable MIDI switch channel\ncontrol switchon(\n  bp3:_switchon,\n  args(channel),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Disable MIDI switch channel\ncontrol switchoff(\n  bp3:_switchoff,\n  args(channel),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Mutes the sound. Bare, (mute), mutes everything sounding; per component, (mute.all) or (mute.lead), mutes the named target.\ncontrol mute(\n  scope(flow),\n  bagOnly:true,\n  transportGroup:midi\n)\n\n// @description Restores the sound muted by mute. Same graphy: (unmute) or (unmute.lead).\ncontrol unmute(\n  scope(flow),\n  bagOnly:true,\n  transportGroup:midi\n)\n\n// @description Emergency stop: every note released, every controller reset flat. Image of MIDI all notes off. Takes no argument.\ncontrol panic(\n  scope(flow),\n  bagOnly:true,\n  transportGroup:midi\n)\n\n// @description Real-time system synchronization message: (sync:start), (sync:continue), (sync:stop). Image of the MIDI Start/Continue/Stop\n// messages.\ncontrol sync(\n  args(message),\n  values(start, continue, stop),\n  scope(flow),\n  transportGroup:midi\n)\n\n// @description NUMBERED MIDI controller. Designated by its component number: (cc.98:45) in a container, !(cc.98:45) in flow. For\n// controllers with no named alias -- those that have one are written by their name (mod = CC1, volume = CC7). The dot CALLS the component,\n// the colon ASSIGNS the value.\ncontrol cc(\n  component:number,\n  args(value),\n  range(0, 127),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Rate of intermediate values for continuous volume, in values per second. Default 50, like the native engine.\ncontrol volumerate(\n  bp3:_volumerate,\n  args(hz),\n  range(0, 1000),\n  unit:"Hz",\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Rate of intermediate values for continuous modulation, in values per second. Default 50, like the native engine.\ncontrol modrate(\n  bp3:_modrate,\n  args(hz),\n  range(0, 1000),\n  unit:"Hz",\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Rate of intermediate values for continuous pitch, in values per second. Default 50, like the native engine.\ncontrol pitchrate(\n  bp3:_pitchrate,\n  args(hz),\n  range(0, 1000),\n  unit:"Hz",\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Rate of intermediate values for continuous pressure, in values per second. Default 50, like the native engine.\ncontrol pressrate(\n  bp3:_pressrate,\n  args(hz),\n  range(0, 1000),\n  unit:"Hz",\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Rate of intermediate values for ALL continuous streams, in emissions per second. Sets in one word what volumerate, modrate,\n// pitchrate and pressrate set separately. Image of SamplingRate in the native engine.\ncontrol rate(\n  bp3:SamplingRate,\n  args(hz),\n  range(0, 1000),\n  unit:"Hz",\n  scope(scene),\n  transportGroup:midi\n)\n\n// @description Number of the MIDI controller carrying volume. Image of VolumeController in the native engine. The channel is stated in the\n// same bag: !(chan:3, volumecontrol:11).\ncontrol volumecontrol(\n  bp3:_volumecontrol,\n  args(controller),\n  range(0, 127),\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:midi\n)\n\n// @description Number of the MIDI controller carrying panning. Image of PanoramicController in the native engine. The channel is stated in\n// the same bag: !(chan:3, pancontrol:11).\ncontrol pancontrol(\n  bp3:_pancontrol,\n  args(controller),\n  range(0, 127),\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:midi\n)\n\n// @description Sound fade-out at the end of the performance, in SECONDS. A value of zero or less removes the fade. Image of EndFadeOut in\n// the native engine.\ncontrol fadeout(\n  bp3:EndFadeOut,\n  args(duration),\n  unit:"s",\n  scope(scene),\n  transportGroup:midi\n)\n\n// @description At the end of the scene, silence whatever is still sounding.\ncontrol resetnotes(\n  bp3:ResetNotes,\n  bp3value:1,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:fin-de-scene,\n  transportGroup:midi\n)\n\n// @description At the end of the scene, let whatever is still sounding ring on.\ncontrol letring(\n  bp3:ResetNotes,\n  bp3value:0,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:fin-de-scene,\n  transportGroup:midi\n)\n\n// @description A note already held that is replayed is RETRIGGERED \u2014 a new NoteOn.\ncontrol strikeagain(\n  bp3:StrikeAgainDefault,\n  bp3value:1,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:note-rejouee,\n  transportGroup:midi\n)\n\n// @description A note already held that is replayed stays HELD \u2014 no new NoteOn.\ncontrol sustain(\n  bp3:StrikeAgainDefault,\n  bp3value:0,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:note-rejouee,\n  transportGroup:midi\n)\n\n// @description A switch already pressed that is re-actuated is released then pressed again.\ncontrol pedalrelease(\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:interrupteur-rejoue,\n  transportGroup:midi\n)\n\n// @description A switch already pressed that is re-actuated keeps its state.\ncontrol pedalhold(\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:interrupteur-rejoue,\n  transportGroup:midi\n)\n\n// @description At the end of the scene, reset the controllers flat.\ncontrol resetcontrols(\n  bp3:ResetControllers,\n  bp3value:1,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:fin-des-controleurs,\n  transportGroup:midi\n)\n\n// @description At the end of the scene, leave the controllers in the state the scene put them in.\ncontrol keepcontrols(\n  bp3:ResetControllers,\n  bp3value:0,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:fin-des-controleurs,\n  transportGroup:midi\n)\n', "fichier": "midi.bpsl" }, { "nom": "midi_default", "format": "bpsl", "texte": 'types\n\n// @documented\n// @description THE DEFAULT MIDI ENVIRONMENT \u2014 the value each word of `midi` carries until a scene writes another.\ndef midi_default(\n  resolvedBy:runtime-MIDI,\n  resolves:midi_default,\n  name:midi_default,\n  version:"0.2.0"\n)\n\nchan:1\nmod:0\npitchbend:0\npitchrange:200\npressure:0\nvolume:90\nvolumerate:50\nmodrate:50\npitchrate:50\npressrate:50\nrate:50\nvolumecontrol:7\npancontrol:10\nfadeout:2\nresetnotes:false\nletring:true\nstrikeagain:true\nsustain:false\npedalrelease:true\npedalhold:false\nresetcontrols:false\nkeepcontrols:true\n', "fichier": "midi_default.bpsl" }, { "nom": "octaves", "format": "bpsl", "texte": 'types\n\n// @documented\ndef octaves(resolvedBy:"Kairos", resolves:octaves)\n\noctaves western(\n  position:suffix,\n  separator:"",\n  registers("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"),\n  default:"4"\n)\n\noctaves arrows(position:suffix, separator:"_", registers(vv, v, "", "^", "^^"), default:"")\n\noctaves saptak(position:prefix, separator:"_", registers(mandra, madhya, taar), default:madhya)\n\noctaves turkish(position:prefix, separator:"_", registers("", tiz), default:"")\n\noctaves gamelan(position:prefix, separator:"_", registers(ageng, tengah, alit), default:tengah)\n\noctaves shakuhachi(position:prefix, separator:"_", registers(otsu, kan, daikan), default:otsu)\n\noctaves korean(position:prefix, separator:"_", registers(tak, jung, cheong), default:jung)\n\noctaves saptak_us(\n  position:suffix,\n  separator:"_",\n  registers("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"),\n  default:"4"\n)\n\noctaves bp3(\n  position:suffix,\n  separator:"",\n  registers("00", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"),\n  default:"4"\n)\n\noctaves bp3_fr(\n  position:suffix,\n  separator:"",\n  registers("000", "00", "0", "1", "2", "3", "4", "5", "6", "7", "8"),\n  default:"3"\n)\n', "fichier": "octaves.bpsl" }, { "nom": "scales", "format": "bpsl", "texte": `types
 
 // @documented
 def scales(resolvedBy:"Kairos", resolves:scale)
@@ -2133,14 +1818,13 @@ interval jins_hijaz(
 interval jins_bayati(
   ratios(1, 12/11, 6/5, 4/3)
 )
-// @description Jins Sikah \u2014 built on Zalzal's neutral second (C D-half-flat Eb F): 12/11 (~151c), 6/5, 4/3. Neutral second = 12/11
-// (consistent with the Arabic table; replaces the former 11/10 ~165c).
+// @description Jins Sikah \u2014 built on Zalzal's neutral second (C D-half-flat Eb F): 12/11 (~151c), 6/5, 4/3. Neutral second = 12/11,
+// consistent with the Arabic table.
 interval jins_sikah(
   ratios(1, 12/11, 6/5, 4/3)
 )
 // @description Jins Ajam \u2014 MAJOR tetrachord (C D E F): 9/8 (tone), 5/4 (Zarlino's major third), 4/3 (perfect fourth). It is the only Arabic
-// jins with a pure 5/4 major third (\u2248 Western major). The tetrachord closes on the fourth 4/3 (corrects the former 45/32 tritone, wrong for
-// a jins).
+// jins with a pure 5/4 major third (\u2248 Western major). The tetrachord closes on the fourth 4/3.
 interval jins_ajam(
   ratios(1, 9/8, 5/4, 4/3)
 )
@@ -5996,7 +5680,7 @@ control syncdelay(
   unit:ms,
   scope("scene")
 )
-`, "fichier": "time.bpsl" }, { "nom": "transpo/chromashift", "format": "bpsl", "texte": "// @description Chromatic transposition on the 12-key grid \u2014 shift N chromatic keys (semitones), rename to target key + its tuning. Image of\n// BP3 _transpose (Romain decision 2026-07-17). Distinct from scaleshift (diatonic degrees) and transpose (real, name preserved).\ncontrol chromashift(\n  bp3:_transpose,\n  args(keys),\n  value:0,\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:transpo,\n  rank:10,\n  params(\n    // @description Number of chromatic keys (semitones) of shift on the 12-grid (may be negative; wraps at the octave).\n    n(\n      from:value,\n      coerce:raw,\n      default:0\n    )\n  )\n) ``ts:\n// Corps de la MANIPULATION `chromashift` \u2014 AUTHORING F1 (vrai .ts TYP\xC9 contre le SDK Kairos).\n// Source de v\xE9rit\xE9 : ce fichier. Le chargeur le greffe sur le CONTR\xD4LE `chromashift` de `transpo`, qui\n// porte le mot \u2014 arbitrage de Romain, 2026-09-03 : le corps se rattache \xE0 l'objet qui le nomme.\n// Kairos transpile (sucrase, qui STRIPE l'`import type`) puis ex\xE9cute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.\n// \u26A0\uFE0F TRANSPOSITION CHROMATIQUE (grille 12 cl\xE9s) : image de BP3 _transpose (d\xE9cision Romain\n//    2026-07-17, hub/decisions/2026-07-17-bp3-transpose-est-scaleshift-sur-grille-12-cles.md).\n//    D\xE9cale le pas ABSOLU de N cl\xE9s chromatiques (N demi-tons) ; Kairos renomme vers la cl\xE9 cible\n//    et prend SON tuning (transposeToken). DISTINCT de `scaleshift` (diatonique, N degr\xE9s d'alphabet)\n//    et de `transpose` (r\xE9el, frameRatio, nom PR\xC9SERV\xC9). Trois gestes nets (Romain, option B).\nimport type { DigitalFn } from '@kairos/core';\n\n/** chromashift \u2014 transposition sur la GRILLE 12 CL\xC9S chromatiques : d\xE9cale le pas absolu de N\n *  positions (N demi-tons). `ctx.target.pitch.step` = pas ABSOLU sur la grille du temp\xE9rament\n *  (confirm\xE9 Kairos [504] : degr\xE9 + alt\xE9ration + registre\xB7divisions). Kairos re-projette le delta\n *  de step \u2192 renomme chromatiquement + retune sur la cl\xE9 d'arriv\xE9e. = BP3 _transpose(N)\n *  (Zouleb.c:555-574, key += Round(trans/100)). PORTER\u2260R\xC9SOUDRE : je d\xE9cale le pas, je ne r\xE9sous rien. */\nconst chromashift: DigitalFn = (ctx) => {\n  const p = ctx.target.pitch;\n  if (!p) return;\n  p.step += Number(ctx.params.n ?? 0);\n};\n\nexport default chromashift;\n``\n", "fichier": "transpo/chromashift.bpsl" }, { "nom": "transpo/keyxpand", "format": "bpsl", "texte": "// @description Interval expansion/contraction around a pivot. factor=2 doubles, factor=-1 inverts, factor=0.5 contracts.\ncontrol keyxpand(\n  bp3:_keyxpand,\n  args(pivot, factor),\n  value(pivot:0, factor:1),\n  scope(symbol, group, rule, flow),\n  transportGroup:transpo,\n  rank:20,\n  params(\n    // @description Pivot: note token resolved into grid steps by Kairos's token-step coercion (cries if unresolvable); stays fixed.\n    pivotStep(\n      from:pivot,\n      coerce:token-step,\n      default:0\n    ),\n    // @description Scale factor of the distance to the pivot (1 = identity, 2 = doubled, 0.5 = folded; may be negative = mirror).\n    factor(\n      from:factor,\n      coerce:raw,\n      default:1\n    )\n  )\n) ``ts:\n// Corps de la MANIPULATION `keyxpand` \u2014 AUTHORING F1 (vrai .ts TYP\xC9 contre le SDK Kairos).\n// Source de v\xE9rit\xE9 : ce fichier. Le chargeur le greffe sur le CONTR\xD4LE `keyxpand` de `transpo`, qui\n// porte le mot \u2014 arbitrage de Romain, 2026-09-03 : le corps se rattache \xE0 l'objet qui le nomme.\n// Kairos transpile (sucrase, qui STRIPE l'`import type`) puis ex\xE9cute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.\nimport type { DigitalFn } from '@kairos/core';\n\n/** keyxpand \u2014 dilate/contracte l'\xE9cart au pivot d'un facteur (le pivot reste fixe). facteur 1 = identit\xE9,\n *  2 = intervalles doubl\xE9s, 0,5 = repli\xE9s de moiti\xE9. R\xE9sultat arrondi au pas de grille le plus proche.\n *  Kairos pr\xE9-r\xE9sout le token pivot en `pivotStep` et passe `{pivotStep, factor}`. */\nconst keyxpand: DigitalFn = (ctx) => {\n  // Mutation de la COPIE (ctx.target) ; Kairos d\xE9rive le Hz APR\xC8S (delta net). `step` = axe de grille absolu.\n  if (ctx.target.pitch) {\n    const pivotStep = Number(ctx.params.pivotStep ?? 0);\n    const factor = Number(ctx.params.factor ?? 1);\n    ctx.target.pitch.step = pivotStep + Math.round((ctx.target.pitch.step - pivotStep) * factor);\n  }\n};\n\nexport default keyxpand;\n``\n", "fichier": "transpo/keyxpand.bpsl" }, { "nom": "transpo/scaleshift", "format": "bpsl", "texte": "// @description Scalar (diatonic) transposition \u2014 shift N degrees in the alphabet. (scaleshift:2): Sa->Ga, etc. Preserves degrees, not\n// intervals (in unequal scales). Formerly rotate-PITCH; distinct from the ![rotate] STRUCTURE control.\ncontrol scaleshift(\n  args(degrees),\n  value:0,\n  scope(symbol, group, rule, flow),\n  transportGroup:transpo,\n  rank:10,\n  params(\n    // @description Number of degrees of shift in the alphabet (may be negative; register carry at the bounds).\n    n(\n      from:value,\n      coerce:raw,\n      default:0\n    )\n  )\n) ``ts:\n// Corps de la MANIPULATION `scaleshift` \u2014 AUTHORING F1 (vrai .ts TYP\xC9 contre le SDK Kairos).\n// Source de v\xE9rit\xE9 : ce fichier. Le chargeur le greffe sur le CONTR\xD4LE `scaleshift` de `transpo`, qui\n// porte le mot \u2014 arbitrage de Romain, 2026-09-03 : le corps se rattache \xE0 l'objet qui le nomme.\n// Kairos transpile (sucrase, qui STRIPE l'`import type`) puis ex\xE9cute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.\n// \u26A0\uFE0F TRANSPOSITION SCALAIRE (diatonique) : d\xE9calage de N DEGR\xC9S d'alphabet (Sa +2 \u2192 Ga), report de\n//    registre aux bornes. Anciennement `rotate` de HAUTEUR \u2014 renomm\xE9 (d\xE9cision 2026-07-11 : deux\n//    transpositions nomm\xE9es, r\xE9elle vs scalaire). RIEN \xC0 VOIR avec le ![rotate] de STRUCTURE\n//    (RotateSequence, rotation de s\xE9quence, moteur BPx), qui garde son nom.\nimport type { DigitalFn } from '@kairos/core';\n\n/** scaleshift \u2014 transposition scalaire : d\xE9cale de N degr\xE9s dans l'alphabet (Sa +2 \u2192 Ga). Recouvre le\n *  degr\xE9 depuis le pas via `models.alphabet.degrees`, tourne l'index (mod taille alphabet, avec report\n *  de registre), recompose. Pr\xE9serve les DEGR\xC9S, pas les intervalles (en gamme in\xE9gale). */\nconst scaleshift: DigitalFn = (ctx) => {\n  const p = ctx.target.pitch;\n  if (!p) return;\n  const degs = ctx.models.alphabet.degrees;   // pas de grille de chaque degr\xE9, ordonn\xE9 (ex. 12-TET [0,2,4,5,7,9,11])\n  const div = ctx.models.temperament.divisions;\n  const n = Number(ctx.params.n ?? 0);\n  const reg = Math.floor(p.step / div);\n  const inOct = ((p.step % div) + div) % div;\n  const idx = degs.indexOf(inOct);\n  if (idx < 0) return;                          // pas hors alphabet : identit\xE9 (best-effort)\n  const len = degs.length, raw = idx + n;\n  const ni = ((raw % len) + len) % len;\n  p.step = degs[ni] + (reg + Math.floor(raw / len)) * div;\n};\n\nexport default scaleshift;\n``\n", "fichier": "transpo/scaleshift.bpsl" }, { "nom": "transpo/transpose", "format": "bpsl", "texte": "// @description Real (chromatic) transposition \u2014 shift the alphabet anchor by a fixed interval (fraction 3/2, cents 700c, decimal 1.5).\n// Preserves intervals AND note names; works in any tuning. A bare integer is a ratio N:1 (N-th harmonic): 2/4/8 = octaves; for semitones\n// use cents (12 semitones = 1200c). The old grid-step regime is removed.\ncontrol transpose(\n  args(interval),\n  argType:interval,\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:transpo,\n  rank:30,\n  params(\n    // @description Interval normalized into a ratio by Kairos from the 3-format string. A NUMERIC transpose cries here (migration cry: the\n    // old grid-step regime is removed).\n    ratio(\n      from:value,\n      coerce:interval-ratio\n    ),\n    // @description The raw interval string (diagnostic); the body does not parse it.\n    interval(\n      from:value,\n      coerce:raw\n    )\n  )\n) ``ts:\n// Corps de la MANIPULATION `transpose` \u2014 AUTHORING F1 (vrai .ts TYP\xC9 contre le SDK Kairos).\n// Source de v\xE9rit\xE9 : ce fichier. Le chargeur le greffe sur le CONTR\xD4LE `transpose` de `transpo`, qui\n// porte le mot \u2014 arbitrage de Romain, 2026-09-03 : le corps se rattache \xE0 l'objet qui le nomme.\n// Kairos transpile (sucrase, qui STRIPE l'`import type`) puis ex\xE9cute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.\n// \u26A0\uFE0F TRANSPOSITION R\xC9ELLE (chromatique) : d\xE9calage de l'ANCRE par un INTERVALLE fixe. Pr\xE9serve les\n//    intervalles ET le nom de chaque note (on d\xE9place le cadre, pas les notes contre un cadre fig\xE9).\n//    Marche dans TOUT accordage (\xE9gal ET in\xE9gal), et m\xEAme en temp\xE9rament param\xE9trique (sans grille).\n//    D\xE9cision 2026-07-11 : deux transpositions nomm\xE9es, r\xE9elle (ici) vs scalaire (scaleshift).\nimport type { DigitalFn } from '@kairos/core';\n\n/** transpose \u2014 transposition r\xE9elle : multiplie le facteur de cadre `frameRatio` par l'intervalle.\n *  `ctx.params.ratio` = intervalle D\xC9J\xC0 NORMALIS\xC9 par Kairos (fraction 3/2 | cents 700c | d\xE9cimal 1.5) ;\n *  `ctx.params.interval` = la cha\xEEne brute (diagnostic). Kairos SEUL applique `hz \xD7 frameRatio` en fin de\n *  r\xE9solution, APR\xC8S les ops de grille \u2014 noms/registres pr\xE9serv\xE9s par construction. Je ne parse RIEN. */\nconst transpose: DigitalFn = (ctx) => {\n  if (ctx.target.pitch) {\n    ctx.target.pitch.frameRatio = (ctx.target.pitch.frameRatio ?? 1) * Number(ctx.params.ratio);\n  }\n};\n\nexport default transpose;\n``\n", "fichier": "transpo/transpose.bpsl" }, { "nom": "transpo", "format": "bpsl", "texte": `transpo/transpose
+`, "fichier": "time.bpsl" }, { "nom": "transpo/chromashift", "format": "bpsl", "texte": "// @description Chromatic transposition on the 12-key grid \u2014 shift N chromatic keys (semitones), rename to target key + its tuning. Image of\n// BP3 _transpose. Distinct from scaleshift (diatonic degrees) and transpose (real, name preserved).\ncontrol chromashift(\n  bp3:_transpose,\n  args(keys),\n  value:0,\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:transpo,\n  rank:10,\n  params(\n    // @description Number of chromatic keys (semitones) of shift on the 12-grid (may be negative; wraps at the octave).\n    n(\n      from:value,\n      coerce:raw,\n      default:0\n    )\n  )\n) ``ts:\n// Corps de la MANIPULATION `chromashift` \u2014 AUTHORING F1 (vrai .ts TYP\xC9 contre le SDK Kairos).\n// Source de v\xE9rit\xE9 : ce fichier. Le chargeur le greffe sur le CONTR\xD4LE `chromashift` de `transpo`, qui\n// porte le mot \u2014 arbitrage de Romain, 2026-09-03 : le corps se rattache \xE0 l'objet qui le nomme.\n// Kairos transpile (sucrase, qui STRIPE l'`import type`) puis ex\xE9cute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.\n// \u26A0\uFE0F TRANSPOSITION CHROMATIQUE (grille 12 cl\xE9s) : image de BP3 _transpose (d\xE9cision Romain\n//    2026-07-17, hub/decisions/2026-07-17-bp3-transpose-est-scaleshift-sur-grille-12-cles.md).\n//    D\xE9cale le pas ABSOLU de N cl\xE9s chromatiques (N demi-tons) ; Kairos renomme vers la cl\xE9 cible\n//    et prend SON tuning (transposeToken). DISTINCT de `scaleshift` (diatonique, N degr\xE9s d'alphabet)\n//    et de `transpose` (r\xE9el, frameRatio, nom PR\xC9SERV\xC9). Trois gestes nets (Romain, option B).\nimport type { DigitalFn } from '@kairos/core';\n\n/** chromashift \u2014 transposition sur la GRILLE 12 CL\xC9S chromatiques : d\xE9cale le pas absolu de N\n *  positions (N demi-tons). `ctx.target.pitch.step` = pas ABSOLU sur la grille du temp\xE9rament\n *  (confirm\xE9 Kairos [504] : degr\xE9 + alt\xE9ration + registre\xB7divisions). Kairos re-projette le delta\n *  de step \u2192 renomme chromatiquement + retune sur la cl\xE9 d'arriv\xE9e. = BP3 _transpose(N)\n *  (Zouleb.c:555-574, key += Round(trans/100)). PORTER\u2260R\xC9SOUDRE : je d\xE9cale le pas, je ne r\xE9sous rien. */\nconst chromashift: DigitalFn = (ctx) => {\n  const p = ctx.target.pitch;\n  if (!p) return;\n  p.step += Number(ctx.params.n ?? 0);\n};\n\nexport default chromashift;\n``\n", "fichier": "transpo/chromashift.bpsl" }, { "nom": "transpo/keyxpand", "format": "bpsl", "texte": "// @description Interval expansion/contraction around a pivot. factor=2 doubles, factor=-1 inverts, factor=0.5 contracts.\ncontrol keyxpand(\n  bp3:_keyxpand,\n  args(pivot, factor),\n  value(pivot:0, factor:1),\n  scope(symbol, group, rule, flow),\n  transportGroup:transpo,\n  rank:20,\n  params(\n    // @description Pivot: note token resolved into grid steps by Kairos's token-step coercion (cries if unresolvable); stays fixed.\n    pivotStep(\n      from:pivot,\n      coerce:token-step,\n      default:0\n    ),\n    // @description Scale factor of the distance to the pivot (1 = identity, 2 = doubled, 0.5 = folded; may be negative = mirror).\n    factor(\n      from:factor,\n      coerce:raw,\n      default:1\n    )\n  )\n) ``ts:\n// Corps de la MANIPULATION `keyxpand` \u2014 AUTHORING F1 (vrai .ts TYP\xC9 contre le SDK Kairos).\n// Source de v\xE9rit\xE9 : ce fichier. Le chargeur le greffe sur le CONTR\xD4LE `keyxpand` de `transpo`, qui\n// porte le mot \u2014 arbitrage de Romain, 2026-09-03 : le corps se rattache \xE0 l'objet qui le nomme.\n// Kairos transpile (sucrase, qui STRIPE l'`import type`) puis ex\xE9cute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.\nimport type { DigitalFn } from '@kairos/core';\n\n/** keyxpand \u2014 dilate/contracte l'\xE9cart au pivot d'un facteur (le pivot reste fixe). facteur 1 = identit\xE9,\n *  2 = intervalles doubl\xE9s, 0,5 = repli\xE9s de moiti\xE9. R\xE9sultat arrondi au pas de grille le plus proche.\n *  Kairos pr\xE9-r\xE9sout le token pivot en `pivotStep` et passe `{pivotStep, factor}`. */\nconst keyxpand: DigitalFn = (ctx) => {\n  // Mutation de la COPIE (ctx.target) ; Kairos d\xE9rive le Hz APR\xC8S (delta net). `step` = axe de grille absolu.\n  if (ctx.target.pitch) {\n    const pivotStep = Number(ctx.params.pivotStep ?? 0);\n    const factor = Number(ctx.params.factor ?? 1);\n    ctx.target.pitch.step = pivotStep + Math.round((ctx.target.pitch.step - pivotStep) * factor);\n  }\n};\n\nexport default keyxpand;\n``\n", "fichier": "transpo/keyxpand.bpsl" }, { "nom": "transpo/scaleshift", "format": "bpsl", "texte": "// @description Scalar (diatonic) transposition \u2014 shift N degrees in the alphabet. (scaleshift:2): Sa->Ga, etc. Preserves degrees, not\n// intervals (in unequal scales). Distinct from the ![rotate] STRUCTURE control.\ncontrol scaleshift(\n  args(degrees),\n  value:0,\n  scope(symbol, group, rule, flow),\n  transportGroup:transpo,\n  rank:10,\n  params(\n    // @description Number of degrees of shift in the alphabet (may be negative; register carry at the bounds).\n    n(\n      from:value,\n      coerce:raw,\n      default:0\n    )\n  )\n) ``ts:\n// Corps de la MANIPULATION `scaleshift` \u2014 AUTHORING F1 (vrai .ts TYP\xC9 contre le SDK Kairos).\n// Source de v\xE9rit\xE9 : ce fichier. Le chargeur le greffe sur le CONTR\xD4LE `scaleshift` de `transpo`, qui\n// porte le mot \u2014 arbitrage de Romain, 2026-09-03 : le corps se rattache \xE0 l'objet qui le nomme.\n// Kairos transpile (sucrase, qui STRIPE l'`import type`) puis ex\xE9cute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.\n// \u26A0\uFE0F TRANSPOSITION SCALAIRE (diatonique) : d\xE9calage de N DEGR\xC9S d'alphabet (Sa +2 \u2192 Ga), report de\n//    registre aux bornes. Anciennement `rotate` de HAUTEUR \u2014 renomm\xE9 (d\xE9cision 2026-07-11 : deux\n//    transpositions nomm\xE9es, r\xE9elle vs scalaire). RIEN \xC0 VOIR avec le ![rotate] de STRUCTURE\n//    (RotateSequence, rotation de s\xE9quence, moteur BPx), qui garde son nom.\nimport type { DigitalFn } from '@kairos/core';\n\n/** scaleshift \u2014 transposition scalaire : d\xE9cale de N degr\xE9s dans l'alphabet (Sa +2 \u2192 Ga). Recouvre le\n *  degr\xE9 depuis le pas via `models.alphabet.degrees`, tourne l'index (mod taille alphabet, avec report\n *  de registre), recompose. Pr\xE9serve les DEGR\xC9S, pas les intervalles (en gamme in\xE9gale). */\nconst scaleshift: DigitalFn = (ctx) => {\n  const p = ctx.target.pitch;\n  if (!p) return;\n  const degs = ctx.models.alphabet.degrees;   // pas de grille de chaque degr\xE9, ordonn\xE9 (ex. 12-TET [0,2,4,5,7,9,11])\n  const div = ctx.models.temperament.divisions;\n  const n = Number(ctx.params.n ?? 0);\n  const reg = Math.floor(p.step / div);\n  const inOct = ((p.step % div) + div) % div;\n  const idx = degs.indexOf(inOct);\n  if (idx < 0) return;                          // pas hors alphabet : identit\xE9 (best-effort)\n  const len = degs.length, raw = idx + n;\n  const ni = ((raw % len) + len) % len;\n  p.step = degs[ni] + (reg + Math.floor(raw / len)) * div;\n};\n\nexport default scaleshift;\n``\n", "fichier": "transpo/scaleshift.bpsl" }, { "nom": "transpo/transpose", "format": "bpsl", "texte": "// @description Real (chromatic) transposition \u2014 shift the alphabet anchor by a fixed interval (fraction 3/2, cents 700c, decimal 1.5).\n// Preserves intervals AND note names; works in any tuning. A bare integer is a ratio N:1 (N-th harmonic): 2/4/8 = octaves; for semitones\n// use cents (12 semitones = 1200c). The old grid-step regime is removed.\ncontrol transpose(\n  args(interval),\n  argType:interval,\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:transpo,\n  rank:30,\n  params(\n    // @description Interval normalized into a ratio by Kairos from the 3-format string. A NUMERIC transpose cries here (migration cry: the\n    // old grid-step regime is removed).\n    ratio(\n      from:value,\n      coerce:interval-ratio\n    ),\n    // @description The raw interval string (diagnostic); the body does not parse it.\n    interval(\n      from:value,\n      coerce:raw\n    )\n  )\n) ``ts:\n// Corps de la MANIPULATION `transpose` \u2014 AUTHORING F1 (vrai .ts TYP\xC9 contre le SDK Kairos).\n// Source de v\xE9rit\xE9 : ce fichier. Le chargeur le greffe sur le CONTR\xD4LE `transpose` de `transpo`, qui\n// porte le mot \u2014 arbitrage de Romain, 2026-09-03 : le corps se rattache \xE0 l'objet qui le nomme.\n// Kairos transpile (sucrase, qui STRIPE l'`import type`) puis ex\xE9cute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.\n// \u26A0\uFE0F TRANSPOSITION R\xC9ELLE (chromatique) : d\xE9calage de l'ANCRE par un INTERVALLE fixe. Pr\xE9serve les\n//    intervalles ET le nom de chaque note (on d\xE9place le cadre, pas les notes contre un cadre fig\xE9).\n//    Marche dans TOUT accordage (\xE9gal ET in\xE9gal), et m\xEAme en temp\xE9rament param\xE9trique (sans grille).\n//    D\xE9cision 2026-07-11 : deux transpositions nomm\xE9es, r\xE9elle (ici) vs scalaire (scaleshift).\nimport type { DigitalFn } from '@kairos/core';\n\n/** transpose \u2014 transposition r\xE9elle : multiplie le facteur de cadre `frameRatio` par l'intervalle.\n *  `ctx.params.ratio` = intervalle D\xC9J\xC0 NORMALIS\xC9 par Kairos (fraction 3/2 | cents 700c | d\xE9cimal 1.5) ;\n *  `ctx.params.interval` = la cha\xEEne brute (diagnostic). Kairos SEUL applique `hz \xD7 frameRatio` en fin de\n *  r\xE9solution, APR\xC8S les ops de grille \u2014 noms/registres pr\xE9serv\xE9s par construction. Je ne parse RIEN. */\nconst transpose: DigitalFn = (ctx) => {\n  if (ctx.target.pitch) {\n    ctx.target.pitch.frameRatio = (ctx.target.pitch.frameRatio ?? 1) * Number(ctx.params.ratio);\n  }\n};\n\nexport default transpose;\n``\n", "fichier": "transpo/transpose.bpsl" }, { "nom": "transpo", "format": "bpsl", "texte": `transpo/transpose
 transpo/chromashift
 transpo/scaleshift
 transpo/keyxpand
@@ -6046,7 +5730,7 @@ control scale(
 )
 
 // @description Scalar (diatonic) transposition \u2014 shift N degrees in the alphabet. (scaleshift:2): Sa->Ga, etc. Preserves degrees, not
-// intervals (in unequal scales). Formerly rotate-PITCH; distinct from the ![rotate] STRUCTURE control.
+// intervals (in unequal scales). Distinct from the ![rotate] STRUCTURE control.
 control scaleshift(
   args(degrees),
   value:0,
@@ -6064,7 +5748,7 @@ control scaleshift(
 )
 
 // @description Chromatic transposition on the 12-key grid \u2014 shift N chromatic keys (semitones), rename to target key + its tuning. Image of
-// BP3 _transpose (Romain decision 2026-07-17). Distinct from scaleshift (diatonic degrees) and transpose (real, name preserved).
+// BP3 _transpose. Distinct from scaleshift (diatonic degrees) and transpose (real, name preserved).
 control chromashift(
   bp3:_transpose,
   args(keys),
@@ -6105,7 +5789,7 @@ control keyxpand(
     )
   )
 )
-`, "fichier": "transpo.bpsl" }, { "nom": "tunings", "format": "bpsl", "texte": "types\n\n// @documented\ndef tunings(resolvedBy:Kairos, resolves:tuning)\n\n// @description Standard Western equal temperament\ntuning western_12TET(\n  alphabet:western,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Western in Pythagorean tuning \u2014 pure fifths\ntuning western_pythagorean(\n  alphabet:western,\n  temperament:pythagorean,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Western in 5-limit just intonation\ntuning western_just(\n  alphabet:western,\n  temperament:just_5limit,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Western in 1/4-comma meantone\ntuning western_meantone(\n  alphabet:western,\n  temperament:meantone_quarter,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Indian sargam in 12-TET (simplified, equal temperament)\ntuning sargam_12TET(\n  alphabet:sargam,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description INDIAN note convention of the native BP3 engine, in 12-TET\ntuning bp3_indian_12TET(\n  alphabet:bp3_indian,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description ENGLISH note convention of the native BP3 engine, in 12-TET\ntuning bp3_english_12TET(\n  alphabet:bp3_english,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description FRENCH note convention of the native BP3 engine, in 12-TET\ntuning bp3_fr_12TET(\n  alphabet:bp3_fr,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Indian sargam in 22-shruti system \u2014 full microtonal resolution\ntuning sargam_22shruti(\n  alphabet:sargam,\n  temperament:22shruti,\n  degrees(0, 4, 8, 9, 13, 17, 21)\n)\n\n// @description Latin solf\xE8ge in 12-TET\ntuning solfege_12TET(\n  alphabet:solfege,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Arabic maqam system \u2014 quarter-tone grid\ntuning arabic_24TET(\n  alphabet:arabic,\n  temperament:24TET,\n  degrees(0, 4, 8, 10, 14, 18, 22)\n)\n\n// @description Turkish makam \u2014 53-comma system\ntuning turkish_53TET(\n  alphabet:turkish,\n  temperament:53TET,\n  degrees(0, 4, 9, 13, 17, 22, 26, 31, 35, 39, 44, 48, 4, 9, 13, 17)\n)\n\n// @description Javanese gamelan pelog \u2014 7-tone stretched octave\ntuning gamelan_pelog(\n  alphabet:gamelan_pelog,\n  temperament:gamelan_pelog,\n  degrees(0, 1, 2, 3, 4, 5, 6)\n)\n\n// @description Javanese gamelan slendro \u2014 5-tone near-equal, stretched octave\ntuning gamelan_slendro(\n  alphabet:gamelan_slendro,\n  temperament:gamelan_slendro,\n  degrees(0, 1, 2, 3, 4)\n)\n\n// @description Bohlen-Pierce just \u2014 13 tones in a tritave (3:1)\ntuning bohlen_pierce_just(\n  alphabet:bohlen_pierce,\n  temperament:bohlen_pierce_just,\n  degrees(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)\n)\n\n// @description Bohlen-Pierce equal \u2014 13 equal divisions of the tritave\ntuning bohlen_pierce_equal(\n  alphabet:bohlen_pierce,\n  temperament:bohlen_pierce_equal,\n  degrees(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)\n)\n\n// @description 22-shruti as named by BP3 \u2014 23 degrees on the bp3_shruti23_native temperament (native table -to.tryShruti verbatim,\n// 729/512). Distinct from bp3_grama (Arnold).\ntuning shruti23_native(\n  alphabet:shruti23,\n  temperament:bp3_shruti23_native,\n  degrees(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22)\n)\n\n// @description Western in BP3 just intonation, C-anchored (tonic C4 = 261.63 Hz, native table -to.tryOneScale). The 'j' in Cj/Aj/Gj =\n// degree marker, parsed C/A/G; ALL notes rendered by this same just scale (Romain's model [428/429]: one tuning, no parallel alphabet).\n// Distinct from western_just (A440-anchored). Temperament bp3_just_intonation = coincides with just_5limit on C/D/E/F/G/A (degrees\n// 0,2,4,5,7,9).\ntuning western_just_c(\n  alphabet:western,\n  temperament:bp3_just_intonation,\n  degrees(0, 2, 4, 5, 7, 9, 11),\n  baseNote:C,\n  diapason:261.63\n)\n\n// @description Shakuhachi 1.8 shaku \u2014 the five base fingerings on equal temperament\ntuning shakuhachi_12TET(\n  alphabet:shakuhachi,\n  temperament:12TET,\n  degrees(0, 3, 5, 7, 10)\n)\n", "fichier": "tunings.bpsl" }, { "nom": "types", "format": "bpsl", "texte": '// @documented\ndef types(resolves:types)\n\ndef scale(scope(scene))\nscale interval\nscale degree\ndegree directional\nscale composite\n\ndef sound(scope(scene))\n\ndef alphabet(scope(scene), octaves:western, sound terminals())\n\ndef temperament\ndef tuning(scope(scene))\ndef octaves(scope(scene))\ndef voice(scope(scene))\ndef eval(scope(scene))\ndef midi_default\n\ndef control\ndef addresskey\ndef enum\ndef flag\ndef symbol\n\ndef destination\ndestination audio(out:true, writable:true, params(gain:1))\ndestination midi(in:true, out:true, writable:true, params(ch:1))\ndestination osc(\n  in:true,\n  out:true,\n  writable:true,\n  params(host:"127.0.0.1", port:57120, addr:/kanopi)\n)\ndestination keyboard(in:true, writable:true)\ndestination dmx(out:true, writable:true, params(universe:0))\ndestination text(out:true, writable:false)\n\ndef actor(alphabet alphabet, tuning tuning, octaves octaves, destination out, eval eval)\n\ndef signal\nsignal pitch\nsignal phase\nsignal logic\n', "fichier": "types.bpsl" }, { "nom": "variation", "format": "bpsl", "texte": 'types\n\n// @documented\n// @description DISCRETE variation modes of playing parameters \u2014 fixed and steps. Between two written values of the same parameter, the mode\n// says whether the first HOLDS until the second (fixed) or GLIDES from note to note (steps). These two modes resolve at the note, hence\n// before any sound is emitted: they belong to Kairos. The third mode \u2014 continuous \u2014 glides DURING notes, through intermediate messages: it\n// can only be rendered by whoever emits, and it therefore lives in the library of its parameter.\ndef variation(\n  resolves:variation,\n  resolvedBy:"Kairos",\n  name:variation,\n  version:0.1.0,\n  section:controls\n)\n\n// @description Velocity in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol velfixed(\n  bp3:_velfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Velocity BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol velstep(\n  bp3:_velstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Modulation in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol modfixed(\n  bp3:_modfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Modulation BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol modstep(\n  bp3:_modstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Pitchbend in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol pitchfixed(\n  bp3:_pitchfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Pitchbend BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol pitchstep(\n  bp3:_pitchstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Pressure in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol pressfixed(\n  bp3:_pressfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Pressure BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol presstep(\n  bp3:_presstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Volume in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol volumefixed(\n  bp3:_volumefixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Volume BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol volumestep(\n  bp3:_volumestep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Articulation in FIXED mode \u2014 the written value holds until the next one, clean jump. Articulation is set by legato and\n// staccato.\ncontrol articulfixed(\n  bp3:_articulfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Articulation BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol articulstep(\n  bp3:_articulstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Panning in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol panfixed(\n  bp3:_panfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Panning BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol panstep(\n  bp3:_panstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Key map in FIXED mode \u2014 the written map holds until the next one, clean jump.\ncontrol mapfixed(\n  bp3:_mapfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Key map BY STEPS \u2014 the map glides from note to note between two written maps.\ncontrol mapstep(\n  bp3:_mapstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Transposition in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol transposefixed(\n  bp3:_transposefixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Transposition BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol transposestep(\n  bp3:_transposestep,\n  scope(symbol, group, rule, flow)\n)\n', "fichier": "variation.bpsl" }, { "nom": "voices", "format": "bpsl", "texte": 'types\n\n// @documented\ndef voices(resolvedBy:Kairos, name:voices, resolves:voice)\n\nvoice wobble(\n  audio:"`js: (t, dur, env) => (2*((t*env.pitch)%1)-1) * (0.55+0.45*Math.sin(2*Math.PI*5.5*t)) * Math.max(0,1-t/dur)`",\n  section:objects\n)\nvoice fatbass(\n  audio:"`js: (t, dur, env) => ((2*((t*env.pitch)%1)-1) + (2*((t*env.pitch*1.01)%1)-1)) * 0.4 * Math.max(0,1-t/dur)`",\n  for(sub37(device(preset:bass-init, glide:0.2, osc1-wave:saw))),\n  section:objects\n)\nvoice bayan_open(\n  audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; const b = 2*(h-Math.floor(h))-1; return (Math.sin(2*Math.PI*80*t)*0.8 + b*0.2) * Math.exp(-t/0.35); }`",\n  section:objects\n)\nvoice bayan_muted(\n  audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; const b = 2*(h-Math.floor(h))-1; return (Math.sin(2*Math.PI*120*t)*0.5 + b*0.5) * Math.exp(-t/0.08); }`",\n  section:objects\n)\nvoice dayan_ring(\n  audio:"`js: (t) => (Math.sin(2*Math.PI*320*t) + Math.sin(2*Math.PI*480*t)) * 0.5 * Math.exp(-t/0.4)`",\n  section:objects\n)\nvoice dayan_tap(\n  audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; return (2*(h-Math.floor(h))-1) * Math.exp(-t/0.06); }`",\n  section:objects\n)\nvoice dayan_dry(\n  audio:"`js: (t) => (Math.sin(2*Math.PI*494*t) + Math.sin(2*Math.PI*587*t)) * 0.5 * Math.exp(-t/0.06)`",\n  section:objects\n)\nvoice dayan_open(\n  audio:"`js: (t) => (Math.sin(2*Math.PI*392*t) + Math.sin(2*Math.PI*494*t) + Math.sin(2*Math.PI*523*t) + Math.sin(2*Math.PI*587*t)) * 0.25 * Math.exp(-t/0.22)`",\n  section:objects\n)\nvoice dummy_csound_a(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_b(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_c(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_d(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_e(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_f(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_midiobject(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\n', "fichier": "voices.bpsl" }];
+`, "fichier": "transpo.bpsl" }, { "nom": "tunings", "format": "bpsl", "texte": "types\n\n// @documented\ndef tunings(resolvedBy:Kairos, resolves:tuning)\n\n// @description Standard Western equal temperament\ntuning western_12TET(\n  alphabet:western,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Western in Pythagorean tuning \u2014 pure fifths\ntuning western_pythagorean(\n  alphabet:western,\n  temperament:pythagorean,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Western in 5-limit just intonation\ntuning western_just(\n  alphabet:western,\n  temperament:just_5limit,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Western in 1/4-comma meantone\ntuning western_meantone(\n  alphabet:western,\n  temperament:meantone_quarter,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Indian sargam in 12-TET (simplified, equal temperament)\ntuning sargam_12TET(\n  alphabet:sargam,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description INDIAN note convention of the native BP3 engine, in 12-TET\ntuning bp3_indian_12TET(\n  alphabet:bp3_indian,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description ENGLISH note convention of the native BP3 engine, in 12-TET\ntuning bp3_english_12TET(\n  alphabet:bp3_english,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description FRENCH note convention of the native BP3 engine, in 12-TET\ntuning bp3_fr_12TET(\n  alphabet:bp3_fr,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Indian sargam in 22-shruti system \u2014 full microtonal resolution\ntuning sargam_22shruti(\n  alphabet:sargam,\n  temperament:22shruti,\n  degrees(0, 4, 8, 9, 13, 17, 21)\n)\n\n// @description Latin solf\xE8ge in 12-TET\ntuning solfege_12TET(\n  alphabet:solfege,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Arabic maqam system \u2014 quarter-tone grid\ntuning arabic_24TET(\n  alphabet:arabic,\n  temperament:24TET,\n  degrees(0, 4, 8, 10, 14, 18, 22)\n)\n\n// @description Turkish makam \u2014 53-comma system\ntuning turkish_53TET(\n  alphabet:turkish,\n  temperament:53TET,\n  degrees(0, 4, 9, 13, 17, 22, 26, 31, 35, 39, 44, 48, 4, 9, 13, 17)\n)\n\n// @description Javanese gamelan pelog \u2014 7-tone stretched octave\ntuning gamelan_pelog(\n  alphabet:gamelan_pelog,\n  temperament:gamelan_pelog,\n  degrees(0, 1, 2, 3, 4, 5, 6)\n)\n\n// @description Javanese gamelan slendro \u2014 5-tone near-equal, stretched octave\ntuning gamelan_slendro(\n  alphabet:gamelan_slendro,\n  temperament:gamelan_slendro,\n  degrees(0, 1, 2, 3, 4)\n)\n\n// @description Bohlen-Pierce just \u2014 13 tones in a tritave (3:1)\ntuning bohlen_pierce_just(\n  alphabet:bohlen_pierce,\n  temperament:bohlen_pierce_just,\n  degrees(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)\n)\n\n// @description Bohlen-Pierce equal \u2014 13 equal divisions of the tritave\ntuning bohlen_pierce_equal(\n  alphabet:bohlen_pierce,\n  temperament:bohlen_pierce_equal,\n  degrees(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)\n)\n\n// @description 22-shruti as named by BP3 \u2014 23 degrees on the bp3_shruti23_native temperament (native table -to.tryShruti verbatim,\n// 729/512). Distinct from bp3_grama (Arnold).\ntuning shruti23_native(\n  alphabet:shruti23,\n  temperament:bp3_shruti23_native,\n  degrees(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22)\n)\n\n// @description Western in BP3 just intonation, C-anchored (tonic C4 = 261.63 Hz, native table -to.tryOneScale). The 'j' in Cj/Aj/Gj =\n// degree marker, parsed C/A/G; ALL notes are rendered by this same just scale \u2014 one tuning, no parallel alphabet. Distinct from\n// western_just (A440-anchored). Temperament bp3_just_intonation coincides with just_5limit on C/D/E/F/G/A (degrees 0,2,4,5,7,9).\ntuning western_just_c(\n  alphabet:western,\n  temperament:bp3_just_intonation,\n  degrees(0, 2, 4, 5, 7, 9, 11),\n  baseNote:C,\n  diapason:261.63\n)\n\n// @description Shakuhachi 1.8 shaku \u2014 the five base fingerings on equal temperament\ntuning shakuhachi_12TET(\n  alphabet:shakuhachi,\n  temperament:12TET,\n  degrees(0, 3, 5, 7, 10)\n)\n", "fichier": "tunings.bpsl" }, { "nom": "types", "format": "bpsl", "texte": '// @documented\ndef types(resolves:types)\n\ndef scale(scope(scene))\nscale interval\nscale degree\ndegree directional\nscale composite\n\ndef sound(scope(scene))\n\ndef alphabet(scope(scene), octaves:western, sound terminals())\n\ndef temperament\ndef tuning(scope(scene))\ndef octaves(scope(scene))\ndef voice(scope(scene))\ndef eval(scope(scene))\ndef midi_default\n\ndef control\ndef addresskey\ndef enum\ndef flag\ndef symbol\n\ndef destination\ndestination audio(out:true, writable:true, params(gain:1))\ndestination midi(in:true, out:true, writable:true, params(ch:1))\ndestination osc(\n  in:true,\n  out:true,\n  writable:true,\n  params(host:"127.0.0.1", port:57120, addr:/kanopi)\n)\ndestination keyboard(in:true, writable:true)\ndestination dmx(out:true, writable:true, params(universe:0))\ndestination text(out:true, writable:false)\n\ndef actor(alphabet alphabet, tuning tuning, octaves octaves, destination out, eval eval)\n\ndef signal\nsignal pitch\nsignal phase\nsignal logic\n', "fichier": "types.bpsl" }, { "nom": "variation", "format": "bpsl", "texte": 'types\n\n// @documented\n// @description DISCRETE variation modes of playing parameters \u2014 fixed and steps. Between two written values of the same parameter, the mode\n// says whether the first HOLDS until the second (fixed) or GLIDES from note to note (steps). These two modes resolve at the note, hence\n// before any sound is emitted: they belong to Kairos. The third mode \u2014 continuous \u2014 glides DURING notes, through intermediate messages: it\n// can only be rendered by whoever emits, and it therefore lives in the library of its parameter.\ndef variation(\n  resolves:variation,\n  resolvedBy:"Kairos",\n  name:variation,\n  version:0.1.0,\n  section:controls\n)\n\n// @description Velocity in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol velfixed(\n  bp3:_velfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Velocity BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol velstep(\n  bp3:_velstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Modulation in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol modfixed(\n  bp3:_modfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Modulation BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol modstep(\n  bp3:_modstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Pitchbend in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol pitchfixed(\n  bp3:_pitchfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Pitchbend BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol pitchstep(\n  bp3:_pitchstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Pressure in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol pressfixed(\n  bp3:_pressfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Pressure BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol presstep(\n  bp3:_presstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Volume in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol volumefixed(\n  bp3:_volumefixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Volume BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol volumestep(\n  bp3:_volumestep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Articulation in FIXED mode \u2014 the written value holds until the next one, clean jump. Articulation is set by legato and\n// staccato.\ncontrol articulfixed(\n  bp3:_articulfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Articulation BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol articulstep(\n  bp3:_articulstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Panning in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol panfixed(\n  bp3:_panfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Panning BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol panstep(\n  bp3:_panstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Key map in FIXED mode \u2014 the written map holds until the next one, clean jump.\ncontrol mapfixed(\n  bp3:_mapfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Key map BY STEPS \u2014 the map glides from note to note between two written maps.\ncontrol mapstep(\n  bp3:_mapstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Transposition in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol transposefixed(\n  bp3:_transposefixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Transposition BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol transposestep(\n  bp3:_transposestep,\n  scope(symbol, group, rule, flow)\n)\n', "fichier": "variation.bpsl" }, { "nom": "voices", "format": "bpsl", "texte": 'types\n\n// @documented\ndef voices(resolvedBy:Kairos, name:voices, resolves:voice)\n\nvoice wobble(\n  audio:"`js: (t, dur, env) => (2*((t*env.pitch)%1)-1) * (0.55+0.45*Math.sin(2*Math.PI*5.5*t)) * Math.max(0,1-t/dur)`",\n  section:objects\n)\nvoice fatbass(\n  audio:"`js: (t, dur, env) => ((2*((t*env.pitch)%1)-1) + (2*((t*env.pitch*1.01)%1)-1)) * 0.4 * Math.max(0,1-t/dur)`",\n  for(sub37(device(preset:bass-init, glide:0.2, osc1-wave:saw))),\n  section:objects\n)\nvoice bayan_open(\n  audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; const b = 2*(h-Math.floor(h))-1; return (Math.sin(2*Math.PI*80*t)*0.8 + b*0.2) * Math.exp(-t/0.35); }`",\n  section:objects\n)\nvoice bayan_muted(\n  audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; const b = 2*(h-Math.floor(h))-1; return (Math.sin(2*Math.PI*120*t)*0.5 + b*0.5) * Math.exp(-t/0.08); }`",\n  section:objects\n)\nvoice dayan_ring(\n  audio:"`js: (t) => (Math.sin(2*Math.PI*320*t) + Math.sin(2*Math.PI*480*t)) * 0.5 * Math.exp(-t/0.4)`",\n  section:objects\n)\nvoice dayan_tap(\n  audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; return (2*(h-Math.floor(h))-1) * Math.exp(-t/0.06); }`",\n  section:objects\n)\nvoice dayan_dry(\n  audio:"`js: (t) => (Math.sin(2*Math.PI*494*t) + Math.sin(2*Math.PI*587*t)) * 0.5 * Math.exp(-t/0.06)`",\n  section:objects\n)\nvoice dayan_open(\n  audio:"`js: (t) => (Math.sin(2*Math.PI*392*t) + Math.sin(2*Math.PI*494*t) + Math.sin(2*Math.PI*523*t) + Math.sin(2*Math.PI*587*t)) * 0.25 * Math.exp(-t/0.22)`",\n  section:objects\n)\nvoice dummy_csound_a(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_b(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_c(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_d(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_e(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_f(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_midiobject(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\n', "fichier": "voices.bpsl" }];
 function sourcesDeLibrairie() {
   return SOURCES.map((s) => ({ ...s }));
 }

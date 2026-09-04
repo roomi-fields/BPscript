@@ -49,14 +49,12 @@ homomorphism transposition(
   sections(TR(chains(C3(B3, F4, C6), B3(C3, B4, F6), F4(C6, F2, B5))))
 )
 
-// @description Ported from bp3-engine/test-data/-ho.Ruwet on 2026-08-13, section by section and link by link. Verified: unfolding into
-// consecutive pairs reproduces the native exactly.
+// @description Ruwet homomorphism, faithful to bp3-engine/test-data/-ho.Ruwet, section by section and link by link.
 homomorphism Ruwet(
   sections(m1(chains(la4(sib4))), m2(chains(la4(sol4))), mineur(chains(fa4(re4), la4(fa4))))
 )
 
-// @description Ported from bp3-engine/test-data/-ho.abc on 2026-08-13, section by section and link by link. Verified: unfolding into
-// consecutive pairs reproduces the native exactly.
+// @description Homomorphism faithful to bp3-engine/test-data/-ho.abc, section by section and link by link.
 homomorphism abc(
   sections(
     "*"(
@@ -93,16 +91,13 @@ homomorphism abc(
   )
 )
 
-// @description Ported from bp3-engine/test-data/-ho.abc1 on 2026-08-13, section by section and link by link. Verified: unfolding into
-// consecutive pairs reproduces the native exactly.
+// @description Homomorphism faithful to bp3-engine/test-data/-ho.abc1, section by section and link by link.
 homomorphism abc1(
   sections(chik(chains(a("a'"), b("b'"), c("c'"), d("d'"))), e(chains(f("f'"), g("g'"))))
 )
 
-// @description Ported from bp3-engine/test-data/-ho.abc2 on 2026-08-13. ⚠️ The section is `sync` and not `*`: the file writes `*` then
-// `sync` with no separator between them, and A LABEL FOLLOWING A LABEL REPLACES IT — the native opens a section only on a separator. I had
-// first read `sync` as a MODIFIER of the current section; that was an invention, the word `sync` exists nowhere in the engine source.
-// Corrected on a report from bp3-frontend, whose criterion comes from the engine.
+// @description Homomorphism faithful to bp3-engine/test-data/-ho.abc2. Its section is `sync`, not `*`: the file writes `*` then `sync` with
+// no separator, and a LABEL FOLLOWING A LABEL REPLACES IT — the native opens a section only on a separator.
 homomorphism abc2(
   sections(
     sync(
@@ -138,8 +133,7 @@ homomorphism abc2(
   )
 )
 
-// @description Ported from bp3-engine/test-data/-ho.abc3 on 2026-08-13, section by section and link by link. Verified: unfolding into
-// consecutive pairs reproduces the native exactly.
+// @description Homomorphism faithful to bp3-engine/test-data/-ho.abc3, section by section and link by link.
 homomorphism abc3(
   sections(
     "*"(
@@ -177,9 +171,7 @@ homomorphism abc3(
 )
 
 // @description Bells — CHAIN homomorphism, faithful to bp3-engine/test-data/-ho.cloches1 (section TR, 4 chains indexed by invocation
-// depth). ⚠️ PORTED AGAIN ON 2026-08-10: the previous version FLATTENED the chains into pairs — it kept the first link of each line and
-// lost the following ones, 15 links out of 19. A chain does not say « do3 becomes mib3 »: it says « on the first call mib3, on the second
-// fa#3, on the third la4 » — flattening it changes the meaning, not just the quantity.
+// depth). A chain does not say « do3 becomes mib3 »: it says « on the first call mib3, on the second fa#3, on the third la4 ».
 homomorphism cloches1(
   sections(
     TR(
@@ -202,8 +194,7 @@ homomorphism dhin--(
 
 homomorphism tabla(default(dha:ta, dhin:tin, dhee:tee, ge:ke))
 
-// @description Ported from bp3-engine/test-data/-ho.trial.mohanam on 2026-08-13, section by section and link by link. Verified: unfolding
-// into consecutive pairs reproduces the native exactly.
+// @description Homomorphism faithful to bp3-engine/test-data/-ho.trial.mohanam, section by section and link by link.
 homomorphism trial_mohanam(
   sections(trn(chains(sa6(ga6), re6(pa6), ga6(dha6), pa6(sa7), dha6(re7), sa7(ga7))))
 )

@@ -1,5 +1,5 @@
 // @description Chromatic transposition on the 12-key grid — shift N chromatic keys (semitones), rename to target key + its tuning. Image of
-// BP3 _transpose (Romain decision 2026-07-17). Distinct from scaleshift (diatonic degrees) and transpose (real, name preserved).
+// BP3 _transpose. Distinct from scaleshift (diatonic degrees) and transpose (real, name preserved).
 control chromashift(
   bp3:_transpose,
   args(keys),

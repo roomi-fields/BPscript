@@ -4,8 +4,7 @@ def eval(resolvedBy:runtime-codevoices, resolves:eval, name:eval, type:code, sec
 // @description Patterns and samples, in the browser.
 def strudel(
   parameters(
-    // @description The sample bank the voice loads. Without it, a scene using sample names plays SILENT — measured at Kanopi: « unknown
-    // bank → MUTE sound ».
+    // @description The sample bank the voice loads. Without it, a scene using sample names plays SILENT.
     bank()
   )
 )
@@ -35,6 +34,5 @@ def csound()
 def tidal()
 
 // @description Literal text, evaluated by no one. Carries a SENTENCE where the language has no escape character: a library description, a
-// label. Ratified by Romain on 2026-08-13 -- the tagged backtick is the only graphy in the repository that delimits free content, and
-// adding a tag to it costs less than inventing a sign.
+// label.
 def txt()

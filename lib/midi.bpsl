@@ -168,7 +168,6 @@ control switchoff(
 )
 
 // @description Mutes the sound. Bare, (mute), mutes everything sounding; per component, (mute.all) or (mute.lead), mutes the named target.
-// Named on 2026-07-26: replaces one of the families script(...) carried without a name.
 control mute(
   scope(flow),
   bagOnly:true,
@@ -190,7 +189,7 @@ control panic(
 )
 
 // @description Real-time system synchronization message: (sync:start), (sync:continue), (sync:stop). Image of the MIDI Start/Continue/Stop
-// messages. Replaces script(MIDI send Continue).
+// messages.
 control sync(
   args(message),
   values(start, continue, stop),
@@ -199,8 +198,8 @@ control sync(
 )
 
 // @description NUMBERED MIDI controller. Designated by its component number: (cc.98:45) in a container, !(cc.98:45) in flow. For
-// controllers with no named alias -- those that have one are written by their name (mod = CC1, volume = CC7). Graphy settled by Romain on
-// 2026-07-26: the dot CALLS the component (controller 98), the colon ASSIGNS the value.
+// controllers with no named alias -- those that have one are written by their name (mod = CC1, volume = CC7). The dot CALLS the component,
+// the colon ASSIGNS the value.
 control cc(
   component:number,
   args(value),

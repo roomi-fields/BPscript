@@ -1,5 +1,5 @@
 // @description Scalar (diatonic) transposition — shift N degrees in the alphabet. (scaleshift:2): Sa->Ga, etc. Preserves degrees, not
-// intervals (in unequal scales). Formerly rotate-PITCH; distinct from the ![rotate] STRUCTURE control.
+// intervals (in unequal scales). Distinct from the ![rotate] STRUCTURE control.
 control scaleshift(
   args(degrees),
   value:0,

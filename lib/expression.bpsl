@@ -56,8 +56,8 @@ control rndvel(
 )
 
 // @description Velocity in CONTINUOUS mode — the value glides DURING notes, through intermediate messages. Its two discrete siblings live
-// in the variation library; their recipient is read on that file's resolvedBy field, never here. Measured on native engine v3.5.1-iso.2: on
-// velocity, continuous yields bytes identical to steps (FillPhaseDiagram.c carries 'not implemented' at line 415).
+// in the variation library; their recipient is read on that file's resolvedBy field. On the native engine, continuous velocity yields bytes
+// identical to steps.
 control velcont(
   bp3:_velcont,
   scope(symbol, group, rule, flow),
@@ -74,8 +74,8 @@ control offvel(
 )
 
 // @description Articulation in CONTINUOUS mode — the value glides DURING notes. Its two discrete siblings, articulfixed and articulstep,
-// live in the variation library. The native behaviour of this word is unsettled: no witness built on engine v3.5.1-iso.2 moved articulation
-// at all, fixed mode included.
+// live in the variation library. The native behaviour of this word is unsettled: on engine v3.5.1-iso.2 no mode moves articulation, fixed
+// included.
 control articulcont(
   bp3:_articulcont,
   scope(symbol, group, rule, flow)
@@ -83,8 +83,7 @@ control articulcont(
 
 // @description Transposition in CONTINUOUS mode — the value glides DURING notes. Its two discrete siblings, transposefixed and
 // transposestep, live in the variation library; this one stays here because transposition is realized by the same resolver as its
-// parameter. Measured on native engine v3.5.1-iso.2: continuous yields bytes identical to steps (FillPhaseDiagram.c carries 'not
-// implemented' at line 608).
+// parameter. On the native engine, continuous transposition yields bytes identical to steps.
 control transposecont(
   bp3:_transposecont,
   scope(symbol, group, rule, flow),
@@ -92,7 +91,7 @@ control transposecont(
 )
 
 // @description NATIVE gesture: gives a value to a named performance parameter. In BPScript the form is !(<param>:<value>), the parameter
-// being declared by its TYPE at the head -- signal <param> -- and it is the KEY, see the ruling of 2026-08-13.
+// being declared by its TYPE at the head -- signal <param> -- and it is the KEY.
 control value(
   bp3:_value,
   bpscript:false,

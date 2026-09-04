@@ -124,9 +124,8 @@ tuning shruti23_native(
 )
 
 // @description Western in BP3 just intonation, C-anchored (tonic C4 = 261.63 Hz, native table -to.tryOneScale). The 'j' in Cj/Aj/Gj =
-// degree marker, parsed C/A/G; ALL notes rendered by this same just scale (Romain's model [428/429]: one tuning, no parallel alphabet).
-// Distinct from western_just (A440-anchored). Temperament bp3_just_intonation = coincides with just_5limit on C/D/E/F/G/A (degrees
-// 0,2,4,5,7,9).
+// degree marker, parsed C/A/G; ALL notes are rendered by this same just scale — one tuning, no parallel alphabet. Distinct from
+// western_just (A440-anchored). Temperament bp3_just_intonation coincides with just_5limit on C/D/E/F/G/A (degrees 0,2,4,5,7,9).
 tuning western_just_c(
   alphabet:western,
   temperament:bp3_just_intonation,

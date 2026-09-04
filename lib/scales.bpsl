@@ -794,14 +794,13 @@ interval jins_hijaz(
 interval jins_bayati(
   ratios(1, 12/11, 6/5, 4/3)
 )
-// @description Jins Sikah — built on Zalzal's neutral second (C D-half-flat Eb F): 12/11 (~151c), 6/5, 4/3. Neutral second = 12/11
-// (consistent with the Arabic table; replaces the former 11/10 ~165c).
+// @description Jins Sikah — built on Zalzal's neutral second (C D-half-flat Eb F): 12/11 (~151c), 6/5, 4/3. Neutral second = 12/11,
+// consistent with the Arabic table.
 interval jins_sikah(
   ratios(1, 12/11, 6/5, 4/3)
 )
 // @description Jins Ajam — MAJOR tetrachord (C D E F): 9/8 (tone), 5/4 (Zarlino's major third), 4/3 (perfect fourth). It is the only Arabic
-// jins with a pure 5/4 major third (≈ Western major). The tetrachord closes on the fourth 4/3 (corrects the former 45/32 tritone, wrong for
-// a jins).
+// jins with a pure 5/4 major third (≈ Western major). The tetrachord closes on the fourth 4/3.
 interval jins_ajam(
   ratios(1, 9/8, 5/4, 4/3)
 )
