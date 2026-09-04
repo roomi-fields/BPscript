@@ -24,7 +24,7 @@
  * n'est pas en cause et chez qui regarder.
  */
 import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // ⛔ LE CHEMIN SE DÉRIVE DE MA RACINE, IL NE S'ÉCRIT PAS EN ABSOLU. Un chemin absolu ne se déclare
@@ -35,7 +35,30 @@ import { fileURLToPath } from 'node:url';
 // n'existe plus, et le portillon s'est arrêté là. ⇒ Ce n'est pas l'enveloppe qui a créé le défaut,
 // elle l'a RENDU VISIBLE : mes bancs typaient contre l'état NON COMMITÉ d'un voisin, donc leur
 // verdict dépendait de ce qu'il avait sous la main à cet instant.
-const ATELIER = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '.publie');
+// ⛔⛔ ET LA COUR SE CHERCHE, ELLE NE SE COMPTE PAS EN REMONTÉES — rendu par bp3-frontend le
+// 2026-09-04, mesuré chez lui. Deux remontées depuis `<dépôt>/test/` donnent la cour quand ce
+// fichier vit dans MON ARBRE ; lues depuis MON ESPACE PUBLIÉ — `.publie/BPscript/test/` — elles
+// donnent déjà `.publie`, et le segment ajouté compose `.publie/.publie`, qui n'existe pas.
+//
+// ⇒ ⛔ ET LE REFUS ACCUSAIT LE VOISIN : « l'artefact que kairos PUBLIE est absent […] cause
+//   probable : kairos n'a pas encore publié ». Kairos avait publié. Un lecteur pressé vérifiait son
+//   empreinte, la trouvait bonne, et rejouait. Chez bp3-frontend, 65 grammaires sur 98 sont passées
+//   à « plante » sans qu'aucune n'ait changé.
+//
+// ⇒ *Un compte de remontées mesure la POSITION du fichier, jamais la cour.* Cette position a changé
+//   avec la séparation, et rien ne l'a dit. On remonte donc jusqu'à trouver la cour elle-même —
+//   celle qui PORTE `.publie`, ou `.publie` lui-même quand on est lu depuis l'intérieur.
+function trouverLAtelier(depart) {
+  for (let d = depart; ; d = dirname(d)) {
+    if (basename(d) === '.publie') return d;
+    if (existsSync(join(d, '.publie'))) return join(d, '.publie');
+    if (dirname(d) === d) break;
+  }
+  throw new Error(
+    `PORTE DU VOISIN : aucun espace publié trouvé en remontant depuis ${depart}. `
+    + `La cour est le dossier qui porte '.publie' ; ni lui ni aucun de ses parents ne l'a.`);
+}
+const ATELIER = trouverLAtelier(dirname(fileURLToPath(import.meta.url)));
 
 /**
  * LES VOISINS QUI PUBLIENT UN ARTEFACT CONSTRUIT, et le chemin de leur entrée DANS LEUR arbre.

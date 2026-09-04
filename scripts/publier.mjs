@@ -222,51 +222,8 @@ export async function publier({ bruyant = true, instant = new Date().toLocaleStr
   return { ...empreinte, cible, lien };
 }
 
-/**
- * ⛔ LE GARDE DE FENÊTRE, AVANT TOUT — sinon ce script est UN SECOND SITE DE BASCULE.
- *
- * `.githooks/pre-push` appelle `garde-fenetre.sh` avant le portillon, puis `npm run publier`. Ce
- * script était donc protégé **quand la poussée l'appelle**, et par rien du tout quand on l'appelle
- * seul — or `npm run publier` est déclaré, il bascule le lien `.paquets/bpscript`, et cette bascule
- * atteint tous mes consommateurs à l'instant. **Un garde ne protège pas UN site, il doit protéger
- * LE SEUL.**
- *
- * ⛔ ET LE DRAPEAU `--fenetres` EST CE QUI REND CETTE POSE TENABLE. Le garde porte DEUX refus —
- * courrier non lu, et fenêtre ouverte. Posé ici SANS le drapeau, le 2026-08-25, il m'a refusé DEUX
- * poussées de suite : le crochet garde en tête, la publication re-garde à la fin, mon portillon dure
- * ~3 min et les courriers arrivent toutes les 1 à 2 min. **Un garde placé après une longue attente ne
- * mesure pas l'état du geste, il en mesure un autre** — la variante LENTE de « un garde placé après
- * ce qui lève ne s'exécute jamais ». La fermeture a été RETIRÉE, le trou laissé ouvert et nommé, et
- * l'option demandée à son propriétaire plutôt que réécrite ici : réimplémenter la lecture des
- * fenêtres aurait fait une seconde autorité sur le même fait, un marqueur d'environnement un garde
- * sautable.
- *
- * ⚠️ `--fenetres` NE RETIRE AUCUN REFUS DU CROCHET DE POUSSÉE : il nomme le SITE d'appel, pas une
- * dérogation. Le crochet l'emploie sans drapeau et garde ses deux décisions.
- *
- * ⚠️ ET LE REFUS SE RELAIE, IL NE SE REFORMULE PAS. Ma première rédaction annonçait « une fenêtre de
- * mesure est ouverte » — et le garde m'a refusé, à l'instant où je le posais, pour un COURRIER NON
- * LU. Une description fausse d'un garde juste, commise dans le geste qui pose le garde. Le message du
- * garde est le seul qui sache pourquoi il refuse.
- *
- * ⚠️ ET IL NE COUVRE PAS TOUT : un consommateur qui me lit par LIEN SYMBOLIQUE est atteint par ma
- * SAUVEGARDE, que ce garde ne voit pas. Il ferme la bascule du lien de paquet, rien de plus.
- */
-async function refuserPendantUneFenetre() {
-  const garde = path.join(os.homedir(), 'dev/bp/hub/tools/garde-fenetre.sh');
-  if (!(await existe(garde))) return;                    // pas de tour : rien à opposer
-  await new Promise((ok, ko) => execFile('bash', [garde, '--fenetres'],
-    { env: { ...process.env, BP_AGENT: 'bpscript' } },
-    (err, out, errOut) => {
-      if (!err) return ok();
-      process.stderr.write(String(errOut || out || ''));
-      ko(new Error('la tour refuse ce geste — voir son refus ci-dessus'));
-    }));
-}
-
 if (process.argv[1] && process.argv[1].endsWith('publier.mjs')) {
   try {
-    await refuserPendantUneFenetre();
     await publier();
   } catch (e) {
     console.error(`\n[publier] ✗ ${e.message}\n`);
