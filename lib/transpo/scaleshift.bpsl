@@ -4,7 +4,6 @@ control scaleshift(
   args(degrees),
   value:0,
   scope(symbol, group, rule, flow),
-  transportGroup:transpo,
   rank:10,
   params(
     // @description Number of degrees of shift in the alphabet (may be negative; register carry at the bounds).

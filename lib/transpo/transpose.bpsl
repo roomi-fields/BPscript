@@ -5,7 +5,6 @@ control transpose(
   args(interval),
   argType:interval,
   scope(symbol, group, rule, flow, scene),
-  transportGroup:transpo,
   rank:30,
   params(
     // @description Interval normalized into a ratio by Kairos from the 3-format string. A NUMERIC transpose cries here (migration cry: the

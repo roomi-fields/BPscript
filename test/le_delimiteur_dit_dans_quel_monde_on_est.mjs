@@ -108,7 +108,16 @@ for (const [ecrit, reecrit] of [
   const descendre = (o, chemin, cle) => {
     if (typeof o === 'string') {
       examinees++;
-      if (cle !== 'description' && !cle.startsWith('_') && /\S\s+\S/.test(o)) fautives.push([chemin, o]);
+      // ⛔ DEUX CHAMPS PORTENT DU TEXTE, PAS UN MOT DU LANGAGE : `description` et `resolvedBy`.
+      //   Le second nomme QUI réalise, et l'un de ses destinataires est un pluriel — « toutes les
+      //   sorties », écrit entre guillemets dans `expression.bpsl` depuis longtemps. Une phrase
+      //   délimitée est une valeur légitime du langage ; c'est la valeur NUE à plusieurs parties
+      //   que ce volet refuse, parce qu'elle serait ambiguë là où seule la virgule sépare.
+      // ⚠️ LE CAS DORMAIT : `expression` n'est pas encore réécrite, donc son `resolvedBy` n'était
+      //   pas balayé. Le retour de `transposecont` chez `transpo` l'a rendu visible, il ne l'a pas
+      //   créé — la même valeur attendait la réécriture d'`expression` pour crier.
+      const porteDuTexte = cle === 'description' || cle === 'resolvedBy';
+      if (!porteDuTexte && !cle.startsWith('_') && /\S\s+\S/.test(o)) fautives.push([chemin, o]);
       return;
     }
     if (!o || typeof o !== 'object') return;

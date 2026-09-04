@@ -20,7 +20,6 @@ control transpose(
   args(interval),
   argType:interval,
   scope(symbol, group, rule, flow, scene),
-  transportGroup:transpo,
   rank:30,
   params(
     // @description Interval normalized into a ratio by Kairos from the 3-format string. A NUMERIC transpose cries here (migration cry: the
@@ -43,8 +42,7 @@ control scale(
   bp3:_scale,
   args(name, blockkey),
   value(name:0, blockkey:0),
-  scope(symbol, group, rule, flow),
-  transportGroup:transpo
+  scope(symbol, group, rule, flow)
 )
 
 // @description Scalar (diatonic) transposition — shift N degrees in the alphabet. (scaleshift:2): Sa->Ga, etc. Preserves degrees, not
@@ -53,7 +51,6 @@ control scaleshift(
   args(degrees),
   value:0,
   scope(symbol, group, rule, flow),
-  transportGroup:transpo,
   rank:10,
   params(
     // @description Number of degrees of shift in the alphabet (may be negative; register carry at the bounds).
@@ -72,7 +69,6 @@ control chromashift(
   args(keys),
   value:0,
   scope(symbol, group, rule, flow, scene),
-  transportGroup:transpo,
   rank:10,
   params(
     // @description Number of chromatic keys (semitones) of shift on the 12-grid (may be negative; wraps at the octave).
@@ -90,7 +86,6 @@ control keyxpand(
   args(pivot, factor),
   value(pivot:0, factor:1),
   scope(symbol, group, rule, flow),
-  transportGroup:transpo,
   rank:20,
   params(
     // @description Pivot: note token resolved into grid steps by Kairos's token-step coercion (cries if unresolvable); stays fixed.
@@ -106,4 +101,13 @@ control keyxpand(
       default:1
     )
   )
+)
+
+// @description Transposition in CONTINUOUS mode — the value glides DURING notes. Its two discrete siblings, transposefixed and
+// transposestep, live in the variation library. It names its own resolver, the one that realizes its parameter. On the native engine,
+// continuous transposition yields bytes identical to steps.
+control transposecont(
+  bp3:_transposecont,
+  resolvedBy:"toutes les sorties",
+  scope(symbol, group, rule, flow)
 )

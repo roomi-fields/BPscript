@@ -5,7 +5,6 @@ control chromashift(
   args(keys),
   value:0,
   scope(symbol, group, rule, flow, scene),
-  transportGroup:transpo,
   rank:10,
   params(
     // @description Number of chromatic keys (semitones) of shift on the 12-grid (may be negative; wraps at the octave).

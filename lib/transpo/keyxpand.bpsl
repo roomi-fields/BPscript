@@ -4,7 +4,6 @@ control keyxpand(
   args(pivot, factor),
   value(pivot:0, factor:1),
   scope(symbol, group, rule, flow),
-  transportGroup:transpo,
   rank:20,
   params(
     // @description Pivot: note token resolved into grid steps by Kairos's token-step coercion (cries if unresolvable); stays fixed.

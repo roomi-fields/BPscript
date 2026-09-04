@@ -14,8 +14,7 @@ def expression(
 control volume(
   args(value),
   range(0, 127),
-  scope(symbol, group, rule, flow, scene),
-  transportGroup:expression
+  scope(symbol, group, rule, flow, scene)
 )
 
 // @description Velocity (0-127). WebAudio: gain, MIDI: NoteOn velocity
@@ -24,8 +23,7 @@ control vel(
   args(value),
   range(0, 127),
   value:64,
-  scope(symbol, group, rule, flow, scene),
-  transportGroup:expression
+  scope(symbol, group, rule, flow, scene)
 )
 
 // @description Pan (0=left, 64=center, 127=right). WebAudio: StereoPanner, MIDI: CC10
@@ -34,16 +32,14 @@ control pan(
   args(value),
   range(0, 127),
   value:64,
-  scope(symbol, group, rule, flow, scene),
-  transportGroup:expression
+  scope(symbol, group, rule, flow, scene)
 )
 
 // @description Panning in CONTINUOUS mode — the value glides DURING notes, through intermediate messages. Its two discrete siblings live in
 // the variation library; their recipient is read on that file's resolvedBy field, never here.
 control pancont(
   bp3:_pancont,
-  scope(symbol, group, rule, flow),
-  transportGroup:expression
+  scope(symbol, group, rule, flow)
 )
 
 // @description Random velocity +/-range
@@ -51,8 +47,7 @@ control rndvel(
   bp3:_rndvel,
   args(range),
   value:0,
-  scope(symbol, group, rule, flow),
-  transportGroup:expression
+  scope(symbol, group, rule, flow)
 )
 
 // @description Velocity in CONTINUOUS mode — the value glides DURING notes, through intermediate messages. Its two discrete siblings live
@@ -60,8 +55,7 @@ control rndvel(
 // identical to steps.
 control velcont(
   bp3:_velcont,
-  scope(symbol, group, rule, flow),
-  transportGroup:expression
+  scope(symbol, group, rule, flow)
 )
 
 // @description NoteOff velocity (0-127). Relevant for expressive controllers (Osmose, MPE)
@@ -69,8 +63,7 @@ control offvel(
   args(value),
   range(0, 127),
   value:64,
-  scope(symbol, group, rule, flow),
-  transportGroup:expression
+  scope(symbol, group, rule, flow)
 )
 
 // @description Articulation in CONTINUOUS mode — the value glides DURING notes. Its two discrete siblings, articulfixed and articulstep,
@@ -79,15 +72,6 @@ control offvel(
 control articulcont(
   bp3:_articulcont,
   scope(symbol, group, rule, flow)
-)
-
-// @description Transposition in CONTINUOUS mode — the value glides DURING notes. Its two discrete siblings, transposefixed and
-// transposestep, live in the variation library; this one stays here because transposition is realized by the same resolver as its
-// parameter. On the native engine, continuous transposition yields bytes identical to steps.
-control transposecont(
-  bp3:_transposecont,
-  scope(symbol, group, rule, flow),
-  transportGroup:transpo
 )
 
 // @description NATIVE gesture: gives a value to a named performance parameter. In BPScript the form is !(<param>:<value>), the parameter
@@ -127,6 +111,5 @@ control panrate(
   range(0, 1000),
   unit:"Hz",
   value:50,
-  scope(symbol, group, rule, flow),
-  transportGroup:expression
+  scope(symbol, group, rule, flow)
 )

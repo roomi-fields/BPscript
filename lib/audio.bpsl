@@ -14,8 +14,7 @@ control wave(
   args(type),
   values(sine, triangle, square, sawtooth),
   value:triangle,
-  scope(symbol, group, rule, flow),
-  transportGroup:audio
+  scope(symbol, group, rule, flow)
 )
 
 // @description Envelope attack in ms (Web Audio)
@@ -24,8 +23,7 @@ control attack(
   range(1, 5000),
   unit:"ms",
   value:20,
-  scope(symbol, group, rule, flow),
-  transportGroup:audio
+  scope(symbol, group, rule, flow)
 )
 
 // @description Envelope release in ms (Web Audio)
@@ -34,8 +32,7 @@ control release(
   range(1, 5000),
   unit:"ms",
   value:100,
-  scope(symbol, group, rule, flow),
-  transportGroup:audio
+  scope(symbol, group, rule, flow)
 )
 
 // @description Detune in cents (Web Audio)
@@ -44,8 +41,7 @@ control detune(
   range(-1200, 1200),
   unit:"cents",
   value:0,
-  scope(symbol, group, rule, flow),
-  transportGroup:audio
+  scope(symbol, group, rule, flow)
 )
 
 // @description Lowpass filter cutoff Hz (Web Audio)
@@ -54,8 +50,7 @@ control filter(
   range(20, 20000),
   unit:"Hz",
   value:20000,
-  scope(symbol, group, rule, flow),
-  transportGroup:audio
+  scope(symbol, group, rule, flow)
 )
 
 // @description Filter resonance Q (Web Audio)
@@ -63,8 +58,7 @@ control filterQ(
   args(value),
   range(0, 30),
   value:1,
-  scope(symbol, group, rule, flow),
-  transportGroup:audio
+  scope(symbol, group, rule, flow)
 )
 
 // @description Actor gain — a permanent stage between an actor's voices and the master. The audio runtime converts this value into linear
@@ -73,6 +67,5 @@ control volume(
   implements:expression.volume,
   args(value),
   range(0, 127),
-  scope(symbol, group, rule, flow, scene),
-  transportGroup:audio
+  scope(symbol, group, rule, flow, scene)
 )

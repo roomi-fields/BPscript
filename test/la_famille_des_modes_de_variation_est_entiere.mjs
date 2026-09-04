@@ -55,7 +55,13 @@ for (const [nomLib, lib] of Object.entries(LIBS)) {
   for (const section of ['controls', 'engine']) {
     for (const [n, d] of Object.entries(lib?.[section] || {})) {
       if (n.startsWith('_') || !d || typeof d !== 'object' || !('args' in d)) continue;
-      declarations.set(n, { lib: nomLib, resolvedBy: lib.resolvedBy ?? null });
+      // ⛔ LE DESTINATAIRE EFFECTIF, PAS CELUI DU FICHIER — règle de Romain du 2026-08-13 : « si je
+      //   définis le destinataire pour la librairie, c'est le défaut de la librairie ; si je le
+      //   définis sur le contrôle, c'est celui du contrôle qui surcharge ». Le compilateur l'applique
+      //   (`libs.js:911-914`) ; ce garde lisait `lib.resolvedBy` seul, donc il mesurait le RANGEMENT
+      //   là où la règle porte sur QUI RÉALISE. Les deux coïncidaient tant qu'aucun contrôle ne
+      //   nommait le sien — `transposecont` est le premier, depuis le 2026-09-04.
+      declarations.set(n, { lib: nomLib, resolvedBy: d.resolvedBy ?? lib.resolvedBy ?? null });
     }
   }
 }

@@ -193,7 +193,11 @@ for (const { source, nom, def } of CLES) {
 //   (gain lineaire) et la plage (0..127, celle de l'interface -- la conversion est chez lui).
 //   midi 37 -> 36 : `press` SORT le 2026-09-02 (décision 3606) — un alias de `pressure`, qui
 //   reçoit le geste natif `_press` que l'alias portait.
-const PAR_DESTINATAIRE = { expression: 14, midi: 36, audio: 7, transpo: 5, variation: 18 };
+//   expression 14 → 13, transpo 5 → 6 : LE 2026-09-04, `transposecont` RETOURNE chez `transpo`,
+//   en nommant son propre destinataire — « toutes les sorties », celui qu'il avait déjà. Son
+//   chemin dit désormais la famille à laquelle il appartient, et `transportGroup`, qui le disait
+//   en double, sort du format (décision de Romain, « le seul qui est légitime est resolvedBy »).
+const PAR_DESTINATAIRE = { expression: 13, midi: 36, audio: 7, transpo: 6, variation: 18 };
 for (const [racine, attendu] of Object.entries(PAR_DESTINATAIRE)) {
   const n = CLES.filter((c) => c.source.startsWith(`${racine}.`)).length;
   ok(n === attendu,

@@ -23,8 +23,8 @@ SYNCDELAY
 LE MOT EST AGNOSTIQUE AU TRANSPORT, et c'est ce qui décide de son domicile. Décision Romain
 du 2026-08-21
 (`trois-reglages-natifs-trouvent-leur-domicile-et-kronos-ne-connait-pas-le-transport`) : le
-décalage vaut pour MIDI comme pour OSC, donc le mot ne nomme aucun transport et ne porte pas
-de 'transportGroup'. Il vit ici parce que SEUL KRONOS lève un point d'attente, et 'time' est
+décalage vaut pour MIDI comme pour OSC, donc le mot est agnostique au transport. Il vit ici
+parce que SEUL KRONOS lève un point d'attente, et 'time' est
 la seule librairie qu'il résout. Sa fonction est mesurée dans le moteur d'origine —
 ConsoleMain.c:1727, dans StopWaiting() : à la reprise après un point d'attente, l'horloge est
 rattrapée pour restaurer le calage des événements suivants. Défaut natif 380 ms

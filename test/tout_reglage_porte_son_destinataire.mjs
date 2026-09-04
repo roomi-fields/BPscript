@@ -64,7 +64,12 @@ for (const [nomLib, lib] of Object.entries(LIBS)) {
       // Sans ce saut, cette table attendrait `runtime-MIDI` pour `volume` et accuserait le
       // chargeur de faire exactement ce que la doctrine demande.
       if (typeof d.implements === 'string') continue;
-      destinataireAttendu[n] = { destinataire: lib.resolvedBy, lib: nomLib };
+      // ⛔ LE PLUS LOCAL GAGNE — règle de Romain du 2026-08-13, appliquée par le chargeur
+      //   (`libs.js:911-914`) : un contrôle qui nomme son propre destinataire surcharge celui de son
+      //   fichier. Cette table lisait le fichier seul, donc elle accusait le chargeur de faire
+      //   exactement ce que la règle demande — le même défaut que le saut d'`implements` juste
+      //   au-dessus, à un étage près.
+      destinataireAttendu[n] = { destinataire: d.resolvedBy ?? lib.resolvedBy, lib: nomLib };
     }
   }
 }

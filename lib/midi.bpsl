@@ -44,8 +44,7 @@ control chan(
   bp3:_chan,
   args(channel),
   range(1, 16),
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description MIDI Program Change. The author writes the program number starting at 1, like the original engine; the byte transmitted is
@@ -54,8 +53,7 @@ control ins(
   bp3:_ins,
   args(program),
   range(1, 128),
-  scope(symbol, group, rule, flow, scene),
-  transportGroup:midi
+  scope(symbol, group, rule, flow, scene)
 )
 
 // @description MIDI Modulation (CC1)
@@ -63,15 +61,13 @@ control mod(
   bp3:_mod,
   args(value),
   range(0, 127),
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description Enable continuous modulation interpolation (CC1)
 control modcont(
   bp3:_modcont,
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description MIDI Pitch Bend
@@ -79,8 +75,7 @@ control pitchbend(
   bp3:_pitchbend,
   args(value),
   range(-8192, 8191),
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description Pitch bend range in cents
@@ -88,15 +83,13 @@ control pitchrange(
   bp3:_pitchrange,
   args(cents),
   unit:"cents",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description Enable continuous pitch bend interpolation
 control pitchcont(
   bp3:_pitchcont,
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description Key mapping — remap MIDI key range (p1,p2) to (q1,q2). Args are key numbers (0..127) or note names; p2 must be greater than
@@ -105,8 +98,7 @@ control keymap(
   bp3:_keymap,
   args(p1, q1, p2, q2),
   range(0, 127),
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description Key map in CONTINUOUS mode — the map glides DURING notes, through intermediate messages. BP3 _mapcont — register of the
@@ -114,8 +106,7 @@ control keymap(
 // the variation library; their recipient is read on that file's resolvedBy field, never here.
 control mapcont(
   bp3:_mapcont,
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description MIDI Channel Pressure (aftertouch)
@@ -123,15 +114,13 @@ control pressure(
   bp3:_press,
   args(value),
   range(0, 127),
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description Enable continuous channel pressure interpolation
 control presscont(
   bp3:_presscont,
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description MIDI Volume (CC7)
@@ -140,52 +129,45 @@ control volume(
   bp3:_volume,
   args(value),
   range(0, 127),
-  scope(symbol, group, rule, flow, scene),
-  transportGroup:midi
+  scope(symbol, group, rule, flow, scene)
 )
 
 // @description Enable continuous volume interpolation
 control volumecont(
   bp3:_volumecont,
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description Enable MIDI switch channel
 control switchon(
   bp3:_switchon,
   args(channel),
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description Disable MIDI switch channel
 control switchoff(
   bp3:_switchoff,
   args(channel),
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description Mutes the sound. Bare, (mute), mutes everything sounding; per component, (mute.all) or (mute.lead), mutes the named target.
 control mute(
   scope(flow),
-  bagOnly:true,
-  transportGroup:midi
+  bagOnly:true
 )
 
 // @description Restores the sound muted by mute. Same graphy: (unmute) or (unmute.lead).
 control unmute(
   scope(flow),
-  bagOnly:true,
-  transportGroup:midi
+  bagOnly:true
 )
 
 // @description Emergency stop: every note released, every controller reset flat. Image of MIDI all notes off. Takes no argument.
 control panic(
   scope(flow),
-  bagOnly:true,
-  transportGroup:midi
+  bagOnly:true
 )
 
 // @description Real-time system synchronization message: (sync:start), (sync:continue), (sync:stop). Image of the MIDI Start/Continue/Stop
@@ -193,8 +175,7 @@ control panic(
 control sync(
   args(message),
   values(start, continue, stop),
-  scope(flow),
-  transportGroup:midi
+  scope(flow)
 )
 
 // @description NUMBERED MIDI controller. Designated by its component number: (cc.98:45) in a container, !(cc.98:45) in flow. For
@@ -204,8 +185,7 @@ control cc(
   component:number,
   args(value),
   range(0, 127),
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description Rate of intermediate values for continuous volume, in values per second. Default 50, like the native engine.
@@ -214,8 +194,7 @@ control volumerate(
   args(hz),
   range(0, 1000),
   unit:"Hz",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description Rate of intermediate values for continuous modulation, in values per second. Default 50, like the native engine.
@@ -224,8 +203,7 @@ control modrate(
   args(hz),
   range(0, 1000),
   unit:"Hz",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description Rate of intermediate values for continuous pitch, in values per second. Default 50, like the native engine.
@@ -234,8 +212,7 @@ control pitchrate(
   args(hz),
   range(0, 1000),
   unit:"Hz",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description Rate of intermediate values for continuous pressure, in values per second. Default 50, like the native engine.
@@ -244,8 +221,7 @@ control pressrate(
   args(hz),
   range(0, 1000),
   unit:"Hz",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
+  scope(symbol, group, rule, flow)
 )
 
 // @description Rate of intermediate values for ALL continuous streams, in emissions per second. Sets in one word what volumerate, modrate,
@@ -255,8 +231,7 @@ control rate(
   args(hz),
   range(0, 1000),
   unit:"Hz",
-  scope(scene),
-  transportGroup:midi
+  scope(scene)
 )
 
 // @description Number of the MIDI controller carrying volume. Image of VolumeController in the native engine. The channel is stated in the
@@ -265,8 +240,7 @@ control volumecontrol(
   bp3:_volumecontrol,
   args(controller),
   range(0, 127),
-  scope(symbol, group, rule, flow, scene),
-  transportGroup:midi
+  scope(symbol, group, rule, flow, scene)
 )
 
 // @description Number of the MIDI controller carrying panning. Image of PanoramicController in the native engine. The channel is stated in
@@ -275,8 +249,7 @@ control pancontrol(
   bp3:_pancontrol,
   args(controller),
   range(0, 127),
-  scope(symbol, group, rule, flow, scene),
-  transportGroup:midi
+  scope(symbol, group, rule, flow, scene)
 )
 
 // @description Sound fade-out at the end of the performance, in SECONDS. A value of zero or less removes the fade. Image of EndFadeOut in
@@ -285,8 +258,7 @@ control fadeout(
   bp3:EndFadeOut,
   args(duration),
   unit:"s",
-  scope(scene),
-  transportGroup:midi
+  scope(scene)
 )
 
 // @description At the end of the scene, silence whatever is still sounding.
@@ -295,8 +267,7 @@ control resetnotes(
   bp3value:1,
   scope(flow, scene),
   bagOnly:true,
-  unicite:fin-de-scene,
-  transportGroup:midi
+  unicite:fin-de-scene
 )
 
 // @description At the end of the scene, let whatever is still sounding ring on.
@@ -305,8 +276,7 @@ control letring(
   bp3value:0,
   scope(flow, scene),
   bagOnly:true,
-  unicite:fin-de-scene,
-  transportGroup:midi
+  unicite:fin-de-scene
 )
 
 // @description A note already held that is replayed is RETRIGGERED — a new NoteOn.
@@ -315,8 +285,7 @@ control strikeagain(
   bp3value:1,
   scope(flow, scene),
   bagOnly:true,
-  unicite:note-rejouee,
-  transportGroup:midi
+  unicite:note-rejouee
 )
 
 // @description A note already held that is replayed stays HELD — no new NoteOn.
@@ -325,24 +294,21 @@ control sustain(
   bp3value:0,
   scope(flow, scene),
   bagOnly:true,
-  unicite:note-rejouee,
-  transportGroup:midi
+  unicite:note-rejouee
 )
 
 // @description A switch already pressed that is re-actuated is released then pressed again.
 control pedalrelease(
   scope(flow, scene),
   bagOnly:true,
-  unicite:interrupteur-rejoue,
-  transportGroup:midi
+  unicite:interrupteur-rejoue
 )
 
 // @description A switch already pressed that is re-actuated keeps its state.
 control pedalhold(
   scope(flow, scene),
   bagOnly:true,
-  unicite:interrupteur-rejoue,
-  transportGroup:midi
+  unicite:interrupteur-rejoue
 )
 
 // @description At the end of the scene, reset the controllers flat.
@@ -351,8 +317,7 @@ control resetcontrols(
   bp3value:1,
   scope(flow, scene),
   bagOnly:true,
-  unicite:fin-des-controleurs,
-  transportGroup:midi
+  unicite:fin-des-controleurs
 )
 
 // @description At the end of the scene, leave the controllers in the state the scene put them in.
@@ -361,6 +326,5 @@ control keepcontrols(
   bp3value:0,
   scope(flow, scene),
   bagOnly:true,
-  unicite:fin-des-controleurs,
-  transportGroup:midi
+  unicite:fin-des-controleurs
 )
