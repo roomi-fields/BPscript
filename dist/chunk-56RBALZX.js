@@ -6489,7 +6489,8 @@ function universeControlNames() {
 }
 function motsDInvocation() {
   const table = /* @__PURE__ */ new Map();
-  for (const [fichier, lib] of Object.entries(leRegistre())) {
+  for (const fichier of Object.keys(leRegistre()).sort()) {
+    const lib = leRegistre()[fichier];
     const mot = lib && typeof lib === "object" ? lib.resolves : null;
     if (!mot) continue;
     if (!table.has(mot)) table.set(mot, []);
