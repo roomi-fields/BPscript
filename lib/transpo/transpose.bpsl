@@ -1,20 +1,23 @@
+// @description Real (chromatic) transposition — shift the alphabet anchor by a fixed interval (fraction 3/2, cents 700c, decimal 1.5).
+// Preserves intervals AND note names; works in any tuning. A bare integer is a ratio N:1 (N-th harmonic): 2/4/8 = octaves; for semitones
+// use cents (12 semitones = 1200c). The old grid-step regime is removed.
 control transpose(
   args(interval),
   argType:interval,
-  description:"Real (chromatic) transposition — shift the alphabet anchor by a fixed interval (fraction 3/2, cents 700c, decimal 1.5). Preserves intervals AND note names; works in any tuning. A bare integer is a ratio N:1 (N-th harmonic): 2/4/8 = octaves; for semitones use cents (12 semitones = 1200c). The old grid-step regime is removed.",
   scope(symbol, group, rule, flow, scene),
   transportGroup:transpo,
   rank:30,
   params(
+    // @description Interval normalized into a ratio by Kairos from the 3-format string. A NUMERIC transpose cries here (migration cry: the
+    // old grid-step regime is removed).
     ratio(
       from:value,
-      coerce:interval-ratio,
-      description:"Intervalle normalisé en ratio par Kairos depuis la chaîne 3-formats. Un transpose NUMÉRIQUE crie ici (cri de migration : l'ancien régime par pas de grille est supprimé)."
+      coerce:interval-ratio
     ),
+    // @description The raw interval string (diagnostic); the body does not parse it.
     interval(
       from:value,
-      coerce:raw,
-      description:"La chaîne d'intervalle brute (diagnostic) ; le corps ne la parse pas."
+      coerce:raw
     )
   )
 ) ``ts:

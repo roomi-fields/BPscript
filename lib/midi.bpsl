@@ -1,353 +1,365 @@
 types
 
 // @documented
+// @description Controls specific to the MIDI transport — EXACT match with LIBRAIRIES.md:172.
 def midi(
   resolves:midi,
   resolvedBy:"runtime-MIDI",
   name:midi,
-  description:"Contrôles spécifiques au transport MIDI — match EXACT LIBRAIRIES.md:172.",
   section:controls
 )
 
+// @description Address channel, short form of channel.
 def ch(
   section:schema.addressKeys,
-  description:"Canal d'adresse, forme courte de channel.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Address channel, long form of ch.
 def channel(
   section:schema.addressKeys,
-  description:"Canal d'adresse, forme longue de ch.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Device targeted by the address.
 def device(
   section:schema.addressKeys,
-  description:"Appareil visé par l'adresse.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Note number of an address — the source a wait point listens to, the event an occurrence targets.
 def note(
   section:schema.addressKeys,
-  description:"Numéro de note d'une adresse — la source qu'un point d'attente écoute, l'événement qu'une occurrence vise.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Port targeted by the address.
 def port(
   section:schema.addressKeys,
-  description:"Port visé par l'adresse.",
   scope(symbol, group, rule, flow)
 )
 
+// @description MIDI channel
 control chan(
   bp3:_chan,
   args(channel),
   range(1, 16),
-  description:"MIDI channel",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description MIDI Program Change. The author writes the program number starting at 1, like the original engine; the byte transmitted is
+// that number minus one.
 control ins(
   bp3:_ins,
   args(program),
   range(1, 128),
-  description:"MIDI Program Change. L'auteur écrit le numéro de programme à partir de 1, comme le moteur d'origine ; l'octet transmis vaut ce numéro moins un.",
   scope(symbol, group, rule, flow, scene),
   transportGroup:midi
 )
 
+// @description MIDI Modulation (CC1)
 control mod(
   bp3:_mod,
   args(value),
   range(0, 127),
-  description:"MIDI Modulation (CC1)",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description Enable continuous modulation interpolation (CC1)
 control modcont(
   bp3:_modcont,
-  description:"Enable continuous modulation interpolation (CC1)",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description MIDI Pitch Bend
 control pitchbend(
   bp3:_pitchbend,
   args(value),
   range(-8192, 8191),
-  description:"MIDI Pitch Bend",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description Pitch bend range in cents
 control pitchrange(
   bp3:_pitchrange,
   args(cents),
   unit:"cents",
-  description:"Pitch bend range in cents",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description Enable continuous pitch bend interpolation
 control pitchcont(
   bp3:_pitchcont,
-  description:"Enable continuous pitch bend interpolation",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description Key mapping — remap MIDI key range (p1,p2) to (q1,q2). Args are key numbers (0..127) or note names; p2 must be greater than
+// p1. BP3 _keymap — register of the native engine, bp3-engine `origin/wasm`: capture-run/console_strings.json carries « 62 4 _keymap ».
 control keymap(
   bp3:_keymap,
   args(p1, q1, p2, q2),
   range(0, 127),
-  description:"Key mapping — remap MIDI key range (p1,p2) to (q1,q2). Args are key numbers (0..127) or note names; p2 must be greater than p1. BP3 _keymap — registre du moteur natif, bp3-engine `origin/wasm` : capture-run/console_strings.json porte « 62 4 _keymap ».",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description Key map in CONTINUOUS mode — the map glides DURING notes, through intermediate messages. BP3 _mapcont — register of the
+// native engine, bp3-engine `origin/wasm`: capture-run/console_strings.json carries « 44 0 _mapcont ». Its two discrete siblings live in
+// the variation library; their recipient is read on that file's resolvedBy field, never here.
 control mapcont(
   bp3:_mapcont,
-  description:"Carte de touches en mode CONTINU — la carte glisse PENDANT les notes, par messages intermédiaires. BP3 _mapcont — registre du moteur natif, bp3-engine `origin/wasm` : capture-run/console_strings.json porte « 44 0 _mapcont ». Ses deux frères discrets vivent dans la librairie variation ; leur destinataire se lit sur le champ resolvedBy de ce fichier-là, jamais ici.",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description MIDI Channel Pressure (aftertouch)
 control pressure(
   bp3:_press,
   args(value),
   range(0, 127),
-  description:"MIDI Channel Pressure (aftertouch)",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description Enable continuous channel pressure interpolation
 control presscont(
   bp3:_presscont,
-  description:"Enable continuous channel pressure interpolation",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description MIDI Volume (CC7)
 control volume(
   implements:expression.volume,
   bp3:_volume,
   args(value),
   range(0, 127),
-  description:"MIDI Volume (CC7)",
   scope(symbol, group, rule, flow, scene),
   transportGroup:midi
 )
 
+// @description Enable continuous volume interpolation
 control volumecont(
   bp3:_volumecont,
-  description:"Enable continuous volume interpolation",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description Enable MIDI switch channel
 control switchon(
   bp3:_switchon,
   args(channel),
-  description:"Enable MIDI switch channel",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description Disable MIDI switch channel
 control switchoff(
   bp3:_switchoff,
   args(channel),
-  description:"Disable MIDI switch channel",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description Mutes the sound. Bare, (mute), mutes everything sounding; per component, (mute.all) or (mute.lead), mutes the named target.
+// Named on 2026-07-26: replaces one of the families script(...) carried without a name.
 control mute(
-  description:"Coupe le son. Nu, (mute), coupe tout ce qui sonne ; par composant, (mute.all) ou (mute.lead), coupe la cible nommee. Nomme le 2026-07-26 : remplace une des familles que script(...) portait sans nom.",
   scope(flow),
   bagOnly:true,
   transportGroup:midi
 )
 
+// @description Restores the sound muted by mute. Same graphy: (unmute) or (unmute.lead).
 control unmute(
-  description:"Retablit le son coupe par mute. Meme graphie : (unmute) ou (unmute.lead).",
   scope(flow),
   bagOnly:true,
   transportGroup:midi
 )
 
+// @description Emergency stop: every note released, every controller reset flat. Image of MIDI all notes off. Takes no argument.
 control panic(
-  description:"Arret d'urgence : toutes les notes relachees, tous les controleurs remis a plat. Image de MIDI all notes off. Ne prend aucun argument.",
   scope(flow),
   bagOnly:true,
   transportGroup:midi
 )
 
+// @description Real-time system synchronization message: (sync:start), (sync:continue), (sync:stop). Image of the MIDI Start/Continue/Stop
+// messages. Replaces script(MIDI send Continue).
 control sync(
   args(message),
   values(start, continue, stop),
-  description:"Message systeme temps reel de synchronisation : (sync:start), (sync:continue), (sync:stop). Image des messages MIDI Start/Continue/Stop. Remplace script(MIDI send Continue).",
   scope(flow),
   transportGroup:midi
 )
 
+// @description NUMBERED MIDI controller. Designated by its component number: (cc.98:45) in a container, !(cc.98:45) in flow. For
+// controllers with no named alias -- those that have one are written by their name (mod = CC1, volume = CC7). Graphy settled by Romain on
+// 2026-07-26: the dot CALLS the component (controller 98), the colon ASSIGNS the value.
 control cc(
   component:number,
   args(value),
   range(0, 127),
-  description:"Controleur MIDI NUMEROTE. Se designe par son numero de composant : (cc.98:45) en contenance, !(cc.98:45) en flux. Pour les controleurs sans alias nomme -- ceux qui en ont un s'ecrivent par leur nom (mod = CC1, volume = CC7). Graphie tranchee par Romain le 2026-07-26 : le point APPELLE le composant (le controleur 98), les deux points AFFECTENT la valeur.",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description Rate of intermediate values for continuous volume, in values per second. Default 50, like the native engine.
 control volumerate(
   bp3:_volumerate,
   args(hz),
   range(0, 1000),
   unit:"Hz",
-  description:"Cadence des valeurs intermediaires du continu de volume, en valeurs par seconde. Defaut 50, comme le moteur natif.",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description Rate of intermediate values for continuous modulation, in values per second. Default 50, like the native engine.
 control modrate(
   bp3:_modrate,
   args(hz),
   range(0, 1000),
   unit:"Hz",
-  description:"Cadence des valeurs intermediaires du continu de modulation, en valeurs par seconde. Defaut 50, comme le moteur natif.",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description Rate of intermediate values for continuous pitch, in values per second. Default 50, like the native engine.
 control pitchrate(
   bp3:_pitchrate,
   args(hz),
   range(0, 1000),
   unit:"Hz",
-  description:"Cadence des valeurs intermediaires du continu de hauteur, en valeurs par seconde. Defaut 50, comme le moteur natif.",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description Rate of intermediate values for continuous pressure, in values per second. Default 50, like the native engine.
 control pressrate(
   bp3:_pressrate,
   args(hz),
   range(0, 1000),
   unit:"Hz",
-  description:"Cadence des valeurs intermediaires du continu de pression, en valeurs par seconde. Defaut 50, comme le moteur natif.",
   scope(symbol, group, rule, flow),
   transportGroup:midi
 )
 
+// @description Rate of intermediate values for ALL continuous streams, in emissions per second. Sets in one word what volumerate, modrate,
+// pitchrate and pressrate set separately. Image of SamplingRate in the native engine.
 control rate(
   bp3:SamplingRate,
   args(hz),
   range(0, 1000),
   unit:"Hz",
-  description:"Cadence des valeurs intermédiaires de TOUS les flux continus, en émissions par seconde. Règle d'un mot ce que volumerate, modrate, pitchrate et pressrate règlent séparément. Image de SamplingRate au moteur natif.",
   scope(scene),
   transportGroup:midi
 )
 
+// @description Number of the MIDI controller carrying volume. Image of VolumeController in the native engine. The channel is stated in the
+// same bag: !(chan:3, volumecontrol:11).
 control volumecontrol(
   bp3:_volumecontrol,
   args(controller),
   range(0, 127),
-  description:"Numéro du contrôleur MIDI qui porte le volume. Image de VolumeController au moteur natif. Le canal se dit dans le même sac : !(chan:3, volumecontrol:11).",
   scope(symbol, group, rule, flow, scene),
   transportGroup:midi
 )
 
+// @description Number of the MIDI controller carrying panning. Image of PanoramicController in the native engine. The channel is stated in
+// the same bag: !(chan:3, pancontrol:11).
 control pancontrol(
   bp3:_pancontrol,
   args(controller),
   range(0, 127),
-  description:"Numéro du contrôleur MIDI qui porte le panoramique. Image de PanoramicController au moteur natif. Le canal se dit dans le même sac : !(chan:3, pancontrol:11).",
   scope(symbol, group, rule, flow, scene),
   transportGroup:midi
 )
 
+// @description Sound fade-out at the end of the performance, in SECONDS. A value of zero or less removes the fade. Image of EndFadeOut in
+// the native engine.
 control fadeout(
   bp3:EndFadeOut,
   args(duration),
   unit:"s",
-  description:"Extinction du son à la fin de la performance, en SECONDES. Une valeur inférieure ou égale à zéro supprime le fondu. Image de EndFadeOut au moteur natif.",
   scope(scene),
   transportGroup:midi
 )
 
+// @description At the end of the scene, silence whatever is still sounding.
 control resetnotes(
   bp3:ResetNotes,
   bp3value:1,
-  description:"À la fin de la scène, éteindre ce qui sonne encore.",
   scope(flow, scene),
   bagOnly:true,
   unicite:fin-de-scene,
   transportGroup:midi
 )
 
+// @description At the end of the scene, let whatever is still sounding ring on.
 control letring(
   bp3:ResetNotes,
   bp3value:0,
-  description:"À la fin de la scène, laisser sonner ce qui sonne encore.",
   scope(flow, scene),
   bagOnly:true,
   unicite:fin-de-scene,
   transportGroup:midi
 )
 
+// @description A note already held that is replayed is RETRIGGERED — a new NoteOn.
 control strikeagain(
   bp3:StrikeAgainDefault,
   bp3value:1,
-  description:"Une note déjà tenue qu'on rejoue est RELANCÉE — nouveau NoteOn.",
   scope(flow, scene),
   bagOnly:true,
   unicite:note-rejouee,
   transportGroup:midi
 )
 
+// @description A note already held that is replayed stays HELD — no new NoteOn.
 control sustain(
   bp3:StrikeAgainDefault,
   bp3value:0,
-  description:"Une note déjà tenue qu'on rejoue reste TENUE — aucun nouveau NoteOn.",
   scope(flow, scene),
   bagOnly:true,
   unicite:note-rejouee,
   transportGroup:midi
 )
 
+// @description A switch already pressed that is re-actuated is released then pressed again.
 control pedalrelease(
-  description:"Un interrupteur déjà enfoncé qu'on ré-actionne est relâché puis repressé.",
   scope(flow, scene),
   bagOnly:true,
   unicite:interrupteur-rejoue,
   transportGroup:midi
 )
 
+// @description A switch already pressed that is re-actuated keeps its state.
 control pedalhold(
-  description:"Un interrupteur déjà enfoncé qu'on ré-actionne garde son état.",
   scope(flow, scene),
   bagOnly:true,
   unicite:interrupteur-rejoue,
   transportGroup:midi
 )
 
+// @description At the end of the scene, reset the controllers flat.
 control resetcontrols(
   bp3:ResetControllers,
   bp3value:1,
-  description:"À la fin de la scène, remettre les contrôleurs à plat.",
   scope(flow, scene),
   bagOnly:true,
   unicite:fin-des-controleurs,
   transportGroup:midi
 )
 
+// @description At the end of the scene, leave the controllers in the state the scene put them in.
 control keepcontrols(
   bp3:ResetControllers,
   bp3value:0,
-  description:"À la fin de la scène, laisser les contrôleurs dans l'état où la scène les a mis.",
   scope(flow, scene),
   bagOnly:true,
   unicite:fin-des-controleurs,

@@ -5,99 +5,105 @@ transpo/keyxpand
 types
 
 // @documented
+// @description Pitch transformations resolved by Kairos.
 def transpo(
   resolves:transpo,
   resolvedBy:"Kairos",
   name:transpo,
-  description:"Transformations de hauteur résolues par Kairos.",
   section:controls
 )
 
+// @description Real (chromatic) transposition — shift the alphabet anchor by a fixed interval (fraction 3/2, cents 700c, decimal 1.5).
+// Preserves intervals AND note names; works in any tuning. A bare integer is a ratio N:1 (N-th harmonic): 2/4/8 = octaves; for semitones
+// use cents (12 semitones = 1200c). The old grid-step regime is removed.
 control transpose(
   args(interval),
   argType:interval,
-  description:"Real (chromatic) transposition — shift the alphabet anchor by a fixed interval (fraction 3/2, cents 700c, decimal 1.5). Preserves intervals AND note names; works in any tuning. A bare integer is a ratio N:1 (N-th harmonic): 2/4/8 = octaves; for semitones use cents (12 semitones = 1200c). The old grid-step regime is removed.",
   scope(symbol, group, rule, flow, scene),
   transportGroup:transpo,
   rank:30,
   params(
+    // @description Interval normalized into a ratio by Kairos from the 3-format string. A NUMERIC transpose cries here (migration cry: the
+    // old grid-step regime is removed).
     ratio(
       from:value,
-      coerce:interval-ratio,
-      description:"Intervalle normalisé en ratio par Kairos depuis la chaîne 3-formats. Un transpose NUMÉRIQUE crie ici (cri de migration : l'ancien régime par pas de grille est supprimé)."
+      coerce:interval-ratio
     ),
+    // @description The raw interval string (diagnostic); the body does not parse it.
     interval(
       from:value,
-      coerce:raw,
-      description:"La chaîne d'intervalle brute (diagnostic) ; le corps ne la parse pas."
+      coerce:raw
     )
   )
 )
 
+// @description Microtonal scale — name + base note. (scale:0 0) returns to equal temperament. The name and the base note are TWO values,
+// separated by a comma in the declarative part and by a space in the flow.
 control scale(
   bp3:_scale,
   args(name, blockkey),
   value(name:0, blockkey:0),
-  description:"Microtonal scale — name + base note. (scale:0 0) revient au temperament egal. Le nom et la note de base sont DEUX valeurs, separees par la virgule dans le declaratif et par l'espace dans le flux.",
   scope(symbol, group, rule, flow),
   transportGroup:transpo
 )
 
+// @description Scalar (diatonic) transposition — shift N degrees in the alphabet. (scaleshift:2): Sa->Ga, etc. Preserves degrees, not
+// intervals (in unequal scales). Formerly rotate-PITCH; distinct from the ![rotate] STRUCTURE control.
 control scaleshift(
   args(degrees),
   value:0,
-  description:"Scalar (diatonic) transposition — shift N degrees in the alphabet. (scaleshift:2) : Sa->Ga, etc. Preserves degrees, not intervals (in unequal scales). Formerly rotate-HAUTEUR; distinct from the ![rotate] STRUCTURE control.",
   scope(symbol, group, rule, flow),
   transportGroup:transpo,
   rank:10,
   params(
+    // @description Number of degrees of shift in the alphabet (may be negative; register carry at the bounds).
     n(
       from:value,
       coerce:raw,
-      default:0,
-      description:"Nombre de degrés de décalage dans l'alphabet (peut être négatif ; report de registre aux bornes)."
+      default:0
     )
   )
 )
 
+// @description Chromatic transposition on the 12-key grid — shift N chromatic keys (semitones), rename to target key + its tuning. Image of
+// BP3 _transpose (Romain decision 2026-07-17). Distinct from scaleshift (diatonic degrees) and transpose (real, name preserved).
 control chromashift(
   bp3:_transpose,
   args(keys),
   value:0,
-  description:"Chromatic transposition on the 12-key grid — shift N chromatic keys (semitones), rename to target key + its tuning. Image of BP3 _transpose (Romain decision 2026-07-17). Distinct from scaleshift (diatonic degrees) and transpose (real, name preserved).",
   scope(symbol, group, rule, flow, scene),
   transportGroup:transpo,
   rank:10,
   params(
+    // @description Number of chromatic keys (semitones) of shift on the 12-grid (may be negative; wraps at the octave).
     n(
       from:value,
       coerce:raw,
-      default:0,
-      description:"Nombre de clés chromatiques (demi-tons) de décalage sur la grille 12 (peut être négatif ; wrap à l'octave)."
+      default:0
     )
   )
 )
 
+// @description Interval expansion/contraction around a pivot. factor=2 doubles, factor=-1 inverts, factor=0.5 contracts.
 control keyxpand(
   bp3:_keyxpand,
   args(pivot, factor),
   value(pivot:0, factor:1),
-  description:"Interval expansion/contraction around a pivot. factor=2 doubles, factor=-1 inverts, factor=0.5 contracts.",
   scope(symbol, group, rule, flow),
   transportGroup:transpo,
   rank:20,
   params(
+    // @description Pivot: note token resolved into grid steps by Kairos's token-step coercion (cries if unresolvable); stays fixed.
     pivotStep(
       from:pivot,
       coerce:token-step,
-      default:0,
-      description:"Pivot : token de note résolu en pas de grille par la coercition token-step de Kairos (crie si irrésoluble) ; reste fixe."
+      default:0
     ),
+    // @description Scale factor of the distance to the pivot (1 = identity, 2 = doubled, 0.5 = folded; may be negative = mirror).
     factor(
       from:factor,
       coerce:raw,
-      default:1,
-      description:"Facteur d'échelle de l'écart au pivot (1 = identité, 2 = doublé, 0,5 = replié ; peut être négatif = miroir)."
+      default:1
     )
   )
 )

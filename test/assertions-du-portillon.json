@@ -1,5 +1,5 @@
 {
- "assertions": 19566,
+ "assertions": 19591,
  "gardes": [
   "alias_est_sorti_du_langage.mjs",
   "anti-vacuité [interne]",
@@ -64,6 +64,7 @@
   "la_porte_du_voisin_est_unique.mjs",
   "la_portee_est_la_scene_entiere.mjs",
   "la_profondeur_d_une_derivation_n_est_bornee_par_rien.mjs",
+  "la_prose_d_un_objet_se_porte_en_marque.mjs",
   "la_prose_publiee_ne_nomme_pas_un_fichier.mjs",
   "la_publication_est_deterministe.mjs",
   "la_spec_declare_les_champs_que_l_arbre_porte.mjs",

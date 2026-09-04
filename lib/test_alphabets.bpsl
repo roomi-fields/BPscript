@@ -2,8 +2,8 @@ types
 
 def test_alphabets(resolvedBy:Kairos, resolves:alphabet)
 
+// @description Single-character alphabet a-z (Bernard's -al.abc / -ho.abc)
 alphabet abc(
-  description:"Single-character alphabet a-z (Bernard's -al.abc / -ho.abc)",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
@@ -63,8 +63,8 @@ alphabet abc(
   )
 )
 
+// @description Single-character alphabet a-h (Bernard's -al.abc1 / -ho.abc1)
 alphabet abc1(
-  description:"Single-character alphabet a-h (Bernard's -al.abc1 / -ho.abc1)",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
@@ -88,16 +88,16 @@ alphabet abc1(
   )
 )
 
+// @description Conway look-and-say sequence digits
 alphabet conway(
-  description:"Conway look-and-say sequence digits",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
   terminals(d1(), d2(), d3())
 )
 
+// @description Kathak counting bols (ek-do-tin)
 alphabet kathak_count(
-  description:"Kathak counting bols (ek-do-tin)",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
@@ -121,8 +121,8 @@ alphabet kathak_count(
   )
 )
 
+// @description Opaque structural symbols for grammar tests (no pitch, no sound)
 alphabet structural(
-  description:"Opaque structural symbols for grammar tests (no pitch, no sound)",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
@@ -153,24 +153,24 @@ alphabet structural(
   )
 )
 
+// @description The ten bols of the native alphabet `-al.dhati`, reproduced as they stand
 alphabet dhati(
-  description:"Les dix bols de l'alphabet natif `-al.dhati`, reproduits tels quels",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
   terminals(dha(), dhee(), ge(), ke(), kt(), na(), ta(), tee(), ti(), tr())
 )
 
+// @description The seven terms of the native alphabet `-al.checkhomo`
 alphabet checkhomo(
-  description:"Les sept termes de l'alphabet natif `-al.checkhomo`",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
   terminals(a(), "a'"(), "a"""(), b(), "b'"(), c(), "c'"())
 )
 
+// @description The fourteen bols of the native alphabet `-al.dhin--`
 alphabet dhin(
-  description:"Les quatorze bols de l'alphabet natif `-al.dhin--`",
   runtime:audio,
   resolvesPitch:false,
   alterations(),

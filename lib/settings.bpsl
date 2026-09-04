@@ -1,9 +1,9 @@
 // @documented
+// @description Default BP3 engine settings. Overridden by @ directives. Used to generate the settings string for bp3_load_settings().
 def settings(
   resolvedBy:BPx,
   resolves:settings,
   name:settings,
-  description:"Default BP3 engine settings. Overridden by @ directives. Used to generate the settings string for bp3_load_settings().",
   version:"0.2.0",
   section:bp3_defaults
 )

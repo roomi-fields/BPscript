@@ -1,29 +1,29 @@
 types
 
 // @documented
+// @description Time that ELAPSES — the scene's metronome. HEADER library, resolved by KRONOS.
 def time(
   resolvedBy:Kronos,
   resolves:time,
   name:time,
-  description:"Le temps qui S'ÉCOULE — le métronome de la scène. Librairie d'EN-TÊTE, résolue par KRONOS.",
   version:"1.0.0",
   section:subgrammar
 )
 
+// @description Absolute metronome of the scene or subgrammar, in BPM.
 def tempo(
   bp3:_mm,
   args("bpm"),
   unit:bpm,
-  description:"Metronome absolu de la scene ou de la sous-grammaire, en BPM.",
   scope("subgrammar", "scene"),
   unicite:metronome
 )
 
+// @description Clock catch-up delay when resuming after a wait point, in MILLISECONDS. Image of MIDIsyncDelay in the native engine.
 control syncdelay(
   section:controls,
   bp3:MIDIsyncDelay,
   args("duration"),
   unit:ms,
-  description:"Retard de rattrapage de l'horloge à la reprise après un point d'attente, en MILLISECONDES. Image de MIDIsyncDelay au moteur natif.",
   scope("scene")
 )

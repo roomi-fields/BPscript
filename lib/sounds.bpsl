@@ -3,6 +3,7 @@ types
 // @documented
 def sounds(resolvedBy:"BPx", resolves:sound, name:sounds)
 
+// @description Tabla percussion — bols of bayan (low) and dayan (high). Prototype AT ENGINE DEFAULTS: it overrides no metric property.
+// Invoked by dhati, dhin and their twins (6 scenes of the corpus). The name comes from the corpus, not from an external catalogue.
 sound tabla_perc(
-  description:"Percussions de tabla — bols de bayan (grave) et de dayan (aigu). Prototype AUX DÉFAUTS MOTEUR : il ne surcharge aucune propriété métrique. Invoqué par dhati, dhin et leurs jumelles (6 scènes du corpus). Le nom vient du corpus, pas d'un catalogue externe."
 )

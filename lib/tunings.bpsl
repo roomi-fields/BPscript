@@ -3,127 +3,131 @@ types
 // @documented
 def tunings(resolvedBy:Kairos, resolves:tuning)
 
+// @description Standard Western equal temperament
 tuning western_12TET(
-  description:"Standard Western equal temperament",
   alphabet:western,
   temperament:12TET,
   degrees(0, 2, 4, 5, 7, 9, 11)
 )
 
+// @description Western in Pythagorean tuning — pure fifths
 tuning western_pythagorean(
-  description:"Western in Pythagorean tuning — pure fifths",
   alphabet:western,
   temperament:pythagorean,
   degrees(0, 2, 4, 5, 7, 9, 11)
 )
 
+// @description Western in 5-limit just intonation
 tuning western_just(
-  description:"Western in 5-limit just intonation",
   alphabet:western,
   temperament:just_5limit,
   degrees(0, 2, 4, 5, 7, 9, 11)
 )
 
+// @description Western in 1/4-comma meantone
 tuning western_meantone(
-  description:"Western in 1/4-comma meantone",
   alphabet:western,
   temperament:meantone_quarter,
   degrees(0, 2, 4, 5, 7, 9, 11)
 )
 
+// @description Indian sargam in 12-TET (simplified, equal temperament)
 tuning sargam_12TET(
-  description:"Indian sargam in 12-TET (simplified, equal temperament)",
   alphabet:sargam,
   temperament:12TET,
   degrees(0, 2, 4, 5, 7, 9, 11)
 )
 
+// @description INDIAN note convention of the native BP3 engine, in 12-TET
 tuning bp3_indian_12TET(
-  description:"Convention de notes INDIAN du moteur BP3 natif, en 12-TET",
   alphabet:bp3_indian,
   temperament:12TET,
   degrees(0, 2, 4, 5, 7, 9, 11)
 )
 
+// @description ENGLISH note convention of the native BP3 engine, in 12-TET
 tuning bp3_english_12TET(
-  description:"Convention de notes ENGLISH du moteur BP3 natif, en 12-TET",
   alphabet:bp3_english,
   temperament:12TET,
   degrees(0, 2, 4, 5, 7, 9, 11)
 )
 
+// @description FRENCH note convention of the native BP3 engine, in 12-TET
 tuning bp3_fr_12TET(
-  description:"Convention de notes FRENCH du moteur BP3 natif, en 12-TET",
   alphabet:bp3_fr,
   temperament:12TET,
   degrees(0, 2, 4, 5, 7, 9, 11)
 )
 
+// @description Indian sargam in 22-shruti system — full microtonal resolution
 tuning sargam_22shruti(
-  description:"Indian sargam in 22-shruti system — full microtonal resolution",
   alphabet:sargam,
   temperament:22shruti,
   degrees(0, 4, 8, 9, 13, 17, 21)
 )
 
+// @description Latin solfège in 12-TET
 tuning solfege_12TET(
-  description:"Solfège latin in 12-TET",
   alphabet:solfege,
   temperament:12TET,
   degrees(0, 2, 4, 5, 7, 9, 11)
 )
 
+// @description Arabic maqam system — quarter-tone grid
 tuning arabic_24TET(
-  description:"Arabic maqam system — quarter-tone grid",
   alphabet:arabic,
   temperament:24TET,
   degrees(0, 4, 8, 10, 14, 18, 22)
 )
 
+// @description Turkish makam — 53-comma system
 tuning turkish_53TET(
-  description:"Turkish makam — 53-comma system",
   alphabet:turkish,
   temperament:53TET,
   degrees(0, 4, 9, 13, 17, 22, 26, 31, 35, 39, 44, 48, 4, 9, 13, 17)
 )
 
+// @description Javanese gamelan pelog — 7-tone stretched octave
 tuning gamelan_pelog(
-  description:"Javanese gamelan pelog — 7-tone stretched octave",
   alphabet:gamelan_pelog,
   temperament:gamelan_pelog,
   degrees(0, 1, 2, 3, 4, 5, 6)
 )
 
+// @description Javanese gamelan slendro — 5-tone near-equal, stretched octave
 tuning gamelan_slendro(
-  description:"Javanese gamelan slendro — 5-tone near-equal, stretched octave",
   alphabet:gamelan_slendro,
   temperament:gamelan_slendro,
   degrees(0, 1, 2, 3, 4)
 )
 
+// @description Bohlen-Pierce just — 13 tones in a tritave (3:1)
 tuning bohlen_pierce_just(
-  description:"Bohlen-Pierce just — 13 tones in a tritave (3:1)",
   alphabet:bohlen_pierce,
   temperament:bohlen_pierce_just,
   degrees(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
 )
 
+// @description Bohlen-Pierce equal — 13 equal divisions of the tritave
 tuning bohlen_pierce_equal(
-  description:"Bohlen-Pierce equal — 13 equal divisions of the tritave",
   alphabet:bohlen_pierce,
   temperament:bohlen_pierce_equal,
   degrees(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
 )
 
+// @description 22-shruti as named by BP3 — 23 degrees on the bp3_shruti23_native temperament (native table -to.tryShruti verbatim,
+// 729/512). Distinct from bp3_grama (Arnold).
 tuning shruti23_native(
-  description:"22-shruti nommé BP3 — 23 degrés sur le tempérament bp3_shruti23_native (table native -to.tryShruti verbatim, 729/512). Distinct de bp3_grama (Arnold).",
   alphabet:shruti23,
   temperament:bp3_shruti23_native,
   degrees(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22)
 )
 
+// @description Western in BP3 just intonation, C-anchored (tonic C4 = 261.63 Hz, native table -to.tryOneScale). The 'j' in Cj/Aj/Gj =
+// degree marker, parsed C/A/G; ALL notes rendered by this same just scale (Romain's model [428/429]: one tuning, no parallel alphabet).
+// Distinct from western_just (A440-anchored). Temperament bp3_just_intonation = coincides with just_5limit on C/D/E/F/G/A (degrees
+// 0,2,4,5,7,9).
 tuning western_just_c(
-  description:"Western en intonation juste BP3, C-ancré (tonique C4 = 261.63 Hz, table native -to.tryOneScale). Le 'j' de Cj/Aj/Gj = marqueur de degré, parsé C/A/G ; TOUTES les notes rendues par cette même gamme juste (modèle Romain [428/429] : un tuning, pas d'alphabet parallèle). Distinct de western_just (A440-ancré). Tempérament bp3_just_intonation = coïncide avec just_5limit sur C/D/E/F/G/A (degrés 0,2,4,5,7,9).",
   alphabet:western,
   temperament:bp3_just_intonation,
   degrees(0, 2, 4, 5, 7, 9, 11),
@@ -131,8 +135,8 @@ tuning western_just_c(
   diapason:261.63
 )
 
+// @description Shakuhachi 1.8 shaku — the five base fingerings on equal temperament
 tuning shakuhachi_12TET(
-  description:"Shakuhachi 1.8 shaku — les cinq doigtes de base sur temperament egal",
   alphabet:shakuhachi,
   temperament:12TET,
   degrees(0, 3, 5, 7, 10)

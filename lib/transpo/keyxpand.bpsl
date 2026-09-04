@@ -1,23 +1,23 @@
+// @description Interval expansion/contraction around a pivot. factor=2 doubles, factor=-1 inverts, factor=0.5 contracts.
 control keyxpand(
   bp3:_keyxpand,
   args(pivot, factor),
   value(pivot:0, factor:1),
-  description:"Interval expansion/contraction around a pivot. factor=2 doubles, factor=-1 inverts, factor=0.5 contracts.",
   scope(symbol, group, rule, flow),
   transportGroup:transpo,
   rank:20,
   params(
+    // @description Pivot: note token resolved into grid steps by Kairos's token-step coercion (cries if unresolvable); stays fixed.
     pivotStep(
       from:pivot,
       coerce:token-step,
-      default:0,
-      description:"Pivot : token de note résolu en pas de grille par la coercition token-step de Kairos (crie si irrésoluble) ; reste fixe."
+      default:0
     ),
+    // @description Scale factor of the distance to the pivot (1 = identity, 2 = doubled, 0.5 = folded; may be negative = mirror).
     factor(
       from:factor,
       coerce:raw,
-      default:1,
-      description:"Facteur d'échelle de l'écart au pivot (1 = identité, 2 = doublé, 0,5 = replié ; peut être négatif = miroir)."
+      default:1
     )
   )
 ) ``ts:

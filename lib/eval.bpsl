@@ -1,27 +1,40 @@
 // @documented
 def eval(resolvedBy:runtime-codevoices, resolves:eval, name:eval, type:code, section:objects)
 
+// @description Patterns and samples, in the browser.
 def strudel(
-  description:"Motifs et échantillons, dans le navigateur.",
   parameters(
-    bank(description:"La banque d'échantillons que la voix charge. Sans elle, une scène qui emploie des noms d'échantillons se joue en SILENCE — mesuré chez Kanopi : « banque inconnue → son MUET ».")
+    // @description The sample bank the voice loads. Without it, a scene using sample names plays SILENT — measured at Kanopi: « unknown
+    // bank → MUTE sound ».
+    bank()
   )
 )
 
-def hydra(description:"Synthèse visuelle.")
+// @description Visual synthesis.
+def hydra()
 
-def sc(description:"SuperCollider — synthèse audio, backend natif.")
+// @description SuperCollider — audio synthesis, native backend.
+def sc()
 
-def js(description:"JavaScript évalué par le runtime.")
+// @description JavaScript evaluated by the runtime.
+def js()
 
-def ts(description:"TypeScript — le langage des corps de librairie, transpilé puis exécuté par le résolveur que la librairie nomme.")
+// @description TypeScript — the language of library bodies, transpiled then executed by the resolver the library names.
+def ts()
 
-def p5(description:"Croquis graphiques p5.js.")
+// @description Croquis graphiques p5.js.
+def p5()
 
-def mercury(description:"Live coding minimal.")
+// @description Live coding minimal.
+def mercury()
 
-def csound(description:"Csound — synthèse, backend natif.")
+// @description Csound — synthesis, native backend.
+def csound()
 
-def tidal(description:"TidalCycles — motifs, backend natif (SuperDirt).")
+// @description TidalCycles — motifs, backend natif (SuperDirt).
+def tidal()
 
-def txt(description:"Texte litteral, evalue par personne. Porte une PHRASE la ou le langage n a pas de caractere d echappement : une description de librairie, un libelle. Ratifie par Romain le 2026-08-13 -- le backtick tague est la seule graphie du depot qui delimite un contenu libre, et lui en ajouter un tag coute moins qu inventer un signe.")
+// @description Literal text, evaluated by no one. Carries a SENTENCE where the language has no escape character: a library description, a
+// label. Ratified by Romain on 2026-08-13 -- the tagged backtick is the only graphy in the repository that delimits free content, and
+// adding a tag to it costs less than inventing a sign.
+def txt()

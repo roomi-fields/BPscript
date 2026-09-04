@@ -8,53 +8,56 @@ def homomorphism(
   section:tables
 )
 
+// @description Tabla open→closed stroke mapping (qa'ida)
 homomorphism tabla_stroke(
-  description:"Tabla open→closed stroke mapping (qa'ida)",
   mappings(dha:ta, dhin:tin, ge:ke, ghe:khe, dhagena:takena, dheene:teene, dheena:teena)
 )
 
+// @description Ruwet — major → minor theme transformation (DEPRECATED)
 homomorphism ruwet_mineur(
-  description:"Ruwet — transformation thème majeur → mineur (DÉPRÉCIÉ)",
   mappings(fa4:re4, la4:fa4, sol4:mi4)
 )
 
+// @description Ruwet — 3 melodic transformations (faithful to bp3-engine/test-data/-ho.Ruwet)
 homomorphism ruwet(
-  description:"Ruwet — 3 transformations mélodiques (fidèle à bp3-engine/test-data/-ho.Ruwet)",
   sections(m1(la4:sib4), m2(la4:sol4), mineur(fa4:re4, la4:fa4))
 )
 
+// @description Dhati — tabla homomorphism (faithful to -ho.dhati, section *, identities preserved)
 homomorphism dhati(
-  description:"Dhati — homomorphisme tabla (fidèle à -ho.dhati, section *, identités conservées)",
   sections("*"(dha:ta, ti:ti, ge:ke, na:na, dhee:tee, tr:tr, kt:kt))
 )
 
+// @description Dhin -- tabla homomorphism (faithful to -ho.dhin--, section *, identities preserved)
 homomorphism dhin(
-  description:"Dhin -- homomorphisme tabla (fidèle à -ho.dhin--, section *, identités conservées)",
   sections("*"(dha:ta, ta:ta, ti:ti, ra:ra, na:na, ki:ki, dhee:tee, ne:ne, ge:ke, ka:ka, dhin:tin))
 )
 
+// @description Test homomorphism (faithful to -ho.tryhomomorphism, chain c-->fa4-->d unfolded)
 homomorphism tryhomomorphism(
-  description:"Homomorphisme de test (fidèle à -ho.tryhomomorphism, chaîne c-->fa4-->d dépliée)",
   sections("*"(a:b, do4:re4, c:fa4, fa4:d))
 )
 
+// @description Test homomorphism — 3 sections (*, H, TR)
 homomorphism checkhomo(
-  description:"Test homomorphism — 3 sections (*, H, TR)",
   sections("*"(a:"a'", "a'":"a""", b:"b'", "b'":b), H(a:c, c:"c'", "c'":"a"""), TR("a'":"b'", "b'":b))
 )
 
+// @description Auto-transposer H. Visser 1997 — CHAIN homomorphism (faithful to bp3-engine/test-data/-ho.transposition, section TR, 3
+// chains indexed by invocation depth)
 homomorphism transposition(
-  description:"Auto-transposer H. Visser 1997 — homomorphisme à CHAÎNES (fidèle à bp3-engine/test-data/-ho.transposition, section TR, 3 chaînes indexées par profondeur d'invocation)",
   sections(TR(chains(C3(B3, F4, C6), B3(C3, B4, F6), F4(C6, F2, B5))))
 )
 
+// @description Ported from bp3-engine/test-data/-ho.Ruwet on 2026-08-13, section by section and link by link. Verified: unfolding into
+// consecutive pairs reproduces the native exactly.
 homomorphism Ruwet(
-  description:"Porté depuis bp3-engine/test-data/-ho.Ruwet le 2026-08-13, section par section et maillon par maillon. Vérifié : le dépliage en paires consécutives redonne exactement le natif.",
   sections(m1(chains(la4(sib4))), m2(chains(la4(sol4))), mineur(chains(fa4(re4), la4(fa4))))
 )
 
+// @description Ported from bp3-engine/test-data/-ho.abc on 2026-08-13, section by section and link by link. Verified: unfolding into
+// consecutive pairs reproduces the native exactly.
 homomorphism abc(
-  description:"Porté depuis bp3-engine/test-data/-ho.abc le 2026-08-13, section par section et maillon par maillon. Vérifié : le dépliage en paires consécutives redonne exactement le natif.",
   sections(
     "*"(
       chains(
@@ -90,13 +93,17 @@ homomorphism abc(
   )
 )
 
+// @description Ported from bp3-engine/test-data/-ho.abc1 on 2026-08-13, section by section and link by link. Verified: unfolding into
+// consecutive pairs reproduces the native exactly.
 homomorphism abc1(
-  description:"Porté depuis bp3-engine/test-data/-ho.abc1 le 2026-08-13, section par section et maillon par maillon. Vérifié : le dépliage en paires consécutives redonne exactement le natif.",
   sections(chik(chains(a("a'"), b("b'"), c("c'"), d("d'"))), e(chains(f("f'"), g("g'"))))
 )
 
+// @description Ported from bp3-engine/test-data/-ho.abc2 on 2026-08-13. ⚠️ The section is `sync` and not `*`: the file writes `*` then
+// `sync` with no separator between them, and A LABEL FOLLOWING A LABEL REPLACES IT — the native opens a section only on a separator. I had
+// first read `sync` as a MODIFIER of the current section; that was an invention, the word `sync` exists nowhere in the engine source.
+// Corrected on a report from bp3-frontend, whose criterion comes from the engine.
 homomorphism abc2(
-  description:"Porté depuis bp3-engine/test-data/-ho.abc2 le 2026-08-13. ⚠️ La section est `sync` et non `*` : le fichier écrit `*` puis `sync` sans séparateur entre les deux, et une ÉTIQUETTE QUI SUIT UNE ÉTIQUETTE LA REMPLACE — le natif n'ouvre une section que sur un séparateur. J'avais d'abord lu `sync` comme un MODIFICATEUR de la section courante ; c'était une invention, le mot `sync` n'existe nulle part dans la source du moteur. Corrigé sur signalement de bp3-frontend, dont le critère vient du moteur.",
   sections(
     sync(
       chains(
@@ -131,8 +138,9 @@ homomorphism abc2(
   )
 )
 
+// @description Ported from bp3-engine/test-data/-ho.abc3 on 2026-08-13, section by section and link by link. Verified: unfolding into
+// consecutive pairs reproduces the native exactly.
 homomorphism abc3(
-  description:"Porté depuis bp3-engine/test-data/-ho.abc3 le 2026-08-13, section par section et maillon par maillon. Vérifié : le dépliage en paires consécutives redonne exactement le natif.",
   sections(
     "*"(
       chains(
@@ -168,8 +176,11 @@ homomorphism abc3(
   )
 )
 
+// @description Bells — CHAIN homomorphism, faithful to bp3-engine/test-data/-ho.cloches1 (section TR, 4 chains indexed by invocation
+// depth). ⚠️ PORTED AGAIN ON 2026-08-10: the previous version FLATTENED the chains into pairs — it kept the first link of each line and
+// lost the following ones, 15 links out of 19. A chain does not say « do3 becomes mib3 »: it says « on the first call mib3, on the second
+// fa#3, on the third la4 » — flattening it changes the meaning, not just the quantity.
 homomorphism cloches1(
-  description:"Cloches — homomorphisme à CHAÎNES, fidèle à bp3-engine/test-data/-ho.cloches1 (section TR, 4 chaînes indexées par profondeur d'invocation). ⚠️ PORTÉ À NOUVEAU LE 2026-08-10 : la version précédente APLATISSAIT les chaînes en paires — elle gardait le premier maillon de chaque ligne et perdait les suivants, soit 15 maillons sur 19. Une chaîne ne dit pas « do3 devient mib3 » : elle dit « au premier appel mib3, au deuxième fa#3, au troisième la4 » — l'aplatir change le sens, pas seulement la quantité.",
   sections(
     TR(
       chains(
@@ -191,7 +202,8 @@ homomorphism dhin--(
 
 homomorphism tabla(default(dha:ta, dhin:tin, dhee:tee, ge:ke))
 
+// @description Ported from bp3-engine/test-data/-ho.trial.mohanam on 2026-08-13, section by section and link by link. Verified: unfolding
+// into consecutive pairs reproduces the native exactly.
 homomorphism trial_mohanam(
-  description:"Porté depuis bp3-engine/test-data/-ho.trial.mohanam le 2026-08-13, section par section et maillon par maillon. Vérifié : le dépliage en paires consécutives redonne exactement le natif.",
   sections(trn(chains(sa6(ga6), re6(pa6), ga6(dha6), pa6(sa7), dha6(re7), sa7(ga7))))
 )

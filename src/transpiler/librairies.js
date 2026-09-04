@@ -147,6 +147,123 @@ function sacEnObjet(sac, fichier = '?', declaration = '?') {
   return out;
 }
 
+// ⛔ LA PROSE D'UN OBJET SE DIT EN COMMENTAIRE, JAMAIS DANS SON SAC — décision de Romain,
+// 2026-09-04 : « la prose sort de la donnée vers une marque // @description en source », et
+// « convention : on met en préfixe de chaque objet le // @description correspondant ». La marque est
+// de même nature que `// @documented` : elle ne traverse pas le compilateur, elle se lit dans le
+// TEXTE de la source, et elle n'est pas un membre de l'objet.
+//
+// ⚠️ ELLE RESSORT DANS LA DONNÉE PUBLIÉE, sous la clé `description` : sa forme m'appartient, son
+//   existence non — mes consommateurs la lisent dans mon paquet, et la voie « lire ma source » est
+//   fermée. C'est pourquoi la marque s'INJECTE dans l'arbre plutôt que de se poser à côté : tout ce
+//   qui suit — le rangement, le discriminant d'un contrôle, l'égalité du paquet — la voit inchangée.
+//
+// ⇒ LA MARQUE S'ATTACHE À CE QUI SUIT, À TOUTE PROFONDEUR. Une déclaration au sommet et un membre au
+//   fond d'un `params(…)` se lisent du même mécanisme : une règle qui vaudrait à l'entrée et pas au
+//   fond d'un sac serait un cas, pas une règle.
+// ⇒ AU-DELÀ DE 140 CARACTÈRES, LA PROSE SE REPLIE — demande de Romain, 2026-09-04. Les lignes
+//   suivantes portent `//` nu, à la même indentation, et se recollent par un espace. La graphie a été
+//   choisie sur mesure : aucun commentaire ordinaire ne s'intercale entre une marque et son objet
+//   dans les 22 sources, donc un `//` nu qui suit une marque ne peut être que sa suite.
+const MARQUE_DESCRIPTION = /^[ \t]*\/\/[ \t]*@description[ \t]+(.*\S)[ \t]*$/;
+const SUITE_DE_MARQUE = /^[ \t]*\/\/[ \t]*(?!@)(.*\S)[ \t]*$/;
+
+/**
+ * LES PLACES QUI PEUVENT PORTER UNE PROSE — ligne d'ouverture → le sac qui la recevra.
+ * Une déclaration donne sa ligne et son sac ; un membre dont la valeur est un sac donne les siens.
+ * Un nom nu vaut un objet vide : le sac se crée, pour que la marque ait où se poser.
+ */
+function placesQuiPortentUneProse(ast) {
+  const table = new Map();
+  const vus = new Set();
+  const visiterSac = (sac) => {
+    if (!sac || sac.type !== 'SettingBag' || vus.has(sac)) return;
+    vus.add(sac);
+    for (const p of sac.pairs || []) {
+      if (p.value && p.value.type === 'SettingBag') {
+        // ⛔ PLUSIEURS SACS OUVRENT SUR UNE MÊME LIGNE, ET C'EST LE PLUS ENGLOBANT QUI PORTE :
+        //   `control stop(bp3:_stop, scope(rule), …)` ouvre le sac du contrôle ET celui de `scope`,
+        //   tous deux à la même ligne. La visite descend du plus large au plus profond, donc le
+        //   premier inscrit est le bon ; écraser donnait la prose du contrôle à son `scope`, sans
+        //   qu'aucun refus ne s'en aperçoive — le registre sortait muet.
+        if (p.line != null && !table.has(p.line)) table.set(p.line, p.value);
+        visiterSac(p.value);
+      }
+    }
+  };
+  for (const d of [...(ast.defs || []), ...(ast.vars || [])]) {
+    if (d.line != null) {
+      if (!d.settings) d.settings = { type: 'SettingBag', pairs: [] };
+      table.set(d.line, d.settings);
+    }
+    visiterSac(d.settings);
+  }
+  return table;
+}
+
+/** Parcourt tous les sacs de l'arbre et rend chaque paire, à toute profondeur. */
+function* toutesLesPaires(ast) {
+  const vus = new Set();
+  const descendre = function* (sac) {
+    if (!sac || sac.type !== 'SettingBag' || vus.has(sac)) return;
+    vus.add(sac);
+    for (const p of sac.pairs || []) {
+      yield p;
+      if (p.value && p.value.type === 'SettingBag') yield* descendre(p.value);
+    }
+  };
+  for (const d of [...(ast.defs || []), ...(ast.vars || [])]) yield* descendre(d.settings);
+}
+
+/**
+ * POSE LA PROSE DES MARQUES SUR L'ARBRE, et refuse celle qui s'écrirait dans un sac.
+ * @param {string} texte   la source telle qu'elle a été compilée — les lignes doivent concorder
+ * @param {object} ast     l'arbre rendu par le compilateur, modifié sur place
+ * @param {string} fichier le nom du fichier, pour les refus
+ * @returns {number} le nombre de marques posées — un appelant qui compte refuse d'avoir posé zéro
+ */
+export function poserLesDescriptions(texte, ast, fichier) {
+  // Le refus vient d'ABORD : une source qui porte encore la prose dans son sac se répare, elle ne se
+  // complète pas. Il vaut à toute profondeur, là où l'ancienne forme vivait.
+  for (const p of toutesLesPaires(ast)) {
+    if (p.key === 'description') {
+      throw new FauteDeLibrairie(`lib/${fichier}:${p.line} : 'description' ne s'écrit plus dans un sac `
+        + `— la prose d'un objet se porte en préfixe, sur une ligne '// @description …' `
+        + `(Romain, 2026-09-04).`);
+    }
+  }
+  const lignes = String(texte).split('\n');
+  const places = placesQuiPortentUneProse(ast);
+  let posees = 0;
+  for (let i = 0; i < lignes.length; i += 1) {
+    const m = MARQUE_DESCRIPTION.exec(lignes[i]);
+    if (!m) continue;
+    // Les lignes de `//` nu qui suivent prolongent la prose ; elles se recollent par un espace.
+    const morceaux = [m[1]];
+    let j = i + 1;
+    for (; j < lignes.length; j += 1) {
+      const s = SUITE_DE_MARQUE.exec(lignes[j]);
+      if (!s) break;
+      morceaux.push(s[1]);
+    }
+    i = j - 1;                                   // la marque et ses suites sont consommées
+    // La marque décrit ce qui SUIT : on saute le blanc, et la première ligne qui porte quelque chose
+    // est celle qui doit ouvrir un objet.
+    while (j < lignes.length && !lignes[j].trim()) j += 1;
+    const sac = places.get(j + 1);
+    if (!sac) {
+      throw new FauteDeLibrairie(`lib/${fichier}:${i + 1} : '// @description' ne précède aucun objet `
+        + `— la marque se pose en préfixe d'une déclaration ou d'un membre qui ouvre une parenthèse.`);
+    }
+    // ⇒ EN TÊTE DU SAC, parce que la marque est un PRÉFIXE : la prose se lit avant l'objet en source,
+    //   et elle se lit avant ses membres dans la donnée. L'ordre devient uniforme — il suivait
+    //   jusqu'ici la place que chaque source avait donnée à sa clé.
+    sac.pairs.unshift({ key: 'description', value: morceaux.join(' '), texte: true, line: i + 1, col: 1 });
+    posees += 1;
+  }
+  return posees;
+}
+
 /**
  * CONSTRUIT UNE LIBRAIRIE depuis l'arbre de sa source — l'objet que le registre portera.
  * @param {string} nom       le nom logique (`audio`, `settings/notreich`)
@@ -333,6 +450,8 @@ export function chargerLesLibrairies(sources, compiler, registerLib) {
       // La ligne `// @documented` se lit dans le TEXTE de la source : c'est un commentaire, il ne
       // traverse pas le compilateur, et c'est voulu — il ne fait pas partie de l'objet.
       const documente = /^\s*\/\/\s*@documented\b/m.test(s.texte);
+      // La prose se lit au même endroit, et se pose sur l'arbre AVANT qu'il ne devienne de la donnée.
+      poserLesDescriptions(s.texte, r.ast, s.fichier);
       const lib = construireLaLibrairie(s.nom, s.fichier, r.ast, documente);
       construites[s.nom] = lib;
       registerLib(s.nom, lib);

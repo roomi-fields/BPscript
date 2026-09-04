@@ -1,119 +1,123 @@
 types
 
 // @documented
+// @description DISCRETE variation modes of playing parameters — fixed and steps. Between two written values of the same parameter, the mode
+// says whether the first HOLDS until the second (fixed) or GLIDES from note to note (steps). These two modes resolve at the note, hence
+// before any sound is emitted: they belong to Kairos. The third mode — continuous — glides DURING notes, through intermediate messages: it
+// can only be rendered by whoever emits, and it therefore lives in the library of its parameter.
 def variation(
   resolves:variation,
   resolvedBy:"Kairos",
   name:variation,
-  description:"Modes de variation DISCRETS des paramètres de jeu — fixe et paliers. Entre deux valeurs écrites d'un même paramètre, le mode dit si la première TIENT jusqu'à la seconde (fixe) ou si elle GLISSE de note en note (paliers). Ces deux modes se résolvent à la note, donc avant qu'un son ne soit émis : ils appartiennent à Kairos. Le troisième mode — continu — glisse PENDANT les notes, par messages intermédiaires : il ne peut être rendu que par celui qui émet, et il vit donc dans la librairie de son paramètre.",
   version:0.1.0,
   section:controls
 )
 
+// @description Velocity in FIXED mode — the written value holds until the next one, clean jump.
 control velfixed(
   bp3:_velfixed,
-  description:"Vélocité en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Velocity BY STEPS — the value glides from note to note between two written values.
 control velstep(
   bp3:_velstep,
-  description:"Vélocité PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Modulation in FIXED mode — the written value holds until the next one, clean jump.
 control modfixed(
   bp3:_modfixed,
-  description:"Modulation en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Modulation BY STEPS — the value glides from note to note between two written values.
 control modstep(
   bp3:_modstep,
-  description:"Modulation PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Pitchbend in FIXED mode — the written value holds until the next one, clean jump.
 control pitchfixed(
   bp3:_pitchfixed,
-  description:"Pitchbend en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Pitchbend BY STEPS — the value glides from note to note between two written values.
 control pitchstep(
   bp3:_pitchstep,
-  description:"Pitchbend PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Pressure in FIXED mode — the written value holds until the next one, clean jump.
 control pressfixed(
   bp3:_pressfixed,
-  description:"Pression en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Pressure BY STEPS — the value glides from note to note between two written values.
 control presstep(
   bp3:_presstep,
-  description:"Pression PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Volume in FIXED mode — the written value holds until the next one, clean jump.
 control volumefixed(
   bp3:_volumefixed,
-  description:"Volume en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Volume BY STEPS — the value glides from note to note between two written values.
 control volumestep(
   bp3:_volumestep,
-  description:"Volume PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Articulation in FIXED mode — the written value holds until the next one, clean jump. Articulation is set by legato and
+// staccato.
 control articulfixed(
   bp3:_articulfixed,
-  description:"Articulation en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net. L'articulation se pose par legato et staccato.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Articulation BY STEPS — the value glides from note to note between two written values.
 control articulstep(
   bp3:_articulstep,
-  description:"Articulation PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Panning in FIXED mode — the written value holds until the next one, clean jump.
 control panfixed(
   bp3:_panfixed,
-  description:"Panoramique en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Panning BY STEPS — the value glides from note to note between two written values.
 control panstep(
   bp3:_panstep,
-  description:"Panoramique PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Key map in FIXED mode — the written map holds until the next one, clean jump.
 control mapfixed(
   bp3:_mapfixed,
-  description:"Carte de touches en mode FIXE — la carte écrite tient jusqu'à la suivante, saut net.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Key map BY STEPS — the map glides from note to note between two written maps.
 control mapstep(
   bp3:_mapstep,
-  description:"Carte de touches PAR PALIERS — la carte glisse de note en note entre deux cartes écrites.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Transposition in FIXED mode — the written value holds until the next one, clean jump.
 control transposefixed(
   bp3:_transposefixed,
-  description:"Transposition en mode FIXE — la valeur écrite tient jusqu'à la suivante, saut net.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Transposition BY STEPS — the value glides from note to note between two written values.
 control transposestep(
   bp3:_transposestep,
-  description:"Transposition PAR PALIERS — la valeur glisse de note en note entre deux valeurs écrites.",
   scope(symbol, group, rule, flow)
 )

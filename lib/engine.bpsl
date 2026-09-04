@@ -1,223 +1,247 @@
 types
 
 // @documented
+// @description The keys the DERIVATION ENGINE consumes — what governs how production unfolds, as opposed to what it produces. HEADER
+// library, resolved by BPx.
 def engine(
   resolves:engine,
   resolvedBy:"BPx",
   name:engine,
-  description:"Les clés que le MOTEUR DE DÉRIVATION consomme — ce qui gouverne comment la production se déroule, par opposition à ce qu'elle produit. Librairie d'EN-TÊTE, résolue par BPx.",
   version:1.0.0
 )
 
+// @description NATIVE gesture: reseeds the random generator DURING derivation. ⚠️ BPScript CARRIES THIS GESTURE, contrary to what this
+// field claimed until 2026-08-13: in-flow reseeding is written ![seed:42] (born 2026-08-10, commit 750d457, which removed its at-sign).
+// Measurement: it compiles and reaches the tree as an InstantControl carrying flux:true, distinct from the scene setting seed:42. The prose
+// here said BPScript exposed only the scene seed, which is not the same gesture -- that was FALSE, and this sentence is the reason this
+// word stayed out of the vocabulary. The bpscript field is NOT touched: declaring a word of the language is Romain's ruling, never a
+// consequence of my measurement.
 control srand(
   bp3:_srand,
   bpscript:false,
   args(seed),
-  description:"Geste NATIF : reamorce le generateur aleatoire EN COURS de derivation. ⚠️ BPScript PORTE CE GESTE, contrairement a ce que ce champ a affirme jusqu au 2026-08-13 : la re-semence en flux s ecrit ![seed:42] (nee le 2026-08-10, commit 750d457, qui lui a retire son arobase). Mesure : elle compile et atteint l arbre en InstantControl porteur de flux:true, distincte du reglage de scene seed:42. La prose disait ici que BPScript n exposait que la graine de scene, qui  n est pas le meme geste  -- c etait FAUX, et cette phrase est la raison pour laquelle ce mot est reste hors du vocabulaire. Le champ bpscript n est PAS touche : declarer un mot du langage est un arbitrage de Romain, jamais une consequence de ma mesure.",
   section:controls
 )
+// @description NATIVE gesture: prints the work string in the trace window of the original engine. BPScript has no such window and no reason
+// to expose the word; it is declared so that the BP3 frontend can route the grammars that write it.
 control print(
   bp3:_print,
   bpscript:false,
-  description:"Geste NATIF : affiche la chaine de travail dans la fenetre de trace du moteur d origine. BPScript n a pas cette fenetre et n a aucune raison d exposer le mot ; il est declare pour que le frontal BP3 puisse router les grammaires qui l ecrivent.",
   section:controls
 )
 
+// @description Derivation mode of the block/subgrammar (rnd, ord, sub, sub1, lin, tem, poslong) -- default: ord.
 control mode(
   args(mode),
   values(rnd, ord, sub, sub1, lin, tem, poslong),
   value:ord,
-  description:"Mode de derivation du bloc/sous-grammaire (rnd, ord, sub, sub1, lin, tem, poslong) -- defaut : ord.",
   scope(subgrammar),
   section:engine
 )
+// @description Traversal direction per rule (left, right, rnd) -- default: rnd.
 control scan(
   args(direction),
   values(left, right, rnd),
   value:rnd,
-  description:"Sens du parcours par regle (left, right, rnd) -- defaut : rnd.",
   scope(scene, rule),
   section:engine
 )
+// @description Rule weight -- an integer, 'inf' for absolute priority, or a K-param.
 control weight(
   args(value),
-  description:"Poids de la regle -- un entier, 'inf' pour la priorite absolue, ou un K-param.",
   scope(rule),
   section:engine
 )
+// @description Rule weights go back to the value written in the grammar. Image of ResetWeights in the native engine.
 control resetweights(
   bp3:ResetWeights,
   bp3value:1,
-  description:"Les poids des regles repartent de leur valeur ecrite dans la grammaire. Image de ResetWeights au moteur natif.",
   scope(scene),
   section:engine
 )
+// @description Rule weights keep the value where derivation left them. Image of ResetWeights in the native engine.
 control keepweights(
   bp3:ResetWeights,
   bp3value:0,
-  description:"Les poids des regles gardent la valeur ou la derivation les a laisses. Image de ResetWeights au moteur natif.",
   scope(scene),
   section:engine
 )
+// @description Derivation failure handling (skip, retry(N), fallback(X)) -- default: skip. NO 'values' enum (unlike mode/scan):
+// retry/fallback take an ARGUMENT ('retry(2)', 'fallback(Autre)'), which the enum validator (controlValidation.js, EXACT comparison) would
+// reject -- measured by vocabulaire_appels.mjs section 2quinquies bis.
 control on_fail(
   args(strategy),
   value:skip,
-  description:"Gestion d'echec de derivation (skip, retry(N), fallback(X)) -- defaut : skip. PAS de 'values' enum (contrairement a mode/scan) : retry/fallback prennent un ARGUMENT ('retry(2)', 'fallback(Autre)'), que le validateur enum (controlValidation.js, comparaison EXACTE) rejetterait -- mesure par vocabulaire_appels.mjs section 2quinquies bis.",
   scope(scene, rule),
   section:engine
 )
+// @description Signature rythmique -- (meter:7/8), (meter:4+4/4).
 control meter(
   args(signature),
-  description:"Signature rythmique -- (meter:7/8), (meter:4+4/4).",
   scope(scene, rule),
   section:engine
 )
+// @description Controlled repetition. expr = K-param or K-param=value.
 control repeat(
   bp3:_repeat,
   scope(rule),
   args(expr),
-  description:"Controlled repetition. expr = K-param or K-param=value.",
   section:engine
 )
+// @description Jump on derivation failure.
 control failed(
   bp3:_failed,
   scope(rule),
   args(subgrammar, rule),
-  description:"Jump on derivation failure.",
   section:engine
 )
-control stop(bp3:_stop, scope(rule), description:"Stop derivation.", section:engine)
+// @description Stop derivation.
+control stop(bp3:_stop, scope(rule), section:engine)
+// @description Jump to specific subgrammar and rule.
 control goto(
   bp3:_goto,
   scope(rule),
   args(subgrammar, rule),
-  description:"Jump to specific subgrammar and rule.",
   section:engine
 )
+// @description Retrograde — reverse element order. flow SCOPE ONLY: the marker acts on what FOLLOWS. Measurement of the original engine
+// (Zouleb.c:95-175, BPx 2026-08-09): on a serial tool it moves FORWARD past the marker and targets what follows, and its loop stops dead on
+// a closing bracket -- no branch looks backwards. The form glued after a closing bracket was therefore accepted and SILENTLY INERT.
 control retro(
   bp3:_retro,
   scope(flow),
-  description:"Retrograde — reverse element order. PORTEE flow UNIQUEMENT : le marqueur agit sur ce qui SUIT. Mesure du moteur d origine (Zouleb.c:95-175, BPx 2026-08-09) : sur un outil seriel il avance APRES le marqueur et prend pour cible la suite, et sa boucle s arrete net sur une fermante — aucune branche ne regarde en arriere. La forme collee apres une fermante etait donc acceptee et SILENCIEUSEMENT INERTE.",
   section:engine
 )
+// @description Shuffle — random reordering of sequence elements. seed arg → _srand(N) prefix. flow SCOPE ONLY: see retro. Measured corpus:
+// 32 occurrences of the tool BEFORE a block against 2 after a closing bracket, and those 2 act on what follows (S --> a b {_retro c d e}
+// _retro f g).
 control shuffle(
   bp3:_rndseq,
   args(seed),
   scope(flow),
-  description:"Shuffle — random reordering of sequence elements. seed arg → _srand(N) prefix. PORTEE flow UNIQUEMENT : voir retro. Corpus mesure : 32 occurrences de l outil AVANT un bloc contre 2 apres une fermante, et ces 2 portent sur la suite (S --> a b {_retro c d e} _retro f g).",
   section:engine
 )
+// @description Order — restore canonical order of sequence elements. PORTEE flow UNIQUEMENT : voir retro.
 control order(
   bp3:_ordseq,
   scope(flow),
-  description:"Order — restore canonical order of sequence elements. PORTEE flow UNIQUEMENT : voir retro.",
   section:engine
 )
+// @description Rotate — cyclic rotation of sequence by N positions (engine, temporal). PORTEE flow UNIQUEMENT : voir retro. Distinct from
+// runtime (rotate) which is a pitch transformation.
 control rotate(
   bp3:_rotate,
   args(degrees),
   scope(flow),
-  description:"Rotate — cyclic rotation of sequence by N positions (engine, temporal). PORTEE flow UNIQUEMENT : voir retro. Distinct from runtime (rotate) which is a pitch transformation.",
   section:engine
 )
+// @description Staccato — shorten note durations (affects temporal structure)
 control staccato(
   bp3:_staccato,
   args(value),
   range(0, 127),
-  description:"Staccato — shorten note durations (affects temporal structure)",
   scope(symbol, group, rule, flow),
   section:engine
 )
+// @description Legato — extend note durations (affects temporal structure)
 control legato(
   bp3:_legato,
   args(value),
   range(0, 1000),
-  description:"Legato — extend note durations (affects temporal structure)",
   scope(symbol, group, rule, flow),
   section:engine
 )
+// @description Random timing jitter — displaces note attacks by ±N ms (temporal). Like staccato/legato, a current-parameter control, not a
+// reorder.
 control rndtime(
   bp3:_rndtime,
   args(amount),
   range(0, 32767),
   unit:"ms",
-  description:"Random timing jitter — displaces note attacks by ±N ms (temporal). Like staccato/legato, a current-parameter control, not a reorder.",
   scope(scene, symbol, group, rule, flow),
   section:engine
 )
+// @description Destructure composed terminals based on alphabet
 control destru(
   bp3:_destru,
-  description:"Destructure composed terminals based on alphabet",
   scope(subgrammar, rule),
   section:engine
 )
 
+// @description Random draw seed -- seed:N freezes the derivation; without it (or absent), the draw is random (Romain's decision
+// 2026-08-09). BP3 Seed. flow SCOPE ADDED 2026-08-10: the seed is ALSO written in the flow, ![seed:N] (form validated by Romain), where it
+// translates the native _srand(N). The flow convention is not new -- retro, shuffle, rotate, order and randomize already carry it; what was
+// missing was declaring it for seed, whose graphy the parser knew without the data saying so.
 control seed(
   args(value),
-  description:"Graine du tirage aleatoire -- seed:N fige la derivation ; sans elle (ou absente), le tirage est aleatoire (decision Romain 2026-08-09). BP3 Seed. PORTEE flow AJOUTEE le 2026-08-10 : la graine s ecrit AUSSI dans le flux, ![seed:N] (forme validee par Romain), ou elle traduit le _srand(N) natif. La convention flow n est pas neuve — retro, shuffle, rotate, order et randomize la portent deja ; ce qui manquait etait de la declarer pour seed, dont le parseur connaissait la graphie sans que la donnee la dise.",
   scope(scene, flow),
   section:engine
 )
+// @description Maximum number of items produced by the derivation (BP3 MaxItemsProduce).
 control maxitems(
   args(count),
-  description:"Nombre maximum d'items produits par la derivation (BP3 MaxItemsProduce).",
   scope(scene),
   section:engine
 )
+// @description Alias of maxitems (BP3 MaxItemsProduce).
 control items(
   args(count),
-  description:"Alias de maxitems (BP3 MaxItemsProduce).",
   scope(scene),
   section:engine
 )
+// @description Produces every possible item, disables improvize (BP3 AllItems).
 control allitems(
-  description:"Produit tous les items possibles, desactive improvize (BP3 AllItems).",
   scope(scene),
   section:engine
 )
-control all_items(description:"Alias de allitems (BP3 AllItems).", scope(scene), section:engine)
+// @description Alias of allitems (BP3 AllItems).
+control all_items(scope(scene), section:engine)
+// @description Endless continuous derivation (BP3 Improvize).
 control improvize(
-  description:"Derivation continue sans fin (BP3 Improvize).",
   scope(scene),
   section:engine
 )
+// @description Placement tolerance in ms (BP3 Quantization). NOT a grid: measured on the native engine, no event boundary falls on a
+// multiple of this value. It is compared to the piece's internal step u and yields a grouping factor k = floor(value/u)+1, which the engine
+// reports (compression rate). k=1: output unchanged to the byte. k>1: instants are recast onto a coarser table -- distinct events share
+// boundaries, the piece lengthens, the start leaves zero.
 control quantization(
   args(value),
   unit:"ms",
-  description:"Tolerance de placement en ms (BP3 Quantization). N'EST PAS une grille : mesure sur le moteur natif, aucune borne d'evenement ne tombe sur un multiple de cette valeur. Elle est comparee au pas interne u de la piece et rend un facteur de regroupement k = floor(valeur/u)+1, que le moteur annonce (compression rate). k=1 : sortie inchangee a l'octet. k>1 : les instants sont refondus sur une table plus grossiere — des evenements distincts partagent des bornes, la piece s'allonge, le depart quitte zero.",
   scope(scene),
   section:engine
 )
+// @description Period of the Q metronome (BP3 Qclock).
 control qclock(
   args(period),
-  description:"Periode du metronome Q (BP3 Qclock).",
   scope(scene),
   section:engine
 )
+// @description A time pattern is a duration ratio carrying a name -- timepatterns: t1=1/1, t2=3/2, ... It is declared at the head, its name
+// is then written in a polymetric expression, and it occupies time without sounding. LANGUAGE.md, section Les motifs temporels.
 control timepatterns(
   args(patterns),
-  description:"Un motif temporel est un rapport de duree qui porte un nom -- timepatterns: t1=1/1, t2=3/2, ... Il se declare en tete, son nom s ecrit ensuite dans une expression polymetrique, et il occupe le temps sans sonner. LANGUAGE.md, section Les motifs temporels.",
   scope(scene),
   section:engine
 )
 
+// @description Re-seed RNG from clock at production start (BP3 _randomize preamble, Encode.c case 50)
 control randomize(
   bp3:_randomize,
-  description:"Re-seed RNG from clock at production start (BP3 _randomize preamble, Encode.c case 50)",
   scope(subgrammar, flow, scene),
   bagOnly:true,
   section:subgrammar
 )
+// @description Striated time (pulsed)
 control striated(
   bp3:_striated,
-  description:"Striated time (pulsed)",
   scope(subgrammar, scene),
   unicite:nature-du-temps,
   section:subgrammar
 )
+// @description Smooth time (non-pulsed)
 control smooth(
   bp3:_smooth,
-  description:"Smooth time (non-pulsed)",
   scope(subgrammar, scene),
   unicite:nature-du-temps,
   section:subgrammar

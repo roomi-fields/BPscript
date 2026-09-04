@@ -9,10 +9,10 @@ eval
 midi_default
 
 // @documented
+// @description BPscript core — rests, prolongation, engine controls, BASE for scene defaults
 def core(
   resolves:core,
   name:core,
-  description:"BPscript core — silences, prolongation, contrôles moteur, SOCLE des défauts de scène",
   version:"0.2.0",
   symbols(),
   section:defaults
@@ -21,18 +21,21 @@ def core(
 def components(alphabet:western, tuning:western_12TET, transport:audio, eval:js)
 
 def values(
+  // @description Reference pitch (Hz). The default comes from the `diapason` field of the EFFECTIVE ALPHABET (actor ?? scene `alphabet.X`
+  // ?? default alphabet `core`, `components.alphabet`) — the anchor is a property of the note system, not of the tuning (see
+  // SCENE_DEFAULTS_CASCADE.md). Overridable with `diapason:N` at the head of a scene, or `(diapason:N)` on one occurrence. When the
+  // alphabet is unresolved, the value stays ABSENT (downstream resolves it).
   diapason(
     range(16, 8000),
     unit:Hz,
-    overriddenBy(tuning.diapason, alphabet.diapason),
-    description:"Hauteur de référence (Hz). Le défaut vient du champ `diapason` de l'ALPHABET EFFECTIF (acteur ?? scène `alphabet.X` ?? alphabet par défaut `core`, `components.alphabet`) — l'ancre est une propriété du système de notes, pas de l'accordage (cf. SCENE_DEFAULTS_CASCADE.md). Surchargeable par `diapason:N` en tête de scène, ou `(diapason:N)` sur une occurrence. Si l'alphabet n'est pas résolu, la valeur reste ABSENTE (l'aval résout)."
+    overriddenBy(tuning.diapason, alphabet.diapason)
   )
 )
 
+// @description Derivation failure handling
 def on_fail(
   section:settings,
   type:directive,
   values("skip", "retry", "fallback"),
-  value:skip,
-  description:"Gestion d'échec de dérivation"
+  value:skip
 )

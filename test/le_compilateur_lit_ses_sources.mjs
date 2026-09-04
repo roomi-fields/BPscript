@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il ECRIT sur le disque : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — LE COMPILATEUR LIT SES LIBRAIRIES DANS LEURS SOURCES, JAMAIS DANS LE PAQUET.
  *
@@ -63,8 +64,11 @@ try {
   //   par l'absence de mouvement, qui suppose que le paquet existe. `libs-data.js` est sorti
   //   (Romain : « ça sort ») : il n'y a plus d'artefact de librairie du tout, donc la lecture ne
   //   PEUT venir que des sources. On l'éprouve, au lieu de le supposer.
+  // La prose se porte en marque, jamais dans le sac — décision de Romain, 2026-09-04. Le témoin
+  // l'écrit sous sa forme vivante : un contrôle a besoin d'une description pour en être un.
   appendFileSync(join(bac, 'lib/audio.bpsl'),
-    '\ncontrol zorglubtemoin(args(value), description:"témoin de ce garde", scope(scene), section:controls)\n');
+    '\n// @description témoin de ce garde'
+    + '\ncontrol zorglubtemoin(args(value), scope(scene), section:controls)\n');
   const apres = compiler();
   ok(apres.length === 0,
      `2. une entrée ajoutée à la SOURCE doit atteindre le compilateur sans régénérer le paquet — reçu ${JSON.stringify(apres)}`);

@@ -3,15 +3,15 @@ types
 // @documented
 def temperaments(resolvedBy:Kairos, resolves:temperament)
 
+// @description Equal temperament, 12 divisions of the octave
 temperament 12TET(
-  description:"Equal temperament, 12 divisions of the octave",
   period_ratio:2,
   divisions:12,
   ratios(1, 100c, 200c, 300c, 400c, 500c, 600c, 700c, 800c, 900c, 1000c, 1100c)
 )
 
+// @description Quarter-tone equal temperament, 24 divisions of the octave
 temperament 24TET(
-  description:"Quarter-tone equal temperament, 24 divisions of the octave",
   period_ratio:2,
   divisions:24,
   ratios(
@@ -42,8 +42,8 @@ temperament 24TET(
   )
 )
 
+// @description Holdrian comma system, 53 divisions of the octave. Used in Turkish makam theory. 1 step ≈ 22.64 cents.
 temperament 53TET(
-  description:"Holdrian comma system, 53 divisions of the octave. Used in Turkish makam theory. 1 step ≈ 22.64 cents.",
   period_ratio:2,
   divisions:53,
   ratios(
@@ -103,22 +103,22 @@ temperament 53TET(
   )
 )
 
+// @description Pythagorean tuning — pure fifths (3/2). Comma: 531441/524288 ≈ 23.46 cents.
 temperament pythagorean(
-  description:"Pythagorean tuning — pure fifths (3/2). Comma: 531441/524288 ≈ 23.46 cents.",
   period_ratio:2,
   divisions:12,
   ratios(1, 256/243, 9/8, 32/27, 81/64, 4/3, 729/512, 3/2, 128/81, 27/16, 16/9, 243/128)
 )
 
+// @description 5-limit just intonation — pure thirds and fifths.
 temperament just_5limit(
-  description:"5-limit just intonation — pure thirds and fifths.",
   period_ratio:2,
   divisions:12,
   ratios(1, 16/15, 9/8, 6/5, 5/4, 4/3, 45/32, 3/2, 8/5, 5/3, 9/5, 15/8)
 )
 
+// @description 1/4-comma meantone — major thirds exactly 5/4. Fifths narrowed by 1/4 syntonic comma.
 temperament meantone_quarter(
-  description:"1/4-comma meantone — major thirds exactly 5/4. Fifths narrowed by 1/4 syntonic comma.",
   period_ratio:2,
   divisions:12,
   ratios(
@@ -137,8 +137,8 @@ temperament meantone_quarter(
   )
 )
 
+// @description 22 shruti — Indian tradition, 5-limit just intonation. Unequal steps (pramana ~22c, nyuna ~70c, purna ~90c).
 temperament 22shruti(
-  description:"22 shruti — Indian tradition, 5-limit just intonation. Unequal steps (pramana ~22c, nyuna ~70c, purna ~90c).",
   period_ratio:2,
   divisions:22,
   ratios(
@@ -167,15 +167,15 @@ temperament 22shruti(
   )
 )
 
+// @description Bohlen-Pierce just — 7-limit, tritave (3:1). 13 steps.
 temperament bohlen_pierce_just(
-  description:"Bohlen-Pierce just — 7-limit, tritave (3:1). 13 steps.",
   period_ratio:3,
   divisions:13,
   ratios(1, 27/25, 25/21, 9/7, 7/5, 75/49, 5/3, 9/5, 49/25, 15/7, 7/3, 63/25, 25/9)
 )
 
+// @description Bohlen-Pierce equal — 13 equal divisions of the tritave (3:1).
 temperament bohlen_pierce_equal(
-  description:"Bohlen-Pierce equal — 13 equal divisions of the tritave (3:1).",
   period_ratio:3,
   divisions:13,
   ratios(
@@ -195,22 +195,23 @@ temperament bohlen_pierce_equal(
   )
 )
 
+// @description Gamelan pelog — 7-tone, Central Javanese approximation. Stretched octave. Varies by ensemble.
 temperament gamelan_pelog(
-  description:"Gamelan pelog — 7-tone, Central Javanese approximation. Stretched octave. Varies by ensemble.",
   period_ratio:2.02,
   divisions:7,
   ratios(1, 1.126, 1.244, 1.351, 1.496, 1.683, 1.894)
 )
 
+// @description Gamelan slendro — near-equal pentatonic, Central Javanese approximation. Stretched octave.
 temperament gamelan_slendro(
-  description:"Gamelan slendro — near-equal pentatonic, Central Javanese approximation. Stretched octave.",
   period_ratio:2.01,
   divisions:5,
   ratios(1, 1.143, 1.317, 1.516, 1.741)
 )
 
+// @description This is a reduction to 12 grades of scale "Ma05" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'Bb'
+// Created on 2021-01-05 18:34:29 Scale aligned ratio 1.0125 (2022-03-11 07:57:41)
 temperament bp3_Abmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma05"" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'Bb' Created on 2021-01-05 18:34:29 Scale aligned ratio 1.0125 (2022-03-11 07:57:41)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -218,8 +219,9 @@ temperament bp3_Abmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma08" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:09:51 Scale aligned
+// ratio 1.0125 (2022-03-11 07:56:59)
 temperament bp3_Abmin(
-  description:"This is a reduction to 12 grades of scale ""Ma08"" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:09:51 Scale aligned ratio 1.0125 (2022-03-11 07:56:59)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -227,8 +229,9 @@ temperament bp3_Abmin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma10" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'B'
+// Created 2021-01-05 18:56:02
 temperament bp3_Amaj(
-  description:"This is a reduction to 12 grades of scale ""Ma10"" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'B' Created 2021-01-05 18:56:02",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -236,8 +239,8 @@ temperament bp3_Amaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma01" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:00:08
 temperament bp3_Amin(
-  description:"This is a reduction to 12 grades of scale ""Ma01"" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:00:08",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -245,8 +248,9 @@ temperament bp3_Amin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma03" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'C'
+// Created 2021-01-05 18:31:20
 temperament bp3_Bbmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma03"" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'C' Created 2021-01-05 18:31:20",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -254,8 +258,8 @@ temperament bp3_Bbmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma06" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:08:40
 temperament bp3_Bbmin(
-  description:"This is a reduction to 12 grades of scale ""Ma06"" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:08:40",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:12,
@@ -263,8 +267,9 @@ temperament bp3_Bbmin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma08" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'Db'
+// Created 2021-01-05 19:37:40
 temperament bp3_Bmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma08"" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'Db' Created 2021-01-05 19:37:40",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -272,8 +277,8 @@ temperament bp3_Bmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma11" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:12:50
 temperament bp3_Bmin(
-  description:"This is a reduction to 12 grades of scale ""Ma11"" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:12:50",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -281,8 +286,9 @@ temperament bp3_Bmin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma01" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'D'
+// Created 2021-01-05 18:29:30
 temperament bp3_Cmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma01"" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'D' Created 2021-01-05 18:29:30",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -290,8 +296,8 @@ temperament bp3_Cmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma04" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 17:49:25
 temperament bp3_Cmin(
-  description:"This is a reduction to 12 grades of scale ""Ma04"" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 17:49:25",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:12,
@@ -299,8 +305,9 @@ temperament bp3_Cmin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma06" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'Eb'
+// Created 2021-01-05 18:35:44Scale aligned ratio 1.0125 (2022-03-11 07:59:19)
 temperament bp3_Dbmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma06"" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'Eb' Created 2021-01-05 18:35:44Scale aligned ratio 1.0125 (2022-03-11 07:59:19)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -308,8 +315,9 @@ temperament bp3_Dbmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma09" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:10:26 Scale aligned
+// ratio 1.0125 (2022-03-11 07:59:30)
 temperament bp3_Dbmin(
-  description:"This is a reduction to 12 grades of scale ""Ma09"" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:10:26 Scale aligned ratio 1.0125 (2022-03-11 07:59:30)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -317,8 +325,9 @@ temperament bp3_Dbmin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma11" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'E'
+// Created 2021-01-05 18:48:23
 temperament bp3_Dmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma11"" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'E' Created 2021-01-05 18:48:23",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -326,8 +335,8 @@ temperament bp3_Dmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma02" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:06:48
 temperament bp3_Dmin(
-  description:"This is a reduction to 12 grades of scale ""Ma02"" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:06:48",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -335,8 +344,9 @@ temperament bp3_Dmin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma04" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'F'
+// Created 2021-01-05 18:33:09Scale aligned ratio 1.0125 (2022-03-11 07:50:02)
 temperament bp3_Ebmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma04"" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'F' Created 2021-01-05 18:33:09Scale aligned ratio 1.0125 (2022-03-11 07:50:02)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -344,8 +354,9 @@ temperament bp3_Ebmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma07" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:09:20 Scale aligned
+// ratio 1.0125 (2022-03-11 07:59:38)
 temperament bp3_Ebmin(
-  description:"This is a reduction to 12 grades of scale ""Ma07"" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:09:20 Scale aligned ratio 1.0125 (2022-03-11 07:59:38)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -353,8 +364,9 @@ temperament bp3_Ebmin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma09" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'F#'
+// Created 2021-01-05 19:38:38
 temperament bp3_Emaj(
-  description:"This is a reduction to 12 grades of scale ""Ma09"" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'F#' Created 2021-01-05 19:38:38",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -362,8 +374,8 @@ temperament bp3_Emaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma12" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:13:25
 temperament bp3_Emin(
-  description:"This is a reduction to 12 grades of scale ""Ma12"" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:13:25",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -371,8 +383,9 @@ temperament bp3_Emin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma07" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'Ab'
+// Created 2021-01-05 19:36:32
 temperament bp3_F_maj(
-  description:"This is a reduction to 12 grades of scale ""Ma07"" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'Ab' Created 2021-01-05 19:36:32",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -380,8 +393,8 @@ temperament bp3_F_maj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma10" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:10:57
 temperament bp3_F_min(
-  description:"This is a reduction to 12 grades of scale ""Ma10"" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:10:57",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -389,8 +402,9 @@ temperament bp3_F_min(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma02" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'G'
+// Created 2021-01-05 18:30:32
 temperament bp3_Fmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma02"" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'G' Created 2021-01-05 18:30:32",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -398,8 +412,9 @@ temperament bp3_Fmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma05" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:07:58 Scale aligned
+// ratio 1.0125 (2022-03-11 07:59:51)
 temperament bp3_Fmin(
-  description:"This is a reduction to 12 grades of scale ""Ma05"" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:07:58 Scale aligned ratio 1.0125 (2022-03-11 07:59:51)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -407,8 +422,9 @@ temperament bp3_Fmin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma12" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'A'
+// Created 2021-01-05 18:49:22
 temperament bp3_Gmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma12"" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'A' Created 2021-01-05 18:49:22",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -416,8 +432,9 @@ temperament bp3_Gmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma03" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:15:32Scale aligned
+// ratio 1.0125 (2022-03-11 07:54:43)
 temperament bp3_Gmin(
-  description:"This is a reduction to 12 grades of scale ""Ma03"" (23 grades) in ‘-cs.12_scales’ Created 2021-01-05 18:15:32Scale aligned ratio 1.0125 (2022-03-11 07:54:43)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -425,8 +442,8 @@ temperament bp3_Gmin(
   comma:81/80
 )
 
+// @description Scale "Ma01" from Bernard Bel / Bol Processor
 temperament bp3_Ma01(
-  description:"Scale ""Ma01"" from Bernard Bel / Bol Processor",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -458,8 +475,8 @@ temperament bp3_Ma01(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma01" (23 grades). From ‘C’ to ‘F’. Created 2020-11-28 16:51:26
 temperament bp3_Ma02(
-  description:"This is a transposition of scale ""Ma01"" (23 grades). From ‘C’ to ‘F’. Created 2020-11-28 16:51:26",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -491,8 +508,8 @@ temperament bp3_Ma02(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma2" (23 grades) From ‘C’ to ‘F’ Created 2020-11-27 18:26:51
 temperament bp3_Ma03(
-  description:"This is a transposition of scale ""Ma2"" (23 grades) From ‘C’ to ‘F’ Created 2020-11-27 18:26:51",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -524,8 +541,8 @@ temperament bp3_Ma03(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma3" (23 grades) From ‘E’ to ‘A’ Created 2020-11-27 19:34:18
 temperament bp3_Ma04(
-  description:"This is a transposition of scale ""Ma3"" (23 grades) From ‘E’ to ‘A’ Created 2020-11-27 19:34:18",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -557,8 +574,8 @@ temperament bp3_Ma04(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma4" (23 grades) From ‘Eb’ to ‘Ab’ Created 2020-11-28 07:25:59
 temperament bp3_Ma05(
-  description:"This is a transposition of scale ""Ma4"" (23 grades) From ‘Eb’ to ‘Ab’ Created 2020-11-28 07:25:59",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -590,8 +607,8 @@ temperament bp3_Ma05(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma5" (23 grades) From ‘D’ to ‘G’ Created 2020-11-28 07:48:18
 temperament bp3_Ma06(
-  description:"This is a transposition of scale ""Ma5"" (23 grades) From ‘D’ to ‘G’ Created 2020-11-28 07:48:18",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -623,8 +640,8 @@ temperament bp3_Ma06(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma6" (23 grades) From ‘D’ to ‘G’ Created 2020-11-28 08:01:21
 temperament bp3_Ma07(
-  description:"This is a transposition of scale ""Ma6"" (23 grades) From ‘D’ to ‘G’ Created 2020-11-28 08:01:21",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -656,8 +673,8 @@ temperament bp3_Ma07(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma7" (23 grades) From ‘C’ to ‘F’ Created 2020-11-28 08:11:34
 temperament bp3_Ma08(
-  description:"This is a transposition of scale ""Ma7"" (23 grades) From ‘C’ to ‘F’ Created 2020-11-28 08:11:34",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -689,8 +706,8 @@ temperament bp3_Ma08(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma08" (23 grades). From ‘C’ to ‘F’. Created 2020-11-28 19:09:43
 temperament bp3_Ma09(
-  description:"This is a transposition of scale ""Ma08"" (23 grades). From ‘C’ to ‘F’. Created 2020-11-28 19:09:43",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -722,8 +739,8 @@ temperament bp3_Ma09(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma09" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 17:41:33
 temperament bp3_Ma10(
-  description:"This is a transposition of scale ""Ma09"" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 17:41:33",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -755,8 +772,8 @@ temperament bp3_Ma10(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma10" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:42:40
 temperament bp3_Ma11(
-  description:"This is a transposition of scale ""Ma10"" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:42:40",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -788,8 +805,8 @@ temperament bp3_Ma11(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma11" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:43:43
 temperament bp3_Ma12(
-  description:"This is a transposition of scale ""Ma11"" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:43:43",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -821,8 +838,8 @@ temperament bp3_Ma12(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma12" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:44:52
 temperament bp3_Ma13(
-  description:"This is a transposition of scale ""Ma12"" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:44:52",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -854,8 +871,8 @@ temperament bp3_Ma13(
   comma:81/80
 )
 
+// @description Scale "Ma_grama" from Bernard Bel / Bol Processor
 temperament bp3_Ma_grama(
-  description:"Scale ""Ma_grama"" from Bernard Bel / Bol Processor",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -887,8 +904,8 @@ temperament bp3_Ma_grama(
   comma:81/80
 )
 
+// @description This is a derivation of scale "Ma01" (23 grades) in major tonality. Sensitive note = 'D' Created 2020-12-05 21:18:01
 temperament bp3_Sa01(
-  description:"This is a derivation of scale ""Ma01"" (23 grades) in major tonality. Sensitive note = 'D' Created 2020-12-05 21:18:01",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -919,8 +936,8 @@ temperament bp3_Sa01(
   )
 )
 
+// @description This is a derivation of scale "Ma02" (23 grades) in major tonality. Sensitive note = 'G' Created 2020-12-05 21:18:59
 temperament bp3_Sa02(
-  description:"This is a derivation of scale ""Ma02"" (23 grades) in major tonality. Sensitive note = 'G' Created 2020-12-05 21:18:59",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -951,8 +968,8 @@ temperament bp3_Sa02(
   )
 )
 
+// @description This is a derivation of scale "Ma03" (23 grades) in major tonality. Sensitive note = 'C' Created 2020-12-05 22:00:48
 temperament bp3_Sa03(
-  description:"This is a derivation of scale ""Ma03"" (23 grades) in major tonality. Sensitive note = 'C' Created 2020-12-05 22:00:48",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -983,8 +1000,8 @@ temperament bp3_Sa03(
   )
 )
 
+// @description This is a derivation of scale "Ma04" (23 grades) in major tonality. Sensitive note = 'F' Created 2020-12-05 21:26:05
 temperament bp3_Sa04(
-  description:"This is a derivation of scale ""Ma04"" (23 grades) in major tonality. Sensitive note = 'F' Created 2020-12-05 21:26:05",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -1015,8 +1032,8 @@ temperament bp3_Sa04(
   )
 )
 
+// @description This is a derivation of scale "Ma05" (23 grades) in major tonality. Sensitive note = 'Bb' Created 2020-12-05 21:26:54
 temperament bp3_Sa05(
-  description:"This is a derivation of scale ""Ma05"" (23 grades) in major tonality. Sensitive note = 'Bb' Created 2020-12-05 21:26:54",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -1047,8 +1064,8 @@ temperament bp3_Sa05(
   )
 )
 
+// @description This is a derivation of scale "Ma06" (23 grades) in major tonality. Sensitive note = 'Eb' Created 2020-12-05 21:27:42
 temperament bp3_Sa06(
-  description:"This is a derivation of scale ""Ma06"" (23 grades) in major tonality. Sensitive note = 'Eb' Created 2020-12-05 21:27:42",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -1080,8 +1097,8 @@ temperament bp3_Sa06(
   comma:81/80
 )
 
+// @description This is a derivation of scale "Ma07" (23 grades) in major tonality. Sensitive note = 'Ab' Created 2020-12-05 21:28:36
 temperament bp3_Sa07(
-  description:"This is a derivation of scale ""Ma07"" (23 grades) in major tonality. Sensitive note = 'Ab' Created 2020-12-05 21:28:36",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -1113,8 +1130,8 @@ temperament bp3_Sa07(
   comma:81/80
 )
 
+// @description This is a derivation of scale "Ma08" (23 grades) in major tonality. Sensitive note = 'Db' Created 2020-12-05 21:29:15
 temperament bp3_Sa08(
-  description:"This is a derivation of scale ""Ma08"" (23 grades) in major tonality. Sensitive note = 'Db' Created 2020-12-05 21:29:15",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -1146,8 +1163,9 @@ temperament bp3_Sa08(
   comma:81/80
 )
 
+// @description This is a derivation of scale "Ma09" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'F#' Created
+// 2021-01-05 14:44:42
 temperament bp3_Sa09(
-  description:"This is a derivation of scale ""Ma09"" (23 grades) in ‘-cs.12_scales’ in major tonality. Sensitive note = 'F#' Created 2021-01-05 14:44:42",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -1179,8 +1197,8 @@ temperament bp3_Sa09(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa09" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:11:29
 temperament bp3_Sa10(
-  description:"This is a transposition of scale ""Sa09"" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:11:29",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -1212,8 +1230,8 @@ temperament bp3_Sa10(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa10" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:49:01
 temperament bp3_Sa11(
-  description:"This is a transposition of scale ""Sa10"" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:49:01",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -1245,8 +1263,8 @@ temperament bp3_Sa11(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa11" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:51:22
 temperament bp3_Sa12(
-  description:"This is a transposition of scale ""Sa11"" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:51:22",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -1278,8 +1296,8 @@ temperament bp3_Sa12(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa12" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:52:00
 temperament bp3_Sa13(
-  description:"This is a transposition of scale ""Sa12"" (23 grades). From ‘C’ to ‘F’. Created 2021-01-05 15:52:00",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -1311,8 +1329,9 @@ temperament bp3_Sa13(
   comma:81/80
 )
 
+// @description A "5-limit" tuning framework for constructing chromatic scales using exclusively ratios of integers 2, 3, 5. Read:
+// http://www.tonalsoft.com/enc/j/just.aspx
 temperament bp3_base(
-  description:"A ""5-limit"" tuning framework for constructing chromatic scales using exclusively ratios of integers 2, 3, 5. Read: http://www.tonalsoft.com/enc/j/just.aspx",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -1343,8 +1362,10 @@ temperament bp3_base(
   )
 )
 
+// @description The Indian grama scale as conceptualized by E. J. Arnold. Publication: ‘L'intonation juste dans la théorie ancienne de
+// l'Inde : les applications aux musiques modale et harmonique’. Revue de Musicologie, vol. 71c n° 1-2, 1985, p. 11-38. Edited and
+// translated by Bernard Bel This version has been modified to define 22 notes on 23 intervals: it has no "m4" (Ma tivra + pramana shruti).
 temperament bp3_grama(
-  description:"The Indian grama scale as conceptualized by E. J. Arnold. Publication: ‘L'intonation juste dans la théorie ancienne de l'Inde : les applications aux musiques modale et harmonique’. Revue de Musicologie, vol. 71c n° 1-2, 1985, p. 11-38. Edited and translated by Bernard Bel This version has been modified to define 22 notes on 23 intervals: it has no ""m4"" (Ma tivra + pramana shruti).",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -1376,8 +1397,8 @@ temperament bp3_grama(
   comma:81/80
 )
 
+// @description Two series of perfect fifths including ascending major thirds (Asselin 2000 p.62) Created 2021-01-08 09:02:23
 temperament bp3_2_cycles_of_fifths(
-  description:"Two series of perfect fifths including ascending major thirds (Asselin 2000 p.62) Created 2021-01-08 09:02:23",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:29,
@@ -1415,8 +1436,9 @@ temperament bp3_2_cycles_of_fifths(
   comma:81/80
 )
 
+// @description Three series of perfect fifths including ascending and descending major thirds (Asselin 2000 p.62) Created 2021-01-08
+// 09:02:23
 temperament bp3_3_cycles_of_fifths(
-  description:"Three series of perfect fifths including ascending and descending major thirds (Asselin 2000 p.62) Created 2021-01-08 09:02:23",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:41,
@@ -1466,8 +1488,10 @@ temperament bp3_3_cycles_of_fifths(
   comma:81/80
 )
 
+// @description Created meantone upwards notes “do, sol, re, la, mi, si, fa#, do#, sol#” ratio 3/2 -2/7 comma (2021-01-11 18:00:22) Created
+// meantone downwards notes “do, fa, sib, mib” ratio 3/2 -2/7 comma (2021-01-11 18:05:45) Created meantone upwards notes “do, sol” ratio 3/2
+// -2/7 comma (2021-01-11 18:06:40)
 temperament bp3_Zarlino_temp(
-  description:"Created meantone upwards notes “do, sol, re, la, mi, si, fa#, do#, sol#” ratio 3/2 -2/7 comma (2021-01-11 18:00:22) Created meantone downwards notes “do, fa, sib, mib” ratio 3/2 -2/7 comma (2021-01-11 18:05:45) Created meantone upwards notes “do, sol” ratio 3/2 -2/7 comma (2021-01-11 18:06:40)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1475,8 +1499,12 @@ temperament bp3_Zarlino_temp(
   comma:81/80
 )
 
+// @description Created 2021-01-14 09:31:50 Created meantone upward notes “do,mi,sol2#” fraction 5/4 (2021-01-14 09:32:46) Created meantone
+// downward notes “sol2#,do#” fraction 3/2 (2021-01-14 09:33:55) Equalized intervals over series “do,sol,re,la,mi,si,fa#,do#” approx
+// fraction 3/2 adjusted -6.1 cents to ratio = 1.495 (2021-01-14 09:34:42) Created meantone downward notes “sol,mib” fraction 5/4
+// (2021-01-14 09:37:02) Equalized intervals over series “mib,sib,fa,do” approx fraction 3/2 adjusted -5.2 cents to ratio = 1.495
+// (2021-01-14 09:38:54)
 temperament bp3_Zarlino_temp2(
-  description:"Created 2021-01-14 09:31:50 Created meantone upward notes “do,mi,sol2#” fraction 5/4 (2021-01-14 09:32:46) Created meantone downward notes “sol2#,do#” fraction 3/2 (2021-01-14 09:33:55) Equalized intervals over series “do,sol,re,la,mi,si,fa#,do#” approx fraction 3/2 adjusted -6.1 cents to ratio = 1.495 (2021-01-14 09:34:42) Created meantone downward notes “sol,mib” fraction 5/4 (2021-01-14 09:37:02) Equalized intervals over series “mib,sib,fa,do” approx fraction 3/2 adjusted -5.2 cents to ratio = 1.495 (2021-01-14 09:38:54)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:13,
@@ -1484,8 +1512,10 @@ temperament bp3_Zarlino_temp2(
   comma:81/80
 )
 
+// @description Kellner's BACH meantone temperament (Asselin 2000 p.101) Created 2021-01-15 16:02:04Created meantone upward notes
+// “do,sol,re,la,mi” fraction 3/2 adjusted -1/5 comma (2021-01-15 16:10:04) Added fifths down: “do,fa,sib,mib,lab,reb,solb” starting
+// fraction 1/1 (2021-01-15 16:11:48) Created meantone upward notes “mi,si” fraction 3/2 (2021-01-15 16:13:36)
 temperament bp3_meantone_BACH(
-  description:"Kellner's BACH meantone temperament (Asselin 2000 p.101) Created 2021-01-15 16:02:04Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/5 comma (2021-01-15 16:10:04) Added fifths down: “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-15 16:11:48) Created meantone upward notes “mi,si” fraction 3/2 (2021-01-15 16:13:36)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1493,8 +1523,10 @@ temperament bp3_meantone_BACH(
   comma:81/80
 )
 
+// @description Barca meantone temperament (Asselin 2000 p.106) Created 2021-01-16 17:56:02 Added fifths down: “do,fa,sib” starting fraction
+// 1/1 (2021-01-16 17:57:57) Created meantone upward notes “do,sol,re,la,mi,si,fa#” fraction 3/2 adjusted -1/6 comma (2021-01-16 18:02:25)
+// Created meantone upward notes “fa#,do#,sol#,re#” fraction 3/2 (2021-01-16 18:03:49)
 temperament bp3_meantone_barca(
-  description:"Barca meantone temperament (Asselin 2000 p.106) Created 2021-01-16 17:56:02 Added fifths down: “do,fa,sib” starting fraction 1/1 (2021-01-16 17:57:57) Created meantone upward notes “do,sol,re,la,mi,si,fa#” fraction 3/2 adjusted -1/6 comma (2021-01-16 18:02:25) Created meantone upward notes “fa#,do#,sol#,re#” fraction 3/2 (2021-01-16 18:03:49)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1502,8 +1534,11 @@ temperament bp3_meantone_barca(
   comma:81/80
 )
 
+// @description Béthisy meantone temperament (Asselin 2000 p.121) Created 2021-01-16 19:21:57 Created meantone upward notes
+// “do,sol,re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 19:23:36) Created meantone downward notes “do,fa,sib,mib” fraction 3/2
+// adjusted 1/12 comma (2021-01-16 19:25:49) Created meantone downward notes “mib,sol#” fraction 3/2 (2021-01-16 19:26:26) Equalized
+// intervals over series “mi,si,fa#,do#,sol#” approx fraction 3/2 adjusted -1.7 cents to ratio = 1.499 (2021-01-16 19:28:09)
 temperament bp3_meantone_bethisy(
-  description:"Béthisy meantone temperament (Asselin 2000 p.121) Created 2021-01-16 19:21:57 Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 19:23:36) Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted 1/12 comma (2021-01-16 19:25:49) Created meantone downward notes “mib,sol#” fraction 3/2 (2021-01-16 19:26:26) Equalized intervals over series “mi,si,fa#,do#,sol#” approx fraction 3/2 adjusted -1.7 cents to ratio = 1.499 (2021-01-16 19:28:09)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1511,8 +1546,10 @@ temperament bp3_meantone_bethisy(
   comma:81/80
 )
 
+// @description Chaumont meantone temperament (Asselin 2000 p.109) Created 2021-01-16 18:06:34 Created meantone upward notes
+// “do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:08:41) Created meantone downward notes “do,fa,sib,mib”
+// fraction 3/2 adjusted -1/4 comma (2021-01-16 18:09:41)
 temperament bp3_meantone_chaumont(
-  description:"Chaumont meantone temperament (Asselin 2000 p.109) Created 2021-01-16 18:06:34 Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:08:41) Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:09:41)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1520,8 +1557,11 @@ temperament bp3_meantone_chaumont(
   comma:81/80
 )
 
+// @description This is an equal-tempered scale for BP3 + Csound. Created 2021-01-14 15:38:08 Created meantone upward notes
+// “do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:20) Created meantone downward notes “do,fa,sib,mib”
+// fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:57) Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted -1/4 comma
+// (2021-01-14 15:43:44)
 temperament bp3_meantone_classic(
-  description:"This is an equal-tempered scale for BP3 + Csound. Created 2021-01-14 15:38:08 Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:20) Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:57) Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted -1/4 comma (2021-01-14 15:43:44)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1529,8 +1569,11 @@ temperament bp3_meantone_classic(
   comma:81/80
 )
 
+// @description Corrette meantone temperament (Asselin 2000 p.111) Created 2021-01-16 18:13:10 Created meantone upward notes
+// “fa,do,sol,re,la,mi,si,fa#,do#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:16:40) Created meantone downward notes “fa,sib,mib”
+// fraction 3/2 adjusted 1/12 comma (2021-01-16 18:34:13) Created meantone upward notes “do#,sol#” fraction 3/2 adjusted 1/12 comma
+// (2021-01-16 18:38:14) Base note reset to ‘do’ (2021-01-16 18:40:53)
 temperament bp3_meantone_corrette(
-  description:"Corrette meantone temperament (Asselin 2000 p.111) Created 2021-01-16 18:13:10 Created meantone upward notes “fa,do,sol,re,la,mi,si,fa#,do#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:16:40) Created meantone downward notes “fa,sib,mib” fraction 3/2 adjusted 1/12 comma (2021-01-16 18:34:13) Created meantone upward notes “do#,sol#” fraction 3/2 adjusted 1/12 comma (2021-01-16 18:38:14) Base note reset to ‘do’ (2021-01-16 18:40:53)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1538,8 +1581,11 @@ temperament bp3_meantone_corrette(
   comma:81/80
 )
 
+// @description D'Alembert-Rousseau meantone temperament (Asselin 2000 p.119) Created 2021-01-16 19:04:44 Created meantone upward notes
+// “do,sol,re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 19:12:08) Created meantone downward notes “do,fa,sib,mib,sol#” fraction
+// 3/2 adjusted 1/12 comma (2021-01-16 19:17:25) Equalized intervals over series “sol#,do#,fa#,si,mi” approx fraction 2/3 adjusted 2.2 cents
+// to ratio = 0.668 (2021-01-16 19:19:34)
 temperament bp3_meantone_d_alembert_rousseau(
-  description:"D'Alembert-Rousseau meantone temperament (Asselin 2000 p.119) Created 2021-01-16 19:04:44 Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 19:12:08) Created meantone downward notes “do,fa,sib,mib,sol#” fraction 3/2 adjusted 1/12 comma (2021-01-16 19:17:25) Equalized intervals over series “sol#,do#,fa#,si,mi” approx fraction 2/3 adjusted 2.2 cents to ratio = 0.668 (2021-01-16 19:19:34)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1547,8 +1593,11 @@ temperament bp3_meantone_d_alembert_rousseau(
   comma:81/80
 )
 
+// @description Kirnberger II meantone temperament (Asselin 2000 p. 90) Created 2021-01-16 11:52:39 Added fifths down:
+// “do,fa,sib,mib,lab,reb” starting fraction 1/1 (2021-01-16 11:54:59) Added fifths up: “do,sol,re” starting fraction 1/1 (2021-01-16
+// 11:55:59) Created meantone upward notes “re,la,mi” fraction 3/2 adjusted -1/2 comma (2021-01-16 11:57:13) Created meantone upward notes
+// “mi,si,fa#” fraction 3/2 (2021-01-16 11:58:24)
 temperament bp3_meantone_kirnberger_2(
-  description:"Kirnberger II meantone temperament (Asselin 2000 p. 90) Created 2021-01-16 11:52:39 Added fifths down: “do,fa,sib,mib,lab,reb” starting fraction 1/1 (2021-01-16 11:54:59) Added fifths up: “do,sol,re” starting fraction 1/1 (2021-01-16 11:55:59) Created meantone upward notes “re,la,mi” fraction 3/2 adjusted -1/2 comma (2021-01-16 11:57:13) Created meantone upward notes “mi,si,fa#” fraction 3/2 (2021-01-16 11:58:24)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1556,8 +1605,10 @@ temperament bp3_meantone_kirnberger_2(
   comma:81/80
 )
 
+// @description Kirnberger III meantone temperament (Asselin 2000 p.92) Created 2021-01-16 12:02:11 Added fifths down:
+// “do,fa,sib,mib,lab,reb” starting fraction 1/1 (2021-01-16 12:03:52) Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted
+// -1/4 comma (2021-01-16 12:05:20) Created meantone upward notes “mi,si,fa#” fraction 3/2 (2021-01-16 12:06:10)
 temperament bp3_meantone_kirnberger_3(
-  description:"Kirnberger III meantone temperament (Asselin 2000 p.92) Created 2021-01-16 12:02:11 Added fifths down: “do,fa,sib,mib,lab,reb” starting fraction 1/1 (2021-01-16 12:03:52) Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 12:05:20) Created meantone upward notes “mi,si,fa#” fraction 3/2 (2021-01-16 12:06:10)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1565,8 +1616,11 @@ temperament bp3_meantone_kirnberger_3(
   comma:81/80
 )
 
+// @description Marpourg meantone temperament (Asselin 2000 p.117) Created 2021-01-16 18:58:49 Created meantone upward notes
+// “fa,do,sol,re,la,mi,si,fa#” fraction 3/2 adjusted -1/4 comma (2021-01-16 19:00:42) Equalized intervals over series
+// “fa,la#,re#,sol#,do#,fa#” approx fraction 2/3 adjusted -2.8 cents to ratio = 0.666 (2021-01-16 19:02:32) Base note reset to ‘do’
+// (2021-01-16 19:03:15)
 temperament bp3_meantone_marpourg(
-  description:"Marpourg meantone temperament (Asselin 2000 p.117) Created 2021-01-16 18:58:49 Created meantone upward notes “fa,do,sol,re,la,mi,si,fa#” fraction 3/2 adjusted -1/4 comma (2021-01-16 19:00:42) Equalized intervals over series “fa,la#,re#,sol#,do#,fa#” approx fraction 2/3 adjusted -2.8 cents to ratio = 0.666 (2021-01-16 19:02:32) Base note reset to ‘do’ (2021-01-16 19:03:15)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1574,8 +1628,10 @@ temperament bp3_meantone_marpourg(
   comma:81/80
 )
 
+// @description Pure minor-thirds temperament (Asselin 2000 p.82) Created 2021-01-15 15:13:09 Created meantone upward notes
+// “mib,sib,fa,do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/3 comma (2021-01-15 15:15:22) Base note reset to ‘do’ (2021-01-15
+// 15:16:00)
 temperament bp3_meantone_pure_minor-thirds(
-  description:"Pure minor-thirds temperament (Asselin 2000 p.82) Created 2021-01-15 15:13:09 Created meantone upward notes “mib,sib,fa,do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/3 comma (2021-01-15 15:15:22) Base note reset to ‘do’ (2021-01-15 15:16:00)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1583,8 +1639,12 @@ temperament bp3_meantone_pure_minor-thirds(
   comma:81/80
 )
 
+// @description Rameau meantone in C temperament (Asselin 2000 p.113) Created 2021-01-16 18:41:56 Created meantone upward notes
+// “do,sol,re,la,mi,si,fa#,do#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:44:03) Added fifths down: “do,fa” starting fraction 1/1
+// (2021-01-16 18:49:25) Created meantone upward notes “do#,sol#” fraction 3/2 adjusted -1/12 comma (2021-01-16 18:51:19) Created meantone
+// downward notes “fa,la#” fraction 3/2 (2021-01-16 18:54:20) Equalized intervals over series “sol#,re#,la#” approx fraction 3/2 adjusted
+// 7.5 cents to ratio = 1.506 (2021-01-16 18:55:25)
 temperament bp3_meantone_rameau_en_do(
-  description:"Rameau meantone in C temperament (Asselin 2000 p.113) Created 2021-01-16 18:41:56 Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:44:03) Added fifths down: “do,fa” starting fraction 1/1 (2021-01-16 18:49:25) Created meantone upward notes “do#,sol#” fraction 3/2 adjusted -1/12 comma (2021-01-16 18:51:19) Created meantone downward notes “fa,la#” fraction 3/2 (2021-01-16 18:54:20) Equalized intervals over series “sol#,re#,la#” approx fraction 3/2 adjusted 7.5 cents to ratio = 1.506 (2021-01-16 18:55:25)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1592,8 +1652,10 @@ temperament bp3_meantone_rameau_en_do(
   comma:81/80
 )
 
+// @description Sauveur meantone temperament (Asselin 2000 p. 81) Created 2021-01-16 10:37:52 Created meantone downward notes
+// “do,fa,sib,mib” fraction 3/2 adjusted -1/5 comma (2021-01-16 10:44:41) Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#,sol#”
+// fraction 3/2 adjusted -1/5 comma (2021-01-16 10:48:56)
 temperament bp3_meantone_sauveur(
-  description:"Sauveur meantone temperament (Asselin 2000 p. 81) Created 2021-01-16 10:37:52 Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted -1/5 comma (2021-01-16 10:44:41) Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/5 comma (2021-01-16 10:48:56)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1601,8 +1663,14 @@ temperament bp3_meantone_sauveur(
   comma:81/80
 )
 
+// @description Schlick meantone temperament (Asselin 2000 p.88) Created 2021-01-16 10:56:35 Created meantone downward notes
+// “la,re,sol,do,fa” fraction 3/2 adjusted -1/4 comma (2021-01-16 10:58:50) Created meantone upward notes “la,mi,si” fraction 3/2 adjusted
+// -1/4 comma (2021-01-16 10:59:48) Created meantone upward notes “la,do#” fraction 5/4 (2021-01-16 11:04:11) Equalized intervals over
+// series “si,fa#,do#” approx fraction 3/2 adjusted -5.4 cents to ratio = 1.495 (2021-01-16 11:05:59) Created meantone downward notes
+// “sol,mib” fraction 5/4 (2021-01-16 11:07:31) Equalized intervals over series “mib,sib,fa” approx fraction 3/2 adjusted -5.3 cents to
+// ratio = 1.495 (2021-01-16 11:08:47) Created meantone downward notes “do,lab” fraction 5/4 (2021-01-16 11:13:58) Created meantone upward
+// notes “mi,sol#” fraction 5/4 adjusted 2/3 comma (2021-01-16 11:23:39) [estimation] Base note reset to ‘do’ (2021-01-16 11:25:48)
 temperament bp3_meantone_schlick(
-  description:"Schlick meantone temperament (Asselin 2000 p.88) Created 2021-01-16 10:56:35 Created meantone downward notes “la,re,sol,do,fa” fraction 3/2 adjusted -1/4 comma (2021-01-16 10:58:50) Created meantone upward notes “la,mi,si” fraction 3/2 adjusted -1/4 comma (2021-01-16 10:59:48) Created meantone upward notes “la,do#” fraction 5/4 (2021-01-16 11:04:11) Equalized intervals over series “si,fa#,do#” approx fraction 3/2 adjusted -5.4 cents to ratio = 1.495 (2021-01-16 11:05:59) Created meantone downward notes “sol,mib” fraction 5/4 (2021-01-16 11:07:31) Equalized intervals over series “mib,sib,fa” approx fraction 3/2 adjusted -5.3 cents to ratio = 1.495 (2021-01-16 11:08:47) Created meantone downward notes “do,lab” fraction 5/4 (2021-01-16 11:13:58) Created meantone upward notes “mi,sol#” fraction 5/4 adjusted 2/3 comma (2021-01-16 11:23:39) [estimation] Base note reset to ‘do’ (2021-01-16 11:25:48)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:13,
@@ -1610,8 +1678,10 @@ temperament bp3_meantone_schlick(
   comma:81/80
 )
 
+// @description Tartini-Vallotti meantone temperament (Asselin 2000 p.104) Created 2021-01-16 17:45:36 Added fifths down:
+// “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-16 17:47:11) Created meantone upward notes “do,sol,re,la,mi,si” fraction 3/2
+// adjusted -1/6 comma (2021-01-16 17:48:49)
 temperament bp3_meantone_tartini-vallotti(
-  description:"Tartini-Vallotti meantone temperament (Asselin 2000 p.104) Created 2021-01-16 17:45:36 Added fifths down: “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-16 17:47:11) Created meantone upward notes “do,sol,re,la,mi,si” fraction 3/2 adjusted -1/6 comma (2021-01-16 17:48:49)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1619,8 +1689,10 @@ temperament bp3_meantone_tartini-vallotti(
   comma:81/80
 )
 
+// @description Werckmeister III meantone temperament (Asselin 2000 p.94) Created 2021-01-16 16:53:15 Added fifths down:
+// “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-16 16:55:35) Created meantone upward notes “do,sol,re,la” fraction 3/2
+// adjusted -1/4 comma (2021-01-16 16:57:00) Created meantone upward notes “la,mi,si” fraction 3/2 (2021-01-16 16:58:34)
 temperament bp3_meantone_werckmeister_3(
-  description:"Werckmeister III meantone temperament (Asselin 2000 p.94) Created 2021-01-16 16:53:15 Added fifths down: “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-16 16:55:35) Created meantone upward notes “do,sol,re,la” fraction 3/2 adjusted -1/4 comma (2021-01-16 16:57:00) Created meantone upward notes “la,mi,si” fraction 3/2 (2021-01-16 16:58:34)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1628,8 +1700,15 @@ temperament bp3_meantone_werckmeister_3(
   comma:81/80
 )
 
+// @description Werckmeister IV meantone temperament (Asselin 2000 p.96) Created 2021-01-16 17:02:48 Added fifths down: “do,fa” starting
+// fraction 1/1 (2021-01-16 17:07:10) Created meantone downward notes “fa,sib” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:08:04)
+// Created meantone downward notes “sib,mib,sol#” fraction 3/2 adjusted 1/3 comma (2021-01-16 17:09:18) Created meantone downward notes
+// “sol#,do#” fraction 3/2 (2021-01-16 17:11:01) Created meantone downward notes “do#,fa#” fraction 3/2 adjusted -1/3 comma (2021-01-16
+// 17:12:07) Created meantone downward notes “fa#,si” fraction 3/2 (2021-01-16 17:13:21) Created meantone downward notes “si,mi” fraction
+// 3/2 adjusted -1/3 comma (2021-01-16 17:14:45) Created meantone downward notes “mi,la” fraction 3/2 (2021-01-16 17:16:07) Created meantone
+// upward notes “do,sol” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:17:11) Created meantone upward notes “sol,re” fraction 3/2
+// (2021-01-16 17:17:49)
 temperament bp3_meantone_werckmeister_4(
-  description:"Werckmeister IV meantone temperament (Asselin 2000 p.96) Created 2021-01-16 17:02:48 Added fifths down: “do,fa” starting fraction 1/1 (2021-01-16 17:07:10) Created meantone downward notes “fa,sib” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:08:04) Created meantone downward notes “sib,mib,sol#” fraction 3/2 adjusted 1/3 comma (2021-01-16 17:09:18) Created meantone downward notes “sol#,do#” fraction 3/2 (2021-01-16 17:11:01) Created meantone downward notes “do#,fa#” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:12:07) Created meantone downward notes “fa#,si” fraction 3/2 (2021-01-16 17:13:21) Created meantone downward notes “si,mi” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:14:45) Created meantone downward notes “mi,la” fraction 3/2 (2021-01-16 17:16:07) Created meantone upward notes “do,sol” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:17:11) Created meantone upward notes “sol,re” fraction 3/2 (2021-01-16 17:17:49)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1637,8 +1716,12 @@ temperament bp3_meantone_werckmeister_4(
   comma:81/80
 )
 
+// @description Werckmeister V meantone temperament (Asselin 2000 p.99) Created 2021-01-16 17:29:54 Added fifths up: “do,sol,re” starting
+// fraction 1/1 (2021-01-16 17:31:53) Created meantone upward notes “re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 17:33:19)
+// Created meantone upward notes “mi,si,fa#” fraction 3/2 (2021-01-16 17:34:05) Created meantone upward notes “fa#,do#,lab” fraction 3/2
+// adjusted -1/4 comma (2021-01-16 17:35:20) Created meantone downward notes “do,fa” fraction 3/2 adjusted -1/4 comma (2021-01-16 17:36:08)
+// Created meantone downward notes “fa,sib,mib” fraction 3/2 (2021-01-16 17:37:05)
 temperament bp3_meantone_werckmeister_5(
-  description:"Werckmeister V meantone temperament (Asselin 2000 p.99) Created 2021-01-16 17:29:54 Added fifths up: “do,sol,re” starting fraction 1/1 (2021-01-16 17:31:53) Created meantone upward notes “re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 17:33:19) Created meantone upward notes “mi,si,fa#” fraction 3/2 (2021-01-16 17:34:05) Created meantone upward notes “fa#,do#,lab” fraction 3/2 adjusted -1/4 comma (2021-01-16 17:35:20) Created meantone downward notes “do,fa” fraction 3/2 adjusted -1/4 comma (2021-01-16 17:36:08) Created meantone downward notes “fa,sib,mib” fraction 3/2 (2021-01-16 17:37:05)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1646,8 +1729,10 @@ temperament bp3_meantone_werckmeister_5(
   comma:81/80
 )
 
+// @description Zarlino meantone temperament (Asselin 2000 p.85) Created meantone upwards notes “do, sol, re, la, mi, si, fa#, do#, sol#”
+// ratio 3/2 -2/7 comma (2021-01-11 18:00:22) Created meantone downwards notes “do, fa, sib, mib” ratio 3/2 -2/7 comma (2021-01-11 18:05:45)
+// Created meantone upwards notes “do, sol” ratio 3/2 -2/7 comma (2021-01-11 18:06:40)
 temperament bp3_meantone_zarlino(
-  description:"Zarlino meantone temperament (Asselin 2000 p.85) Created meantone upwards notes “do, sol, re, la, mi, si, fa#, do#, sol#” ratio 3/2 -2/7 comma (2021-01-11 18:00:22) Created meantone downwards notes “do, fa, sib, mib” ratio 3/2 -2/7 comma (2021-01-11 18:05:45) Created meantone upwards notes “do, sol” ratio 3/2 -2/7 comma (2021-01-11 18:06:40)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1655,16 +1740,16 @@ temperament bp3_meantone_zarlino(
   comma:81/80
 )
 
+// @description Tuning of a piano with perfect fifths and stretched octave
 temperament bp3_piano(
-  description:"Tuning of a piano with perfect fifths and stretched octave",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2.004,
   divisions:12,
   ratios(1, 1.06, 1.123, 1.19, 1.261, 1.336, 1.416, 1.5, 1.59, 1.684, 1.785, 1.891)
 )
 
+// @description Tuning of a piano with perfect fifths and stretched octave
 temperament bp3_stretched_octave-Indian(
-  description:"Tuning of a piano with perfect fifths and stretched octave",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2.004,
   divisions:12,
@@ -1672,8 +1757,10 @@ temperament bp3_stretched_octave-Indian(
   comma:81/80
 )
 
+// @description This is an equal-tempered scale for BP3 + Csound. Created 2021-01-15 16:02:04Created meantone upward notes “do,sol,re,la,mi”
+// fraction 3/2 adjusted -1/5 comma (2021-01-15 16:10:04) Added fifths down: “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-15
+// 16:11:48) Created meantone upward notes “mi,si” fraction 3/2 (2021-01-15 16:13:36)
 temperament bp3_bach_temperament(
-  description:"This is an equal-tempered scale for BP3 + Csound. Created 2021-01-15 16:02:04Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/5 comma (2021-01-15 16:10:04) Added fifths down: “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-15 16:11:48) Created meantone upward notes “mi,si” fraction 3/2 (2021-01-15 16:13:36)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1681,8 +1768,10 @@ temperament bp3_bach_temperament(
   comma:81/80
 )
 
+// @description This is an equal-tempered scale for BP3 + Csound. Created 2021-01-15 15:13:09 Created meantone upward notes
+// “mib,sib,fa,do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/3 comma (2021-01-15 15:15:22) Base note reset to ‘do’ (2021-01-15
+// 15:16:00)
 temperament bp3_pure_minor-third_meantone(
-  description:"This is an equal-tempered scale for BP3 + Csound. Created 2021-01-15 15:13:09 Created meantone upward notes “mib,sib,fa,do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/3 comma (2021-01-15 15:15:22) Base note reset to ‘do’ (2021-01-15 15:16:00)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1690,8 +1779,8 @@ temperament bp3_pure_minor-third_meantone(
   comma:81/80
 )
 
+// @description A traditional scale constructed with 'simple' integer ratios
 temperament bp3_just_intonation(
-  description:"A traditional scale constructed with 'simple' integer ratios",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1699,8 +1788,13 @@ temperament bp3_just_intonation(
   comma:81/80
 )
 
+// @description Rameau meantone in B flat temperament (Asselin 2000 p.115) Created 2021-01-16 18:41:56 Created meantone upward notes
+// “do,sol,re,la,mi,si” fraction 3/2 adjusted -1/4 comma (2022-02-04 16:38:50) Created meantone downward notes “do,fa,sib” fraction 3/2
+// adjusted -1/4 comma (2022-02-04 16:40:08) Created meantone downward notes “sib,mib” fraction 3/2 (2022-02-04 16:58:49) Created meantone
+// upward notes “si,fa#” fraction 3/2 adjusted -1/4 comma (2022-02-04 17:10:32) Created meantone downward notes “mib,lab” fraction 3/2
+// (2022-02-04 17:16:00) Equalized intervals over series “fa#,reb,lab” approx fraction 3/2 adjusted 10.6 cents to ratio = 1.509 (2022-02-04
+// 17:20:39)
 temperament bp3_rameau_en_sib(
-  description:"Rameau meantone in B flat temperament (Asselin 2000 p.115) Created 2021-01-16 18:41:56 Created meantone upward notes “do,sol,re,la,mi,si” fraction 3/2 adjusted -1/4 comma (2022-02-04 16:38:50) Created meantone downward notes “do,fa,sib” fraction 3/2 adjusted -1/4 comma (2022-02-04 16:40:08) Created meantone downward notes “sib,mib” fraction 3/2 (2022-02-04 16:58:49) Created meantone upward notes “si,fa#” fraction 3/2 adjusted -1/4 comma (2022-02-04 17:10:32) Created meantone downward notes “mib,lab” fraction 3/2 (2022-02-04 17:16:00) Equalized intervals over series “fa#,reb,lab” approx fraction 3/2 adjusted 10.6 cents to ratio = 1.509 (2022-02-04 17:20:39)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1708,8 +1802,8 @@ temperament bp3_rameau_en_sib(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From ‘dhak’ to ‘sa’. Created 2020-12-17 17:19:51
 temperament bp3_Dha1_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From ‘dhak’ to ‘sa’. Created 2020-12-17 17:19:51",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1717,8 +1811,8 @@ temperament bp3_Dha1_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From ‘dha’ to ‘sa’. Created 2020-12-17 17:55:10
 temperament bp3_Dha3_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From ‘dha’ to ‘sa’. Created 2020-12-17 17:55:10",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1726,8 +1820,8 @@ temperament bp3_Dha3_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From ‘gak’ to ‘sa’. Created 2020-12-17 17:13:32
 temperament bp3_Ga1_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From ‘gak’ to ‘sa’. Created 2020-12-17 17:13:32",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1735,8 +1829,8 @@ temperament bp3_Ga1_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From ‘ga’ to ‘sa’. Created 2020-12-17 17:52:29
 temperament bp3_Ga3_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From ‘ga’ to ‘sa’. Created 2020-12-17 17:52:29",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1744,8 +1838,8 @@ temperament bp3_Ga3_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From ‘ma’ to ‘sa’. Created 2020-12-17 16:59:54
 temperament bp3_Ma1_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From ‘ma’ to ‘sa’. Created 2020-12-17 16:59:54",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1753,8 +1847,8 @@ temperament bp3_Ma1_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From ‘ma#’ to ‘sa’. Created 2020-12-17 19:45:32
 temperament bp3_Ma3_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From ‘ma#’ to ‘sa’. Created 2020-12-17 19:45:32",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1762,8 +1856,8 @@ temperament bp3_Ma3_murcchana(
   comma:81/80
 )
 
+// @description This is a derivation of scale "Ma01" (23 grades) in ‘-cs.raga’ Created 2020-12-07 09:27:54
 temperament bp3_Ma_grama_full(
-  description:"This is a derivation of scale ""Ma01"" (23 grades) in ‘-cs.raga’ Created 2020-12-07 09:27:54",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -1795,8 +1889,8 @@ temperament bp3_Ma_grama_full(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From ‘nik’ to ‘sa’. Created 2020-12-17 17:09:41
 temperament bp3_Ni1_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From ‘nik’ to ‘sa’. Created 2020-12-17 17:09:41",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1804,8 +1898,8 @@ temperament bp3_Ni1_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From ‘ni’ to ‘sa’. Created 2020-12-17 17:43:30
 temperament bp3_Ni3_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From ‘ni’ to ‘sa’. Created 2020-12-17 17:43:30",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1813,8 +1907,8 @@ temperament bp3_Ni3_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From ‘pa’ to ‘sa’. Created 2020-12-17 18:03:15
 temperament bp3_Pa3_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From ‘pa’ to ‘sa’. Created 2020-12-17 18:03:15",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1822,8 +1916,8 @@ temperament bp3_Pa3_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From ‘rek’ to ‘sa’. Created 2020-12-17 17:27:47
 temperament bp3_Re1_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From ‘rek’ to ‘sa’. Created 2020-12-17 17:27:47",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1831,8 +1925,8 @@ temperament bp3_Re1_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From ‘re’ to ‘sa’. Created 2020-12-17 18:00:02
 temperament bp3_Re3_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From ‘re’ to ‘sa’. Created 2020-12-17 18:00:02",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1840,8 +1934,8 @@ temperament bp3_Re3_murcchana(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma_grama_full" (23 grades) in ‘-cs.raga2’ Created 2020-12-17 15:44:19
 temperament bp3_Sa_murcchana(
-  description:"This is a reduction to 12 grades of scale ""Ma_grama_full"" (23 grades) in ‘-cs.raga2’ Created 2020-12-17 15:44:19",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -1849,8 +1943,8 @@ temperament bp3_Sa_murcchana(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Dha3_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:57:24
 temperament bp3_asavari1(
-  description:"This is a reduction to 7 grades of scale ""Dha3_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:57:24",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -1858,8 +1952,8 @@ temperament bp3_asavari1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Re3_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:01:33
 temperament bp3_asavari2(
-  description:"This is a reduction to 7 grades of scale ""Re3_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:01:33",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -1867,8 +1961,8 @@ temperament bp3_asavari2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Pa3_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:04:25
 temperament bp3_asavari3(
-  description:"This is a reduction to 7 grades of scale ""Pa3_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:04:25",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -1876,8 +1970,8 @@ temperament bp3_asavari3(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Sa_murcchana" (12 grades) in ‘-cs.raga’ Created 2020-12-17 18:45:55
 temperament bp3_bad-scale(
-  description:"This is a reduction to 7 grades of scale ""Sa_murcchana"" (12 grades) in ‘-cs.raga’ Created 2020-12-17 18:45:55",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -1885,8 +1979,8 @@ temperament bp3_bad-scale(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ma3_murcchana" (12 grades) in ‘-cs.raga’ Created 2020-12-17 19:50:06
 temperament bp3_bhairao1(
-  description:"This is a reduction to 7 grades of scale ""Ma3_murcchana"" (12 grades) in ‘-cs.raga’ Created 2020-12-17 19:50:06",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -1894,8 +1988,8 @@ temperament bp3_bhairao1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ni3_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:51:30
 temperament bp3_bhairao2(
-  description:"This is a reduction to 7 grades of scale ""Ni3_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:51:30",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -1903,8 +1997,8 @@ temperament bp3_bhairao2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ni3_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:48:21
 temperament bp3_bhairavi1(
-  description:"This is a reduction to 7 grades of scale ""Ni3_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:48:21",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -1912,8 +2006,8 @@ temperament bp3_bhairavi1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ga3_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:54:29
 temperament bp3_bhairavi2(
-  description:"This is a reduction to 7 grades of scale ""Ga3_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:54:29",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -1921,8 +2015,8 @@ temperament bp3_bhairavi2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Dha3_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:59:10
 temperament bp3_bhairavi3(
-  description:"This is a reduction to 7 grades of scale ""Dha3_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:59:10",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -1930,8 +2024,8 @@ temperament bp3_bhairavi3(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Re3_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:00:44
 temperament bp3_bhairavi4(
-  description:"This is a reduction to 7 grades of scale ""Re3_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:00:44",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -1939,8 +2033,8 @@ temperament bp3_bhairavi4(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Sa_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 15:49:41
 temperament bp3_bilaval1(
-  description:"This is a reduction to 7 grades of scale ""Sa_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 15:49:41",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -1948,8 +2042,8 @@ temperament bp3_bilaval1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ma_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:02:10
 temperament bp3_bilaval2(
-  description:"This is a reduction to 7 grades of scale ""Ma_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:02:10",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -1957,8 +2051,8 @@ temperament bp3_bilaval2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ni_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:10:33
 temperament bp3_bilaval3(
-  description:"This is a reduction to 7 grades of scale ""Ni_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:10:33",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -1966,8 +2060,8 @@ temperament bp3_bilaval3(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ma_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:07:12
 temperament bp3_kalyan1(
-  description:"This is a reduction to 7 grades of scale ""Ma_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:07:12",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -1975,8 +2069,8 @@ temperament bp3_kalyan1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ni_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:11:52
 temperament bp3_kalyan2(
-  description:"This is a reduction to 7 grades of scale ""Ni_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:11:52",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -1984,8 +2078,8 @@ temperament bp3_kalyan2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ga_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:14:50
 temperament bp3_kalyan3(
-  description:"This is a reduction to 7 grades of scale ""Ga_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:14:50",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -1993,8 +2087,8 @@ temperament bp3_kalyan3(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Sa_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 15:46:42
 temperament bp3_kaphi1(
-  description:"This is a reduction to 7 grades of scale ""Sa_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 15:46:42",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -2002,8 +2096,8 @@ temperament bp3_kaphi1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Re3_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:02:27
 temperament bp3_kaphi2(
-  description:"This is a reduction to 7 grades of scale ""Re3_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:02:27",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -2011,8 +2105,8 @@ temperament bp3_kaphi2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Pa3_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:05:03
 temperament bp3_kaphi3(
-  description:"This is a reduction to 7 grades of scale ""Pa3_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:05:03",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -2020,8 +2114,8 @@ temperament bp3_kaphi3(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Sa_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 15:48:50
 temperament bp3_khamaj1(
-  description:"This is a reduction to 7 grades of scale ""Sa_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 15:48:50",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -2029,8 +2123,8 @@ temperament bp3_khamaj1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ma_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:04:13
 temperament bp3_khamaj2(
-  description:"This is a reduction to 7 grades of scale ""Ma_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:04:13",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -2038,8 +2132,8 @@ temperament bp3_khamaj2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Pa3_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:06:06
 temperament bp3_khamaj3(
-  description:"This is a reduction to 7 grades of scale ""Pa3_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 18:06:06",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -2047,8 +2141,8 @@ temperament bp3_khamaj3(
   comma:81/80
 )
 
+// @description This is a reduction to 8 grades of scale "Ma3_murcchana" (12 grades) in ‘-cs.raga’ Created 2020-12-19 14:23:28
 temperament bp3_lalit1(
-  description:"This is a reduction to 8 grades of scale ""Ma3_murcchana"" (12 grades) in ‘-cs.raga’ Created 2020-12-19 14:23:28",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:8,
@@ -2056,8 +2150,8 @@ temperament bp3_lalit1(
   comma:81/80
 )
 
+// @description This is a reduction to 8 grades of scale "Ni3_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:50:24
 temperament bp3_lalit2(
-  description:"This is a reduction to 8 grades of scale ""Ni3_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:50:24",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:8,
@@ -2065,8 +2159,8 @@ temperament bp3_lalit2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ni_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:12:34
 temperament bp3_marva1(
-  description:"This is a reduction to 7 grades of scale ""Ni_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:12:34",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -2074,8 +2168,8 @@ temperament bp3_marva1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ga_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:17:10
 temperament bp3_marva2(
-  description:"This is a reduction to 7 grades of scale ""Ga_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:17:10",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -2083,8 +2177,8 @@ temperament bp3_marva2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Dha_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:24:35
 temperament bp3_marva3(
-  description:"This is a reduction to 7 grades of scale ""Dha_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:24:35",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -2092,8 +2186,8 @@ temperament bp3_marva3(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ga_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:18:42
 temperament bp3_purvi1(
-  description:"This is a reduction to 7 grades of scale ""Ga_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:18:42",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -2101,8 +2195,8 @@ temperament bp3_purvi1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Dha_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:26:08
 temperament bp3_purvi2(
-  description:"This is a reduction to 7 grades of scale ""Dha_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:26:08",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -2110,8 +2204,8 @@ temperament bp3_purvi2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Re_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:35:06
 temperament bp3_purvi3(
-  description:"This is a reduction to 7 grades of scale ""Re_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:35:06",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -2119,8 +2213,8 @@ temperament bp3_purvi3(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Dha_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:26:59
 temperament bp3_todi1(
-  description:"This is a reduction to 7 grades of scale ""Dha_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:26:59",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -2128,8 +2222,8 @@ temperament bp3_todi1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Re_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:35:38
 temperament bp3_todi2(
-  description:"This is a reduction to 7 grades of scale ""Re_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:35:38",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -2137,8 +2231,8 @@ temperament bp3_todi2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ma3_murcchana" (12 grades) in ‘-cs.raga’ Created 2020-12-17 19:47:44
 temperament bp3_todi3(
-  description:"This is a reduction to 7 grades of scale ""Ma3_murcchana"" (12 grades) in ‘-cs.raga’ Created 2020-12-17 19:47:44",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -2146,8 +2240,8 @@ temperament bp3_todi3(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ga3_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:53:30
 temperament bp3_todi4(
-  description:"This is a reduction to 7 grades of scale ""Ga3_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:53:30",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -2155,40 +2249,41 @@ temperament bp3_todi4(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Re_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:35:38
 temperament bp3_todi_aak_2(
-  description:"This is a reduction to 7 grades of scale ""Re_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:35:38",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:2,
   ratios(1, 3/2)
 )
 
+// @description This is a reduction to 7 grades of scale "Re_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:35:38
 temperament bp3_todi_aak_3(
-  description:"This is a reduction to 7 grades of scale ""Re_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:35:38",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:2,
   ratios(1, 3/2)
 )
 
+// @description This is a reduction to 7 grades of scale "Re_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:35:38
 temperament bp3_todi_ka_3(
-  description:"This is a reduction to 7 grades of scale ""Re_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:35:38",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:3,
   ratios(1, 3/2, 243/128)
 )
 
+// @description This is a reduction to 7 grades of scale "Re_murcchana" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:35:38
 temperament bp3_todi_ka_4(
-  description:"This is a reduction to 7 grades of scale ""Re_murcchana"" (12 grades) in ‘-cs.raga2’ Created 2020-12-17 17:35:38",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:4,
   ratios(1, 3/2, 128/81, 243/128)
 )
 
+// @description Bohlen-Pierce scale "just intonation" https://midi.org/microtuning-and-alternative-intonation-systems
+// https://en.wikipedia.org/wiki/Bohlen-Pierce_scale Created 2024-10-03 12:33:18
 temperament bp3_Bohlen-Pierce(
-  description:"Bohlen-Pierce scale ""just intonation"" https://midi.org/microtuning-and-alternative-intonation-systems https://en.wikipedia.org/wiki/Bohlen-Pierce_scale Created 2024-10-03 12:33:18",
   source:"Bernard Bel / Bol Processor",
   period_ratio:3,
   divisions:13,
@@ -2196,8 +2291,9 @@ temperament bp3_Bohlen-Pierce(
   comma:81/80
 )
 
+// @description This is a new scale for BP3. Creation 2020-11-17 22:55:31 This scale has been imported from a SCALA file. Created 2024-08-22
+// 07:14:33
 temperament bp3_meantone_try(
-  description:"This is a new scale for BP3.  Creation 2020-11-17 22:55:31 This scale has been imported from a SCALA file. Created 2024-08-22 07:14:33",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2.022,
   divisions:12,
@@ -2205,8 +2301,9 @@ temperament bp3_meantone_try(
   comma:81/80
 )
 
+// @description This is a new scale for BP3. Creation 2020-11-17 22:55:31 Same as meantone_try except that the base key is #64. Created
+// 2024-08-22 07:14:33
 temperament bp3_meantone_try2(
-  description:"This is a new scale for BP3.  Creation 2020-11-17 22:55:31 Same as meantone_try except that the base key is #64. Created 2024-08-22 07:14:33",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2.022,
   divisions:12,
@@ -2214,8 +2311,8 @@ temperament bp3_meantone_try2(
   comma:81/80
 )
 
+// @description Goya-17 plus 484, 676, and 1180 cents This scale has been imported from a SCALA file. Created 2024-08-22 07:41:27
 temperament bp3_zest24-supergoya17plus3_Db(
-  description:"Goya-17 plus 484, 676, and 1180 cents This scale has been imported from a SCALA file. Created 2024-08-22 07:41:27",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:20,
@@ -2244,8 +2341,9 @@ temperament bp3_zest24-supergoya17plus3_Db(
   comma:81/80
 )
 
+// @description Quarter-comma meantone (Pietro Aron, 1523): the fifth is narrowed by a quarter of a syntonic comma, the major third 5/4 and
+// the minor sixth 8/5 are pure. Twelve degrees on the table C Db D Eb E F Gb G Ab A Bb B.
 temperament bp3_meantone1(
-  description:"Mesotonique au quart de comma syntonique (Pietro Aron, 1523) : la quinte est diminuee d'un quart de comma, la tierce majeure 5/4 et la sixte mineure 8/5 sont pures. Douze degres sur la table C Db D Eb E F Gb G Ab A Bb B.",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2265,8 +2363,10 @@ temperament bp3_meantone1(
   )
 )
 
+// @description Kellner's BACH temperament (Asselin 2000 p.101) Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/5
+// comma (2021-01-15 16:10:04) Added fifths down: “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-15 16:11:48) Created meantone
+// upward notes “mi,si” fraction 3/2 (2021-01-15 16:13:36)
 temperament bp3_BACH(
-  description:"Kellner's BACH temperament (Asselin 2000 p.101) Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/5 comma (2021-01-15 16:10:04) Added fifths down: “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-15 16:11:48) Created meantone upward notes “mi,si” fraction 3/2 (2021-01-15 16:13:36)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2274,16 +2374,18 @@ temperament bp3_BACH(
   comma:81/80
 )
 
+// @description A traditional scale constructed with simple integer ratios
 temperament bp3_Zarlino_natural(
-  description:"A traditional scale constructed with simple integer ratios",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
   ratios(1, 16/15, 9/8, 6/5, 5/4, 4/3, 64/45, 3/2, 8/5, 5/3, 16/9, 15/8)
 )
 
+// @description Barca temperament (Asselin 2000 p.106) Created 2021-01-16 17:56:02 Added fifths down: “do,fa,sib” starting fraction 1/1
+// (2021-01-16 17:57:57) Created meantone upward notes “do,sol,re,la,mi,si,fa#” fraction 3/2 adjusted -1/6 comma (2021-01-16 18:02:25)
+// Created meantone upward notes “fa#,do#,sol#,re#” fraction 3/2 (2021-01-16 18:03:49)
 temperament bp3_barca(
-  description:"Barca temperament (Asselin 2000 p.106) Created 2021-01-16 17:56:02 Added fifths down: “do,fa,sib” starting fraction 1/1 (2021-01-16 17:57:57) Created meantone upward notes “do,sol,re,la,mi,si,fa#” fraction 3/2 adjusted -1/6 comma (2021-01-16 18:02:25) Created meantone upward notes “fa#,do#,sol#,re#” fraction 3/2 (2021-01-16 18:03:49)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2291,8 +2393,11 @@ temperament bp3_barca(
   comma:81/80
 )
 
+// @description Béthisy temperament (Asselin 2000 p.121) Created 2021-01-16 19:21:57 Created meantone upward notes “do,sol,re,la,mi”
+// fraction 3/2 adjusted -1/4 comma (2021-01-16 19:23:36) Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted 1/12 comma
+// (2021-01-16 19:25:49) Created meantone downward notes “mib,sol#” fraction 3/2 (2021-01-16 19:26:26) Equalized intervals over series
+// “mi,si,fa#,do#,sol#” approx fraction 3/2 adjusted -1.7 cents to ratio = 1.499 (2021-01-16 19:28:09)
 temperament bp3_bethisy(
-  description:"Béthisy temperament (Asselin 2000 p.121) Created 2021-01-16 19:21:57 Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 19:23:36) Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted 1/12 comma (2021-01-16 19:25:49) Created meantone downward notes “mib,sol#” fraction 3/2 (2021-01-16 19:26:26) Equalized intervals over series “mi,si,fa#,do#,sol#” approx fraction 3/2 adjusted -1.7 cents to ratio = 1.499 (2021-01-16 19:28:09)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2300,8 +2405,10 @@ temperament bp3_bethisy(
   comma:81/80
 )
 
+// @description Chaumont temperament (Asselin 2000 p.109) Created 2021-01-16 18:06:34 Created meantone upward notes
+// “do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:08:41) Created meantone downward notes “do,fa,sib,mib”
+// fraction 3/2 adjusted -1/4 comma (2021-01-16 18:09:41)
 temperament bp3_chaumont(
-  description:"Chaumont temperament (Asselin 2000 p.109) Created 2021-01-16 18:06:34 Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:08:41) Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:09:41)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2309,8 +2416,10 @@ temperament bp3_chaumont(
   comma:81/80
 )
 
+// @description Classic temperament (Asselin 2000 p.76) Equivalent to Chaumont (p.109) Created 2021-01-14 15:38:08 Created meantone upward
+// notes “do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:20) Created meantone downward notes
+// “do,fa,sib,mib” fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:57)
 temperament bp3_classic(
-  description:"Classic temperament (Asselin 2000 p.76) Equivalent to Chaumont (p.109) Created 2021-01-14 15:38:08 Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:20) Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:57)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2318,8 +2427,11 @@ temperament bp3_classic(
   comma:81/80
 )
 
+// @description Corrette temperament (Asselin 2000 p.111) Created 2021-01-16 18:13:10 Created meantone upward notes
+// “fa,do,sol,re,la,mi,si,fa#,do#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:16:40) Created meantone downward notes “fa,sib,mib”
+// fraction 3/2 adjusted 1/12 comma (2021-01-16 18:34:13) Created meantone upward notes “do#,sol#” fraction 3/2 adjusted 1/12 comma
+// (2021-01-16 18:38:14) Base note reset to ‘do’ (2021-01-16 18:40:53)
 temperament bp3_corrette(
-  description:"Corrette temperament (Asselin 2000 p.111) Created 2021-01-16 18:13:10 Created meantone upward notes “fa,do,sol,re,la,mi,si,fa#,do#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:16:40) Created meantone downward notes “fa,sib,mib” fraction 3/2 adjusted 1/12 comma (2021-01-16 18:34:13) Created meantone upward notes “do#,sol#” fraction 3/2 adjusted 1/12 comma (2021-01-16 18:38:14) Base note reset to ‘do’ (2021-01-16 18:40:53)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2327,8 +2439,11 @@ temperament bp3_corrette(
   comma:81/80
 )
 
+// @description D'Alembert-Rousseau temperament (Asselin 2000 p.119) Created 2021-01-16 19:04:44 Created meantone upward notes
+// “do,sol,re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 19:12:08) Created meantone downward notes “do,fa,sib,mib,sol#” fraction
+// 3/2 adjusted 1/12 comma (2021-01-16 19:17:25) Equalized intervals over series “sol#,do#,fa#,si,mi” approx fraction 2/3 adjusted 2.2 cents
+// to ratio = 0.668 (2021-01-16 19:19:34)
 temperament bp3_d_alembert_rousseau(
-  description:"D'Alembert-Rousseau temperament (Asselin 2000 p.119) Created 2021-01-16 19:04:44 Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 19:12:08) Created meantone downward notes “do,fa,sib,mib,sol#” fraction 3/2 adjusted 1/12 comma (2021-01-16 19:17:25) Equalized intervals over series “sol#,do#,fa#,si,mi” approx fraction 2/3 adjusted 2.2 cents to ratio = 0.668 (2021-01-16 19:19:34)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2336,8 +2451,8 @@ temperament bp3_d_alembert_rousseau(
   comma:81/80
 )
 
+// @description This is an equal-tempered scale for BP3 + Csound. Created 2021-02-13 19:09:08
 temperament bp3_equal_tempered(
-  description:"This is an equal-tempered scale for BP3 + Csound. Created 2021-02-13 19:09:08",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2345,8 +2460,11 @@ temperament bp3_equal_tempered(
   comma:81/80
 )
 
+// @description Kirnberger II temperament (Asselin 2000 p. 90) Created 2021-01-16 11:52:39 Added fifths down: “do,fa,sib,mib,lab,reb”
+// starting fraction 1/1 (2021-01-16 11:54:59) Added fifths up: “do,sol,re” starting fraction 1/1 (2021-01-16 11:55:59) Created meantone
+// upward notes “re,la,mi” fraction 3/2 adjusted -1/2 comma (2021-01-16 11:57:13) Created meantone upward notes “mi,si,fa#” fraction 3/2
+// (2021-01-16 11:58:24)
 temperament bp3_kirnberger_2(
-  description:"Kirnberger II temperament (Asselin 2000 p. 90) Created 2021-01-16 11:52:39 Added fifths down: “do,fa,sib,mib,lab,reb” starting fraction 1/1 (2021-01-16 11:54:59) Added fifths up: “do,sol,re” starting fraction 1/1 (2021-01-16 11:55:59) Created meantone upward notes “re,la,mi” fraction 3/2 adjusted -1/2 comma (2021-01-16 11:57:13) Created meantone upward notes “mi,si,fa#” fraction 3/2 (2021-01-16 11:58:24)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2354,8 +2472,10 @@ temperament bp3_kirnberger_2(
   comma:81/80
 )
 
+// @description Kirnberger III temperament (Asselin 2000 p.93) Created 2021-01-16 12:02:11 Added fifths down: “do,fa,sib,mib,lab,reb”
+// starting fraction 1/1 (2021-01-16 12:03:52) Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16
+// 12:05:20) Created meantone upward notes “mi,si,fa#” fraction 3/2 (2021-01-16 12:06:10)
 temperament bp3_kirnberger_3(
-  description:"Kirnberger III temperament (Asselin 2000 p.93) Created 2021-01-16 12:02:11 Added fifths down: “do,fa,sib,mib,lab,reb” starting fraction 1/1 (2021-01-16 12:03:52) Created meantone upward notes “do,sol,re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 12:05:20) Created meantone upward notes “mi,si,fa#” fraction 3/2 (2021-01-16 12:06:10)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2363,8 +2483,11 @@ temperament bp3_kirnberger_3(
   comma:81/80
 )
 
+// @description Marpourg temperament (Asselin 2000 p.117) Created 2021-01-16 18:58:49 Created meantone upward notes
+// “fa,do,sol,re,la,mi,si,fa#” fraction 3/2 adjusted -1/4 comma (2021-01-16 19:00:42) Equalized intervals over series
+// “fa,la#,re#,sol#,do#,fa#” approx fraction 2/3 adjusted -2.8 cents to ratio = 0.666 (2021-01-16 19:02:32) Base note reset to ‘do’
+// (2021-01-16 19:03:15)
 temperament bp3_marpourg(
-  description:"Marpourg temperament (Asselin 2000 p.117) Created 2021-01-16 18:58:49 Created meantone upward notes “fa,do,sol,re,la,mi,si,fa#” fraction 3/2 adjusted -1/4 comma (2021-01-16 19:00:42) Equalized intervals over series “fa,la#,re#,sol#,do#,fa#” approx fraction 2/3 adjusted -2.8 cents to ratio = 0.666 (2021-01-16 19:02:32) Base note reset to ‘do’ (2021-01-16 19:03:15)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2372,8 +2495,10 @@ temperament bp3_marpourg(
   comma:81/80
 )
 
+// @description Pure minor-thirds temperament (Asselin 2000 p.82) Created 2021-01-15 15:13:09 Created meantone upward notes
+// “mib,sib,fa,do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/3 comma (2021-01-15 15:15:22) Base note reset to ‘do’ (2021-01-15
+// 15:16:00)
 temperament bp3_pure_minor-thirds(
-  description:"Pure minor-thirds temperament (Asselin 2000 p.82) Created 2021-01-15 15:13:09 Created meantone upward notes “mib,sib,fa,do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/3 comma (2021-01-15 15:15:22) Base note reset to ‘do’ (2021-01-15 15:16:00)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2381,8 +2506,12 @@ temperament bp3_pure_minor-thirds(
   comma:81/80
 )
 
+// @description Rameau meantone in C temperament (Asselin 2000 p.113) Created 2021-01-16 18:41:56 Created meantone upward notes
+// “do,sol,re,la,mi,si,fa#,do#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:44:03) Added fifths down: “do,fa” starting fraction 1/1
+// (2021-01-16 18:49:25) Created meantone upward notes “do#,sol#” fraction 3/2 adjusted -1/4 comma (2022-02-04 18:09:16) Created meantone
+// downward notes “fa,la#” fraction 3/2 (2021-01-16 18:54:20) Equalized intervals over series “sol#,re#,la#” approx fraction 3/2 adjusted
+// 9.1 cents to ratio = 1.508 (2022-02-04 18:10:27)
 temperament bp3_rameau_en_do(
-  description:"Rameau meantone in C temperament (Asselin 2000 p.113) Created 2021-01-16 18:41:56 Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#” fraction 3/2 adjusted -1/4 comma (2021-01-16 18:44:03) Added fifths down: “do,fa” starting fraction 1/1 (2021-01-16 18:49:25) Created meantone upward notes “do#,sol#” fraction 3/2 adjusted -1/4 comma (2022-02-04 18:09:16) Created meantone downward notes “fa,la#” fraction 3/2 (2021-01-16 18:54:20) Equalized intervals over series “sol#,re#,la#” approx fraction 3/2 adjusted 9.1 cents to ratio = 1.508 (2022-02-04 18:10:27)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2390,8 +2519,10 @@ temperament bp3_rameau_en_do(
   comma:81/80
 )
 
+// @description Sauveur temperament (Asselin 2000 p. 81) Created 2021-01-16 10:37:52 Created meantone downward notes “do,fa,sib,mib”
+// fraction 3/2 adjusted -1/5 comma (2021-01-16 10:44:41) Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2
+// adjusted -1/5 comma (2021-01-16 10:48:56)
 temperament bp3_sauveur(
-  description:"Sauveur temperament (Asselin 2000 p. 81) Created 2021-01-16 10:37:52 Created meantone downward notes “do,fa,sib,mib” fraction 3/2 adjusted -1/5 comma (2021-01-16 10:44:41) Created meantone upward notes “do,sol,re,la,mi,si,fa#,do#,sol#” fraction 3/2 adjusted -1/5 comma (2021-01-16 10:48:56)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2399,8 +2530,8 @@ temperament bp3_sauveur(
   comma:81/80
 )
 
+// @description Two series of perfect fifths including ascending major thirds (Asselin 2000 p.62) Created 2021-01-08 09:02:23
 temperament bp3_scale_1(
-  description:"Two series of perfect fifths including ascending major thirds (Asselin 2000 p.62) Created 2021-01-08 09:02:23",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:29,
@@ -2437,8 +2568,14 @@ temperament bp3_scale_1(
   )
 )
 
+// @description Schlick temperament (Asselin 2000 p.88) Created 2021-01-16 10:56:35 [INCORRECT] Created meantone downward notes
+// “la,re,sol,do,fa” fraction 3/2 adjusted -1/4 comma (2021-01-16 10:58:50) Created meantone upward notes “la,mi,si” fraction 3/2 adjusted
+// -1/4 comma (2021-01-16 10:59:48) Created meantone upward notes “la,do#” fraction 5/4 (2021-01-16 11:04:11) Equalized intervals over
+// series “si,fa#,do#” approx fraction 3/2 adjusted -5.4 cents to ratio = 1.495 (2021-01-16 11:05:59) Created meantone downward notes
+// “sol,mib” fraction 5/4 (2021-01-16 11:07:31) Equalized intervals over series “mib,sib,fa” approx fraction 3/2 adjusted -5.3 cents to
+// ratio = 1.495 (2021-01-16 11:08:47) Created meantone downward notes “do,lab” fraction 5/4 (2021-01-16 11:13:58) Created meantone upward
+// notes “mi,sol#” fraction 5/4 adjusted 2/3 comma (2021-01-16 11:23:39) [estimation] Base note reset to ‘do’ (2021-01-16 11:25:48)
 temperament bp3_schlick_bad(
-  description:"Schlick temperament (Asselin 2000 p.88) Created 2021-01-16 10:56:35 [INCORRECT] Created meantone downward notes “la,re,sol,do,fa” fraction 3/2 adjusted -1/4 comma (2021-01-16 10:58:50) Created meantone upward notes “la,mi,si” fraction 3/2 adjusted -1/4 comma (2021-01-16 10:59:48) Created meantone upward notes “la,do#” fraction 5/4 (2021-01-16 11:04:11) Equalized intervals over series “si,fa#,do#” approx fraction 3/2 adjusted -5.4 cents to ratio = 1.495 (2021-01-16 11:05:59) Created meantone downward notes “sol,mib” fraction 5/4 (2021-01-16 11:07:31) Equalized intervals over series “mib,sib,fa” approx fraction 3/2 adjusted -5.3 cents to ratio = 1.495 (2021-01-16 11:08:47) Created meantone downward notes “do,lab” fraction 5/4 (2021-01-16 11:13:58) Created meantone upward notes “mi,sol#” fraction 5/4 adjusted 2/3 comma (2021-01-16 11:23:39) [estimation] Base note reset to ‘do’ (2021-01-16 11:25:48)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:13,
@@ -2446,8 +2583,10 @@ temperament bp3_schlick_bad(
   comma:81/80
 )
 
+// @description Tartini-Vallotti temperament (Asselin 2000 p.104) Created 2021-01-16 17:45:36 Added fifths down:
+// “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-16 17:47:11) Created meantone upward notes “do,sol,re,la,mi,si” fraction 3/2
+// adjusted -1/6 comma (2021-01-16 17:48:49)
 temperament bp3_tartini-vallotti(
-  description:"Tartini-Vallotti temperament (Asselin 2000 p.104) Created 2021-01-16 17:45:36 Added fifths down: “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-16 17:47:11) Created meantone upward notes “do,sol,re,la,mi,si” fraction 3/2 adjusted -1/6 comma (2021-01-16 17:48:49)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2455,8 +2594,10 @@ temperament bp3_tartini-vallotti(
   comma:81/80
 )
 
+// @description Werckmeister III temperament (Asselin 2000 p.94) Created 2021-01-16 16:53:15 Added fifths down: “do,fa,sib,mib,lab,reb,solb”
+// starting fraction 1/1 (2021-01-16 16:55:35) Created meantone upward notes “do,sol,re,la” fraction 3/2 adjusted -1/4 comma (2021-01-16
+// 16:57:00) Created meantone upward notes “la,mi,si” fraction 3/2 (2021-01-16 16:58:34)
 temperament bp3_werckmeister_3(
-  description:"Werckmeister III temperament (Asselin 2000 p.94) Created 2021-01-16 16:53:15 Added fifths down: “do,fa,sib,mib,lab,reb,solb” starting fraction 1/1 (2021-01-16 16:55:35) Created meantone upward notes “do,sol,re,la” fraction 3/2 adjusted -1/4 comma (2021-01-16 16:57:00) Created meantone upward notes “la,mi,si” fraction 3/2 (2021-01-16 16:58:34)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2464,8 +2605,14 @@ temperament bp3_werckmeister_3(
   comma:81/80
 )
 
+// @description Werckmeister IV temperament (Asselin 2000 p.96) Created 2021-01-16 17:02:48 Added fifths down: “do,fa” starting fraction 1/1
+// (2021-01-16 17:07:10) Created meantone downward notes “fa,sib” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:08:04) Created meantone
+// downward notes “sib,mib,sol#” fraction 3/2 adjusted 1/3 comma (2021-01-16 17:09:18) Created meantone downward notes “sol#,do#” fraction
+// 3/2 (2021-01-16 17:11:01) Created meantone downward notes “do#,fa#” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:12:07) Created
+// meantone downward notes “fa#,si” fraction 3/2 (2021-01-16 17:13:21) Created meantone downward notes “si,mi” fraction 3/2 adjusted -1/3
+// comma (2021-01-16 17:14:45) Created meantone downward notes “mi,la” fraction 3/2 (2021-01-16 17:16:07) Created meantone upward notes
+// “do,sol” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:17:11) Created meantone upward notes “sol,re” fraction 3/2 (2021-01-16 17:17:49)
 temperament bp3_werckmeister_4(
-  description:"Werckmeister IV temperament (Asselin 2000 p.96) Created 2021-01-16 17:02:48 Added fifths down: “do,fa” starting fraction 1/1 (2021-01-16 17:07:10) Created meantone downward notes “fa,sib” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:08:04) Created meantone downward notes “sib,mib,sol#” fraction 3/2 adjusted 1/3 comma (2021-01-16 17:09:18) Created meantone downward notes “sol#,do#” fraction 3/2 (2021-01-16 17:11:01) Created meantone downward notes “do#,fa#” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:12:07) Created meantone downward notes “fa#,si” fraction 3/2 (2021-01-16 17:13:21) Created meantone downward notes “si,mi” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:14:45) Created meantone downward notes “mi,la” fraction 3/2 (2021-01-16 17:16:07) Created meantone upward notes “do,sol” fraction 3/2 adjusted -1/3 comma (2021-01-16 17:17:11) Created meantone upward notes “sol,re” fraction 3/2 (2021-01-16 17:17:49)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2473,8 +2620,12 @@ temperament bp3_werckmeister_4(
   comma:81/80
 )
 
+// @description Werckmeister V temperament (Asselin 2000 p.99) Created 2021-01-16 17:29:54 Added fifths up: “do,sol,re” starting fraction
+// 1/1 (2021-01-16 17:31:53) Created meantone upward notes “re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 17:33:19) Created
+// meantone upward notes “mi,si,fa#” fraction 3/2 (2021-01-16 17:34:05) Created meantone upward notes “fa#,do#,lab” fraction 3/2 adjusted
+// -1/4 comma (2021-01-16 17:35:20) Created meantone downward notes “do,fa” fraction 3/2 adjusted -1/4 comma (2021-01-16 17:36:08) Created
+// meantone downward notes “fa,sib,mib” fraction 3/2 (2021-01-16 17:37:05)
 temperament bp3_werckmeister_5(
-  description:"Werckmeister V temperament (Asselin 2000 p.99) Created 2021-01-16 17:29:54 Added fifths up: “do,sol,re” starting fraction 1/1 (2021-01-16 17:31:53) Created meantone upward notes “re,la,mi” fraction 3/2 adjusted -1/4 comma (2021-01-16 17:33:19) Created meantone upward notes “mi,si,fa#” fraction 3/2 (2021-01-16 17:34:05) Created meantone upward notes “fa#,do#,lab” fraction 3/2 adjusted -1/4 comma (2021-01-16 17:35:20) Created meantone downward notes “do,fa” fraction 3/2 adjusted -1/4 comma (2021-01-16 17:36:08) Created meantone downward notes “fa,sib,mib” fraction 3/2 (2021-01-16 17:37:05)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2482,8 +2633,10 @@ temperament bp3_werckmeister_5(
   comma:81/80
 )
 
+// @description Zarlino temperament (Asselin 2000 p.85) Created meantone upwards notes “do, sol, re, la, mi, si, fa#, do#, sol#” ratio 3/2
+// -2/7 comma (2021-01-11 18:00:22) Created meantone downwards notes “do, fa, sib, mib” ratio 3/2 -2/7 comma (2021-01-11 18:05:45) Created
+// meantone upwards notes “do, sol” ratio 3/2 -2/7 comma (2021-01-11 18:06:40)
 temperament bp3_zarlino(
-  description:"Zarlino temperament (Asselin 2000 p.85) Created meantone upwards notes “do, sol, re, la, mi, si, fa#, do#, sol#” ratio 3/2 -2/7 comma (2021-01-11 18:00:22) Created meantone downwards notes “do, fa, sib, mib” ratio 3/2 -2/7 comma (2021-01-11 18:05:45) Created meantone upwards notes “do, sol” ratio 3/2 -2/7 comma (2021-01-11 18:06:40)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -2491,8 +2644,9 @@ temperament bp3_zarlino(
   comma:81/80
 )
 
+// @description Johnston final lattice for "The Un-tempered Pianos" and "K" This scale has been imported from a SCALA file. Created
+// 2024-08-22 07:44:18
 temperament bp3_johnston_unt3(
-  description:"Johnston final lattice for ""The Un-tempered Pianos"" and ""K"" This scale has been imported from a SCALA file. Created 2024-08-22 07:44:18",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:25,
@@ -2525,8 +2679,9 @@ temperament bp3_johnston_unt3(
   )
 )
 
+// @description Henri Arnaut De Zwolle's modified meantone tuning (c. 1440) This scale has been imported from a SCALA file. Created
+// 2024-08-22 07:39:55
 temperament bp3_zwolle2(
-  description:"Henri Arnaut De Zwolle's modified meantone tuning (c. 1440) This scale has been imported from a SCALA file. Created 2024-08-22 07:39:55",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:3,
@@ -2534,8 +2689,10 @@ temperament bp3_zwolle2(
   comma:81/80
 )
 
+// @description Native 22-shruti table from -to.tryShruti (BP3, 23 ratios over 23 degrees). Pythagorean convention at degree 12 (729/512).
+// DISTINCT from bp3_grama (Arnold's scholarly edition by B. Bel, 64/45 at the same degree) — two valid systems, this one is the native
+// engine's table.
 temperament bp3_shruti23_native(
-  description:"Table native 22-shruti de -to.tryShruti (BP3, 23 ratios sur 23 degrés). Convention pythagoricienne au degré 12 (729/512). DISTINCT de bp3_grama (édition savante d'Arnold par B. Bel, 64/45 au même degré) — deux systèmes valides, celui-ci est la table du moteur natif.",
   source:bp3-engine/test-data/-to.tryShruti,
   period_ratio:2,
   divisions:23,

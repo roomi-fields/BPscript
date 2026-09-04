@@ -1,77 +1,78 @@
 types
 
 // @documented
+// @description Controls specific to the Web Audio transport — EXACT match with LIBRAIRIES.md:173.
 def audio(
   resolves:audio,
   name:audio,
   resolvedBy:"runtime-audio",
-  description:"Contrôles spécifiques au transport Web Audio — match EXACT LIBRAIRIES.md:173.",
   section:controls
 )
 
+// @description Oscillator waveform (Web Audio)
 control wave(
   args(type),
   values(sine, triangle, square, sawtooth),
   value:triangle,
-  description:"Oscillator waveform (Web Audio)",
   scope(symbol, group, rule, flow),
   transportGroup:audio
 )
 
+// @description Envelope attack in ms (Web Audio)
 control attack(
   args(ms),
   range(1, 5000),
   unit:"ms",
   value:20,
-  description:"Envelope attack in ms (Web Audio)",
   scope(symbol, group, rule, flow),
   transportGroup:audio
 )
 
+// @description Envelope release in ms (Web Audio)
 control release(
   args(ms),
   range(1, 5000),
   unit:"ms",
   value:100,
-  description:"Envelope release in ms (Web Audio)",
   scope(symbol, group, rule, flow),
   transportGroup:audio
 )
 
+// @description Detune in cents (Web Audio)
 control detune(
   args(cents),
   range(-1200, 1200),
   unit:"cents",
   value:0,
-  description:"Detune in cents (Web Audio)",
   scope(symbol, group, rule, flow),
   transportGroup:audio
 )
 
+// @description Lowpass filter cutoff Hz (Web Audio)
 control filter(
   args(freq),
   range(20, 20000),
   unit:"Hz",
   value:20000,
-  description:"Lowpass filter cutoff Hz (Web Audio)",
   scope(symbol, group, rule, flow),
   transportGroup:audio
 )
 
+// @description Filter resonance Q (Web Audio)
 control filterQ(
   args(value),
   range(0, 30),
   value:1,
-  description:"Filter resonance Q (Web Audio)",
   scope(symbol, group, rule, flow),
   transportGroup:audio
 )
 
+// @description Actor gain — a permanent stage between an actor's voices and the master. The audio runtime converts this value into linear
+// gain.
 control volume(
   implements:expression.volume,
   args(value),
   range(0, 127),
-  description:"Gain d'acteur — un étage permanent entre les voix d'un acteur et le maître. Le runtime audio convertit cette valeur en gain linéaire.",
   scope(symbol, group, rule, flow, scene),
   transportGroup:audio
 )

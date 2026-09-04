@@ -3,8 +3,8 @@ types
 // @documented
 def alphabets(resolvedBy:Kairos, resolves:alphabet)
 
+// @description Western chromatic — 7 natural notes, 5 alteration levels
 alphabet western(
-  description:"Western chromatic — 7 natural notes, 5 alteration levels",
   runtime:audio,
   tuning:western_12TET,
   octaves:western,
@@ -16,8 +16,8 @@ alphabet western(
   terminals(C(), D(), E(), F(), G(), A(), B())
 )
 
+// @description Indian sargam — 7 svaras
 alphabet sargam(
-  description:"Indian sargam — 7 svaras",
   runtime:audio,
   tuning:sargam_12TET,
   octaves:saptak,
@@ -29,8 +29,9 @@ alphabet sargam(
   terminals(sa(), re(), ga(), ma(), pa(), dha(), ni())
 )
 
+// @description Sargam AS THE NATIVE BP3 ENGINE NAMES IT (INDIAN note convention) — BP3 test alphabet, alongside the others (Romain's ruling
+// 2026-07-19)
 alphabet bp3_indian(
-  description:"Sargam TEL QUE LE MOTEUR BP3 NATIF le nomme (convention de notes INDIAN) — alphabet de test BP3, à côté des autres (arbitrage Romain 2026-07-19)",
   runtime:audio,
   tuning:bp3_indian_12TET,
   octaves:bp3,
@@ -42,8 +43,9 @@ alphabet bp3_indian(
   terminals(sa(), re(), ga(), ma(), pa(), dha(), ni())
 )
 
+// @description ENGLISH note convention of the native BP3 engine — BP3 test alphabet, alongside the others (Romain's decision 2026-07-29:
+// the mechanism uses only alphabets)
 alphabet bp3_english(
-  description:"Convention de notes ENGLISH du moteur BP3 natif — alphabet de test BP3, à côté des autres (décision Romain 2026-07-29 : la mécanique n'utilise que des alphabets)",
   runtime:audio,
   tuning:bp3_english_12TET,
   octaves:bp3,
@@ -55,8 +57,8 @@ alphabet bp3_english(
   terminals(C(), D(), E(), F(), G(), A(), B())
 )
 
+// @description FRENCH note convention of the native BP3 engine — BP3 test alphabet, alongside the others (Romain's decision 2026-07-29)
 alphabet bp3_fr(
-  description:"Convention de notes FRENCH du moteur BP3 natif — alphabet de test BP3, à côté des autres (décision Romain 2026-07-29)",
   runtime:audio,
   tuning:bp3_fr_12TET,
   octaves:bp3_fr,
@@ -68,8 +70,8 @@ alphabet bp3_fr(
   terminals(do(), re(), mi(), fa(), sol(), la(), si())
 )
 
+// @description Latin solfège — do ré mi fa sol la si
 alphabet solfege(
-  description:"Solfège latin — do ré mi fa sol la si",
   runtime:audio,
   tuning:solfege_12TET,
   octaves:western,
@@ -81,8 +83,8 @@ alphabet solfege(
   terminals(do(), re(), mi(), fa(), sol(), la(), si())
 )
 
+// @description Arabic — 7 perde (degree names) with quarter-tone alterations. rast≈do, sikah = neutral third, awj = neutral seventh.
 alphabet arabic(
-  description:"Arabic — 7 perde (noms de degrés) with quarter-tone alterations. rast≈do, sikah=tierce neutre, awj=septième neutre.",
   runtime:audio,
   tuning:arabic_24TET,
   diapason:440,
@@ -92,8 +94,8 @@ alphabet arabic(
   terminals(rast(), dukah(), sikah(), jaharkah(), nawa(), husayni(), awj())
 )
 
+// @description Turkish makam — note names from Ottoman/Turkish tradition
 alphabet turkish(
-  description:"Turkish makam — note names from Ottoman/Turkish tradition",
   runtime:audio,
   tuning:turkish_53TET,
   octaves:turkish,
@@ -122,8 +124,8 @@ alphabet turkish(
   )
 )
 
+// @description Javanese gamelan pelog — 7 tones
 alphabet gamelan_pelog(
-  description:"Javanese gamelan pelog — 7 tones",
   runtime:audio,
   tuning:gamelan_pelog,
   diapason:282,
@@ -133,8 +135,8 @@ alphabet gamelan_pelog(
   terminals(nem(), barang(), bem(), gulu(), lima(), enam(), pitu())
 )
 
+// @description Javanese gamelan slendro — 5 tones
 alphabet gamelan_slendro(
-  description:"Javanese gamelan slendro — 5 tones",
   runtime:audio,
   tuning:gamelan_slendro,
   diapason:282,
@@ -144,8 +146,8 @@ alphabet gamelan_slendro(
   terminals(nem(), barang(), gulu(), dada(), lima())
 )
 
+// @description Shakuhachi — 5 base fingerings (Kinko-ryū)
 alphabet shakuhachi(
-  description:"Shakuhachi — 5 base fingerings (Kinko-ryū)",
   runtime:audio,
   tuning:shakuhachi_12TET,
   octaves:shakuhachi,
@@ -157,8 +159,8 @@ alphabet shakuhachi(
   terminals(ro(), tsu(), re(), chi(), ri())
 )
 
+// @description Bohlen-Pierce — 13 pitch classes in a tritave
 alphabet bohlen_pierce(
-  description:"Bohlen-Pierce — 13 pitch classes in a tritave",
   runtime:audio,
   tuning:bohlen_pierce_equal,
   diapason:440,
@@ -168,8 +170,8 @@ alphabet bohlen_pierce(
   terminals(C(), Db(), D(), E(), F(), Gb(), G(), H(), Jb(), J(), A(), Bb(), B())
 )
 
+// @description Tabla bols — the ATOMIC syllables, those that no other one composes
 alphabet tabla(
-  description:"Bols de tabla — les syllabes ATOMIQUES, celles qu'aucune autre ne compose",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
@@ -199,8 +201,8 @@ alphabet tabla(
   )
 )
 
+// @description Abstract symbols — single lowercase letters, no pitch. For structural test scenes.
 alphabet simple(
-  description:"Abstract symbols — single lowercase letters, no pitch. For structural test scenes.",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
@@ -239,8 +241,9 @@ alphabet simple(
   )
 )
 
+// @description 22-shruti as named by BP3 — 23 microtonal degrees (sa, r1..r4, g1..g4, m1, m2, m3p1, m4p2, p3, p4, d1..d4, n1..n4). Names
+// verbatim from -to.tryShruti, tonic sa.
 alphabet shruti23(
-  description:"22-shruti nommé BP3 — 23 degrés microtonaux (sa, r1..r4, g1..g4, m1, m2, m3p1, m4p2, p3, p4, d1..d4, n1..n4). Noms verbatim de -to.tryShruti, tonique sa.",
   runtime:audio,
   tuning:shruti23_native,
   octaves:saptak_us,
@@ -276,8 +279,8 @@ alphabet shruti23(
   )
 )
 
+// @description Csound sound objects from the tryCsoundObjects test grammar (pitchless)
 alphabet tryCsoundObjects(
-  description:"Objets sonores Csound de la grammaire de test tryCsoundObjects (sans hauteur)",
   runtime:audio,
   resolvesPitch:false,
   alterations(),

@@ -75,6 +75,72 @@ function sacEnObjet(sac, fichier = "?", declaration = "?") {
   }
   return out;
 }
+var MARQUE_DESCRIPTION = /^[ \t]*\/\/[ \t]*@description[ \t]+(.*\S)[ \t]*$/;
+var SUITE_DE_MARQUE = /^[ \t]*\/\/[ \t]*(?!@)(.*\S)[ \t]*$/;
+function placesQuiPortentUneProse(ast) {
+  const table = /* @__PURE__ */ new Map();
+  const vus = /* @__PURE__ */ new Set();
+  const visiterSac = (sac) => {
+    if (!sac || sac.type !== "SettingBag" || vus.has(sac)) return;
+    vus.add(sac);
+    for (const p of sac.pairs || []) {
+      if (p.value && p.value.type === "SettingBag") {
+        if (p.line != null && !table.has(p.line)) table.set(p.line, p.value);
+        visiterSac(p.value);
+      }
+    }
+  };
+  for (const d of [...ast.defs || [], ...ast.vars || []]) {
+    if (d.line != null) {
+      if (!d.settings) d.settings = { type: "SettingBag", pairs: [] };
+      table.set(d.line, d.settings);
+    }
+    visiterSac(d.settings);
+  }
+  return table;
+}
+function* toutesLesPaires(ast) {
+  const vus = /* @__PURE__ */ new Set();
+  const descendre = function* (sac) {
+    if (!sac || sac.type !== "SettingBag" || vus.has(sac)) return;
+    vus.add(sac);
+    for (const p of sac.pairs || []) {
+      yield p;
+      if (p.value && p.value.type === "SettingBag") yield* descendre(p.value);
+    }
+  };
+  for (const d of [...ast.defs || [], ...ast.vars || []]) yield* descendre(d.settings);
+}
+function poserLesDescriptions(texte, ast, fichier) {
+  for (const p of toutesLesPaires(ast)) {
+    if (p.key === "description") {
+      throw new FauteDeLibrairie(`lib/${fichier}:${p.line} : 'description' ne s'\xE9crit plus dans un sac \u2014 la prose d'un objet se porte en pr\xE9fixe, sur une ligne '// @description \u2026' (Romain, 2026-09-04).`);
+    }
+  }
+  const lignes = String(texte).split("\n");
+  const places2 = placesQuiPortentUneProse(ast);
+  let posees = 0;
+  for (let i = 0; i < lignes.length; i += 1) {
+    const m = MARQUE_DESCRIPTION.exec(lignes[i]);
+    if (!m) continue;
+    const morceaux = [m[1]];
+    let j = i + 1;
+    for (; j < lignes.length; j += 1) {
+      const s = SUITE_DE_MARQUE.exec(lignes[j]);
+      if (!s) break;
+      morceaux.push(s[1]);
+    }
+    i = j - 1;
+    while (j < lignes.length && !lignes[j].trim()) j += 1;
+    const sac = places2.get(j + 1);
+    if (!sac) {
+      throw new FauteDeLibrairie(`lib/${fichier}:${i + 1} : '// @description' ne pr\xE9c\xE8de aucun objet \u2014 la marque se pose en pr\xE9fixe d'une d\xE9claration ou d'un membre qui ouvre une parenth\xE8se.`);
+    }
+    sac.pairs.unshift({ key: "description", value: morceaux.join(" "), texte: true, line: i + 1, col: 1 });
+    posees += 1;
+  }
+  return posees;
+}
 function construireLaLibrairie(nom, fichier, ast, documente) {
   const lib = { controls: {} };
   let sectionDuFichier = null;
@@ -195,6 +261,7 @@ function chargerLesLibrairies(sources, compiler, registerLib2) {
         continue;
       }
       const documente = /^\s*\/\/\s*@documented\b/m.test(s.texte);
+      poserLesDescriptions(s.texte, r.ast, s.fichier);
       const lib = construireLaLibrairie(s.nom, s.fichier, r.ast, documente);
       construites[s.nom] = lib;
       registerLib2(s.nom, lib);
@@ -311,8 +378,8 @@ var SOURCES = [{ "nom": "alphabets", "format": "bpsl", "texte": `types
 // @documented
 def alphabets(resolvedBy:Kairos, resolves:alphabet)
 
+// @description Western chromatic \u2014 7 natural notes, 5 alteration levels
 alphabet western(
-  description:"Western chromatic \u2014 7 natural notes, 5 alteration levels",
   runtime:audio,
   tuning:western_12TET,
   octaves:western,
@@ -324,8 +391,8 @@ alphabet western(
   terminals(C(), D(), E(), F(), G(), A(), B())
 )
 
+// @description Indian sargam \u2014 7 svaras
 alphabet sargam(
-  description:"Indian sargam \u2014 7 svaras",
   runtime:audio,
   tuning:sargam_12TET,
   octaves:saptak,
@@ -337,8 +404,9 @@ alphabet sargam(
   terminals(sa(), re(), ga(), ma(), pa(), dha(), ni())
 )
 
+// @description Sargam AS THE NATIVE BP3 ENGINE NAMES IT (INDIAN note convention) \u2014 BP3 test alphabet, alongside the others (Romain's ruling
+// 2026-07-19)
 alphabet bp3_indian(
-  description:"Sargam TEL QUE LE MOTEUR BP3 NATIF le nomme (convention de notes INDIAN) \u2014 alphabet de test BP3, \xE0 c\xF4t\xE9 des autres (arbitrage Romain 2026-07-19)",
   runtime:audio,
   tuning:bp3_indian_12TET,
   octaves:bp3,
@@ -350,8 +418,9 @@ alphabet bp3_indian(
   terminals(sa(), re(), ga(), ma(), pa(), dha(), ni())
 )
 
+// @description ENGLISH note convention of the native BP3 engine \u2014 BP3 test alphabet, alongside the others (Romain's decision 2026-07-29:
+// the mechanism uses only alphabets)
 alphabet bp3_english(
-  description:"Convention de notes ENGLISH du moteur BP3 natif \u2014 alphabet de test BP3, \xE0 c\xF4t\xE9 des autres (d\xE9cision Romain 2026-07-29 : la m\xE9canique n'utilise que des alphabets)",
   runtime:audio,
   tuning:bp3_english_12TET,
   octaves:bp3,
@@ -363,8 +432,8 @@ alphabet bp3_english(
   terminals(C(), D(), E(), F(), G(), A(), B())
 )
 
+// @description FRENCH note convention of the native BP3 engine \u2014 BP3 test alphabet, alongside the others (Romain's decision 2026-07-29)
 alphabet bp3_fr(
-  description:"Convention de notes FRENCH du moteur BP3 natif \u2014 alphabet de test BP3, \xE0 c\xF4t\xE9 des autres (d\xE9cision Romain 2026-07-29)",
   runtime:audio,
   tuning:bp3_fr_12TET,
   octaves:bp3_fr,
@@ -376,8 +445,8 @@ alphabet bp3_fr(
   terminals(do(), re(), mi(), fa(), sol(), la(), si())
 )
 
+// @description Latin solf\xE8ge \u2014 do r\xE9 mi fa sol la si
 alphabet solfege(
-  description:"Solf\xE8ge latin \u2014 do r\xE9 mi fa sol la si",
   runtime:audio,
   tuning:solfege_12TET,
   octaves:western,
@@ -389,8 +458,8 @@ alphabet solfege(
   terminals(do(), re(), mi(), fa(), sol(), la(), si())
 )
 
+// @description Arabic \u2014 7 perde (degree names) with quarter-tone alterations. rast\u2248do, sikah = neutral third, awj = neutral seventh.
 alphabet arabic(
-  description:"Arabic \u2014 7 perde (noms de degr\xE9s) with quarter-tone alterations. rast\u2248do, sikah=tierce neutre, awj=septi\xE8me neutre.",
   runtime:audio,
   tuning:arabic_24TET,
   diapason:440,
@@ -400,8 +469,8 @@ alphabet arabic(
   terminals(rast(), dukah(), sikah(), jaharkah(), nawa(), husayni(), awj())
 )
 
+// @description Turkish makam \u2014 note names from Ottoman/Turkish tradition
 alphabet turkish(
-  description:"Turkish makam \u2014 note names from Ottoman/Turkish tradition",
   runtime:audio,
   tuning:turkish_53TET,
   octaves:turkish,
@@ -430,8 +499,8 @@ alphabet turkish(
   )
 )
 
+// @description Javanese gamelan pelog \u2014 7 tones
 alphabet gamelan_pelog(
-  description:"Javanese gamelan pelog \u2014 7 tones",
   runtime:audio,
   tuning:gamelan_pelog,
   diapason:282,
@@ -441,8 +510,8 @@ alphabet gamelan_pelog(
   terminals(nem(), barang(), bem(), gulu(), lima(), enam(), pitu())
 )
 
+// @description Javanese gamelan slendro \u2014 5 tones
 alphabet gamelan_slendro(
-  description:"Javanese gamelan slendro \u2014 5 tones",
   runtime:audio,
   tuning:gamelan_slendro,
   diapason:282,
@@ -452,8 +521,8 @@ alphabet gamelan_slendro(
   terminals(nem(), barang(), gulu(), dada(), lima())
 )
 
+// @description Shakuhachi \u2014 5 base fingerings (Kinko-ry\u016B)
 alphabet shakuhachi(
-  description:"Shakuhachi \u2014 5 base fingerings (Kinko-ry\u016B)",
   runtime:audio,
   tuning:shakuhachi_12TET,
   octaves:shakuhachi,
@@ -465,8 +534,8 @@ alphabet shakuhachi(
   terminals(ro(), tsu(), re(), chi(), ri())
 )
 
+// @description Bohlen-Pierce \u2014 13 pitch classes in a tritave
 alphabet bohlen_pierce(
-  description:"Bohlen-Pierce \u2014 13 pitch classes in a tritave",
   runtime:audio,
   tuning:bohlen_pierce_equal,
   diapason:440,
@@ -476,8 +545,8 @@ alphabet bohlen_pierce(
   terminals(C(), Db(), D(), E(), F(), Gb(), G(), H(), Jb(), J(), A(), Bb(), B())
 )
 
+// @description Tabla bols \u2014 the ATOMIC syllables, those that no other one composes
 alphabet tabla(
-  description:"Bols de tabla \u2014 les syllabes ATOMIQUES, celles qu'aucune autre ne compose",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
@@ -507,8 +576,8 @@ alphabet tabla(
   )
 )
 
+// @description Abstract symbols \u2014 single lowercase letters, no pitch. For structural test scenes.
 alphabet simple(
-  description:"Abstract symbols \u2014 single lowercase letters, no pitch. For structural test scenes.",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
@@ -547,8 +616,9 @@ alphabet simple(
   )
 )
 
+// @description 22-shruti as named by BP3 \u2014 23 microtonal degrees (sa, r1..r4, g1..g4, m1, m2, m3p1, m4p2, p3, p4, d1..d4, n1..n4). Names
+// verbatim from -to.tryShruti, tonic sa.
 alphabet shruti23(
-  description:"22-shruti nomm\xE9 BP3 \u2014 23 degr\xE9s microtonaux (sa, r1..r4, g1..g4, m1, m2, m3p1, m4p2, p3, p4, d1..d4, n1..n4). Noms verbatim de -to.tryShruti, tonique sa.",
   runtime:audio,
   tuning:shruti23_native,
   octaves:saptak_us,
@@ -584,8 +654,8 @@ alphabet shruti23(
   )
 )
 
+// @description Csound sound objects from the tryCsoundObjects test grammar (pitchless)
 alphabet tryCsoundObjects(
-  description:"Objets sonores Csound de la grammaire de test tryCsoundObjects (sans hauteur)",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
@@ -602,450 +672,459 @@ alphabet tryCsoundObjects(
 `, "fichier": "alphabets.bpsl" }, { "nom": "audio", "format": "bpsl", "texte": `types
 
 // @documented
+// @description Controls specific to the Web Audio transport \u2014 EXACT match with LIBRAIRIES.md:173.
 def audio(
   resolves:audio,
   name:audio,
   resolvedBy:"runtime-audio",
-  description:"Contr\xF4les sp\xE9cifiques au transport Web Audio \u2014 match EXACT LIBRAIRIES.md:173.",
   section:controls
 )
 
+// @description Oscillator waveform (Web Audio)
 control wave(
   args(type),
   values(sine, triangle, square, sawtooth),
   value:triangle,
-  description:"Oscillator waveform (Web Audio)",
   scope(symbol, group, rule, flow),
   transportGroup:audio
 )
 
+// @description Envelope attack in ms (Web Audio)
 control attack(
   args(ms),
   range(1, 5000),
   unit:"ms",
   value:20,
-  description:"Envelope attack in ms (Web Audio)",
   scope(symbol, group, rule, flow),
   transportGroup:audio
 )
 
+// @description Envelope release in ms (Web Audio)
 control release(
   args(ms),
   range(1, 5000),
   unit:"ms",
   value:100,
-  description:"Envelope release in ms (Web Audio)",
   scope(symbol, group, rule, flow),
   transportGroup:audio
 )
 
+// @description Detune in cents (Web Audio)
 control detune(
   args(cents),
   range(-1200, 1200),
   unit:"cents",
   value:0,
-  description:"Detune in cents (Web Audio)",
   scope(symbol, group, rule, flow),
   transportGroup:audio
 )
 
+// @description Lowpass filter cutoff Hz (Web Audio)
 control filter(
   args(freq),
   range(20, 20000),
   unit:"Hz",
   value:20000,
-  description:"Lowpass filter cutoff Hz (Web Audio)",
   scope(symbol, group, rule, flow),
   transportGroup:audio
 )
 
+// @description Filter resonance Q (Web Audio)
 control filterQ(
   args(value),
   range(0, 30),
   value:1,
-  description:"Filter resonance Q (Web Audio)",
   scope(symbol, group, rule, flow),
   transportGroup:audio
 )
 
+// @description Actor gain \u2014 a permanent stage between an actor's voices and the master. The audio runtime converts this value into linear
+// gain.
 control volume(
   implements:expression.volume,
   args(value),
   range(0, 127),
-  description:"Gain d'acteur \u2014 un \xE9tage permanent entre les voix d'un acteur et le ma\xEEtre. Le runtime audio convertit cette valeur en gain lin\xE9aire.",
   scope(symbol, group, rule, flow, scene),
   transportGroup:audio
 )
-`, "fichier": "audio.bpsl" }, { "nom": "core", "format": "bpsl", "texte": 'expression\nmidi\naudio\ntranspo\nengine\ntime\nvariation\neval\nmidi_default\n\n// @documented\ndef core(\n  resolves:core,\n  name:core,\n  description:"BPscript core \u2014 silences, prolongation, contr\xF4les moteur, SOCLE des d\xE9fauts de sc\xE8ne",\n  version:"0.2.0",\n  symbols(),\n  section:defaults\n)\n\ndef components(alphabet:western, tuning:western_12TET, transport:audio, eval:js)\n\ndef values(\n  diapason(\n    range(16, 8000),\n    unit:Hz,\n    overriddenBy(tuning.diapason, alphabet.diapason),\n    description:"Hauteur de r\xE9f\xE9rence (Hz). Le d\xE9faut vient du champ `diapason` de l\'ALPHABET EFFECTIF (acteur ?? sc\xE8ne `alphabet.X` ?? alphabet par d\xE9faut `core`, `components.alphabet`) \u2014 l\'ancre est une propri\xE9t\xE9 du syst\xE8me de notes, pas de l\'accordage (cf. SCENE_DEFAULTS_CASCADE.md). Surchargeable par `diapason:N` en t\xEAte de sc\xE8ne, ou `(diapason:N)` sur une occurrence. Si l\'alphabet n\'est pas r\xE9solu, la valeur reste ABSENTE (l\'aval r\xE9sout)."\n  )\n)\n\ndef on_fail(\n  section:settings,\n  type:directive,\n  values("skip", "retry", "fallback"),\n  value:skip,\n  description:"Gestion d\'\xE9chec de d\xE9rivation"\n)\n', "fichier": "core.bpsl" }, { "nom": "engine", "format": "bpsl", "texte": `types
+`, "fichier": "audio.bpsl" }, { "nom": "core", "format": "bpsl", "texte": 'expression\nmidi\naudio\ntranspo\nengine\ntime\nvariation\neval\nmidi_default\n\n// @documented\n// @description BPscript core \u2014 rests, prolongation, engine controls, BASE for scene defaults\ndef core(\n  resolves:core,\n  name:core,\n  version:"0.2.0",\n  symbols(),\n  section:defaults\n)\n\ndef components(alphabet:western, tuning:western_12TET, transport:audio, eval:js)\n\ndef values(\n  // @description Reference pitch (Hz). The default comes from the `diapason` field of the EFFECTIVE ALPHABET (actor ?? scene `alphabet.X`\n  // ?? default alphabet `core`, `components.alphabet`) \u2014 the anchor is a property of the note system, not of the tuning (see\n  // SCENE_DEFAULTS_CASCADE.md). Overridable with `diapason:N` at the head of a scene, or `(diapason:N)` on one occurrence. When the\n  // alphabet is unresolved, the value stays ABSENT (downstream resolves it).\n  diapason(\n    range(16, 8000),\n    unit:Hz,\n    overriddenBy(tuning.diapason, alphabet.diapason)\n  )\n)\n\n// @description Derivation failure handling\ndef on_fail(\n  section:settings,\n  type:directive,\n  values("skip", "retry", "fallback"),\n  value:skip\n)\n', "fichier": "core.bpsl" }, { "nom": "engine", "format": "bpsl", "texte": `types
 
 // @documented
+// @description The keys the DERIVATION ENGINE consumes \u2014 what governs how production unfolds, as opposed to what it produces. HEADER
+// library, resolved by BPx.
 def engine(
   resolves:engine,
   resolvedBy:"BPx",
   name:engine,
-  description:"Les cl\xE9s que le MOTEUR DE D\xC9RIVATION consomme \u2014 ce qui gouverne comment la production se d\xE9roule, par opposition \xE0 ce qu'elle produit. Librairie d'EN-T\xCATE, r\xE9solue par BPx.",
   version:1.0.0
 )
 
+// @description NATIVE gesture: reseeds the random generator DURING derivation. \u26A0\uFE0F BPScript CARRIES THIS GESTURE, contrary to what this
+// field claimed until 2026-08-13: in-flow reseeding is written ![seed:42] (born 2026-08-10, commit 750d457, which removed its at-sign).
+// Measurement: it compiles and reaches the tree as an InstantControl carrying flux:true, distinct from the scene setting seed:42. The prose
+// here said BPScript exposed only the scene seed, which is not the same gesture -- that was FALSE, and this sentence is the reason this
+// word stayed out of the vocabulary. The bpscript field is NOT touched: declaring a word of the language is Romain's ruling, never a
+// consequence of my measurement.
 control srand(
   bp3:_srand,
   bpscript:false,
   args(seed),
-  description:"Geste NATIF : reamorce le generateur aleatoire EN COURS de derivation. \u26A0\uFE0F BPScript PORTE CE GESTE, contrairement a ce que ce champ a affirme jusqu au 2026-08-13 : la re-semence en flux s ecrit ![seed:42] (nee le 2026-08-10, commit 750d457, qui lui a retire son arobase). Mesure : elle compile et atteint l arbre en InstantControl porteur de flux:true, distincte du reglage de scene seed:42. La prose disait ici que BPScript n exposait que la graine de scene, qui  n est pas le meme geste  -- c etait FAUX, et cette phrase est la raison pour laquelle ce mot est reste hors du vocabulaire. Le champ bpscript n est PAS touche : declarer un mot du langage est un arbitrage de Romain, jamais une consequence de ma mesure.",
   section:controls
 )
+// @description NATIVE gesture: prints the work string in the trace window of the original engine. BPScript has no such window and no reason
+// to expose the word; it is declared so that the BP3 frontend can route the grammars that write it.
 control print(
   bp3:_print,
   bpscript:false,
-  description:"Geste NATIF : affiche la chaine de travail dans la fenetre de trace du moteur d origine. BPScript n a pas cette fenetre et n a aucune raison d exposer le mot ; il est declare pour que le frontal BP3 puisse router les grammaires qui l ecrivent.",
   section:controls
 )
 
+// @description Derivation mode of the block/subgrammar (rnd, ord, sub, sub1, lin, tem, poslong) -- default: ord.
 control mode(
   args(mode),
   values(rnd, ord, sub, sub1, lin, tem, poslong),
   value:ord,
-  description:"Mode de derivation du bloc/sous-grammaire (rnd, ord, sub, sub1, lin, tem, poslong) -- defaut : ord.",
   scope(subgrammar),
   section:engine
 )
+// @description Traversal direction per rule (left, right, rnd) -- default: rnd.
 control scan(
   args(direction),
   values(left, right, rnd),
   value:rnd,
-  description:"Sens du parcours par regle (left, right, rnd) -- defaut : rnd.",
   scope(scene, rule),
   section:engine
 )
+// @description Rule weight -- an integer, 'inf' for absolute priority, or a K-param.
 control weight(
   args(value),
-  description:"Poids de la regle -- un entier, 'inf' pour la priorite absolue, ou un K-param.",
   scope(rule),
   section:engine
 )
+// @description Rule weights go back to the value written in the grammar. Image of ResetWeights in the native engine.
 control resetweights(
   bp3:ResetWeights,
   bp3value:1,
-  description:"Les poids des regles repartent de leur valeur ecrite dans la grammaire. Image de ResetWeights au moteur natif.",
   scope(scene),
   section:engine
 )
+// @description Rule weights keep the value where derivation left them. Image of ResetWeights in the native engine.
 control keepweights(
   bp3:ResetWeights,
   bp3value:0,
-  description:"Les poids des regles gardent la valeur ou la derivation les a laisses. Image de ResetWeights au moteur natif.",
   scope(scene),
   section:engine
 )
+// @description Derivation failure handling (skip, retry(N), fallback(X)) -- default: skip. NO 'values' enum (unlike mode/scan):
+// retry/fallback take an ARGUMENT ('retry(2)', 'fallback(Autre)'), which the enum validator (controlValidation.js, EXACT comparison) would
+// reject -- measured by vocabulaire_appels.mjs section 2quinquies bis.
 control on_fail(
   args(strategy),
   value:skip,
-  description:"Gestion d'echec de derivation (skip, retry(N), fallback(X)) -- defaut : skip. PAS de 'values' enum (contrairement a mode/scan) : retry/fallback prennent un ARGUMENT ('retry(2)', 'fallback(Autre)'), que le validateur enum (controlValidation.js, comparaison EXACTE) rejetterait -- mesure par vocabulaire_appels.mjs section 2quinquies bis.",
   scope(scene, rule),
   section:engine
 )
+// @description Signature rythmique -- (meter:7/8), (meter:4+4/4).
 control meter(
   args(signature),
-  description:"Signature rythmique -- (meter:7/8), (meter:4+4/4).",
   scope(scene, rule),
   section:engine
 )
+// @description Controlled repetition. expr = K-param or K-param=value.
 control repeat(
   bp3:_repeat,
   scope(rule),
   args(expr),
-  description:"Controlled repetition. expr = K-param or K-param=value.",
   section:engine
 )
+// @description Jump on derivation failure.
 control failed(
   bp3:_failed,
   scope(rule),
   args(subgrammar, rule),
-  description:"Jump on derivation failure.",
   section:engine
 )
-control stop(bp3:_stop, scope(rule), description:"Stop derivation.", section:engine)
+// @description Stop derivation.
+control stop(bp3:_stop, scope(rule), section:engine)
+// @description Jump to specific subgrammar and rule.
 control goto(
   bp3:_goto,
   scope(rule),
   args(subgrammar, rule),
-  description:"Jump to specific subgrammar and rule.",
   section:engine
 )
+// @description Retrograde \u2014 reverse element order. flow SCOPE ONLY: the marker acts on what FOLLOWS. Measurement of the original engine
+// (Zouleb.c:95-175, BPx 2026-08-09): on a serial tool it moves FORWARD past the marker and targets what follows, and its loop stops dead on
+// a closing bracket -- no branch looks backwards. The form glued after a closing bracket was therefore accepted and SILENTLY INERT.
 control retro(
   bp3:_retro,
   scope(flow),
-  description:"Retrograde \u2014 reverse element order. PORTEE flow UNIQUEMENT : le marqueur agit sur ce qui SUIT. Mesure du moteur d origine (Zouleb.c:95-175, BPx 2026-08-09) : sur un outil seriel il avance APRES le marqueur et prend pour cible la suite, et sa boucle s arrete net sur une fermante \u2014 aucune branche ne regarde en arriere. La forme collee apres une fermante etait donc acceptee et SILENCIEUSEMENT INERTE.",
   section:engine
 )
+// @description Shuffle \u2014 random reordering of sequence elements. seed arg \u2192 _srand(N) prefix. flow SCOPE ONLY: see retro. Measured corpus:
+// 32 occurrences of the tool BEFORE a block against 2 after a closing bracket, and those 2 act on what follows (S --> a b {_retro c d e}
+// _retro f g).
 control shuffle(
   bp3:_rndseq,
   args(seed),
   scope(flow),
-  description:"Shuffle \u2014 random reordering of sequence elements. seed arg \u2192 _srand(N) prefix. PORTEE flow UNIQUEMENT : voir retro. Corpus mesure : 32 occurrences de l outil AVANT un bloc contre 2 apres une fermante, et ces 2 portent sur la suite (S --> a b {_retro c d e} _retro f g).",
   section:engine
 )
+// @description Order \u2014 restore canonical order of sequence elements. PORTEE flow UNIQUEMENT : voir retro.
 control order(
   bp3:_ordseq,
   scope(flow),
-  description:"Order \u2014 restore canonical order of sequence elements. PORTEE flow UNIQUEMENT : voir retro.",
   section:engine
 )
+// @description Rotate \u2014 cyclic rotation of sequence by N positions (engine, temporal). PORTEE flow UNIQUEMENT : voir retro. Distinct from
+// runtime (rotate) which is a pitch transformation.
 control rotate(
   bp3:_rotate,
   args(degrees),
   scope(flow),
-  description:"Rotate \u2014 cyclic rotation of sequence by N positions (engine, temporal). PORTEE flow UNIQUEMENT : voir retro. Distinct from runtime (rotate) which is a pitch transformation.",
   section:engine
 )
+// @description Staccato \u2014 shorten note durations (affects temporal structure)
 control staccato(
   bp3:_staccato,
   args(value),
   range(0, 127),
-  description:"Staccato \u2014 shorten note durations (affects temporal structure)",
   scope(symbol, group, rule, flow),
   section:engine
 )
+// @description Legato \u2014 extend note durations (affects temporal structure)
 control legato(
   bp3:_legato,
   args(value),
   range(0, 1000),
-  description:"Legato \u2014 extend note durations (affects temporal structure)",
   scope(symbol, group, rule, flow),
   section:engine
 )
+// @description Random timing jitter \u2014 displaces note attacks by \xB1N ms (temporal). Like staccato/legato, a current-parameter control, not a
+// reorder.
 control rndtime(
   bp3:_rndtime,
   args(amount),
   range(0, 32767),
   unit:"ms",
-  description:"Random timing jitter \u2014 displaces note attacks by \xB1N ms (temporal). Like staccato/legato, a current-parameter control, not a reorder.",
   scope(scene, symbol, group, rule, flow),
   section:engine
 )
+// @description Destructure composed terminals based on alphabet
 control destru(
   bp3:_destru,
-  description:"Destructure composed terminals based on alphabet",
   scope(subgrammar, rule),
   section:engine
 )
 
+// @description Random draw seed -- seed:N freezes the derivation; without it (or absent), the draw is random (Romain's decision
+// 2026-08-09). BP3 Seed. flow SCOPE ADDED 2026-08-10: the seed is ALSO written in the flow, ![seed:N] (form validated by Romain), where it
+// translates the native _srand(N). The flow convention is not new -- retro, shuffle, rotate, order and randomize already carry it; what was
+// missing was declaring it for seed, whose graphy the parser knew without the data saying so.
 control seed(
   args(value),
-  description:"Graine du tirage aleatoire -- seed:N fige la derivation ; sans elle (ou absente), le tirage est aleatoire (decision Romain 2026-08-09). BP3 Seed. PORTEE flow AJOUTEE le 2026-08-10 : la graine s ecrit AUSSI dans le flux, ![seed:N] (forme validee par Romain), ou elle traduit le _srand(N) natif. La convention flow n est pas neuve \u2014 retro, shuffle, rotate, order et randomize la portent deja ; ce qui manquait etait de la declarer pour seed, dont le parseur connaissait la graphie sans que la donnee la dise.",
   scope(scene, flow),
   section:engine
 )
+// @description Maximum number of items produced by the derivation (BP3 MaxItemsProduce).
 control maxitems(
   args(count),
-  description:"Nombre maximum d'items produits par la derivation (BP3 MaxItemsProduce).",
   scope(scene),
   section:engine
 )
+// @description Alias of maxitems (BP3 MaxItemsProduce).
 control items(
   args(count),
-  description:"Alias de maxitems (BP3 MaxItemsProduce).",
   scope(scene),
   section:engine
 )
+// @description Produces every possible item, disables improvize (BP3 AllItems).
 control allitems(
-  description:"Produit tous les items possibles, desactive improvize (BP3 AllItems).",
   scope(scene),
   section:engine
 )
-control all_items(description:"Alias de allitems (BP3 AllItems).", scope(scene), section:engine)
+// @description Alias of allitems (BP3 AllItems).
+control all_items(scope(scene), section:engine)
+// @description Endless continuous derivation (BP3 Improvize).
 control improvize(
-  description:"Derivation continue sans fin (BP3 Improvize).",
   scope(scene),
   section:engine
 )
+// @description Placement tolerance in ms (BP3 Quantization). NOT a grid: measured on the native engine, no event boundary falls on a
+// multiple of this value. It is compared to the piece's internal step u and yields a grouping factor k = floor(value/u)+1, which the engine
+// reports (compression rate). k=1: output unchanged to the byte. k>1: instants are recast onto a coarser table -- distinct events share
+// boundaries, the piece lengthens, the start leaves zero.
 control quantization(
   args(value),
   unit:"ms",
-  description:"Tolerance de placement en ms (BP3 Quantization). N'EST PAS une grille : mesure sur le moteur natif, aucune borne d'evenement ne tombe sur un multiple de cette valeur. Elle est comparee au pas interne u de la piece et rend un facteur de regroupement k = floor(valeur/u)+1, que le moteur annonce (compression rate). k=1 : sortie inchangee a l'octet. k>1 : les instants sont refondus sur une table plus grossiere \u2014 des evenements distincts partagent des bornes, la piece s'allonge, le depart quitte zero.",
   scope(scene),
   section:engine
 )
+// @description Period of the Q metronome (BP3 Qclock).
 control qclock(
   args(period),
-  description:"Periode du metronome Q (BP3 Qclock).",
   scope(scene),
   section:engine
 )
+// @description A time pattern is a duration ratio carrying a name -- timepatterns: t1=1/1, t2=3/2, ... It is declared at the head, its name
+// is then written in a polymetric expression, and it occupies time without sounding. LANGUAGE.md, section Les motifs temporels.
 control timepatterns(
   args(patterns),
-  description:"Un motif temporel est un rapport de duree qui porte un nom -- timepatterns: t1=1/1, t2=3/2, ... Il se declare en tete, son nom s ecrit ensuite dans une expression polymetrique, et il occupe le temps sans sonner. LANGUAGE.md, section Les motifs temporels.",
   scope(scene),
   section:engine
 )
 
+// @description Re-seed RNG from clock at production start (BP3 _randomize preamble, Encode.c case 50)
 control randomize(
   bp3:_randomize,
-  description:"Re-seed RNG from clock at production start (BP3 _randomize preamble, Encode.c case 50)",
   scope(subgrammar, flow, scene),
   bagOnly:true,
   section:subgrammar
 )
+// @description Striated time (pulsed)
 control striated(
   bp3:_striated,
-  description:"Striated time (pulsed)",
   scope(subgrammar, scene),
   unicite:nature-du-temps,
   section:subgrammar
 )
+// @description Smooth time (non-pulsed)
 control smooth(
   bp3:_smooth,
-  description:"Smooth time (non-pulsed)",
   scope(subgrammar, scene),
   unicite:nature-du-temps,
   section:subgrammar
 )
-`, "fichier": "engine.bpsl" }, { "nom": "eval", "format": "bpsl", "texte": `// @documented
-def eval(resolvedBy:runtime-codevoices, resolves:eval, name:eval, type:code, section:objects)
-
-def strudel(
-  description:"Motifs et \xE9chantillons, dans le navigateur.",
-  parameters(
-    bank(description:"La banque d'\xE9chantillons que la voix charge. Sans elle, une sc\xE8ne qui emploie des noms d'\xE9chantillons se joue en SILENCE \u2014 mesur\xE9 chez Kanopi : \xAB banque inconnue \u2192 son MUET \xBB.")
-  )
-)
-
-def hydra(description:"Synth\xE8se visuelle.")
-
-def sc(description:"SuperCollider \u2014 synth\xE8se audio, backend natif.")
-
-def js(description:"JavaScript \xE9valu\xE9 par le runtime.")
-
-def ts(description:"TypeScript \u2014 le langage des corps de librairie, transpil\xE9 puis ex\xE9cut\xE9 par le r\xE9solveur que la librairie nomme.")
-
-def p5(description:"Croquis graphiques p5.js.")
-
-def mercury(description:"Live coding minimal.")
-
-def csound(description:"Csound \u2014 synth\xE8se, backend natif.")
-
-def tidal(description:"TidalCycles \u2014 motifs, backend natif (SuperDirt).")
-
-def txt(description:"Texte litteral, evalue par personne. Porte une PHRASE la ou le langage n a pas de caractere d echappement : une description de librairie, un libelle. Ratifie par Romain le 2026-08-13 -- le backtick tague est la seule graphie du depot qui delimite un contenu libre, et lui en ajouter un tag coute moins qu inventer un signe.")
-`, "fichier": "eval.bpsl" }, { "nom": "expression", "format": "bpsl", "texte": `types
+`, "fichier": "engine.bpsl" }, { "nom": "eval", "format": "bpsl", "texte": "// @documented\ndef eval(resolvedBy:runtime-codevoices, resolves:eval, name:eval, type:code, section:objects)\n\n// @description Patterns and samples, in the browser.\ndef strudel(\n  parameters(\n    // @description The sample bank the voice loads. Without it, a scene using sample names plays SILENT \u2014 measured at Kanopi: \xAB unknown\n    // bank \u2192 MUTE sound \xBB.\n    bank()\n  )\n)\n\n// @description Visual synthesis.\ndef hydra()\n\n// @description SuperCollider \u2014 audio synthesis, native backend.\ndef sc()\n\n// @description JavaScript evaluated by the runtime.\ndef js()\n\n// @description TypeScript \u2014 the language of library bodies, transpiled then executed by the resolver the library names.\ndef ts()\n\n// @description Croquis graphiques p5.js.\ndef p5()\n\n// @description Live coding minimal.\ndef mercury()\n\n// @description Csound \u2014 synthesis, native backend.\ndef csound()\n\n// @description TidalCycles \u2014 motifs, backend natif (SuperDirt).\ndef tidal()\n\n// @description Literal text, evaluated by no one. Carries a SENTENCE where the language has no escape character: a library description, a\n// label. Ratified by Romain on 2026-08-13 -- the tagged backtick is the only graphy in the repository that delimits free content, and\n// adding a tag to it costs less than inventing a sign.\ndef txt()\n", "fichier": "eval.bpsl" }, { "nom": "expression", "format": "bpsl", "texte": `types
 
 // @documented
+// @description Controls describing HOW a note is played, valid for EVERY output \u2014 not one specific transport (LIBRAIRIES.md:171,217-219: \xAB
+// expression is no exception\u2026 it is A destination, a class named by what it describes \xBB).
 def expression(
   resolves:expression,
   resolvedBy:"toutes les sorties",
   name:expression,
-  description:"Contr\xF4les qui d\xE9crivent COMMENT on joue une note, valables pour TOUTE sortie \u2014 pas un transport pr\xE9cis (LIBRAIRIES.md:171,217-219 : \xAB expression ne fait pas exception\u2026 c'est UNE destination, une classe nomm\xE9e par ce qu'elle d\xE9crit \xBB).",
   section:controls
 )
 
+// @description Volume of a voice. MIDI realizes it as CC7; every output declares its own realization.
 control volume(
   args(value),
   range(0, 127),
-  description:"Volume d'une voix. MIDI le r\xE9alise en CC7 ; chaque sortie d\xE9clare sa r\xE9alisation.",
   scope(symbol, group, rule, flow, scene),
   transportGroup:expression
 )
 
+// @description Velocity (0-127). WebAudio: gain, MIDI: NoteOn velocity
 control vel(
   bp3:_vel,
   args(value),
   range(0, 127),
   value:64,
-  description:"Velocity (0-127). WebAudio: gain, MIDI: NoteOn velocity",
   scope(symbol, group, rule, flow, scene),
   transportGroup:expression
 )
 
+// @description Pan (0=left, 64=center, 127=right). WebAudio: StereoPanner, MIDI: CC10
 control pan(
   bp3:_pan,
   args(value),
   range(0, 127),
   value:64,
-  description:"Pan (0=left, 64=center, 127=right). WebAudio: StereoPanner, MIDI: CC10",
   scope(symbol, group, rule, flow, scene),
   transportGroup:expression
 )
 
+// @description Panning in CONTINUOUS mode \u2014 the value glides DURING notes, through intermediate messages. Its two discrete siblings live in
+// the variation library; their recipient is read on that file's resolvedBy field, never here.
 control pancont(
   bp3:_pancont,
-  description:"Panoramique en mode CONTINU \u2014 la valeur glisse PENDANT les notes, par messages interm\xE9diaires. Ses deux fr\xE8res discrets vivent dans la librairie variation ; leur destinataire se lit sur le champ resolvedBy de ce fichier-l\xE0, jamais ici.",
   scope(symbol, group, rule, flow),
   transportGroup:expression
 )
 
+// @description Random velocity +/-range
 control rndvel(
   bp3:_rndvel,
   args(range),
   value:0,
-  description:"Random velocity +/-range",
   scope(symbol, group, rule, flow),
   transportGroup:expression
 )
 
+// @description Velocity in CONTINUOUS mode \u2014 the value glides DURING notes, through intermediate messages. Its two discrete siblings live
+// in the variation library; their recipient is read on that file's resolvedBy field, never here. Measured on native engine v3.5.1-iso.2: on
+// velocity, continuous yields bytes identical to steps (FillPhaseDiagram.c carries 'not implemented' at line 415).
 control velcont(
   bp3:_velcont,
-  description:"V\xE9locit\xE9 en mode CONTINU \u2014 la valeur glisse PENDANT les notes, par messages interm\xE9diaires. Ses deux fr\xE8res discrets vivent dans la librairie variation ; leur destinataire se lit sur le champ resolvedBy de ce fichier-l\xE0, jamais ici. Mesur\xE9 sur le moteur natif v3.5.1-iso.2 : sur la v\xE9locit\xE9, le continu rend des octets identiques aux paliers (FillPhaseDiagram.c porte 'not implemented' ligne 415).",
   scope(symbol, group, rule, flow),
   transportGroup:expression
 )
 
+// @description NoteOff velocity (0-127). Relevant for expressive controllers (Osmose, MPE)
 control offvel(
   args(value),
   range(0, 127),
   value:64,
-  description:"NoteOff velocity (0-127). Relevant for expressive controllers (Osmose, MPE)",
   scope(symbol, group, rule, flow),
   transportGroup:expression
 )
 
+// @description Articulation in CONTINUOUS mode \u2014 the value glides DURING notes. Its two discrete siblings, articulfixed and articulstep,
+// live in the variation library. The native behaviour of this word is unsettled: no witness built on engine v3.5.1-iso.2 moved articulation
+// at all, fixed mode included.
 control articulcont(
   bp3:_articulcont,
-  description:"Articulation en mode CONTINU \u2014 la valeur glisse PENDANT les notes. Ses deux fr\xE8res discrets, articulfixed et articulstep, vivent dans la librairie variation. Le comportement natif de ce mot n'est pas tranch\xE9 : aucun t\xE9moin construit sur le moteur v3.5.1-iso.2 n'a fait bouger l'articulation, le mode fixe compris.",
   scope(symbol, group, rule, flow)
 )
 
+// @description Transposition in CONTINUOUS mode \u2014 the value glides DURING notes. Its two discrete siblings, transposefixed and
+// transposestep, live in the variation library; this one stays here because transposition is realized by the same resolver as its
+// parameter. Measured on native engine v3.5.1-iso.2: continuous yields bytes identical to steps (FillPhaseDiagram.c carries 'not
+// implemented' at line 608).
 control transposecont(
   bp3:_transposecont,
-  description:"Transposition en mode CONTINU \u2014 la valeur glisse PENDANT les notes. Ses deux fr\xE8res discrets, transposefixed et transposestep, vivent dans la librairie variation ; celui-ci reste ici parce que la transposition se rend chez le m\xEAme r\xE9solveur que son param\xE8tre. Mesur\xE9 sur le moteur natif v3.5.1-iso.2 : le continu rend des octets identiques aux paliers (FillPhaseDiagram.c porte 'not implemented' ligne 608).",
   scope(symbol, group, rule, flow),
   transportGroup:transpo
 )
 
+// @description NATIVE gesture: gives a value to a named performance parameter. In BPScript the form is !(<param>:<value>), the parameter
+// being declared by its TYPE at the head -- signal <param> -- and it is the KEY, see the ruling of 2026-08-13.
 control value(
   bp3:_value,
   bpscript:false,
-  args(param),
-  description:"Geste NATIF : donne une valeur a un parametre de performance nomme. En BPScript la forme est !(<param>:<valeur>), le parametre etant declare par son TYPE en tete -- signal <param> -- et il est la CLE, cf. arbitrage du 2026-08-13."
+  args(param)
 )
 
+// @description NATIVE gesture: the named parameter DOES NOT VARY. In BPScript: !(<param>fixed), the mode glued to the parameter.
 control fixed(
   bp3:_fixed,
   bpscript:false,
-  args(param),
-  description:"Geste NATIF : le parametre nomme NE VARIE PAS. En BPScript : !(<param>fixed), le mode colle au parametre."
+  args(param)
 )
 
+// @description NATIVE gesture: the named parameter varies CONTINUOUSLY. In BPScript: !(<param>cont).
 control cont(
   bp3:_cont,
   bpscript:false,
-  args(param),
-  description:"Geste NATIF : le parametre nomme varie CONTINUMENT. En BPScript : !(<param>cont)."
+  args(param)
 )
 
+// @description NATIVE gesture: the named parameter varies BY STEPS. In BPScript: !(<param>step). Never declared as a word of the language
+// -- it enters here through the routing door, not the vocabulary one.
 control step(
   bp3:_step,
   bpscript:false,
-  args(param),
-  description:"Geste NATIF : le parametre nomme varie PAR PALIERS. En BPScript : !(<param>step). Jamais declare comme mot du langage -- il entre ici par la porte du routage, pas par celle du vocabulaire."
+  args(param)
 )
 
+// @description Rate of intermediate values for continuous panning, in values per second. Default 50, like the native engine.
 control panrate(
   bp3:_panrate,
   args(hz),
   range(0, 1000),
   unit:"Hz",
   value:50,
-  description:"Cadence des valeurs intermediaires du continu de panoramique, en valeurs par seconde. Defaut 50, comme le moteur natif.",
   scope(symbol, group, rule, flow),
   transportGroup:expression
 )
@@ -1059,53 +1138,56 @@ def homomorphism(
   section:tables
 )
 
+// @description Tabla open\u2192closed stroke mapping (qa'ida)
 homomorphism tabla_stroke(
-  description:"Tabla open\u2192closed stroke mapping (qa'ida)",
   mappings(dha:ta, dhin:tin, ge:ke, ghe:khe, dhagena:takena, dheene:teene, dheena:teena)
 )
 
+// @description Ruwet \u2014 major \u2192 minor theme transformation (DEPRECATED)
 homomorphism ruwet_mineur(
-  description:"Ruwet \u2014 transformation th\xE8me majeur \u2192 mineur (D\xC9PR\xC9CI\xC9)",
   mappings(fa4:re4, la4:fa4, sol4:mi4)
 )
 
+// @description Ruwet \u2014 3 melodic transformations (faithful to bp3-engine/test-data/-ho.Ruwet)
 homomorphism ruwet(
-  description:"Ruwet \u2014 3 transformations m\xE9lodiques (fid\xE8le \xE0 bp3-engine/test-data/-ho.Ruwet)",
   sections(m1(la4:sib4), m2(la4:sol4), mineur(fa4:re4, la4:fa4))
 )
 
+// @description Dhati \u2014 tabla homomorphism (faithful to -ho.dhati, section *, identities preserved)
 homomorphism dhati(
-  description:"Dhati \u2014 homomorphisme tabla (fid\xE8le \xE0 -ho.dhati, section *, identit\xE9s conserv\xE9es)",
   sections("*"(dha:ta, ti:ti, ge:ke, na:na, dhee:tee, tr:tr, kt:kt))
 )
 
+// @description Dhin -- tabla homomorphism (faithful to -ho.dhin--, section *, identities preserved)
 homomorphism dhin(
-  description:"Dhin -- homomorphisme tabla (fid\xE8le \xE0 -ho.dhin--, section *, identit\xE9s conserv\xE9es)",
   sections("*"(dha:ta, ta:ta, ti:ti, ra:ra, na:na, ki:ki, dhee:tee, ne:ne, ge:ke, ka:ka, dhin:tin))
 )
 
+// @description Test homomorphism (faithful to -ho.tryhomomorphism, chain c-->fa4-->d unfolded)
 homomorphism tryhomomorphism(
-  description:"Homomorphisme de test (fid\xE8le \xE0 -ho.tryhomomorphism, cha\xEEne c-->fa4-->d d\xE9pli\xE9e)",
   sections("*"(a:b, do4:re4, c:fa4, fa4:d))
 )
 
+// @description Test homomorphism \u2014 3 sections (*, H, TR)
 homomorphism checkhomo(
-  description:"Test homomorphism \u2014 3 sections (*, H, TR)",
   sections("*"(a:"a'", "a'":"a""", b:"b'", "b'":b), H(a:c, c:"c'", "c'":"a"""), TR("a'":"b'", "b'":b))
 )
 
+// @description Auto-transposer H. Visser 1997 \u2014 CHAIN homomorphism (faithful to bp3-engine/test-data/-ho.transposition, section TR, 3
+// chains indexed by invocation depth)
 homomorphism transposition(
-  description:"Auto-transposer H. Visser 1997 \u2014 homomorphisme \xE0 CHA\xCENES (fid\xE8le \xE0 bp3-engine/test-data/-ho.transposition, section TR, 3 cha\xEEnes index\xE9es par profondeur d'invocation)",
   sections(TR(chains(C3(B3, F4, C6), B3(C3, B4, F6), F4(C6, F2, B5))))
 )
 
+// @description Ported from bp3-engine/test-data/-ho.Ruwet on 2026-08-13, section by section and link by link. Verified: unfolding into
+// consecutive pairs reproduces the native exactly.
 homomorphism Ruwet(
-  description:"Port\xE9 depuis bp3-engine/test-data/-ho.Ruwet le 2026-08-13, section par section et maillon par maillon. V\xE9rifi\xE9 : le d\xE9pliage en paires cons\xE9cutives redonne exactement le natif.",
   sections(m1(chains(la4(sib4))), m2(chains(la4(sol4))), mineur(chains(fa4(re4), la4(fa4))))
 )
 
+// @description Ported from bp3-engine/test-data/-ho.abc on 2026-08-13, section by section and link by link. Verified: unfolding into
+// consecutive pairs reproduces the native exactly.
 homomorphism abc(
-  description:"Port\xE9 depuis bp3-engine/test-data/-ho.abc le 2026-08-13, section par section et maillon par maillon. V\xE9rifi\xE9 : le d\xE9pliage en paires cons\xE9cutives redonne exactement le natif.",
   sections(
     "*"(
       chains(
@@ -1141,13 +1223,17 @@ homomorphism abc(
   )
 )
 
+// @description Ported from bp3-engine/test-data/-ho.abc1 on 2026-08-13, section by section and link by link. Verified: unfolding into
+// consecutive pairs reproduces the native exactly.
 homomorphism abc1(
-  description:"Port\xE9 depuis bp3-engine/test-data/-ho.abc1 le 2026-08-13, section par section et maillon par maillon. V\xE9rifi\xE9 : le d\xE9pliage en paires cons\xE9cutives redonne exactement le natif.",
   sections(chik(chains(a("a'"), b("b'"), c("c'"), d("d'"))), e(chains(f("f'"), g("g'"))))
 )
 
+// @description Ported from bp3-engine/test-data/-ho.abc2 on 2026-08-13. \u26A0\uFE0F The section is \`sync\` and not \`*\`: the file writes \`*\` then
+// \`sync\` with no separator between them, and A LABEL FOLLOWING A LABEL REPLACES IT \u2014 the native opens a section only on a separator. I had
+// first read \`sync\` as a MODIFIER of the current section; that was an invention, the word \`sync\` exists nowhere in the engine source.
+// Corrected on a report from bp3-frontend, whose criterion comes from the engine.
 homomorphism abc2(
-  description:"Port\xE9 depuis bp3-engine/test-data/-ho.abc2 le 2026-08-13. \u26A0\uFE0F La section est \`sync\` et non \`*\` : le fichier \xE9crit \`*\` puis \`sync\` sans s\xE9parateur entre les deux, et une \xC9TIQUETTE QUI SUIT UNE \xC9TIQUETTE LA REMPLACE \u2014 le natif n'ouvre une section que sur un s\xE9parateur. J'avais d'abord lu \`sync\` comme un MODIFICATEUR de la section courante ; c'\xE9tait une invention, le mot \`sync\` n'existe nulle part dans la source du moteur. Corrig\xE9 sur signalement de bp3-frontend, dont le crit\xE8re vient du moteur.",
   sections(
     sync(
       chains(
@@ -1182,8 +1268,9 @@ homomorphism abc2(
   )
 )
 
+// @description Ported from bp3-engine/test-data/-ho.abc3 on 2026-08-13, section by section and link by link. Verified: unfolding into
+// consecutive pairs reproduces the native exactly.
 homomorphism abc3(
-  description:"Port\xE9 depuis bp3-engine/test-data/-ho.abc3 le 2026-08-13, section par section et maillon par maillon. V\xE9rifi\xE9 : le d\xE9pliage en paires cons\xE9cutives redonne exactement le natif.",
   sections(
     "*"(
       chains(
@@ -1219,8 +1306,11 @@ homomorphism abc3(
   )
 )
 
+// @description Bells \u2014 CHAIN homomorphism, faithful to bp3-engine/test-data/-ho.cloches1 (section TR, 4 chains indexed by invocation
+// depth). \u26A0\uFE0F PORTED AGAIN ON 2026-08-10: the previous version FLATTENED the chains into pairs \u2014 it kept the first link of each line and
+// lost the following ones, 15 links out of 19. A chain does not say \xAB do3 becomes mib3 \xBB: it says \xAB on the first call mib3, on the second
+// fa#3, on the third la4 \xBB \u2014 flattening it changes the meaning, not just the quantity.
 homomorphism cloches1(
-  description:"Cloches \u2014 homomorphisme \xE0 CHA\xCENES, fid\xE8le \xE0 bp3-engine/test-data/-ho.cloches1 (section TR, 4 cha\xEEnes index\xE9es par profondeur d'invocation). \u26A0\uFE0F PORT\xC9 \xC0 NOUVEAU LE 2026-08-10 : la version pr\xE9c\xE9dente APLATISSAIT les cha\xEEnes en paires \u2014 elle gardait le premier maillon de chaque ligne et perdait les suivants, soit 15 maillons sur 19. Une cha\xEEne ne dit pas \xAB do3 devient mib3 \xBB : elle dit \xAB au premier appel mib3, au deuxi\xE8me fa#3, au troisi\xE8me la4 \xBB \u2014 l'aplatir change le sens, pas seulement la quantit\xE9.",
   sections(
     TR(
       chains(
@@ -1242,988 +1332,609 @@ homomorphism dhin--(
 
 homomorphism tabla(default(dha:ta, dhin:tin, dhee:tee, ge:ke))
 
+// @description Ported from bp3-engine/test-data/-ho.trial.mohanam on 2026-08-13, section by section and link by link. Verified: unfolding
+// into consecutive pairs reproduces the native exactly.
 homomorphism trial_mohanam(
-  description:"Port\xE9 depuis bp3-engine/test-data/-ho.trial.mohanam le 2026-08-13, section par section et maillon par maillon. V\xE9rifi\xE9 : le d\xE9pliage en paires cons\xE9cutives redonne exactement le natif.",
   sections(trn(chains(sa6(ga6), re6(pa6), ga6(dha6), pa6(sa7), dha6(re7), sa7(ga7))))
 )
-`, "fichier": "homomorphism.bpsl" }, { "nom": "midi", "format": "bpsl", "texte": `types
-
-// @documented
-def midi(
-  resolves:midi,
-  resolvedBy:"runtime-MIDI",
-  name:midi,
-  description:"Contr\xF4les sp\xE9cifiques au transport MIDI \u2014 match EXACT LIBRAIRIES.md:172.",
-  section:controls
-)
-
-def ch(
-  section:schema.addressKeys,
-  description:"Canal d'adresse, forme courte de channel.",
-  scope(symbol, group, rule, flow)
-)
-
-def channel(
-  section:schema.addressKeys,
-  description:"Canal d'adresse, forme longue de ch.",
-  scope(symbol, group, rule, flow)
-)
-
-def device(
-  section:schema.addressKeys,
-  description:"Appareil vis\xE9 par l'adresse.",
-  scope(symbol, group, rule, flow)
-)
-
-def note(
-  section:schema.addressKeys,
-  description:"Num\xE9ro de note d'une adresse \u2014 la source qu'un point d'attente \xE9coute, l'\xE9v\xE9nement qu'une occurrence vise.",
-  scope(symbol, group, rule, flow)
-)
-
-def port(
-  section:schema.addressKeys,
-  description:"Port vis\xE9 par l'adresse.",
-  scope(symbol, group, rule, flow)
-)
-
-control chan(
-  bp3:_chan,
-  args(channel),
-  range(1, 16),
-  description:"MIDI channel",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control ins(
-  bp3:_ins,
-  args(program),
-  range(1, 128),
-  description:"MIDI Program Change. L'auteur \xE9crit le num\xE9ro de programme \xE0 partir de 1, comme le moteur d'origine ; l'octet transmis vaut ce num\xE9ro moins un.",
-  scope(symbol, group, rule, flow, scene),
-  transportGroup:midi
-)
-
-control mod(
-  bp3:_mod,
-  args(value),
-  range(0, 127),
-  description:"MIDI Modulation (CC1)",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control modcont(
-  bp3:_modcont,
-  description:"Enable continuous modulation interpolation (CC1)",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control pitchbend(
-  bp3:_pitchbend,
-  args(value),
-  range(-8192, 8191),
-  description:"MIDI Pitch Bend",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control pitchrange(
-  bp3:_pitchrange,
-  args(cents),
-  unit:"cents",
-  description:"Pitch bend range in cents",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control pitchcont(
-  bp3:_pitchcont,
-  description:"Enable continuous pitch bend interpolation",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control keymap(
-  bp3:_keymap,
-  args(p1, q1, p2, q2),
-  range(0, 127),
-  description:"Key mapping \u2014 remap MIDI key range (p1,p2) to (q1,q2). Args are key numbers (0..127) or note names; p2 must be greater than p1. BP3 _keymap \u2014 registre du moteur natif, bp3-engine \`origin/wasm\` : capture-run/console_strings.json porte \xAB 62 4 _keymap \xBB.",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control mapcont(
-  bp3:_mapcont,
-  description:"Carte de touches en mode CONTINU \u2014 la carte glisse PENDANT les notes, par messages interm\xE9diaires. BP3 _mapcont \u2014 registre du moteur natif, bp3-engine \`origin/wasm\` : capture-run/console_strings.json porte \xAB 44 0 _mapcont \xBB. Ses deux fr\xE8res discrets vivent dans la librairie variation ; leur destinataire se lit sur le champ resolvedBy de ce fichier-l\xE0, jamais ici.",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control pressure(
-  bp3:_press,
-  args(value),
-  range(0, 127),
-  description:"MIDI Channel Pressure (aftertouch)",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control presscont(
-  bp3:_presscont,
-  description:"Enable continuous channel pressure interpolation",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control volume(
-  implements:expression.volume,
-  bp3:_volume,
-  args(value),
-  range(0, 127),
-  description:"MIDI Volume (CC7)",
-  scope(symbol, group, rule, flow, scene),
-  transportGroup:midi
-)
-
-control volumecont(
-  bp3:_volumecont,
-  description:"Enable continuous volume interpolation",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control switchon(
-  bp3:_switchon,
-  args(channel),
-  description:"Enable MIDI switch channel",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control switchoff(
-  bp3:_switchoff,
-  args(channel),
-  description:"Disable MIDI switch channel",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control mute(
-  description:"Coupe le son. Nu, (mute), coupe tout ce qui sonne ; par composant, (mute.all) ou (mute.lead), coupe la cible nommee. Nomme le 2026-07-26 : remplace une des familles que script(...) portait sans nom.",
-  scope(flow),
-  bagOnly:true,
-  transportGroup:midi
-)
-
-control unmute(
-  description:"Retablit le son coupe par mute. Meme graphie : (unmute) ou (unmute.lead).",
-  scope(flow),
-  bagOnly:true,
-  transportGroup:midi
-)
-
-control panic(
-  description:"Arret d'urgence : toutes les notes relachees, tous les controleurs remis a plat. Image de MIDI all notes off. Ne prend aucun argument.",
-  scope(flow),
-  bagOnly:true,
-  transportGroup:midi
-)
-
-control sync(
-  args(message),
-  values(start, continue, stop),
-  description:"Message systeme temps reel de synchronisation : (sync:start), (sync:continue), (sync:stop). Image des messages MIDI Start/Continue/Stop. Remplace script(MIDI send Continue).",
-  scope(flow),
-  transportGroup:midi
-)
-
-control cc(
-  component:number,
-  args(value),
-  range(0, 127),
-  description:"Controleur MIDI NUMEROTE. Se designe par son numero de composant : (cc.98:45) en contenance, !(cc.98:45) en flux. Pour les controleurs sans alias nomme -- ceux qui en ont un s'ecrivent par leur nom (mod = CC1, volume = CC7). Graphie tranchee par Romain le 2026-07-26 : le point APPELLE le composant (le controleur 98), les deux points AFFECTENT la valeur.",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control volumerate(
-  bp3:_volumerate,
-  args(hz),
-  range(0, 1000),
-  unit:"Hz",
-  description:"Cadence des valeurs intermediaires du continu de volume, en valeurs par seconde. Defaut 50, comme le moteur natif.",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control modrate(
-  bp3:_modrate,
-  args(hz),
-  range(0, 1000),
-  unit:"Hz",
-  description:"Cadence des valeurs intermediaires du continu de modulation, en valeurs par seconde. Defaut 50, comme le moteur natif.",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control pitchrate(
-  bp3:_pitchrate,
-  args(hz),
-  range(0, 1000),
-  unit:"Hz",
-  description:"Cadence des valeurs intermediaires du continu de hauteur, en valeurs par seconde. Defaut 50, comme le moteur natif.",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control pressrate(
-  bp3:_pressrate,
-  args(hz),
-  range(0, 1000),
-  unit:"Hz",
-  description:"Cadence des valeurs intermediaires du continu de pression, en valeurs par seconde. Defaut 50, comme le moteur natif.",
-  scope(symbol, group, rule, flow),
-  transportGroup:midi
-)
-
-control rate(
-  bp3:SamplingRate,
-  args(hz),
-  range(0, 1000),
-  unit:"Hz",
-  description:"Cadence des valeurs interm\xE9diaires de TOUS les flux continus, en \xE9missions par seconde. R\xE8gle d'un mot ce que volumerate, modrate, pitchrate et pressrate r\xE8glent s\xE9par\xE9ment. Image de SamplingRate au moteur natif.",
-  scope(scene),
-  transportGroup:midi
-)
-
-control volumecontrol(
-  bp3:_volumecontrol,
-  args(controller),
-  range(0, 127),
-  description:"Num\xE9ro du contr\xF4leur MIDI qui porte le volume. Image de VolumeController au moteur natif. Le canal se dit dans le m\xEAme sac : !(chan:3, volumecontrol:11).",
-  scope(symbol, group, rule, flow, scene),
-  transportGroup:midi
-)
-
-control pancontrol(
-  bp3:_pancontrol,
-  args(controller),
-  range(0, 127),
-  description:"Num\xE9ro du contr\xF4leur MIDI qui porte le panoramique. Image de PanoramicController au moteur natif. Le canal se dit dans le m\xEAme sac : !(chan:3, pancontrol:11).",
-  scope(symbol, group, rule, flow, scene),
-  transportGroup:midi
-)
-
-control fadeout(
-  bp3:EndFadeOut,
-  args(duration),
-  unit:"s",
-  description:"Extinction du son \xE0 la fin de la performance, en SECONDES. Une valeur inf\xE9rieure ou \xE9gale \xE0 z\xE9ro supprime le fondu. Image de EndFadeOut au moteur natif.",
-  scope(scene),
-  transportGroup:midi
-)
-
-control resetnotes(
-  bp3:ResetNotes,
-  bp3value:1,
-  description:"\xC0 la fin de la sc\xE8ne, \xE9teindre ce qui sonne encore.",
-  scope(flow, scene),
-  bagOnly:true,
-  unicite:fin-de-scene,
-  transportGroup:midi
-)
-
-control letring(
-  bp3:ResetNotes,
-  bp3value:0,
-  description:"\xC0 la fin de la sc\xE8ne, laisser sonner ce qui sonne encore.",
-  scope(flow, scene),
-  bagOnly:true,
-  unicite:fin-de-scene,
-  transportGroup:midi
-)
-
-control strikeagain(
-  bp3:StrikeAgainDefault,
-  bp3value:1,
-  description:"Une note d\xE9j\xE0 tenue qu'on rejoue est RELANC\xC9E \u2014 nouveau NoteOn.",
-  scope(flow, scene),
-  bagOnly:true,
-  unicite:note-rejouee,
-  transportGroup:midi
-)
-
-control sustain(
-  bp3:StrikeAgainDefault,
-  bp3value:0,
-  description:"Une note d\xE9j\xE0 tenue qu'on rejoue reste TENUE \u2014 aucun nouveau NoteOn.",
-  scope(flow, scene),
-  bagOnly:true,
-  unicite:note-rejouee,
-  transportGroup:midi
-)
-
-control pedalrelease(
-  description:"Un interrupteur d\xE9j\xE0 enfonc\xE9 qu'on r\xE9-actionne est rel\xE2ch\xE9 puis repress\xE9.",
-  scope(flow, scene),
-  bagOnly:true,
-  unicite:interrupteur-rejoue,
-  transportGroup:midi
-)
-
-control pedalhold(
-  description:"Un interrupteur d\xE9j\xE0 enfonc\xE9 qu'on r\xE9-actionne garde son \xE9tat.",
-  scope(flow, scene),
-  bagOnly:true,
-  unicite:interrupteur-rejoue,
-  transportGroup:midi
-)
-
-control resetcontrols(
-  bp3:ResetControllers,
-  bp3value:1,
-  description:"\xC0 la fin de la sc\xE8ne, remettre les contr\xF4leurs \xE0 plat.",
-  scope(flow, scene),
-  bagOnly:true,
-  unicite:fin-des-controleurs,
-  transportGroup:midi
-)
-
-control keepcontrols(
-  bp3:ResetControllers,
-  bp3value:0,
-  description:"\xC0 la fin de la sc\xE8ne, laisser les contr\xF4leurs dans l'\xE9tat o\xF9 la sc\xE8ne les a mis.",
-  scope(flow, scene),
-  bagOnly:true,
-  unicite:fin-des-controleurs,
-  transportGroup:midi
-)
-`, "fichier": "midi.bpsl" }, { "nom": "midi_default", "format": "bpsl", "texte": `types
-
-// @documented
-def midi_default(
-  resolvedBy:runtime-MIDI,
-  resolves:midi_default,
-  name:midi_default,
-  description:"L'ENVIRONNEMENT MIDI PAR D\xC9FAUT \u2014 la valeur que porte chaque mot de \`midi\` tant qu'une sc\xE8ne n'en \xE9crit pas d'autre.",
-  version:"0.2.0"
-)
-
-chan:1
-mod:0
-pitchbend:0
-pitchrange:200
-pressure:0
-volume:90
-volumerate:50
-modrate:50
-pitchrate:50
-pressrate:50
-rate:50
-volumecontrol:7
-pancontrol:10
-fadeout:2
-resetnotes:false
-letring:true
-strikeagain:true
-sustain:false
-pedalrelease:true
-pedalhold:false
-resetcontrols:false
-keepcontrols:true
-`, "fichier": "midi_default.bpsl" }, { "nom": "octaves", "format": "bpsl", "texte": 'types\n\n// @documented\ndef octaves(resolvedBy:"Kairos", resolves:octaves)\n\noctaves western(\n  position:suffix,\n  separator:"",\n  registers("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"),\n  default:"4"\n)\n\noctaves arrows(position:suffix, separator:"_", registers(vv, v, "", "^", "^^"), default:"")\n\noctaves saptak(position:prefix, separator:"_", registers(mandra, madhya, taar), default:madhya)\n\noctaves turkish(position:prefix, separator:"_", registers("", tiz), default:"")\n\noctaves gamelan(position:prefix, separator:"_", registers(ageng, tengah, alit), default:tengah)\n\noctaves shakuhachi(position:prefix, separator:"_", registers(otsu, kan, daikan), default:otsu)\n\noctaves korean(position:prefix, separator:"_", registers(tak, jung, cheong), default:jung)\n\noctaves saptak_us(\n  position:suffix,\n  separator:"_",\n  registers("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"),\n  default:"4"\n)\n\noctaves bp3(\n  position:suffix,\n  separator:"",\n  registers("00", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"),\n  default:"4"\n)\n\noctaves bp3_fr(\n  position:suffix,\n  separator:"",\n  registers("000", "00", "0", "1", "2", "3", "4", "5", "6", "7", "8"),\n  default:"3"\n)\n', "fichier": "octaves.bpsl" }, { "nom": "scales", "format": "bpsl", "texte": `types
+`, "fichier": "homomorphism.bpsl" }, { "nom": "midi", "format": "bpsl", "texte": 'types\n\n// @documented\n// @description Controls specific to the MIDI transport \u2014 EXACT match with LIBRAIRIES.md:172.\ndef midi(\n  resolves:midi,\n  resolvedBy:"runtime-MIDI",\n  name:midi,\n  section:controls\n)\n\n// @description Address channel, short form of channel.\ndef ch(\n  section:schema.addressKeys,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Address channel, long form of ch.\ndef channel(\n  section:schema.addressKeys,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Device targeted by the address.\ndef device(\n  section:schema.addressKeys,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Note number of an address \u2014 the source a wait point listens to, the event an occurrence targets.\ndef note(\n  section:schema.addressKeys,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Port targeted by the address.\ndef port(\n  section:schema.addressKeys,\n  scope(symbol, group, rule, flow)\n)\n\n// @description MIDI channel\ncontrol chan(\n  bp3:_chan,\n  args(channel),\n  range(1, 16),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description MIDI Program Change. The author writes the program number starting at 1, like the original engine; the byte transmitted is\n// that number minus one.\ncontrol ins(\n  bp3:_ins,\n  args(program),\n  range(1, 128),\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:midi\n)\n\n// @description MIDI Modulation (CC1)\ncontrol mod(\n  bp3:_mod,\n  args(value),\n  range(0, 127),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Enable continuous modulation interpolation (CC1)\ncontrol modcont(\n  bp3:_modcont,\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description MIDI Pitch Bend\ncontrol pitchbend(\n  bp3:_pitchbend,\n  args(value),\n  range(-8192, 8191),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Pitch bend range in cents\ncontrol pitchrange(\n  bp3:_pitchrange,\n  args(cents),\n  unit:"cents",\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Enable continuous pitch bend interpolation\ncontrol pitchcont(\n  bp3:_pitchcont,\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Key mapping \u2014 remap MIDI key range (p1,p2) to (q1,q2). Args are key numbers (0..127) or note names; p2 must be greater than\n// p1. BP3 _keymap \u2014 register of the native engine, bp3-engine `origin/wasm`: capture-run/console_strings.json carries \xAB 62 4 _keymap \xBB.\ncontrol keymap(\n  bp3:_keymap,\n  args(p1, q1, p2, q2),\n  range(0, 127),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Key map in CONTINUOUS mode \u2014 the map glides DURING notes, through intermediate messages. BP3 _mapcont \u2014 register of the\n// native engine, bp3-engine `origin/wasm`: capture-run/console_strings.json carries \xAB 44 0 _mapcont \xBB. Its two discrete siblings live in\n// the variation library; their recipient is read on that file\'s resolvedBy field, never here.\ncontrol mapcont(\n  bp3:_mapcont,\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description MIDI Channel Pressure (aftertouch)\ncontrol pressure(\n  bp3:_press,\n  args(value),\n  range(0, 127),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Enable continuous channel pressure interpolation\ncontrol presscont(\n  bp3:_presscont,\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description MIDI Volume (CC7)\ncontrol volume(\n  implements:expression.volume,\n  bp3:_volume,\n  args(value),\n  range(0, 127),\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:midi\n)\n\n// @description Enable continuous volume interpolation\ncontrol volumecont(\n  bp3:_volumecont,\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Enable MIDI switch channel\ncontrol switchon(\n  bp3:_switchon,\n  args(channel),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Disable MIDI switch channel\ncontrol switchoff(\n  bp3:_switchoff,\n  args(channel),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Mutes the sound. Bare, (mute), mutes everything sounding; per component, (mute.all) or (mute.lead), mutes the named target.\n// Named on 2026-07-26: replaces one of the families script(...) carried without a name.\ncontrol mute(\n  scope(flow),\n  bagOnly:true,\n  transportGroup:midi\n)\n\n// @description Restores the sound muted by mute. Same graphy: (unmute) or (unmute.lead).\ncontrol unmute(\n  scope(flow),\n  bagOnly:true,\n  transportGroup:midi\n)\n\n// @description Emergency stop: every note released, every controller reset flat. Image of MIDI all notes off. Takes no argument.\ncontrol panic(\n  scope(flow),\n  bagOnly:true,\n  transportGroup:midi\n)\n\n// @description Real-time system synchronization message: (sync:start), (sync:continue), (sync:stop). Image of the MIDI Start/Continue/Stop\n// messages. Replaces script(MIDI send Continue).\ncontrol sync(\n  args(message),\n  values(start, continue, stop),\n  scope(flow),\n  transportGroup:midi\n)\n\n// @description NUMBERED MIDI controller. Designated by its component number: (cc.98:45) in a container, !(cc.98:45) in flow. For\n// controllers with no named alias -- those that have one are written by their name (mod = CC1, volume = CC7). Graphy settled by Romain on\n// 2026-07-26: the dot CALLS the component (controller 98), the colon ASSIGNS the value.\ncontrol cc(\n  component:number,\n  args(value),\n  range(0, 127),\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Rate of intermediate values for continuous volume, in values per second. Default 50, like the native engine.\ncontrol volumerate(\n  bp3:_volumerate,\n  args(hz),\n  range(0, 1000),\n  unit:"Hz",\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Rate of intermediate values for continuous modulation, in values per second. Default 50, like the native engine.\ncontrol modrate(\n  bp3:_modrate,\n  args(hz),\n  range(0, 1000),\n  unit:"Hz",\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Rate of intermediate values for continuous pitch, in values per second. Default 50, like the native engine.\ncontrol pitchrate(\n  bp3:_pitchrate,\n  args(hz),\n  range(0, 1000),\n  unit:"Hz",\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Rate of intermediate values for continuous pressure, in values per second. Default 50, like the native engine.\ncontrol pressrate(\n  bp3:_pressrate,\n  args(hz),\n  range(0, 1000),\n  unit:"Hz",\n  scope(symbol, group, rule, flow),\n  transportGroup:midi\n)\n\n// @description Rate of intermediate values for ALL continuous streams, in emissions per second. Sets in one word what volumerate, modrate,\n// pitchrate and pressrate set separately. Image of SamplingRate in the native engine.\ncontrol rate(\n  bp3:SamplingRate,\n  args(hz),\n  range(0, 1000),\n  unit:"Hz",\n  scope(scene),\n  transportGroup:midi\n)\n\n// @description Number of the MIDI controller carrying volume. Image of VolumeController in the native engine. The channel is stated in the\n// same bag: !(chan:3, volumecontrol:11).\ncontrol volumecontrol(\n  bp3:_volumecontrol,\n  args(controller),\n  range(0, 127),\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:midi\n)\n\n// @description Number of the MIDI controller carrying panning. Image of PanoramicController in the native engine. The channel is stated in\n// the same bag: !(chan:3, pancontrol:11).\ncontrol pancontrol(\n  bp3:_pancontrol,\n  args(controller),\n  range(0, 127),\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:midi\n)\n\n// @description Sound fade-out at the end of the performance, in SECONDS. A value of zero or less removes the fade. Image of EndFadeOut in\n// the native engine.\ncontrol fadeout(\n  bp3:EndFadeOut,\n  args(duration),\n  unit:"s",\n  scope(scene),\n  transportGroup:midi\n)\n\n// @description At the end of the scene, silence whatever is still sounding.\ncontrol resetnotes(\n  bp3:ResetNotes,\n  bp3value:1,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:fin-de-scene,\n  transportGroup:midi\n)\n\n// @description At the end of the scene, let whatever is still sounding ring on.\ncontrol letring(\n  bp3:ResetNotes,\n  bp3value:0,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:fin-de-scene,\n  transportGroup:midi\n)\n\n// @description A note already held that is replayed is RETRIGGERED \u2014 a new NoteOn.\ncontrol strikeagain(\n  bp3:StrikeAgainDefault,\n  bp3value:1,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:note-rejouee,\n  transportGroup:midi\n)\n\n// @description A note already held that is replayed stays HELD \u2014 no new NoteOn.\ncontrol sustain(\n  bp3:StrikeAgainDefault,\n  bp3value:0,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:note-rejouee,\n  transportGroup:midi\n)\n\n// @description A switch already pressed that is re-actuated is released then pressed again.\ncontrol pedalrelease(\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:interrupteur-rejoue,\n  transportGroup:midi\n)\n\n// @description A switch already pressed that is re-actuated keeps its state.\ncontrol pedalhold(\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:interrupteur-rejoue,\n  transportGroup:midi\n)\n\n// @description At the end of the scene, reset the controllers flat.\ncontrol resetcontrols(\n  bp3:ResetControllers,\n  bp3value:1,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:fin-des-controleurs,\n  transportGroup:midi\n)\n\n// @description At the end of the scene, leave the controllers in the state the scene put them in.\ncontrol keepcontrols(\n  bp3:ResetControllers,\n  bp3value:0,\n  scope(flow, scene),\n  bagOnly:true,\n  unicite:fin-des-controleurs,\n  transportGroup:midi\n)\n', "fichier": "midi.bpsl" }, { "nom": "midi_default", "format": "bpsl", "texte": 'types\n\n// @documented\n// @description THE DEFAULT MIDI ENVIRONMENT \u2014 the value each word of `midi` carries until a scene writes another.\ndef midi_default(\n  resolvedBy:runtime-MIDI,\n  resolves:midi_default,\n  name:midi_default,\n  version:"0.2.0"\n)\n\nchan:1\nmod:0\npitchbend:0\npitchrange:200\npressure:0\nvolume:90\nvolumerate:50\nmodrate:50\npitchrate:50\npressrate:50\nrate:50\nvolumecontrol:7\npancontrol:10\nfadeout:2\nresetnotes:false\nletring:true\nstrikeagain:true\nsustain:false\npedalrelease:true\npedalhold:false\nresetcontrols:false\nkeepcontrols:true\n', "fichier": "midi_default.bpsl" }, { "nom": "octaves", "format": "bpsl", "texte": 'types\n\n// @documented\ndef octaves(resolvedBy:"Kairos", resolves:octaves)\n\noctaves western(\n  position:suffix,\n  separator:"",\n  registers("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"),\n  default:"4"\n)\n\noctaves arrows(position:suffix, separator:"_", registers(vv, v, "", "^", "^^"), default:"")\n\noctaves saptak(position:prefix, separator:"_", registers(mandra, madhya, taar), default:madhya)\n\noctaves turkish(position:prefix, separator:"_", registers("", tiz), default:"")\n\noctaves gamelan(position:prefix, separator:"_", registers(ageng, tengah, alit), default:tengah)\n\noctaves shakuhachi(position:prefix, separator:"_", registers(otsu, kan, daikan), default:otsu)\n\noctaves korean(position:prefix, separator:"_", registers(tak, jung, cheong), default:jung)\n\noctaves saptak_us(\n  position:suffix,\n  separator:"_",\n  registers("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"),\n  default:"4"\n)\n\noctaves bp3(\n  position:suffix,\n  separator:"",\n  registers("00", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"),\n  default:"4"\n)\n\noctaves bp3_fr(\n  position:suffix,\n  separator:"",\n  registers("000", "00", "0", "1", "2", "3", "4", "5", "6", "7", "8"),\n  default:"3"\n)\n', "fichier": "octaves.bpsl" }, { "nom": "scales", "format": "bpsl", "texte": `types
 
 // @documented
 def scales(resolvedBy:"Kairos", resolves:scale)
 
+// @description Maqam Sikah \u2014 starts on sikah (E half-flat) \u2014 Ratios = zalzalian just intonation (5-limit; neutral third 27/22). Source of
+// truth; 24-TET is a rendering projection, not the ontology. [jins decomposition TO BE ESTABLISHED (musicological verification); exact
+// ratios kept meanwhile].
 interval maqam_sikah(
-  description:"Maqam Sikah \u2014 starts on sikah (E half-flat) \u2014 Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de v\xE9rit\xE9 ; le 24-TET est une projection de rendu, pas l'ontologie. [d\xE9composition en jins \xC0 \xC9TABLIR (v\xE9rification musicologique) ; ratios exacts conserv\xE9s en attendant].",
   culture:arabic,
   notes_count:7,
   ratios(1, 12/11, 27/22, 4/3, 16/11, 18/11, 11/6),
   system:"zalzal-ji"
 )
+// @description Maqam Jiharkah \u2014 Rast-like with lowered 7th \u2014 Ratios = zalzalian just intonation (5-limit; neutral third 27/22). Source of
+// truth; 24-TET is a rendering projection, not the ontology. [jins decomposition TO BE ESTABLISHED (musicological verification); exact
+// ratios kept meanwhile].
 interval maqam_jiharkah(
-  description:"Maqam Jiharkah \u2014 Rast-like with lowered 7th \u2014 Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de v\xE9rit\xE9 ; le 24-TET est une projection de rendu, pas l'ontologie. [d\xE9composition en jins \xC0 \xC9TABLIR (v\xE9rification musicologique) ; ratios exacts conserv\xE9s en attendant].",
   culture:arabic,
   notes_count:7,
   ratios(1, 9/8, 5/4, 4/3, 3/2, 5/3, 11/6),
   system:"zalzal-ji"
 )
+// @description Maqam Suzidil \u2014 Ajam lower + Hijaz Kar upper \u2014 Ratios = zalzalian just intonation (5-limit; neutral third 27/22). Source of
+// truth; 24-TET is a rendering projection, not the ontology. [jins decomposition TO BE ESTABLISHED (musicological verification); exact
+// ratios kept meanwhile].
 interval maqam_suzidil(
-  description:"Maqam Suzidil \u2014 Ajam lower + Hijaz Kar upper \u2014 Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de v\xE9rit\xE9 ; le 24-TET est une projection de rendu, pas l'ontologie. [d\xE9composition en jins \xC0 \xC9TABLIR (v\xE9rification musicologique) ; ratios exacts conserv\xE9s en attendant].",
   culture:arabic,
   notes_count:7,
   ratios(1, 9/8, 5/4, 4/3, 3/2, 8/5, 15/8),
   system:"zalzal-ji"
 )
+// @description Maqam Shawq Afza \u2014 Sikah-based, emotional character \u2014 Ratios = zalzalian just intonation (5-limit; neutral third 27/22).
+// Source of truth; 24-TET is a rendering projection, not the ontology. [jins decomposition TO BE ESTABLISHED (musicological verification);
+// exact ratios kept meanwhile].
 interval maqam_shawq_afza(
-  description:"Maqam Shawq Afza \u2014 Sikah-based, emotional character \u2014 Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de v\xE9rit\xE9 ; le 24-TET est une projection de rendu, pas l'ontologie. [d\xE9composition en jins \xC0 \xC9TABLIR (v\xE9rification musicologique) ; ratios exacts conserv\xE9s en attendant].",
   culture:arabic,
   notes_count:7,
   ratios(1, 12/11, 6/5, 4/3, 3/2, 5/3, 11/6),
   system:"zalzal-ji"
 )
+// @description Jins Nikriz \u2014 4-note tetrachord with augmented second [zalzalian JI ratios (from 24-TET degrees)].
 interval jins_nikriz(
-  description:"Jins Nikriz \u2014 4-note tetrachord with augmented second [ratios JI zalzaliens (depuis degr\xE9s 24-TET)].",
   culture:arabic,
   temperament:"24TET",
   notes_count:4,
   ratios(1, 9/8, 6/5, 45/32)
 )
+// @description Jins Athar Kurd \u2014 Kurd variant with raised 3rd [zalzalian JI ratios (from 24-TET degrees)].
 interval jins_athar_kurd(
-  description:"Jins Athar Kurd \u2014 Kurd variant with raised 3rd [ratios JI zalzaliens (depuis degr\xE9s 24-TET)].",
   culture:arabic,
   temperament:"24TET",
   notes_count:4,
   ratios(1, 16/15, 6/5, 45/32)
 )
+// @description Jins Saba Zamzam \u2014 Saba variant with flat 2nd and 4th [zalzalian JI ratios (from 24-TET degrees)].
 interval jins_saba_zamzam(
-  description:"Jins Saba Zamzam \u2014 Saba variant with flat 2nd and 4th [ratios JI zalzaliens (depuis degr\xE9s 24-TET)].",
   culture:arabic,
   temperament:"24TET",
   notes_count:4,
   ratios(1, 16/15, 6/5, 5/4)
 )
+// @description Jins Mustaar \u2014 rare 3-note jins, narrow intervals [zalzalian JI ratios (from 24-TET degrees)].
 interval jins_mustaar(
-  description:"Jins Mustaar \u2014 rare 3-note jins, narrow intervals [ratios JI zalzaliens (depuis degr\xE9s 24-TET)].",
   culture:arabic,
   temperament:"24TET",
   notes_count:3,
   ratios(1, 12/11, 15/13)
 )
+// @description Gong mode \u2014 1st mode of Chinese pentatonic, Do position
 interval gong(
-  description:"Gong mode \u2014 1st mode of Chinese pentatonic, Do position",
   culture:chinese,
   ratios(1, 9/8, 81/64, 3/2, 27/16),
   notes_count:5
 )
+// @description Shang mode \u2014 2nd mode of Chinese pentatonic, Re position
 interval shang(
-  description:"Shang mode \u2014 2nd mode of Chinese pentatonic, Re position",
   culture:chinese,
   ratios(1, 9/8, 4/3, 3/2, 16/9),
   notes_count:5
 )
+// @description Jue mode \u2014 3rd mode of Chinese pentatonic, Mi position
 interval jue(
-  description:"Jue mode \u2014 3rd mode of Chinese pentatonic, Mi position",
   culture:chinese,
   ratios(1, 32/27, 4/3, 128/81, 16/9),
   notes_count:5
 )
+// @description Zhi mode \u2014 4th mode of Chinese pentatonic, Sol position
 interval zhi(
-  description:"Zhi mode \u2014 4th mode of Chinese pentatonic, Sol position",
   culture:chinese,
   ratios(1, 9/8, 4/3, 3/2, 16/9),
   notes_count:5
 )
+// @description Yu mode \u2014 5th mode of Chinese pentatonic, La position
 interval yu(
-  description:"Yu mode \u2014 5th mode of Chinese pentatonic, La position",
   culture:chinese,
   ratios(1, 32/27, 4/3, 3/2, 128/81),
   notes_count:5
 )
+// @description Yayue \u2014 Chinese ceremonial court music heptatonic scale
 interval yayue(
-  description:"Yayue \u2014 Chinese ceremonial court music heptatonic scale",
   culture:chinese,
   ratios(1, 9/8, 81/64, 4/3, 3/2, 27/16, 243/128),
   notes_count:7
 )
+// @description Qingyue \u2014 Chinese folk heptatonic scale with minor 7th
 interval qingyue(
-  description:"Qingyue \u2014 Chinese folk heptatonic scale with minor 7th",
   culture:chinese,
   ratios(1, 9/8, 81/64, 4/3, 3/2, 27/16, 16/9),
   notes_count:7
 )
+// @description Hirajoshi \u2014 Japanese pentatonic scale, melancholic character
 interval hirajoshi(
-  description:"Hirajoshi \u2014 Japanese pentatonic scale, melancholic character",
   culture:japanese,
   ratios(1, 9/8, 6/5, 3/2, 8/5),
   notes_count:5
 )
+// @description In-sen \u2014 Japanese pentatonic, used in shakuhachi music
 interval in_sen(
-  description:"In-sen \u2014 Japanese pentatonic, used in shakuhachi music",
   culture:japanese,
   ratios(1, 16/15, 4/3, 3/2, 8/5),
   notes_count:5
 )
+// @description Yo \u2014 Japanese pentatonic, bright folk scale
 interval yo(
-  description:"Yo \u2014 Japanese pentatonic, bright folk scale",
   culture:japanese,
   ratios(1, 9/8, 4/3, 3/2, 16/9),
   notes_count:5
 )
+// @description Iwato \u2014 Japanese pentatonic, dark meditative scale
 interval iwato(
-  description:"Iwato \u2014 Japanese pentatonic, dark meditative scale",
   culture:japanese,
   ratios(1, 16/15, 4/3, 45/32, 8/5),
   notes_count:5
 )
+// @description Kumoi \u2014 Japanese pentatonic, koto tuning
 interval kumoi(
-  description:"Kumoi \u2014 Japanese pentatonic, koto tuning",
   culture:japanese,
   ratios(1, 9/8, 6/5, 3/2, 9/5),
   notes_count:5
 )
+// @description Ryukyu \u2014 Okinawan pentatonic scale
 interval ryukyu(
-  description:"Ryukyu \u2014 Okinawan pentatonic scale",
   culture:japanese,
   ratios(1, 5/4, 4/3, 3/2, 15/8),
   notes_count:5
 )
+// @description Miyako-bushi \u2014 Japanese urban pentatonic, used in koto and shamisen
 interval miyako_bushi(
-  description:"Miyako-bushi \u2014 Japanese urban pentatonic, used in koto and shamisen",
   culture:japanese,
   ratios(1, 16/15, 5/4, 3/2, 8/5),
   notes_count:5
 )
+// @description Pyeong-jo \u2014 Korean pentatonic mode, peaceful character
 interval pyeong_jo(
-  description:"Pyeong-jo \u2014 Korean pentatonic mode, peaceful character",
   culture:korean,
   ratios(1, 9/8, 4/3, 3/2, 16/9),
   notes_count:5
 )
+// @description Gye-myeon-jo \u2014 Korean pentatonic mode, sorrowful character
 interval gye_myeon_jo(
-  description:"Gye-myeon-jo \u2014 Korean pentatonic mode, sorrowful character",
   culture:korean,
   ratios(1, 6/5, 4/3, 3/2, 8/5),
   notes_count:5
 )
+// @description Ancient Greek Dorian \u2014 descending E to E on white keys
 interval dorian_ancient(
-  description:"Ancient Greek Dorian \u2014 descending E to E on white keys",
   culture:greek,
   ratios(1, 9/8, 32/27, 4/3, 3/2, 128/81, 16/9),
   notes_count:7
 )
+// @description Ancient Greek Phrygian \u2014 descending D to D on white keys
 interval phrygian_ancient(
-  description:"Ancient Greek Phrygian \u2014 descending D to D on white keys",
   culture:greek,
   ratios(1, 9/8, 81/64, 4/3, 3/2, 27/16, 243/128),
   notes_count:7
 )
+// @description Ancient Greek Lydian \u2014 descending C to C on white keys
 interval lydian_ancient(
-  description:"Ancient Greek Lydian \u2014 descending C to C on white keys",
   culture:greek,
   ratios(1, 9/8, 81/64, 4/3, 3/2, 27/16, 16/9),
   notes_count:7
 )
+// @description Ancient Greek Mixolydian \u2014 descending B to B on white keys
 interval mixolydian_ancient(
-  description:"Ancient Greek Mixolydian \u2014 descending B to B on white keys",
   culture:greek,
   ratios(1, 256/243, 32/27, 4/3, 3/2, 128/81, 16/9),
   notes_count:7
 )
+// @description Ancient Greek Chromatic genus tetrachord \u2014 narrow semitones + minor third
 interval chromatic_genus(
-  description:"Ancient Greek Chromatic genus tetrachord \u2014 narrow semitones + minor third",
   culture:greek,
   ratios(1, 28/27, 32/27, 4/3),
   notes_count:4
 )
+// @description Ancient Greek Enharmonic genus tetrachord \u2014 quarter-tones + major third
 interval enharmonic_genus(
-  description:"Ancient Greek Enharmonic genus tetrachord \u2014 quarter-tones + major third",
   culture:greek,
   ratios(1, 28/27, 16/15, 4/3),
   notes_count:4
 )
+// @description Medieval Ionian mode \u2014 C to C, equivalent to major scale
 interval ionian(
-  description:"Medieval Ionian mode \u2014 C to C, equivalent to major scale",
   culture:medieval,
   ratios(1, 9/8, 5/4, 4/3, 3/2, 5/3, 15/8),
   notes_count:7
 )
+// @description Medieval Dorian mode \u2014 D to D, minor with raised 6th
 interval dorian(
-  description:"Medieval Dorian mode \u2014 D to D, minor with raised 6th",
   culture:medieval,
   ratios(1, 9/8, 6/5, 4/3, 3/2, 5/3, 9/5),
   notes_count:7
 )
+// @description Medieval Phrygian mode \u2014 E to E, minor with flat 2nd
 interval phrygian(
-  description:"Medieval Phrygian mode \u2014 E to E, minor with flat 2nd",
   culture:medieval,
   ratios(1, 16/15, 6/5, 4/3, 3/2, 8/5, 9/5),
   notes_count:7
 )
+// @description Medieval Lydian mode \u2014 F to F, major with raised 4th
 interval lydian(
-  description:"Medieval Lydian mode \u2014 F to F, major with raised 4th",
   culture:medieval,
   ratios(1, 9/8, 5/4, 45/32, 3/2, 5/3, 15/8),
   notes_count:7
 )
+// @description Medieval Mixolydian mode \u2014 G to G, major with flat 7th
 interval mixolydian(
-  description:"Medieval Mixolydian mode \u2014 G to G, major with flat 7th",
   culture:medieval,
   ratios(1, 9/8, 5/4, 4/3, 3/2, 5/3, 9/5),
   notes_count:7
 )
+// @description Medieval Aeolian mode \u2014 A to A, natural minor
 interval aeolian(
-  description:"Medieval Aeolian mode \u2014 A to A, natural minor",
   culture:medieval,
   ratios(1, 9/8, 6/5, 4/3, 3/2, 8/5, 9/5),
   notes_count:7
 )
+// @description Medieval Locrian mode \u2014 B to B, diminished mode
 interval locrian(
-  description:"Medieval Locrian mode \u2014 B to B, diminished mode",
   culture:medieval,
   ratios(1, 16/15, 6/5, 4/3, 64/45, 8/5, 9/5),
   notes_count:7
 )
+// @description Byzantine Protos \u2014 1st mode of Byzantine Octoechos
 interval byzantine_protos(
-  description:"Byzantine Protos \u2014 1st mode of Byzantine Octoechos",
   culture:byzantine,
   ratios(1, 9/8, 12/11, 4/3, 3/2, 27/16, 18/11),
   notes_count:7
 )
+// @description Byzantine Devteros \u2014 2nd mode of Byzantine Octoechos
 interval byzantine_devteros(
-  description:"Byzantine Devteros \u2014 2nd mode of Byzantine Octoechos",
   culture:byzantine,
   ratios(1, 12/11, 32/27, 4/3, 3/2, 18/11, 16/9),
   notes_count:7
 )
+// @description Tizita major \u2014 Ethiopian pentatonic, nostalgic mood
 interval tizita_major(
-  description:"Tizita major \u2014 Ethiopian pentatonic, nostalgic mood",
   culture:ethiopian,
   ratios(1, 9/8, 5/4, 3/2, 5/3),
   notes_count:5
 )
+// @description Tizita minor \u2014 Ethiopian pentatonic, melancholic variant
 interval tizita_minor(
-  description:"Tizita minor \u2014 Ethiopian pentatonic, melancholic variant",
   culture:ethiopian,
   ratios(1, 9/8, 6/5, 3/2, 8/5),
   notes_count:5
 )
+// @description Bati major \u2014 Ethiopian pentatonic, bright and festive
 interval bati_major(
-  description:"Bati major \u2014 Ethiopian pentatonic, bright and festive",
   culture:ethiopian,
   ratios(1, 6/5, 4/3, 3/2, 9/5),
   notes_count:5
 )
+// @description Bati minor \u2014 Ethiopian pentatonic, darker Bati variant
 interval bati_minor(
-  description:"Bati minor \u2014 Ethiopian pentatonic, darker Bati variant",
   culture:ethiopian,
   ratios(1, 6/5, 4/3, 3/2, 8/5),
   notes_count:5
 )
+// @description Ambassel \u2014 Ethiopian pentatonic, spiritual and contemplative
 interval ambassel(
-  description:"Ambassel \u2014 Ethiopian pentatonic, spiritual and contemplative",
   culture:ethiopian,
   ratios(1, 16/15, 5/4, 3/2, 8/5),
   notes_count:5
 )
+// @description Anchihoye \u2014 Ethiopian tetratonic, simplest Ethiopian mode
 interval anchihoye(
-  description:"Anchihoye \u2014 Ethiopian tetratonic, simplest Ethiopian mode",
   culture:ethiopian,
   ratios(1, 6/5, 3/2, 8/5),
   notes_count:4
 )
+// @description Pelog lima \u2014 5-note Javanese pelog, empirical tuning
 interval pelog_lima(
-  description:"Pelog lima \u2014 5-note Javanese pelog, empirical tuning",
   culture:indonesian,
   ratios(1, 120c, 260c, 540c, 675c),
   notes_count:5
 )
+// @description Slendro Balinese \u2014 5-tone quasi-equal Balinese slendro
 interval slendro_balinese(
-  description:"Slendro Balinese \u2014 5-tone quasi-equal Balinese slendro",
   culture:indonesian,
   ratios(1, 240c, 480c, 720c, 960c),
   notes_count:5
 )
+// @description Thai 7-TET \u2014 7 equal divisions of the octave
 interval thai_7tet(
-  description:"Thai 7-TET \u2014 7 equal divisions of the octave",
   culture:thai,
   ratios(1, 171c, 343c, 514c, 686c, 857c, 1029c),
   notes_count:7
 )
+// @description Thai pentatonic \u2014 5 of 7 equal steps, traditional Thai selection
 interval thai_pentatonic(
-  description:"Thai pentatonic \u2014 5 of 7 equal steps, traditional Thai selection",
   culture:thai,
   ratios(1, 171c, 514c, 686c, 857c),
   notes_count:5
 )
+// @description Blues scale \u2014 hexatonic with blue notes
 interval blues(
-  description:"Blues scale \u2014 hexatonic with blue notes",
   culture:western,
   ratios(1, 6/5, 4/3, 7/5, 3/2, 9/5),
   notes_count:6
 )
+// @description Whole tone scale \u2014 6 equal whole steps
 interval whole_tone(
-  description:"Whole tone scale \u2014 6 equal whole steps",
   culture:western,
   ratios(1, 200c, 400c, 600c, 800c, 1000c),
   notes_count:6
 )
+// @description Diminished scale (half-whole) \u2014 octatonic alternating H-W
 interval diminished_hw(
-  description:"Diminished scale (half-whole) \u2014 octatonic alternating H-W",
   culture:western,
   ratios(1, 100c, 300c, 400c, 600c, 700c, 900c, 1000c),
   notes_count:8
 )
+// @description Diminished scale (whole-half) \u2014 octatonic alternating W-H
 interval diminished_wh(
-  description:"Diminished scale (whole-half) \u2014 octatonic alternating W-H",
   culture:western,
   ratios(1, 200c, 300c, 500c, 600c, 800c, 900c, 1100c),
   notes_count:8
 )
+// @description Augmented scale \u2014 hexatonic symmetric scale
 interval augmented(
-  description:"Augmented scale \u2014 hexatonic symmetric scale",
   culture:western,
   ratios(1, 300c, 400c, 700c, 800c, 1100c),
   notes_count:6
 )
+// @description Harmonic minor \u2014 natural minor with raised 7th
 interval harmonic_minor(
-  description:"Harmonic minor \u2014 natural minor with raised 7th",
   culture:western,
   ratios(1, 9/8, 6/5, 4/3, 3/2, 8/5, 15/8),
   notes_count:7
 )
+// @description Hungarian minor \u2014 double harmonic minor, gypsy scale
 interval hungarian_minor(
-  description:"Hungarian minor \u2014 double harmonic minor, gypsy scale",
   culture:western,
   ratios(1, 9/8, 6/5, 45/32, 3/2, 8/5, 15/8),
   notes_count:7
 )
+// @description Chromatic scale \u2014 all 12 semitones
 interval chromatic(
-  description:"Chromatic scale \u2014 all 12 semitones",
   culture:western,
   ratios(1, 100c, 200c, 300c, 400c, 500c, 600c, 700c, 800c, 900c, 1000c, 1100c),
   notes_count:12
 )
+// @description Kurd \u2014 Aeolian / Natural Minor. The most popular handpan scale worldwide.
 interval handpan_kurd(
-  description:"Kurd \u2014 Aeolian / Natural Minor. The most popular handpan scale worldwide.",
   culture:handpan,
   ratios(1, 9/8, 6/5, 4/3, 3/2, 8/5, 9/5),
   notes_count:7,
   layout:"D3 A3 Bb3 C4 D4 E4 F4 G4 A4"
 )
+// @description Integral \u2014 Aeolian without 4th. Created by PanArt (original Hang). Open, spacious.
 interval handpan_integral(
-  description:"Integral \u2014 Aeolian without 4th. Created by PanArt (original Hang). Open, spacious.",
   culture:handpan,
   ratios(1, 6/5, 4/3, 3/2, 8/5, 9/5),
   notes_count:6,
   layout:"D3 A3 Bb3 C4 D4 F4 A4 C5"
 )
+// @description Celtic / Amara \u2014 Dorian mode. Brighter minor with raised 6th. Folk/Celtic character.
 interval handpan_celtic(
-  description:"Celtic / Amara \u2014 Dorian mode. Brighter minor with raised 6th. Folk/Celtic character.",
   culture:handpan,
   ratios(1, 9/8, 6/5, 4/3, 3/2, 5/3, 9/5),
   notes_count:7,
   layout:"D3 A3 C4 D4 E4 F4 G4 A4 B4"
 )
+// @description Pygmy \u2014 Minor pentatonic + b6. African-inspired, warm and forgiving.
 interval handpan_pygmy(
-  description:"Pygmy \u2014 Minor pentatonic + b6. African-inspired, warm and forgiving.",
   culture:handpan,
   ratios(1, 6/5, 4/3, 3/2, 8/5, 9/5),
   notes_count:6,
   layout:"D3 A3 Bb3 C4 D4 F4 G4 A4 C5"
 )
+// @description Equinox \u2014 Phrygian mode. Dark, Spanish/Middle-Eastern flavor. Pantheon Steel.
 interval handpan_equinox(
-  description:"Equinox \u2014 Phrygian mode. Dark, Spanish/Middle-Eastern flavor. Pantheon Steel.",
   culture:handpan,
   ratios(1, 16/15, 6/5, 4/3, 3/2, 8/5, 9/5),
   notes_count:7,
   layout:"D3 A3 Bb3 C4 D4 Eb4 F4 G4 A4"
 )
+// @description Hijaz \u2014 Phrygian Dominant (5th mode of Harmonic Minor). Arabic/Spanish feel.
 interval handpan_hijaz(
-  description:"Hijaz \u2014 Phrygian Dominant (5th mode of Harmonic Minor). Arabic/Spanish feel.",
   culture:handpan,
   ratios(1, 16/15, 5/4, 4/3, 3/2, 8/5, 9/5),
   notes_count:7,
   layout:"D3 A3 Bb3 C#4 D4 E4 F4 G4 A4"
 )
+// @description Hijaz Kar \u2014 Double Harmonic Major / Byzantine / Bhairav. Two Hijaz tetrachords.
 interval handpan_hijaz_kar(
-  description:"Hijaz Kar \u2014 Double Harmonic Major / Byzantine / Bhairav. Two Hijaz tetrachords.",
   culture:handpan,
   ratios(1, 16/15, 5/4, 4/3, 3/2, 8/5, 15/8),
   notes_count:7,
   layout:"D3 A3 Bb3 C#4 D4 E4 F4 G#4 A4"
 )
+// @description Golden Gate \u2014 Harmonic Minor. Classical sound, augmented second between b6 and 7.
 interval handpan_golden_gate(
-  description:"Golden Gate \u2014 Harmonic Minor. Classical sound, augmented second between b6 and 7.",
   culture:handpan,
   ratios(1, 9/8, 6/5, 4/3, 3/2, 8/5, 15/8),
   notes_count:7,
   layout:"D3 A3 Bb3 C4 D4 E4 F4 G#4 A4"
 )
+// @description Romanian Hijaz \u2014 Hungarian/Double Harmonic Minor. Two augmented seconds, intense Eastern European feel.
 interval handpan_romanian_hijaz(
-  description:"Romanian Hijaz \u2014 Hungarian/Double Harmonic Minor. Two augmented seconds, intense Eastern European feel.",
   culture:handpan,
   ratios(1, 9/8, 6/5, 45/32, 3/2, 8/5, 15/8),
   notes_count:7,
   layout:"D3 A3 Bb3 C#4 D4 Eb4 F#4 G4 A4"
 )
+// @description Akebono \u2014 Japanese pentatonic (In scale variant). Contemplative, zen.
 interval handpan_akebono(
-  description:"Akebono \u2014 Japanese pentatonic (In scale variant). Contemplative, zen.",
   culture:handpan,
   ratios(1, 16/15, 4/3, 3/2, 8/5),
   notes_count:5,
   layout:"D3 A3 Bb3 D4 E4 F4 A4 Bb4 D5"
 )
+// @description Sabye \u2014 PanArt creation. Mysterious, African-inspired hexatonic.
 interval handpan_sabye(
-  description:"Sabye \u2014 PanArt creation. Mysterious, African-inspired hexatonic.",
   culture:handpan,
   ratios(1, 16/15, 6/5, 3/2, 8/5),
   notes_count:5,
   layout:"D3 A3 Bb3 D4 E4 F4 G4 A4 D5"
 )
+// @description Mystic \u2014 Phrygian without 7th. Dark, introspective, spacious.
 interval handpan_mystic(
-  description:"Mystic \u2014 Phrygian without 7th. Dark, introspective, spacious.",
   culture:handpan,
   ratios(1, 16/15, 6/5, 4/3, 3/2, 8/5),
   notes_count:6,
   layout:"D3 A3 Bb3 C4 D4 Eb4 G4 A4 Bb4"
 )
+// @description La Sirena \u2014 Phrygian Dominant. Spanish/Arabic dramatic character.
 interval handpan_la_sirena(
-  description:"La Sirena \u2014 Phrygian Dominant. Spanish/Arabic dramatic character.",
   culture:handpan,
   ratios(1, 16/15, 5/4, 4/3, 3/2, 8/5, 9/5),
   notes_count:7,
   layout:"D3 A3 Bb3 D4 E4 F4 A4 Bb4 C#5"
 )
+// @description Oxalis \u2014 Dorian without 6th. Open, airy minor. Ayasa creation.
 interval handpan_oxalis(
-  description:"Oxalis \u2014 Dorian without 6th. Open, airy minor. Ayasa creation.",
   culture:handpan,
   ratios(1, 9/8, 6/5, 4/3, 3/2, 9/5),
   notes_count:6,
   layout:"D3 A3 C4 D4 E4 F4 A4 C5 D5"
 )
+// @description Jibuk \u2014 Mixolydian. Major-sounding with flatted 7th. Bright, festive.
 interval handpan_jibuk(
-  description:"Jibuk \u2014 Mixolydian. Major-sounding with flatted 7th. Bright, festive.",
   culture:handpan,
   ratios(1, 9/8, 5/4, 4/3, 3/2, 5/3, 9/5),
   notes_count:7,
   layout:"D3 A3 C4 D4 E4 F#4 G4 A4 B4"
 )
+// @description Annaziska \u2014 Minor Pentatonic. Maximum consonance, impossible to play wrong.
 interval handpan_annaziska(
-  description:"Annaziska \u2014 Minor Pentatonic. Maximum consonance, impossible to play wrong.",
   culture:handpan,
   ratios(1, 6/5, 4/3, 3/2, 9/5),
   notes_count:5,
   layout:"D3 A3 C4 D4 F4 G4 A4 C5 D5"
 )
+// @description Ashta Taki \u2014 Major without 6th. Bright, uplifting, rare major handpan.
 interval handpan_ashta_taki(
-  description:"Ashta Taki \u2014 Major without 6th. Bright, uplifting, rare major handpan.",
   culture:handpan,
   ratios(1, 9/8, 5/4, 4/3, 3/2, 15/8),
   notes_count:6,
   layout:"D3 A3 C4 D4 E4 F4 G4 B4 C5"
 )
+// @description Flamenco mode / Phrygian Dominant \u2014 the defining sound of flamenco. Hijaz maqam equivalent.
 interval flamenco_phrygian(
-  description:"Flamenco mode / Phrygian Dominant \u2014 the defining sound of flamenco. Hijaz maqam equivalent.",
   culture:flamenco,
   ratios(1, 16/15, 5/4, 4/3, 3/2, 8/5, 9/5),
   notes_count:7
 )
+// @description Flamenco por medio \u2014 Phrygian mode on A (guitar standard). Dark, intense.
 interval flamenco_por_medio(
-  description:"Flamenco por medio \u2014 Phrygian mode on A (guitar standard). Dark, intense.",
   culture:flamenco,
   ratios(1, 16/15, 6/5, 4/3, 3/2, 8/5, 9/5),
   notes_count:7
 )
+// @description Flamenco por arriba \u2014 Phrygian mode on E (guitar standard). Classic flamenco position.
 interval flamenco_por_arriba(
-  description:"Flamenco por arriba \u2014 Phrygian mode on E (guitar standard). Classic flamenco position.",
   culture:flamenco,
   ratios(1, 16/15, 6/5, 4/3, 3/2, 8/5, 9/5),
   notes_count:7
 )
+// @description Escala andaluza / Double Harmonic Major \u2014 Hijaz Kar / Bhairav equivalent in flamenco context.
 interval flamenco_double_harmonic(
-  description:"Escala andaluza / Double Harmonic Major \u2014 Hijaz Kar / Bhairav equivalent in flamenco context.",
   culture:flamenco,
   ratios(1, 16/15, 5/4, 4/3, 3/2, 8/5, 15/8),
   notes_count:7
 )
+// @description Flamenco minor \u2014 Harmonic minor with Andalusian cadence (iv-III-II-I).
 interval flamenco_minor(
-  description:"Flamenco minor \u2014 Harmonic minor with Andalusian cadence (iv-III-II-I).",
   culture:flamenco,
   ratios(1, 9/8, 6/5, 4/3, 3/2, 8/5, 15/8),
   notes_count:7
 )
+// @description Messiaen mode 1 \u2014 Whole tone scale (6 equal divisions). Debussy, Messiaen.
 interval messiaen_mode1(
-  description:"Messiaen mode 1 \u2014 Whole tone scale (6 equal divisions). Debussy, Messiaen.",
   culture:contemporary,
   ratios(1, 200c, 400c, 600c, 800c, 1000c),
   notes_count:6
 )
+// @description Messiaen mode 2 \u2014 Octatonic / Diminished (half-whole). Messiaen, Bart\xF3k, Stravinsky.
 interval messiaen_mode2(
-  description:"Messiaen mode 2 \u2014 Octatonic / Diminished (half-whole). Messiaen, Bart\xF3k, Stravinsky.",
   culture:contemporary,
   ratios(1, 100c, 300c, 400c, 600c, 700c, 900c, 1000c),
   notes_count:8
 )
+// @description Messiaen mode 3 \u2014 9 notes, period = major third (400c). Three transpositions.
 interval messiaen_mode3(
-  description:"Messiaen mode 3 \u2014 9 notes, period = major third (400c). Three transpositions.",
   culture:contemporary,
   ratios(1, 200c, 300c, 400c, 600c, 700c, 800c, 1000c, 1100c),
   notes_count:9
 )
+// @description Messiaen mode 4 \u2014 8 notes, period = tritone (600c). Rare in practice.
 interval messiaen_mode4(
-  description:"Messiaen mode 4 \u2014 8 notes, period = tritone (600c). Rare in practice.",
   culture:contemporary,
   ratios(1, 100c, 200c, 500c, 600c, 700c, 800c, 1100c),
   notes_count:8
 )
+// @description Messiaen mode 5 \u2014 6 notes, period = tritone (600c).
 interval messiaen_mode5(
-  description:"Messiaen mode 5 \u2014 6 notes, period = tritone (600c).",
   culture:contemporary,
   ratios(1, 100c, 500c, 600c, 700c, 1100c),
   notes_count:6
 )
+// @description Messiaen mode 6 \u2014 8 notes, period = tritone (600c). Augmented fourths.
 interval messiaen_mode6(
-  description:"Messiaen mode 6 \u2014 8 notes, period = tritone (600c). Augmented fourths.",
   culture:contemporary,
   ratios(1, 200c, 400c, 500c, 600c, 800c, 1000c, 1100c),
   notes_count:8
 )
+// @description Messiaen mode 7 \u2014 10 notes, period = tritone (600c). Most dense of the modes.
 interval messiaen_mode7(
-  description:"Messiaen mode 7 \u2014 10 notes, period = tritone (600c). Most dense of the modes.",
   culture:contemporary,
   ratios(1, 100c, 200c, 300c, 500c, 600c, 700c, 800c, 900c, 1100c),
   notes_count:10
 )
+// @description Chromatic aggregate \u2014 all 12 pitch classes. Basis of serial/12-tone technique (Schoenberg, Webern, Boulez).
 interval chromatic_12(
-  description:"Chromatic aggregate \u2014 all 12 pitch classes. Basis of serial/12-tone technique (Schoenberg, Webern, Boulez).",
   culture:contemporary,
   ratios(1, 100c, 200c, 300c, 400c, 500c, 600c, 700c, 800c, 900c, 1000c, 1100c),
   notes_count:12
 )
+// @description Spectral scale (harmonics 8-16) \u2014 Grisey, Murail. Natural harmonic series from 8th partial.
 interval spectral_harmonic_8(
-  description:"Spectral scale (harmonics 8-16) \u2014 Grisey, Murail. Natural harmonic series from 8th partial.",
   culture:contemporary,
   ratios(1, 9/8, 10/8, 11/8, 12/8, 13/8, 14/8, 15/8),
   notes_count:8
 )
+// @description Spectral scale (harmonics 1-16) \u2014 full harmonic series. Grisey Partiels, Haas.
 interval spectral_harmonic_16(
-  description:"Spectral scale (harmonics 1-16) \u2014 full harmonic series. Grisey Partiels, Haas.",
   culture:contemporary,
   ratios(1, 9/8, 5/4, 11/8, 3/2, 13/8, 7/4, 15/8),
   notes_count:8
 )
+// @description Bart\xF3k scale / Acoustic scale / Lydian Dominant \u2014 Overtone scale (Bart\xF3k, Debussy).
 interval bartok_acoustic(
-  description:"Bart\xF3k scale / Acoustic scale / Lydian Dominant \u2014 Overtone scale (Bart\xF3k, Debussy).",
   culture:contemporary,
   ratios(1, 9/8, 5/4, 45/32, 3/2, 5/3, 9/5),
   notes_count:7
 )
+// @description Scriabin Mystic Chord / Prometheus scale \u2014 C F# Bb E A D as scale. Scriabin late works.
 interval scriabin_mystic_chord(
-  description:"Scriabin Mystic Chord / Prometheus scale \u2014 C F# Bb E A D as scale. Scriabin late works.",
   culture:contemporary,
   ratios(1, 200c, 400c, 600c, 900c, 1000c),
   notes_count:6
 )
+// @description Tritone scale \u2014 Two augmented triads a semitone apart. Jazz/contemporary.
 interval tritone_scale(
-  description:"Tritone scale \u2014 Two augmented triads a semitone apart. Jazz/contemporary.",
   culture:contemporary,
   ratios(1, 100c, 400c, 500c, 800c, 900c),
   notes_count:6
 )
+// @description Slonimsky scale 1 \u2014 Symmetric division of octave in minor thirds + chromatic fill. Used by Coltrane.
 interval slonimsky_1(
-  description:"Slonimsky scale 1 \u2014 Symmetric division of octave in minor thirds + chromatic fill. Used by Coltrane.",
   culture:contemporary,
   ratios(1, 100c, 300c, 400c, 600c, 700c, 900c, 1000c),
   notes_count:8
 )
+// @description Harry Partch 43-tone scale \u2014 11-limit just intonation. Microtonal pioneer.
 interval harry_partch_43(
-  description:"Harry Partch 43-tone scale \u2014 11-limit just intonation. Microtonal pioneer.",
   culture:contemporary,
   ratios(
     1,
@@ -2272,14 +1983,14 @@ interval harry_partch_43(
   ),
   notes_count:43
 )
+// @description Wendy Carlos Alpha \u2014 15.385 steps per octave (78c per step). Non-octave scale.
 interval wendy_carlos_alpha(
-  description:"Wendy Carlos Alpha \u2014 15.385 steps per octave (78c per step). Non-octave scale.",
   culture:contemporary,
   ratios(1, 78c, 156c, 234c, 312c, 390c, 468c, 546c, 624c, 702c, 780c, 858c, 936c, 1014c, 1092c),
   notes_count:15
 )
+// @description Wendy Carlos Beta \u2014 18.809 steps per octave (63.8c per step). Non-octave scale.
 interval wendy_carlos_beta(
-  description:"Wendy Carlos Beta \u2014 18.809 steps per octave (63.8c per step). Non-octave scale.",
   culture:contemporary,
   ratios(
     1,
@@ -2303,584 +2014,635 @@ interval wendy_carlos_beta(
   ),
   notes_count:18
 )
+// @description Bebop Dominant \u2014 Mixolydian + passing natural 7th. The quintessential bebop scale (Charlie Parker, Dizzy Gillespie).
 interval bebop_dominant(
-  description:"Bebop Dominant \u2014 Mixolydian + passing natural 7th. The quintessential bebop scale (Charlie Parker, Dizzy Gillespie).",
   culture:jazz,
   ratios(1, 9/8, 5/4, 4/3, 3/2, 5/3, 9/5, 15/8),
   notes_count:8
 )
+// @description Bebop Major \u2014 Ionian + passing #5. Barry Harris method.
 interval bebop_major(
-  description:"Bebop Major \u2014 Ionian + passing #5. Barry Harris method.",
   culture:jazz,
   ratios(1, 9/8, 5/4, 4/3, 3/2, 800c, 5/3, 15/8),
   notes_count:8
 )
+// @description Bebop Dorian \u2014 Dorian + passing major 3rd. Minor bebop scale.
 interval bebop_dorian(
-  description:"Bebop Dorian \u2014 Dorian + passing major 3rd. Minor bebop scale.",
   culture:jazz,
   ratios(1, 9/8, 6/5, 5/4, 4/3, 3/2, 5/3, 9/5),
   notes_count:8
 )
+// @description Bebop Melodic Minor \u2014 Melodic minor ascending + passing b6. David Baker.
 interval bebop_melodic_minor(
-  description:"Bebop Melodic Minor \u2014 Melodic minor ascending + passing b6. David Baker.",
   culture:jazz,
   ratios(1, 9/8, 6/5, 4/3, 3/2, 800c, 5/3, 15/8),
   notes_count:8
 )
+// @description Altered scale / Super Locrian \u2014 7th mode of melodic minor. Essential for V7alt chords (Coltrane, Shorter, Henderson).
 interval altered(
-  description:"Altered scale / Super Locrian \u2014 7th mode of melodic minor. Essential for V7alt chords (Coltrane, Shorter, Henderson).",
   culture:jazz,
   ratios(1, 16/15, 200c, 6/5, 600c, 800c, 9/5),
   notes_count:7
 )
+// @description Lydian Augmented \u2014 3rd mode of melodic minor. #4 + #5. George Russell Lydian Chromatic Concept.
 interval lydian_augmented(
-  description:"Lydian Augmented \u2014 3rd mode of melodic minor. #4 + #5. George Russell Lydian Chromatic Concept.",
   culture:jazz,
   ratios(1, 9/8, 5/4, 600c, 800c, 5/3, 15/8),
   notes_count:7
 )
+// @description Lydian Dominant / Lydian b7 \u2014 4th mode of melodic minor. Dominant sound with #4. (= Bart\xF3k acoustic scale).
 interval lydian_dominant(
-  description:"Lydian Dominant / Lydian b7 \u2014 4th mode of melodic minor. Dominant sound with #4. (= Bart\xF3k acoustic scale).",
   culture:jazz,
   ratios(1, 9/8, 5/4, 45/32, 3/2, 5/3, 9/5),
   notes_count:7
 )
+// @description Locrian #2 / Half-Diminished \u2014 6th mode of melodic minor. Used on minor7b5 chords.
 interval locrian_natural2(
-  description:"Locrian #2 / Half-Diminished \u2014 6th mode of melodic minor. Used on minor7b5 chords.",
   culture:jazz,
   ratios(1, 9/8, 6/5, 4/3, 600c, 8/5, 9/5),
   notes_count:7
 )
+// @description Phrygian Dominant \u2014 5th mode of harmonic minor. Hijaz. Used on V7b9 in minor keys.
 interval phrygian_dominant(
-  description:"Phrygian Dominant \u2014 5th mode of harmonic minor. Hijaz. Used on V7b9 in minor keys.",
   culture:jazz,
   ratios(1, 16/15, 5/4, 4/3, 3/2, 8/5, 9/5),
   notes_count:7
 )
+// @description Major Pentatonic \u2014 1 2 3 5 6. Foundation of blues, rock, jazz melody.
 interval pentatonic_major(
-  description:"Major Pentatonic \u2014 1 2 3 5 6. Foundation of blues, rock, jazz melody.",
   culture:jazz,
   ratios(1, 9/8, 5/4, 3/2, 5/3),
   notes_count:5
 )
+// @description Minor Pentatonic \u2014 1 b3 4 5 b7. The most universal scale in popular music.
 interval pentatonic_minor(
-  description:"Minor Pentatonic \u2014 1 b3 4 5 b7. The most universal scale in popular music.",
   culture:jazz,
   ratios(1, 6/5, 4/3, 3/2, 9/5),
   notes_count:5
 )
+// @description Coltrane Pentatonic \u2014 1 2 3 5 b7. Dominant pentatonic used by Coltrane on V7 chords.
 interval coltrane_pentatonic(
-  description:"Coltrane Pentatonic \u2014 1 2 3 5 b7. Dominant pentatonic used by Coltrane on V7 chords.",
   culture:jazz,
   ratios(1, 9/8, 5/4, 3/2, 9/5),
   notes_count:5
 )
+// @description Kumoi (jazz usage) \u2014 1 2 b3 5 6. Japanese-influenced pentatonic popular in jazz (McCoy Tyner).
 interval kumoi_jazz(
-  description:"Kumoi (jazz usage) \u2014 1 2 b3 5 6. Japanese-influenced pentatonic popular in jazz (McCoy Tyner).",
   culture:jazz,
   ratios(1, 9/8, 6/5, 3/2, 5/3),
   notes_count:5
 )
+// @description In-Sen \u2014 1 b2 4 5 b7. Japanese scale used in jazz (John McLaughlin, Joe Henderson).
 interval in_sen_jazz(
-  description:"In-Sen \u2014 1 b2 4 5 b7. Japanese scale used in jazz (John McLaughlin, Joe Henderson).",
   culture:jazz,
   ratios(1, 16/15, 4/3, 3/2, 9/5),
   notes_count:5
 )
+// @description Augmented scale \u2014 Symmetric scale alternating m3 and H. Coltrane, Thelonious Monk.
 interval augmented_scale(
-  description:"Augmented scale \u2014 Symmetric scale alternating m3 and H. Coltrane, Thelonious Monk.",
   culture:jazz,
   ratios(1, 6/5, 5/4, 3/2, 8/5, 15/8),
   notes_count:6
 )
+// @description Tritone scale (dominant) \u2014 Two major triads a tritone apart. Mark Levine, modern jazz.
 interval tritone_dominant(
-  description:"Tritone scale (dominant) \u2014 Two major triads a tritone apart. Mark Levine, modern jazz.",
   culture:jazz,
   ratios(1, 100c, 400c, 500c, 800c, 900c),
   notes_count:6
 )
+// @description Jins Rast \u2014 Rast tetrachord with a neutral third (C D E half-flat F). Zalzal's third 27/22 (~354.5c) = musicological
+// signature of Arabic just intonation, NOT Zarlino's major third 5/4 (which would give an Ajam tetrachord). The data keeps the PURE ratio
+// (ontological truth); the 24-TET projection (350c / 7 quarter-tones) is done at rendering by the engine.
 interval jins_rast(
-  ratios(1, 9/8, 27/22, 4/3),
-  description:"Jins Rast \u2014 t\xE9tracorde Rast \xE0 tierce neutre (C D E demi-b\xE9mol F). Tierce de Zalzal 27/22 (~354.5c) = signature musicologique de l'intonation juste arabe, PAS la tierce majeure 5/4 de Zarlino (qui donnerait un t\xE9tracorde Ajam). La donn\xE9e garde le ratio PUR (v\xE9rit\xE9 ontologique) ; la projection 24-TET (350c / 7 quarts de ton) est faite au rendu par le moteur."
+  ratios(1, 9/8, 27/22, 4/3)
 )
+// @description Jins Nahawand \u2014 minor tetrachord (C D Eb F)
 interval jins_nahawand(
-  ratios(1, 9/8, 6/5, 4/3),
-  description:"Jins Nahawand \u2014 t\xE9tracorde mineur (C D Eb F)"
+  ratios(1, 9/8, 6/5, 4/3)
 )
+// @description Jins Kurd \u2014 phrygian tetrachord (C Db Eb F)
 interval jins_kurd(
-  ratios(1, 16/15, 6/5, 4/3),
-  description:"Jins Kurd \u2014 t\xE9tracorde phrygien (C Db Eb F)"
+  ratios(1, 16/15, 6/5, 4/3)
 )
+// @description Jins Hijaz \u2014 characteristic augmented second (C Db E F)
 interval jins_hijaz(
-  ratios(1, 16/15, 5/4, 4/3),
-  description:"Jins Hijaz \u2014 seconde augment\xE9e caract\xE9ristique (C Db E F)"
+  ratios(1, 16/15, 5/4, 4/3)
 )
+// @description Jins Bayati \u2014 Zalzal's NEUTRAL second (C D-half-flat Eb F): 12/11 (~151c), 6/5 (just minor third), 4/3. Zalzalian 5-limit
+// just intonation (pythagorean alt. 32/27 for the third; the just 6/5 is kept for consistency of the Arabic system).
 interval jins_bayati(
-  ratios(1, 12/11, 6/5, 4/3),
-  description:"Jins Bayati \u2014 seconde NEUTRE de Zalzal (C D-demi-b\xE9mol Eb F) : 12/11 (~151c), 6/5 (tierce mineure juste), 4/3. Intonation juste zalzalienne 5-limite (alt. pythagoricienne 32/27 pour la tierce ; on retient le juste 6/5 par coh\xE9rence du syst\xE8me arabe)."
+  ratios(1, 12/11, 6/5, 4/3)
 )
+// @description Jins Sikah \u2014 built on Zalzal's neutral second (C D-half-flat Eb F): 12/11 (~151c), 6/5, 4/3. Neutral second = 12/11
+// (consistent with the Arabic table; replaces the former 11/10 ~165c).
 interval jins_sikah(
-  ratios(1, 12/11, 6/5, 4/3),
-  description:"Jins Sikah \u2014 assise sur la seconde neutre de Zalzal (C D-demi-b\xE9mol Eb F) : 12/11 (~151c), 6/5, 4/3. Seconde neutre = 12/11 (coh\xE9rent avec la table arabe ; remplace l'ancien 11/10 ~165c)."
+  ratios(1, 12/11, 6/5, 4/3)
 )
+// @description Jins Ajam \u2014 MAJOR tetrachord (C D E F): 9/8 (tone), 5/4 (Zarlino's major third), 4/3 (perfect fourth). It is the only Arabic
+// jins with a pure 5/4 major third (\u2248 Western major). The tetrachord closes on the fourth 4/3 (corrects the former 45/32 tritone, wrong for
+// a jins).
 interval jins_ajam(
-  ratios(1, 9/8, 5/4, 4/3),
-  description:"Jins Ajam \u2014 t\xE9tracorde MAJEUR (C D E F) : 9/8 (ton), 5/4 (tierce majeure de Zarlino), 4/3 (quarte juste). C'est l'unique jins arabe \xE0 tierce majeure pure 5/4 (\u2248 majeur occidental). Le t\xE9tracorde ferme sur la quarte 4/3 (corrige l'ancien 45/32 triton, erron\xE9 pour un jins)."
+  ratios(1, 9/8, 5/4, 4/3)
 )
+// @description Jins Saba \u2014 neutral second + minor third + DIMINISHED fourth (C D-half-flat Eb Fb): 12/11, 6/5, 13/10 (~454c); the
+// diminished fourth is Saba's signature.
 interval jins_saba(
-  ratios(1, 12/11, 6/5, 13/10),
-  description:"Jins Saba \u2014 seconde neutre + tierce mineure + quarte DIMINU\xC9E (C D-demi-b\xE9mol Eb Fb) : 12/11, 6/5, 13/10 (~454c) ; la quarte diminu\xE9e est la signature du Saba."
+  ratios(1, 12/11, 6/5, 13/10)
 )
+// @description Cins turc (cins_rast) \u2014 segment pythagoricien exact
 interval cins_rast(
   system:"pythagorean",
-  ratios(1, 9/8, 8192/6561, 4/3, 3/2),
-  description:"Cins turc (cins_rast) \u2014 segment pythagoricien exact"
+  ratios(1, 9/8, 8192/6561, 4/3, 3/2)
 )
+// @description Cins turc (cins_rast4) \u2014 segment pythagoricien exact
 interval cins_rast4(
   system:"pythagorean",
-  ratios(1, 9/8, 8192/6561, 4/3),
-  description:"Cins turc (cins_rast4) \u2014 segment pythagoricien exact"
+  ratios(1, 9/8, 8192/6561, 4/3)
 )
+// @description Cins turc (cins_ussak) \u2014 segment pythagoricien exact
 interval cins_ussak(
   system:"pythagorean",
-  ratios(1, 65536/59049, 32/27, 4/3, 3/2),
-  description:"Cins turc (cins_ussak) \u2014 segment pythagoricien exact"
+  ratios(1, 65536/59049, 32/27, 4/3, 3/2)
 )
+// @description Cins turc (cins_ussak4) \u2014 segment pythagoricien exact
 interval cins_ussak4(
   system:"pythagorean",
-  ratios(1, 65536/59049, 32/27, 4/3),
-  description:"Cins turc (cins_ussak4) \u2014 segment pythagoricien exact"
+  ratios(1, 65536/59049, 32/27, 4/3)
 )
+// @description Cins turc (cins_buselik4) \u2014 segment pythagoricien exact
 interval cins_buselik4(
   system:"pythagorean",
-  ratios(1, 9/8, 32/27, 4/3),
-  description:"Cins turc (cins_buselik4) \u2014 segment pythagoricien exact"
+  ratios(1, 9/8, 32/27, 4/3)
 )
+// @description Cins turc (cins_hicaz) \u2014 segment pythagoricien exact
 interval cins_hicaz(
   system:"pythagorean",
-  ratios(1, 2187/2048, 8192/6561, 4/3, 3/2),
-  description:"Cins turc (cins_hicaz) \u2014 segment pythagoricien exact"
+  ratios(1, 2187/2048, 8192/6561, 4/3, 3/2)
 )
+// @description Cins turc (cins_buselik) \u2014 segment pythagoricien exact
 interval cins_buselik(
   system:"pythagorean",
-  ratios(1, 9/8, 32/27, 4/3, 3/2),
-  description:"Cins turc (cins_buselik) \u2014 segment pythagoricien exact"
+  ratios(1, 9/8, 32/27, 4/3, 3/2)
 )
+// @description Cins turc (cins_kurdi4) \u2014 segment pythagoricien exact
 interval cins_kurdi4(
   system:"pythagorean",
-  ratios(1, 256/243, 32/27, 4/3),
-  description:"Cins turc (cins_kurdi4) \u2014 segment pythagoricien exact"
+  ratios(1, 256/243, 32/27, 4/3)
 )
+// @description Cins turc (cins_kurdi) \u2014 segment pythagoricien exact
 interval cins_kurdi(
   system:"pythagorean",
-  ratios(1, 256/243, 32/27, 4/3, 3/2),
-  description:"Cins turc (cins_kurdi) \u2014 segment pythagoricien exact"
+  ratios(1, 256/243, 32/27, 4/3, 3/2)
 )
+// @description Cins turc (cins_segah) \u2014 segment pythagoricien exact
 interval cins_segah(
   system:"pythagorean",
-  ratios(1, 256/243, 9/8, 4/3, 3/2),
-  description:"Cins turc (cins_segah) \u2014 segment pythagoricien exact"
+  ratios(1, 256/243, 9/8, 4/3, 3/2)
 )
+// @description Cins turc (cins_cargah4) \u2014 segment pythagoricien exact
 interval cins_cargah4(
   system:"pythagorean",
-  ratios(1, 256/243, 9/8, 4/3),
-  description:"Cins turc (cins_cargah4) \u2014 segment pythagoricien exact"
+  ratios(1, 256/243, 9/8, 4/3)
 )
+// @description Cins turc (cins_saba) \u2014 segment pythagoricien exact
 interval cins_saba(
   system:"pythagorean",
-  ratios(1, 65536/59049, 32/27, 81/64, 3/2),
-  description:"Cins turc (cins_saba) \u2014 segment pythagoricien exact"
+  ratios(1, 65536/59049, 32/27, 81/64, 3/2)
 )
+// @description Cins turc (cins_huseyni4) \u2014 segment pythagoricien exact
 interval cins_huseyni4(
   system:"pythagorean",
-  ratios(1, 65536/59049, 8192/6561, 4/3),
-  description:"Cins turc (cins_huseyni4) \u2014 segment pythagoricien exact"
+  ratios(1, 65536/59049, 8192/6561, 4/3)
 )
+// @description Cins turc (cins_segah4) \u2014 segment pythagoricien exact
 interval cins_segah4(
   system:"pythagorean",
-  ratios(1, 256/243, 8192/6561, 4/3),
-  description:"Cins turc (cins_segah4) \u2014 segment pythagoricien exact"
+  ratios(1, 256/243, 8192/6561, 4/3)
 )
+// @description Cins turc (cins_huzzam) \u2014 segment pythagoricien exact
 interval cins_huzzam(
   system:"pythagorean",
-  ratios(1, 2187/2048, 32/27, 4/3, 3/2),
-  description:"Cins turc (cins_huzzam) \u2014 segment pythagoricien exact"
+  ratios(1, 2187/2048, 32/27, 4/3, 3/2)
 )
 
+// @description Bilaval thaat \u2014 equivalent to Western major scale
 degree bilaval(
-  description:"Bilaval thaat \u2014 equivalent to Western major scale",
   culture:hindustani,
   temperament:"22shruti",
   degrees(0, 4, 7, 9, 13, 17, 20),
   notes_count:7
 )
+// @description Khamaj thaat \u2014 komal Ni
 degree khamaj(
-  description:"Khamaj thaat \u2014 komal Ni",
   culture:hindustani,
   temperament:"22shruti",
   degrees(0, 4, 7, 9, 13, 17, 18),
   notes_count:7
 )
+// @description Kafi thaat \u2014 komal Ga, komal Ni
 degree kafi(
-  description:"Kafi thaat \u2014 komal Ga, komal Ni",
   culture:hindustani,
   temperament:"22shruti",
   degrees(0, 4, 5, 9, 13, 17, 18),
   notes_count:7
 )
+// @description Asavari thaat \u2014 komal Ga, Dha, Ni
 degree asavari(
-  description:"Asavari thaat \u2014 komal Ga, Dha, Ni",
   culture:hindustani,
   temperament:"22shruti",
   degrees(0, 4, 5, 9, 13, 15, 18),
   notes_count:7
 )
+// @description Bhairavi thaat \u2014 all komal (Re, Ga, Dha, Ni)
 degree bhairavi(
-  description:"Bhairavi thaat \u2014 all komal (Re, Ga, Dha, Ni)",
   culture:hindustani,
   temperament:"22shruti",
   degrees(0, 2, 5, 9, 13, 15, 18),
   notes_count:7
 )
+// @description Kalyan thaat \u2014 tivra Ma
 degree kalyan(
-  description:"Kalyan thaat \u2014 tivra Ma",
   culture:hindustani,
   temperament:"22shruti",
   degrees(0, 4, 7, 11, 13, 17, 20),
   notes_count:7
 )
+// @description Marva thaat \u2014 komal Re, tivra Ma
 degree marva(
-  description:"Marva thaat \u2014 komal Re, tivra Ma",
   culture:hindustani,
   temperament:"22shruti",
   degrees(0, 2, 7, 11, 13, 17, 20),
   notes_count:7
 )
+// @description Purvi thaat \u2014 komal Re, tivra Ma, komal Dha
 degree purvi(
-  description:"Purvi thaat \u2014 komal Re, tivra Ma, komal Dha",
   culture:hindustani,
   temperament:"22shruti",
   degrees(0, 2, 7, 11, 13, 15, 20),
   notes_count:7
 )
+// @description Todi thaat \u2014 komal Re, Ga, tivra Ma, komal Dha
 degree todi(
-  description:"Todi thaat \u2014 komal Re, Ga, tivra Ma, komal Dha",
   culture:hindustani,
   temperament:"22shruti",
   degrees(0, 2, 5, 11, 13, 15, 20),
   notes_count:7
 )
+// @description Shankarabharanam melakarta (72 #29) \u2014 equivalent to Bilaval/major
 degree shankarabharanam(
-  description:"Shankarabharanam melakarta (72 #29) \u2014 equivalent to Bilaval/major",
   culture:carnatic,
   temperament:"22shruti",
   degrees(0, 4, 7, 9, 13, 17, 20),
   notes_count:7
 )
+// @description Kalyani melakarta (72 #65) \u2014 equivalent to Kalyan/Lydian
 degree kalyani(
-  description:"Kalyani melakarta (72 #65) \u2014 equivalent to Kalyan/Lydian",
   culture:carnatic,
   temperament:"22shruti",
   degrees(0, 4, 7, 11, 13, 17, 20),
   notes_count:7
 )
+// @description Kharaharapriya melakarta (72 #22) \u2014 equivalent to Kafi/Dorian
 degree kharaharapriya(
-  description:"Kharaharapriya melakarta (72 #22) \u2014 equivalent to Kafi/Dorian",
   culture:carnatic,
   temperament:"22shruti",
   degrees(0, 4, 5, 9, 13, 17, 18),
   notes_count:7
 )
+// @description Shubhapantuvarali melakarta (72 #45) \u2014 equivalent to Todi thaat
 degree todi_carnatic(
-  description:"Shubhapantuvarali melakarta (72 #45) \u2014 equivalent to Todi thaat",
   culture:carnatic,
   temperament:"22shruti",
   degrees(0, 2, 5, 11, 13, 15, 20),
   notes_count:7
 )
+// @description Harikambhoji melakarta (72 #28) \u2014 equivalent to Khamaj/Mixolydian
 degree harikambhoji(
-  description:"Harikambhoji melakarta (72 #28) \u2014 equivalent to Khamaj/Mixolydian",
   culture:carnatic,
   temperament:"22shruti",
   degrees(0, 4, 7, 9, 13, 17, 18),
   notes_count:7
 )
+// @description Raga Malkauns \u2014 audava (pentatonic), deep night raga
 degree malkauns(
-  description:"Raga Malkauns \u2014 audava (pentatonic), deep night raga",
   culture:hindustani,
   temperament:"22shruti",
   degrees(0, 5, 9, 15, 18),
   notes_count:5
 )
+// @description Thaat Bhairav \u2014 komal re, shuddh ga, komal dha, shuddh ni. Double Harmonic Major. Morning raga.
 degree thaat_bhairav(
-  description:"Thaat Bhairav \u2014 komal re, shuddh ga, komal dha, shuddh ni. Double Harmonic Major. Morning raga.",
   culture:hindustani,
   temperament:"22shruti",
   degrees(0, 2, 7, 9, 13, 15, 20),
   notes_count:7
 )
+// @description Quarter-tone chromatic \u2014 24 equal divisions. Haba, Wyschnegradsky, Boulez (Marteau sans ma\xEEtre).
 degree quarter_tone_chromatic(
-  description:"Quarter-tone chromatic \u2014 24 equal divisions. Haba, Wyschnegradsky, Boulez (Marteau sans ma\xEEtre).",
   culture:contemporary,
   temperament:"24TET",
   degrees(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23),
   notes_count:24
 )
 
+// @description Raga Bageshri \u2014 different notes in ascent and descent
 directional bageshri(
-  description:"Raga Bageshri \u2014 different notes in ascent and descent",
   culture:hindustani,
   temperament:"22shruti",
   ascending(0, 5, 9, 13, 15, 18),
   descending(0, 18, 17, 15, 13, 9, 5, 4),
   notes_count:7
 )
+// @description Raga Bhairav \u2014 different aroha and avaroha. komal re and dha ascending, shuddh descending. Aroha = thaat Bhairav; avaroha a
+// variant. The SCALE aspect of a raga lives here; intonation is stated by the referenced temperament.
 directional raga_bhairav(
-  description:"Raga Bhairav \u2014 aroha et avaroha diff\xE9rents. komal re et dha \xE0 la mont\xE9e, shuddh \xE0 la descente. Aroha = thaat Bhairav ; avaroha variante. L'aspect GAMME d'une raga vit ici ; l'intonation se dit par le temp\xE9rament r\xE9f\xE9renc\xE9.",
   culture:hindustani,
   temperament:"22shruti",
   ascending(0, 2, 7, 9, 13, 15, 20),
   descending(0, 4, 7, 9, 13, 17, 20),
   notes_count:7
 )
+// @description Raga Yaman (Kalyan) \u2014 ma tivra ascending, shuddh descending in some interpretations. Aroha = thaat Kalyan.
 directional raga_yaman(
-  description:"Raga Yaman (Kalyan) \u2014 ma tivra \xE0 la mont\xE9e, shuddh \xE0 la descente dans certaines interpr\xE9tations. Aroha = thaat Kalyan.",
   culture:hindustani,
   temperament:"22shruti",
   ascending(0, 4, 7, 11, 13, 17, 20),
   descending(0, 4, 7, 9, 13, 17, 20),
   notes_count:7
 )
+// @description Raga Darbari Kanada \u2014 andolit komal Ga, majestic night raga
 directional darbari_kanada(
-  description:"Raga Darbari Kanada \u2014 andolit komal Ga, majestic night raga",
   culture:hindustani,
   temperament:"22shruti",
   ascending(0, 4, 5, 9, 13, 15, 18),
   descending(0, 18, 15, 13, 9, 7, 5, 4),
   notes_count:7
 )
+// @description Raga Desh \u2014 komal Ni in descent, romantic evening raga
 directional desh(
-  description:"Raga Desh \u2014 komal Ni in descent, romantic evening raga",
   culture:hindustani,
   temperament:"22shruti",
   ascending(0, 4, 7, 9, 13, 17, 20),
   descending(0, 20, 18, 17, 13, 9, 7, 4),
   notes_count:7
 )
+// @description Raga Bihag \u2014 both Ma used, late night raga
 directional bihag(
-  description:"Raga Bihag \u2014 both Ma used, late night raga",
   culture:hindustani,
   temperament:"22shruti",
   ascending(0, 4, 7, 11, 13, 17, 20),
   descending(0, 20, 17, 13, 11, 9, 7, 4),
   notes_count:7
 )
+// @description Melodic minor \u2014 different ascending and descending forms
 directional melodic_minor(
-  description:"Melodic minor \u2014 different ascending and descending forms",
   culture:western,
   ascending(1, 9/8, 6/5, 4/3, 3/2, 5/3, 15/8),
   descending(1, 9/8, 6/5, 4/3, 3/2, 8/5, 9/5),
   notes_count:7
 )
 
+// @description Maqam Ajam \u2014 equivalent to Western major \u2014 Ratios = zalzalian just intonation (5-limit; neutral third 27/22). Source of
+// truth; 24-TET is a rendering projection, not the ontology. [compose(jins)+junction = ontological source; the engine computes the ratios
+// from the jins].
 composite maqam_ajam(
-  description:"Maqam Ajam \u2014 equivalent to Western major \u2014 Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de v\xE9rit\xE9 ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source ontologique ; le moteur calcule les ratios depuis les jins].",
   culture:arabic,
   notes_count:7,
   system:"zalzal-ji",
   compose(jins_ajam, jins_ajam),
   junction:3/2
 )
+// @description Maqam Kurd \u2014 starts with jins Kurd \u2014 Ratios = zalzalian just intonation (5-limit; neutral third 27/22). Source of truth;
+// 24-TET is a rendering projection, not the ontology. [compose(jins)+junction = ontological source; the engine computes the ratios from the
+// jins].
 composite maqam_kurd(
-  description:"Maqam Kurd \u2014 starts with jins Kurd \u2014 Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de v\xE9rit\xE9 ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source ontologique ; le moteur calcule les ratios depuis les jins].",
   culture:arabic,
   notes_count:7,
   system:"zalzal-ji",
   compose(jins_kurd, jins_kurd),
   junction:3/2
 )
+// @description Maqam Suznak \u2014 Rast lower + Hijaz upper \u2014 Ratios = zalzalian just intonation (5-limit; neutral third 27/22). Source of
+// truth; 24-TET is a rendering projection, not the ontology. [compose(jins)+junction = ontological source; the engine computes the ratios
+// from the jins].
 composite maqam_suznak(
-  description:"Maqam Suznak \u2014 Rast lower + Hijaz upper \u2014 Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de v\xE9rit\xE9 ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source ontologique ; le moteur calcule les ratios depuis les jins].",
   culture:arabic,
   compose(jins_rast, jins_hijaz),
   junction:3/2,
   notes_count:7,
   system:"zalzal-ji"
 )
+// @description Maqam Nawa Athar \u2014 double augmented second \u2014 Ratios = zalzalian just intonation (5-limit; neutral third 27/22). Source of
+// truth; 24-TET is a rendering projection, not the ontology. [compose(jins)+junction = source].
 composite maqam_nawa_athar(
-  description:"Maqam Nawa Athar \u2014 double augmented second \u2014 Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de v\xE9rit\xE9 ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source].",
   culture:arabic,
   notes_count:7,
   system:"zalzal-ji",
   compose(jins_nikriz, jins_hijaz),
   junction:3/2
 )
+// @description Maqam Athar Kurd \u2014 Kurd with augmented second \u2014 Ratios = zalzalian just intonation (5-limit; neutral third 27/22). Source of
+// truth; 24-TET is a rendering projection, not the ontology. [compose(jins)+junction = source].
 composite maqam_athar_kurd(
-  description:"Maqam Athar Kurd \u2014 Kurd with augmented second \u2014 Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de v\xE9rit\xE9 ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source].",
   culture:arabic,
   notes_count:7,
   system:"zalzal-ji",
   compose(jins_athar_kurd, jins_hijaz),
   junction:3/2
 )
+// @description Maqam Hijaz Kar \u2014 double harmonic major \u2014 Ratios = zalzalian just intonation (5-limit; neutral third 27/22). Source of
+// truth; 24-TET is a rendering projection, not the ontology. [compose(jins)+junction = ontological source; the engine computes the ratios
+// from the jins].
 composite maqam_hijaz_kar(
-  description:"Maqam Hijaz Kar \u2014 double harmonic major \u2014 Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de v\xE9rit\xE9 ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source ontologique ; le moteur calcule les ratios depuis les jins].",
   culture:arabic,
   notes_count:7,
   system:"zalzal-ji",
   compose(jins_hijaz, jins_hijaz),
   junction:3/2
 )
+// @description Maqam Nikriz \u2014 Nikriz tetrachord + Rast upper \u2014 Ratios = zalzalian just intonation (5-limit; neutral third 27/22). Source of
+// truth; 24-TET is a rendering projection, not the ontology. [compose(jins)+junction = ontological source; the engine computes the ratios
+// from the jins].
 composite maqam_nikriz(
-  description:"Maqam Nikriz \u2014 Nikriz tetrachord + Rast upper \u2014 Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de v\xE9rit\xE9 ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source ontologique ; le moteur calcule les ratios depuis les jins].",
   culture:arabic,
   compose(jins_nikriz, jins_rast),
   junction:3/2,
   notes_count:7,
   system:"zalzal-ji"
 )
+// @description Maqam Husayni \u2014 Bayati variant with Husayni emphasis \u2014 Ratios = zalzalian just intonation (5-limit; neutral third 27/22).
+// Source of truth; 24-TET is a rendering projection, not the ontology. [compose(jins)+junction = ontological source; the engine computes
+// the ratios from the jins].
 composite maqam_husayni(
-  description:"Maqam Husayni \u2014 Bayati variant with Husayni emphasis \u2014 Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de v\xE9rit\xE9 ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source ontologique ; le moteur calcule les ratios depuis les jins].",
   culture:arabic,
   compose(jins_bayati, jins_bayati),
   junction:3/2,
   notes_count:7,
   system:"zalzal-ji"
 )
+// @description Maqam Farahfaza \u2014 Nahawand with Sikah flavor \u2014 Ratios = zalzalian just intonation (5-limit; neutral third 27/22). Source of
+// truth; 24-TET is a rendering projection, not the ontology. [compose(jins)+junction = ontological source; the engine computes the ratios
+// from the jins].
 composite maqam_farahfaza(
-  description:"Maqam Farahfaza \u2014 Nahawand with Sikah flavor \u2014 Ratios = intonation juste zalzalienne (5-limite ; tierce neutre 27/22). Source de v\xE9rit\xE9 ; le 24-TET est une projection de rendu, pas l'ontologie. [compose(jins)+junction = source ontologique ; le moteur calcule les ratios depuis les jins].",
   culture:arabic,
   compose(jins_nahawand, jins_bayati),
   junction:3/2,
   notes_count:7,
   system:"zalzal-ji"
 )
+// @description Makam Rast \u2014 fundamental Turkish makam \u2014 Ratios = Pythagorean (3-limit, chain of fifths of the Ottoman 53-comma
+// Arel-Ezgi-Uzdilmek system). Source of truth; 53-TET is a projection. [Turkish system: Pythagorean (3-limit); cins = exact segments; name
+// = family (provisional for the rare d\xF6rtl\xFC)].
 composite makam_rast(
-  description:"Makam Rast \u2014 fundamental Turkish makam \u2014 Ratios = Pythagore (3-limite, cha\xEEne de quintes du syst\xE8me ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de v\xE9rit\xE9 ; le 53-TET est une projection. [syst\xE8me turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les d\xF6rtl\xFC rares)].",
   culture:turkish,
   notes_count:7,
   system:"pythagorean",
   compose(cins_rast, cins_rast4),
   junction:3/2
 )
+// @description Makam Ussak \u2014 one of the most common Turkish makams \u2014 Ratios = Pythagorean (3-limit, chain of fifths of the Ottoman 53-comma
+// Arel-Ezgi-Uzdilmek system). Source of truth; 53-TET is a projection. [Turkish system: Pythagorean (3-limit); cins = exact segments; name
+// = family (provisional for the rare d\xF6rtl\xFC)].
 composite makam_ussak(
-  description:"Makam Ussak \u2014 one of the most common Turkish makams \u2014 Ratios = Pythagore (3-limite, cha\xEEne de quintes du syst\xE8me ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de v\xE9rit\xE9 ; le 53-TET est une projection. [syst\xE8me turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les d\xF6rtl\xFC rares)].",
   culture:turkish,
   notes_count:7,
   system:"pythagorean",
   compose(cins_ussak, cins_ussak4),
   junction:3/2
 )
+// @description Makam Huseyni \u2014 similar to Ussak with different upper tetrachord \u2014 Ratios = Pythagorean (3-limit, chain of fifths of the
+// Ottoman 53-comma Arel-Ezgi-Uzdilmek system). Source of truth; 53-TET is a projection. [Turkish system: Pythagorean (3-limit); cins =
+// exact segments; name = family (provisional for the rare d\xF6rtl\xFC)].
 composite makam_huseyni(
-  description:"Makam Huseyni \u2014 similar to Ussak with different upper tetrachord \u2014 Ratios = Pythagore (3-limite, cha\xEEne de quintes du syst\xE8me ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de v\xE9rit\xE9 ; le 53-TET est une projection. [syst\xE8me turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les d\xF6rtl\xFC rares)].",
   culture:turkish,
   notes_count:7,
   system:"pythagorean",
   compose(cins_ussak, cins_buselik4),
   junction:3/2
 )
+// @description Makam Hicaz \u2014 augmented second in lower tetrachord \u2014 Ratios = Pythagorean (3-limit, chain of fifths of the Ottoman 53-comma
+// Arel-Ezgi-Uzdilmek system). Source of truth; 53-TET is a projection. [Turkish system: Pythagorean (3-limit); cins = exact segments; name
+// = family (provisional for the rare d\xF6rtl\xFC)].
 composite makam_hicaz(
-  description:"Makam Hicaz \u2014 augmented second in lower tetrachord \u2014 Ratios = Pythagore (3-limite, cha\xEEne de quintes du syst\xE8me ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de v\xE9rit\xE9 ; le 53-TET est une projection. [syst\xE8me turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les d\xF6rtl\xFC rares)].",
   culture:turkish,
   notes_count:7,
   system:"pythagorean",
   compose(cins_hicaz, cins_ussak4),
   junction:3/2
 )
+// @description Makam Nihavend \u2014 Turkish minor, similar to harmonic minor \u2014 Ratios = Pythagorean (3-limit, chain of fifths of the Ottoman
+// 53-comma Arel-Ezgi-Uzdilmek system). Source of truth; 53-TET is a projection. [Turkish system: Pythagorean (3-limit); cins = exact
+// segments; name = family (provisional for the rare d\xF6rtl\xFC)].
 composite makam_nihavend(
-  description:"Makam Nihavend \u2014 Turkish minor, similar to harmonic minor \u2014 Ratios = Pythagore (3-limite, cha\xEEne de quintes du syst\xE8me ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de v\xE9rit\xE9 ; le 53-TET est une projection. [syst\xE8me turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les d\xF6rtl\xFC rares)].",
   culture:turkish,
   notes_count:7,
   system:"pythagorean",
   compose(cins_buselik, cins_kurdi4),
   junction:3/2
 )
+// @description Makam Kurdi \u2014 starts with minor second \u2014 Ratios = Pythagorean (3-limit, chain of fifths of the Ottoman 53-comma
+// Arel-Ezgi-Uzdilmek system). Source of truth; 53-TET is a projection. [Turkish system: Pythagorean (3-limit); cins = exact segments; name
+// = family (provisional for the rare d\xF6rtl\xFC)].
 composite makam_kurdi(
-  description:"Makam Kurdi \u2014 starts with minor second \u2014 Ratios = Pythagore (3-limite, cha\xEEne de quintes du syst\xE8me ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de v\xE9rit\xE9 ; le 53-TET est une projection. [syst\xE8me turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les d\xF6rtl\xFC rares)].",
   culture:turkish,
   notes_count:7,
   system:"pythagorean",
   compose(cins_kurdi, cins_kurdi4),
   junction:3/2
 )
+// @description Makam Segah \u2014 starts on segah pitch, meditative character \u2014 Ratios = Pythagorean (3-limit, chain of fifths of the Ottoman
+// 53-comma Arel-Ezgi-Uzdilmek system). Source of truth; 53-TET is a projection. [Turkish system: Pythagorean (3-limit); cins = exact
+// segments; name = family (provisional for the rare d\xF6rtl\xFC)].
 composite makam_segah(
-  description:"Makam Segah \u2014 starts on segah pitch, meditative character \u2014 Ratios = Pythagore (3-limite, cha\xEEne de quintes du syst\xE8me ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de v\xE9rit\xE9 ; le 53-TET est une projection. [syst\xE8me turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les d\xF6rtl\xFC rares)].",
   culture:turkish,
   notes_count:7,
   system:"pythagorean",
   compose(cins_segah, cins_cargah4),
   junction:3/2
 )
+// @description Makam Huzzam \u2014 Segah variant with diminished fifth \u2014 Ratios = Pythagorean (3-limit, chain of fifths of the Ottoman 53-comma
+// Arel-Ezgi-Uzdilmek system). Source of truth; 53-TET is a projection. [Turkish system: Pythagorean (3-limit); cins = exact segments; name
+// = family (provisional for the rare d\xF6rtl\xFC)].
 composite makam_huzzam(
-  description:"Makam Huzzam \u2014 Segah variant with diminished fifth \u2014 Ratios = Pythagore (3-limite, cha\xEEne de quintes du syst\xE8me ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de v\xE9rit\xE9 ; le 53-TET est une projection. [syst\xE8me turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les d\xF6rtl\xFC rares)].",
   culture:turkish,
   notes_count:7,
   system:"pythagorean",
   compose(cins_cargah4, cins_huzzam),
   junction:4/3
 )
+// @description Makam Saba \u2014 distinctive Turkish makam with narrow intervals \u2014 Ratios = Pythagorean (3-limit, chain of fifths of the Ottoman
+// 53-comma Arel-Ezgi-Uzdilmek system). Source of truth; 53-TET is a projection. [Turkish system: Pythagorean (3-limit); cins = exact
+// segments; name = family (provisional for the rare d\xF6rtl\xFC)].
 composite makam_saba(
-  description:"Makam Saba \u2014 distinctive Turkish makam with narrow intervals \u2014 Ratios = Pythagore (3-limite, cha\xEEne de quintes du syst\xE8me ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de v\xE9rit\xE9 ; le 53-TET est une projection. [syst\xE8me turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les d\xF6rtl\xFC rares)].",
   culture:turkish,
   notes_count:7,
   system:"pythagorean",
   compose(cins_saba, cins_kurdi4),
   junction:3/2
 )
+// @description Makam Buselik \u2014 Turkish natural minor equivalent \u2014 Ratios = Pythagorean (3-limit, chain of fifths of the Ottoman 53-comma
+// Arel-Ezgi-Uzdilmek system). Source of truth; 53-TET is a projection. [Turkish system: Pythagorean (3-limit); cins = exact segments; name
+// = family (provisional for the rare d\xF6rtl\xFC)].
 composite makam_buselik(
-  description:"Makam Buselik \u2014 Turkish natural minor equivalent \u2014 Ratios = Pythagore (3-limite, cha\xEEne de quintes du syst\xE8me ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de v\xE9rit\xE9 ; le 53-TET est une projection. [syst\xE8me turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les d\xF6rtl\xFC rares)].",
   culture:turkish,
   notes_count:7,
   system:"pythagorean",
   compose(cins_buselik, cins_ussak4),
   junction:3/2
 )
+// @description Makam Sultaniyegah \u2014 Rast transposed, majestic character \u2014 Ratios = Pythagorean (3-limit, chain of fifths of the Ottoman
+// 53-comma Arel-Ezgi-Uzdilmek system). Source of truth; 53-TET is a projection. [Turkish system: Pythagorean (3-limit); cins = exact
+// segments; name = family (provisional for the rare d\xF6rtl\xFC)].
 composite makam_sultaniyegah(
-  description:"Makam Sultaniyegah \u2014 Rast transposed, majestic character \u2014 Ratios = Pythagore (3-limite, cha\xEEne de quintes du syst\xE8me ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de v\xE9rit\xE9 ; le 53-TET est une projection. [syst\xE8me turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les d\xF6rtl\xFC rares)].",
   culture:turkish,
   notes_count:7,
   system:"pythagorean",
   compose(cins_rast, cins_huseyni4),
   junction:3/2
 )
+// @description Makam Karcigar \u2014 mixed Turkish-Arabic makam \u2014 Ratios = Pythagorean (3-limit, chain of fifths of the Ottoman 53-comma
+// Arel-Ezgi-Uzdilmek system). Source of truth; 53-TET is a projection. [Turkish system: Pythagorean (3-limit); cins = exact segments; name
+// = family (provisional for the rare d\xF6rtl\xFC)].
 composite makam_karcigar(
-  description:"Makam Karcigar \u2014 mixed Turkish-Arabic makam \u2014 Ratios = Pythagore (3-limite, cha\xEEne de quintes du syst\xE8me ottoman 53-comma Arel-Ezgi-Uzdilmek). Source de v\xE9rit\xE9 ; le 53-TET est une projection. [syst\xE8me turc : Pythagore (3-limite) ; cins = segments exacts ; nom = famille (provisoire pour les d\xF6rtl\xFC rares)].",
   culture:turkish,
   notes_count:7,
   system:"pythagorean",
   compose(cins_ussak, cins_segah4),
   junction:3/2
 )
+// @description Maqam Rast \u2014 Rast + Rast on the fifth [compose(jins)+junction = source; the engine computes the ratios from the jins].
 composite maqam_rast(
-  description:"Maqam Rast \u2014 Rast + Rast sur la quinte [compose(jins)+junction = source ; le moteur calcule les ratios depuis les jins].",
   culture:arabic,
   system:"zalzal-ji",
   compose(jins_rast, jins_rast),
   junction:3/2
 )
+// @description Maqam Nahawand \u2014 Nahawand (lower) + Kurd (upper) [compose(jins)+junction = source; the engine computes the ratios from the
+// jins].
 composite maqam_nahawand(
-  description:"Maqam Nahawand \u2014 Nahawand (bas) + Kurd (haut) [compose(jins)+junction = source ; le moteur calcule les ratios depuis les jins].",
   culture:arabic,
   system:"zalzal-ji",
   compose(jins_nahawand, jins_kurd),
   junction:3/2
 )
+// @description Maqam Hijaz \u2014 Hijaz (lower) + Rast (upper) [compose(jins)+junction = source; the engine computes the ratios from the jins].
 composite maqam_hijaz(
-  description:"Maqam Hijaz \u2014 Hijaz (bas) + Rast (haut) [compose(jins)+junction = source ; le moteur calcule les ratios depuis les jins].",
   culture:arabic,
   system:"zalzal-ji",
   compose(jins_hijaz, jins_rast),
   junction:3/2
 )
+// @description Maqam Bayati \u2014 Bayati (lower) + Nahawand (upper) [compose(jins)+junction = source; the engine computes the ratios from the
+// jins].
 composite maqam_bayati(
-  description:"Maqam Bayati \u2014 Bayati (bas) + Nahawand (haut) [compose(jins)+junction = source ; le moteur calcule les ratios depuis les jins].",
   culture:arabic,
   system:"zalzal-ji",
   compose(jins_bayati, jins_nahawand),
   junction:3/2
 )
+// @description Maqam Saba \u2014 Saba (lower) + Hijaz (upper) + Rast (topmost, 3 jins) [compose(jins)+junction = source; the engine computes the
+// ratios from the jins].
 composite maqam_saba(
-  description:"Maqam Saba \u2014 Saba (bas) + Hijaz (haut) + Rast (tr\xE8s haut, 3 jins) [compose(jins)+junction = source ; le moteur calcule les ratios depuis les jins].",
   culture:arabic,
   system:"zalzal-ji",
   compose(jins_saba, jins_hijaz, jins_rast),
@@ -3303,28 +3065,20 @@ composite maqam_saba(
     "boolean": "1"
   }
 }
-`, "fichier": "settings/notreich.json" }, { "nom": "settings/pattern_grammar", "format": "json", "texte": '{\n  "documented": false,\n  "AllItems": {\n    "name": "Produce all items",\n    "value": "1",\n    "boolean": "1"\n  },\n  "MaxItemsProduce": {\n    "name": "Max items to produce",\n    "value": "20",\n    "boolean": "0"\n  },\n  "AllowRandomize": {\n    "name": "Allow randomize",\n    "value": "1",\n    "boolean": "1"\n  }\n}', "fichier": "settings/pattern_grammar.json" }, { "nom": "settings/test1", "format": "json", "texte": '{\n  "documented": false,\n  "AllItems": {\n    "name": "Produce all items",\n    "value": "1",\n    "boolean": "1"\n  },\n  "MaxItemsProduce": {\n    "name": "Max items to produce",\n    "value": "50",\n    "boolean": "0"\n  },\n  "Quantization": {\n    "name": "Quantization",\n    "value": "5",\n    "unit": "ms",\n    "boolean": "0"\n  }\n}', "fichier": "settings/test1.json" }, { "nom": "settings", "format": "bpsl", "texte": '// @documented\ndef settings(\n  resolvedBy:BPx,\n  resolves:settings,\n  name:settings,\n  description:"Default BP3 engine settings. Overridden by @ directives. Used to generate the settings string for bp3_load_settings().",\n  version:"0.2.0",\n  section:bp3_defaults\n)\n\ndef Quantization(name:Quantization, value:"10", unit:ms, boolean:"0")\n\ndef Quantize(name:Quantize, value:"1", boolean:"1")\n\ndef Time_res(name:"Time resolution", value:"10", unit:ms, boolean:"0")\n\ndef MIDIsyncDelay(name:"MIDI sync delay", value:"100", unit:ms, boolean:"0")\n\ndef Nature_of_time(name:"Nature of time", value:"1", boolean:"0")\n\ndef NoteConvention(name:"Note convention", value:"0", boolean:"0")\n\ndef Pclock(name:"P clock", value:"1", boolean:"0")\n\ndef Qclock(name:"Q clock", value:"1", boolean:"0")\n\ndef ShowGraphic(name:"Show graphic", value:"0", boolean:"1")\n\ndef ShowObjectGraph(name:"Show object graphic", value:"0", boolean:"1")\n\ndef ShowPianoRoll(name:"Show piano roll", value:"0", boolean:"1")\n\ndef GraphicScaleP(name:"Graphic scale P", value:"0", boolean:"0")\n\ndef GraphicScaleQ(name:"Graphic scale Q", value:"0", boolean:"0")\n\ndef DisplayItems(name:"Display items", value:"1", boolean:"1")\n\ndef DisplayProduce(name:"Display produce", value:"0", boolean:"1")\n\ndef SplitTimeObjects(name:"Split time objects", value:"1", boolean:"1")\n\ndef SplitVariables(name:"Split variables", value:"0", boolean:"1")\n\ndef CsoundTrace(name:"Csound trace", value:"0", boolean:"1")\n\ndef Improvize(name:Improvize, value:"0", boolean:"1")\n\ndef DeftBufferSize(name:"Default buffer size", value:"1000", boolean:"0")\n\ndef ComputeWhilePlay(name:"Compute while playing", value:"1", boolean:"1")\n\ndef MaxConsoleTime(name:"Max console time", value:"60", boolean:"0")\n\ndef ResetNotes(name:"Reset notes between items", value:"1", boolean:"1")\n\ndef ResetWeights(name:"Reset rule weights", value:"1", boolean:"1")\n\ndef ResetFlags(name:"Reset flags", value:"1", boolean:"1")\n\ndef ResetControllers(name:"Reset controllers", value:"0", boolean:"1")\n\ndef EndFadeOut(name:"End fade out", value:"2.00", boolean:"0")\n\ndef C4key(name:"C4 key number", value:"60", boolean:"0")\n\ndef A4freq(name:"A4 frequency", value:"440.0000", boolean:"0")\n\ndef StrikeAgainDefault(name:"Strike again default", value:"1", boolean:"0")\n\ndef DeftVolume(name:"Default volume", value:"90", boolean:"0")\n\ndef VolumeController(name:"Volume controller", value:"7", boolean:"0")\n\ndef DeftVelocity(name:"Default velocity", value:"64", boolean:"0")\n\ndef DeftPanoramic(name:"Default panoramic", value:"64", boolean:"0")\n\ndef PanoramicController(name:"Panoramic controller", value:"10", boolean:"0")\n\ndef SamplingRate(name:"Sampling rate", value:"50", boolean:"0")\n\ndef TraceMicrotonality(name:"Trace microtonality", value:"0", boolean:"1")\n\ndef DisplayTimeSet(name:"Display time set", value:"0", boolean:"1")\n\ndef AllItems(name:"Produce all items", value:"0", boolean:"1")\n\ndef MaxItemsProduce(name:"Max items to produce", value:"20", boolean:"0")\n\ndef Seed(name:"Random seed", value:"0", boolean:"0")\n\ndef improvize(section:directive_map, Improvize:"1")\n\ndef allitems(section:directive_map, AllItems:"1", Improvize:"0")\n\ndef all_items(section:directive_map, AllItems:"1", Improvize:"0")\n\ndef maxitems(section:directive_map, MaxItemsProduce:"@value")\n\ndef items(section:directive_map, MaxItemsProduce:"@value")\n\ndef quantize(section:directive_map, Quantization:"@value")\n\ndef quantization(section:directive_map, Quantization:"@value")\n\ndef qclock(section:directive_map, Qclock:"@value")\n\ndef seed(section:directive_map, Seed:"@value")\n\ndef vel(section:directive_map, DeftVelocity:"@value")\n\ndef pan(section:directive_map, DeftPanoramic:"@value")\n\ndef volume(section:directive_map, DeftVolume:"@value")\n\ndef a4(section:directive_map, A4freq:"@value")\n\ndef timeres(section:directive_map, Time_res:"@value")\n\ndef note_conventions(section:"", western:1, raga:2, keys:3)\n', "fichier": "settings.bpsl" }, { "nom": "sounds", "format": "bpsl", "texte": `types
-
-// @documented
-def sounds(resolvedBy:"BPx", resolves:sound, name:sounds)
-
-sound tabla_perc(
-  description:"Percussions de tabla \u2014 bols de bayan (grave) et de dayan (aigu). Prototype AUX D\xC9FAUTS MOTEUR : il ne surcharge aucune propri\xE9t\xE9 m\xE9trique. Invoqu\xE9 par dhati, dhin et leurs jumelles (6 sc\xE8nes du corpus). Le nom vient du corpus, pas d'un catalogue externe."
-)
-`, "fichier": "sounds.bpsl" }, { "nom": "temperaments", "format": "bpsl", "texte": `types
+`, "fichier": "settings/notreich.json" }, { "nom": "settings/pattern_grammar", "format": "json", "texte": '{\n  "documented": false,\n  "AllItems": {\n    "name": "Produce all items",\n    "value": "1",\n    "boolean": "1"\n  },\n  "MaxItemsProduce": {\n    "name": "Max items to produce",\n    "value": "20",\n    "boolean": "0"\n  },\n  "AllowRandomize": {\n    "name": "Allow randomize",\n    "value": "1",\n    "boolean": "1"\n  }\n}', "fichier": "settings/pattern_grammar.json" }, { "nom": "settings/test1", "format": "json", "texte": '{\n  "documented": false,\n  "AllItems": {\n    "name": "Produce all items",\n    "value": "1",\n    "boolean": "1"\n  },\n  "MaxItemsProduce": {\n    "name": "Max items to produce",\n    "value": "50",\n    "boolean": "0"\n  },\n  "Quantization": {\n    "name": "Quantization",\n    "value": "5",\n    "unit": "ms",\n    "boolean": "0"\n  }\n}', "fichier": "settings/test1.json" }, { "nom": "settings", "format": "bpsl", "texte": '// @documented\n// @description Default BP3 engine settings. Overridden by @ directives. Used to generate the settings string for bp3_load_settings().\ndef settings(\n  resolvedBy:BPx,\n  resolves:settings,\n  name:settings,\n  version:"0.2.0",\n  section:bp3_defaults\n)\n\ndef Quantization(name:Quantization, value:"10", unit:ms, boolean:"0")\n\ndef Quantize(name:Quantize, value:"1", boolean:"1")\n\ndef Time_res(name:"Time resolution", value:"10", unit:ms, boolean:"0")\n\ndef MIDIsyncDelay(name:"MIDI sync delay", value:"100", unit:ms, boolean:"0")\n\ndef Nature_of_time(name:"Nature of time", value:"1", boolean:"0")\n\ndef NoteConvention(name:"Note convention", value:"0", boolean:"0")\n\ndef Pclock(name:"P clock", value:"1", boolean:"0")\n\ndef Qclock(name:"Q clock", value:"1", boolean:"0")\n\ndef ShowGraphic(name:"Show graphic", value:"0", boolean:"1")\n\ndef ShowObjectGraph(name:"Show object graphic", value:"0", boolean:"1")\n\ndef ShowPianoRoll(name:"Show piano roll", value:"0", boolean:"1")\n\ndef GraphicScaleP(name:"Graphic scale P", value:"0", boolean:"0")\n\ndef GraphicScaleQ(name:"Graphic scale Q", value:"0", boolean:"0")\n\ndef DisplayItems(name:"Display items", value:"1", boolean:"1")\n\ndef DisplayProduce(name:"Display produce", value:"0", boolean:"1")\n\ndef SplitTimeObjects(name:"Split time objects", value:"1", boolean:"1")\n\ndef SplitVariables(name:"Split variables", value:"0", boolean:"1")\n\ndef CsoundTrace(name:"Csound trace", value:"0", boolean:"1")\n\ndef Improvize(name:Improvize, value:"0", boolean:"1")\n\ndef DeftBufferSize(name:"Default buffer size", value:"1000", boolean:"0")\n\ndef ComputeWhilePlay(name:"Compute while playing", value:"1", boolean:"1")\n\ndef MaxConsoleTime(name:"Max console time", value:"60", boolean:"0")\n\ndef ResetNotes(name:"Reset notes between items", value:"1", boolean:"1")\n\ndef ResetWeights(name:"Reset rule weights", value:"1", boolean:"1")\n\ndef ResetFlags(name:"Reset flags", value:"1", boolean:"1")\n\ndef ResetControllers(name:"Reset controllers", value:"0", boolean:"1")\n\ndef EndFadeOut(name:"End fade out", value:"2.00", boolean:"0")\n\ndef C4key(name:"C4 key number", value:"60", boolean:"0")\n\ndef A4freq(name:"A4 frequency", value:"440.0000", boolean:"0")\n\ndef StrikeAgainDefault(name:"Strike again default", value:"1", boolean:"0")\n\ndef DeftVolume(name:"Default volume", value:"90", boolean:"0")\n\ndef VolumeController(name:"Volume controller", value:"7", boolean:"0")\n\ndef DeftVelocity(name:"Default velocity", value:"64", boolean:"0")\n\ndef DeftPanoramic(name:"Default panoramic", value:"64", boolean:"0")\n\ndef PanoramicController(name:"Panoramic controller", value:"10", boolean:"0")\n\ndef SamplingRate(name:"Sampling rate", value:"50", boolean:"0")\n\ndef TraceMicrotonality(name:"Trace microtonality", value:"0", boolean:"1")\n\ndef DisplayTimeSet(name:"Display time set", value:"0", boolean:"1")\n\ndef AllItems(name:"Produce all items", value:"0", boolean:"1")\n\ndef MaxItemsProduce(name:"Max items to produce", value:"20", boolean:"0")\n\ndef Seed(name:"Random seed", value:"0", boolean:"0")\n\ndef improvize(section:directive_map, Improvize:"1")\n\ndef allitems(section:directive_map, AllItems:"1", Improvize:"0")\n\ndef all_items(section:directive_map, AllItems:"1", Improvize:"0")\n\ndef maxitems(section:directive_map, MaxItemsProduce:"@value")\n\ndef items(section:directive_map, MaxItemsProduce:"@value")\n\ndef quantize(section:directive_map, Quantization:"@value")\n\ndef quantization(section:directive_map, Quantization:"@value")\n\ndef qclock(section:directive_map, Qclock:"@value")\n\ndef seed(section:directive_map, Seed:"@value")\n\ndef vel(section:directive_map, DeftVelocity:"@value")\n\ndef pan(section:directive_map, DeftPanoramic:"@value")\n\ndef volume(section:directive_map, DeftVolume:"@value")\n\ndef a4(section:directive_map, A4freq:"@value")\n\ndef timeres(section:directive_map, Time_res:"@value")\n\ndef note_conventions(section:"", western:1, raga:2, keys:3)\n', "fichier": "settings.bpsl" }, { "nom": "sounds", "format": "bpsl", "texte": 'types\n\n// @documented\ndef sounds(resolvedBy:"BPx", resolves:sound, name:sounds)\n\n// @description Tabla percussion \u2014 bols of bayan (low) and dayan (high). Prototype AT ENGINE DEFAULTS: it overrides no metric property.\n// Invoked by dhati, dhin and their twins (6 scenes of the corpus). The name comes from the corpus, not from an external catalogue.\nsound tabla_perc(\n)\n', "fichier": "sounds.bpsl" }, { "nom": "temperaments", "format": "bpsl", "texte": `types
 
 // @documented
 def temperaments(resolvedBy:Kairos, resolves:temperament)
 
+// @description Equal temperament, 12 divisions of the octave
 temperament 12TET(
-  description:"Equal temperament, 12 divisions of the octave",
   period_ratio:2,
   divisions:12,
   ratios(1, 100c, 200c, 300c, 400c, 500c, 600c, 700c, 800c, 900c, 1000c, 1100c)
 )
 
+// @description Quarter-tone equal temperament, 24 divisions of the octave
 temperament 24TET(
-  description:"Quarter-tone equal temperament, 24 divisions of the octave",
   period_ratio:2,
   divisions:24,
   ratios(
@@ -3355,8 +3109,8 @@ temperament 24TET(
   )
 )
 
+// @description Holdrian comma system, 53 divisions of the octave. Used in Turkish makam theory. 1 step \u2248 22.64 cents.
 temperament 53TET(
-  description:"Holdrian comma system, 53 divisions of the octave. Used in Turkish makam theory. 1 step \u2248 22.64 cents.",
   period_ratio:2,
   divisions:53,
   ratios(
@@ -3416,22 +3170,22 @@ temperament 53TET(
   )
 )
 
+// @description Pythagorean tuning \u2014 pure fifths (3/2). Comma: 531441/524288 \u2248 23.46 cents.
 temperament pythagorean(
-  description:"Pythagorean tuning \u2014 pure fifths (3/2). Comma: 531441/524288 \u2248 23.46 cents.",
   period_ratio:2,
   divisions:12,
   ratios(1, 256/243, 9/8, 32/27, 81/64, 4/3, 729/512, 3/2, 128/81, 27/16, 16/9, 243/128)
 )
 
+// @description 5-limit just intonation \u2014 pure thirds and fifths.
 temperament just_5limit(
-  description:"5-limit just intonation \u2014 pure thirds and fifths.",
   period_ratio:2,
   divisions:12,
   ratios(1, 16/15, 9/8, 6/5, 5/4, 4/3, 45/32, 3/2, 8/5, 5/3, 9/5, 15/8)
 )
 
+// @description 1/4-comma meantone \u2014 major thirds exactly 5/4. Fifths narrowed by 1/4 syntonic comma.
 temperament meantone_quarter(
-  description:"1/4-comma meantone \u2014 major thirds exactly 5/4. Fifths narrowed by 1/4 syntonic comma.",
   period_ratio:2,
   divisions:12,
   ratios(
@@ -3450,8 +3204,8 @@ temperament meantone_quarter(
   )
 )
 
+// @description 22 shruti \u2014 Indian tradition, 5-limit just intonation. Unequal steps (pramana ~22c, nyuna ~70c, purna ~90c).
 temperament 22shruti(
-  description:"22 shruti \u2014 Indian tradition, 5-limit just intonation. Unequal steps (pramana ~22c, nyuna ~70c, purna ~90c).",
   period_ratio:2,
   divisions:22,
   ratios(
@@ -3480,15 +3234,15 @@ temperament 22shruti(
   )
 )
 
+// @description Bohlen-Pierce just \u2014 7-limit, tritave (3:1). 13 steps.
 temperament bohlen_pierce_just(
-  description:"Bohlen-Pierce just \u2014 7-limit, tritave (3:1). 13 steps.",
   period_ratio:3,
   divisions:13,
   ratios(1, 27/25, 25/21, 9/7, 7/5, 75/49, 5/3, 9/5, 49/25, 15/7, 7/3, 63/25, 25/9)
 )
 
+// @description Bohlen-Pierce equal \u2014 13 equal divisions of the tritave (3:1).
 temperament bohlen_pierce_equal(
-  description:"Bohlen-Pierce equal \u2014 13 equal divisions of the tritave (3:1).",
   period_ratio:3,
   divisions:13,
   ratios(
@@ -3508,22 +3262,23 @@ temperament bohlen_pierce_equal(
   )
 )
 
+// @description Gamelan pelog \u2014 7-tone, Central Javanese approximation. Stretched octave. Varies by ensemble.
 temperament gamelan_pelog(
-  description:"Gamelan pelog \u2014 7-tone, Central Javanese approximation. Stretched octave. Varies by ensemble.",
   period_ratio:2.02,
   divisions:7,
   ratios(1, 1.126, 1.244, 1.351, 1.496, 1.683, 1.894)
 )
 
+// @description Gamelan slendro \u2014 near-equal pentatonic, Central Javanese approximation. Stretched octave.
 temperament gamelan_slendro(
-  description:"Gamelan slendro \u2014 near-equal pentatonic, Central Javanese approximation. Stretched octave.",
   period_ratio:2.01,
   divisions:5,
   ratios(1, 1.143, 1.317, 1.516, 1.741)
 )
 
+// @description This is a reduction to 12 grades of scale "Ma05" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'Bb'
+// Created on 2021-01-05 18:34:29 Scale aligned ratio 1.0125 (2022-03-11 07:57:41)
 temperament bp3_Abmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma05"" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'Bb' Created on 2021-01-05 18:34:29 Scale aligned ratio 1.0125 (2022-03-11 07:57:41)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3531,8 +3286,9 @@ temperament bp3_Abmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma08" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:09:51 Scale aligned
+// ratio 1.0125 (2022-03-11 07:56:59)
 temperament bp3_Abmin(
-  description:"This is a reduction to 12 grades of scale ""Ma08"" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:09:51 Scale aligned ratio 1.0125 (2022-03-11 07:56:59)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3540,8 +3296,9 @@ temperament bp3_Abmin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma10" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'B'
+// Created 2021-01-05 18:56:02
 temperament bp3_Amaj(
-  description:"This is a reduction to 12 grades of scale ""Ma10"" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'B' Created 2021-01-05 18:56:02",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3549,8 +3306,8 @@ temperament bp3_Amaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma01" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:00:08
 temperament bp3_Amin(
-  description:"This is a reduction to 12 grades of scale ""Ma01"" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:00:08",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3558,8 +3315,9 @@ temperament bp3_Amin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma03" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'C'
+// Created 2021-01-05 18:31:20
 temperament bp3_Bbmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma03"" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'C' Created 2021-01-05 18:31:20",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3567,8 +3325,8 @@ temperament bp3_Bbmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma06" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:08:40
 temperament bp3_Bbmin(
-  description:"This is a reduction to 12 grades of scale ""Ma06"" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:08:40",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:12,
@@ -3576,8 +3334,9 @@ temperament bp3_Bbmin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma08" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'Db'
+// Created 2021-01-05 19:37:40
 temperament bp3_Bmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma08"" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'Db' Created 2021-01-05 19:37:40",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3585,8 +3344,8 @@ temperament bp3_Bmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma11" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:12:50
 temperament bp3_Bmin(
-  description:"This is a reduction to 12 grades of scale ""Ma11"" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:12:50",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3594,8 +3353,9 @@ temperament bp3_Bmin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma01" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'D'
+// Created 2021-01-05 18:29:30
 temperament bp3_Cmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma01"" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'D' Created 2021-01-05 18:29:30",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3603,8 +3363,8 @@ temperament bp3_Cmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma04" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 17:49:25
 temperament bp3_Cmin(
-  description:"This is a reduction to 12 grades of scale ""Ma04"" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 17:49:25",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:12,
@@ -3612,8 +3372,9 @@ temperament bp3_Cmin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma06" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'Eb'
+// Created 2021-01-05 18:35:44Scale aligned ratio 1.0125 (2022-03-11 07:59:19)
 temperament bp3_Dbmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma06"" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'Eb' Created 2021-01-05 18:35:44Scale aligned ratio 1.0125 (2022-03-11 07:59:19)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3621,8 +3382,9 @@ temperament bp3_Dbmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma09" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:10:26 Scale aligned
+// ratio 1.0125 (2022-03-11 07:59:30)
 temperament bp3_Dbmin(
-  description:"This is a reduction to 12 grades of scale ""Ma09"" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:10:26 Scale aligned ratio 1.0125 (2022-03-11 07:59:30)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3630,8 +3392,9 @@ temperament bp3_Dbmin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma11" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'E'
+// Created 2021-01-05 18:48:23
 temperament bp3_Dmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma11"" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'E' Created 2021-01-05 18:48:23",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3639,8 +3402,8 @@ temperament bp3_Dmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma02" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:06:48
 temperament bp3_Dmin(
-  description:"This is a reduction to 12 grades of scale ""Ma02"" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:06:48",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3648,8 +3411,9 @@ temperament bp3_Dmin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma04" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'F'
+// Created 2021-01-05 18:33:09Scale aligned ratio 1.0125 (2022-03-11 07:50:02)
 temperament bp3_Ebmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma04"" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'F' Created 2021-01-05 18:33:09Scale aligned ratio 1.0125 (2022-03-11 07:50:02)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3657,8 +3421,9 @@ temperament bp3_Ebmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma07" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:09:20 Scale aligned
+// ratio 1.0125 (2022-03-11 07:59:38)
 temperament bp3_Ebmin(
-  description:"This is a reduction to 12 grades of scale ""Ma07"" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:09:20 Scale aligned ratio 1.0125 (2022-03-11 07:59:38)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3666,8 +3431,9 @@ temperament bp3_Ebmin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma09" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'F#'
+// Created 2021-01-05 19:38:38
 temperament bp3_Emaj(
-  description:"This is a reduction to 12 grades of scale ""Ma09"" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'F#' Created 2021-01-05 19:38:38",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3675,8 +3441,8 @@ temperament bp3_Emaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma12" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:13:25
 temperament bp3_Emin(
-  description:"This is a reduction to 12 grades of scale ""Ma12"" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:13:25",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3684,8 +3450,9 @@ temperament bp3_Emin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma07" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'Ab'
+// Created 2021-01-05 19:36:32
 temperament bp3_F_maj(
-  description:"This is a reduction to 12 grades of scale ""Ma07"" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'Ab' Created 2021-01-05 19:36:32",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3693,8 +3460,8 @@ temperament bp3_F_maj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma10" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:10:57
 temperament bp3_F_min(
-  description:"This is a reduction to 12 grades of scale ""Ma10"" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:10:57",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3702,8 +3469,9 @@ temperament bp3_F_min(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma02" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'G'
+// Created 2021-01-05 18:30:32
 temperament bp3_Fmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma02"" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'G' Created 2021-01-05 18:30:32",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3711,8 +3479,9 @@ temperament bp3_Fmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma05" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:07:58 Scale aligned
+// ratio 1.0125 (2022-03-11 07:59:51)
 temperament bp3_Fmin(
-  description:"This is a reduction to 12 grades of scale ""Ma05"" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:07:58 Scale aligned ratio 1.0125 (2022-03-11 07:59:51)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3720,8 +3489,9 @@ temperament bp3_Fmin(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma12" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'A'
+// Created 2021-01-05 18:49:22
 temperament bp3_Gmaj(
-  description:"This is a reduction to 12 grades of scale ""Ma12"" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'A' Created 2021-01-05 18:49:22",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3729,8 +3499,9 @@ temperament bp3_Gmaj(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma03" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:15:32Scale aligned
+// ratio 1.0125 (2022-03-11 07:54:43)
 temperament bp3_Gmin(
-  description:"This is a reduction to 12 grades of scale ""Ma03"" (23 grades) in \u2018-cs.12_scales\u2019 Created 2021-01-05 18:15:32Scale aligned ratio 1.0125 (2022-03-11 07:54:43)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -3738,8 +3509,8 @@ temperament bp3_Gmin(
   comma:81/80
 )
 
+// @description Scale "Ma01" from Bernard Bel / Bol Processor
 temperament bp3_Ma01(
-  description:"Scale ""Ma01"" from Bernard Bel / Bol Processor",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -3771,8 +3542,8 @@ temperament bp3_Ma01(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma01" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2020-11-28 16:51:26
 temperament bp3_Ma02(
-  description:"This is a transposition of scale ""Ma01"" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2020-11-28 16:51:26",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -3804,8 +3575,8 @@ temperament bp3_Ma02(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma2" (23 grades) From \u2018C\u2019 to \u2018F\u2019 Created 2020-11-27 18:26:51
 temperament bp3_Ma03(
-  description:"This is a transposition of scale ""Ma2"" (23 grades) From \u2018C\u2019 to \u2018F\u2019 Created 2020-11-27 18:26:51",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -3837,8 +3608,8 @@ temperament bp3_Ma03(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma3" (23 grades) From \u2018E\u2019 to \u2018A\u2019 Created 2020-11-27 19:34:18
 temperament bp3_Ma04(
-  description:"This is a transposition of scale ""Ma3"" (23 grades) From \u2018E\u2019 to \u2018A\u2019 Created 2020-11-27 19:34:18",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -3870,8 +3641,8 @@ temperament bp3_Ma04(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma4" (23 grades) From \u2018Eb\u2019 to \u2018Ab\u2019 Created 2020-11-28 07:25:59
 temperament bp3_Ma05(
-  description:"This is a transposition of scale ""Ma4"" (23 grades) From \u2018Eb\u2019 to \u2018Ab\u2019 Created 2020-11-28 07:25:59",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -3903,8 +3674,8 @@ temperament bp3_Ma05(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma5" (23 grades) From \u2018D\u2019 to \u2018G\u2019 Created 2020-11-28 07:48:18
 temperament bp3_Ma06(
-  description:"This is a transposition of scale ""Ma5"" (23 grades) From \u2018D\u2019 to \u2018G\u2019 Created 2020-11-28 07:48:18",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -3936,8 +3707,8 @@ temperament bp3_Ma06(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma6" (23 grades) From \u2018D\u2019 to \u2018G\u2019 Created 2020-11-28 08:01:21
 temperament bp3_Ma07(
-  description:"This is a transposition of scale ""Ma6"" (23 grades) From \u2018D\u2019 to \u2018G\u2019 Created 2020-11-28 08:01:21",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -3969,8 +3740,8 @@ temperament bp3_Ma07(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma7" (23 grades) From \u2018C\u2019 to \u2018F\u2019 Created 2020-11-28 08:11:34
 temperament bp3_Ma08(
-  description:"This is a transposition of scale ""Ma7"" (23 grades) From \u2018C\u2019 to \u2018F\u2019 Created 2020-11-28 08:11:34",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -4002,8 +3773,8 @@ temperament bp3_Ma08(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma08" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2020-11-28 19:09:43
 temperament bp3_Ma09(
-  description:"This is a transposition of scale ""Ma08"" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2020-11-28 19:09:43",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -4035,8 +3806,8 @@ temperament bp3_Ma09(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma09" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2021-01-05 17:41:33
 temperament bp3_Ma10(
-  description:"This is a transposition of scale ""Ma09"" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2021-01-05 17:41:33",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -4068,8 +3839,8 @@ temperament bp3_Ma10(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma10" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2021-01-05 15:42:40
 temperament bp3_Ma11(
-  description:"This is a transposition of scale ""Ma10"" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2021-01-05 15:42:40",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -4101,8 +3872,8 @@ temperament bp3_Ma11(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma11" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2021-01-05 15:43:43
 temperament bp3_Ma12(
-  description:"This is a transposition of scale ""Ma11"" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2021-01-05 15:43:43",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -4134,8 +3905,8 @@ temperament bp3_Ma12(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Ma12" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2021-01-05 15:44:52
 temperament bp3_Ma13(
-  description:"This is a transposition of scale ""Ma12"" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2021-01-05 15:44:52",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -4167,8 +3938,8 @@ temperament bp3_Ma13(
   comma:81/80
 )
 
+// @description Scale "Ma_grama" from Bernard Bel / Bol Processor
 temperament bp3_Ma_grama(
-  description:"Scale ""Ma_grama"" from Bernard Bel / Bol Processor",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -4200,8 +3971,8 @@ temperament bp3_Ma_grama(
   comma:81/80
 )
 
+// @description This is a derivation of scale "Ma01" (23 grades) in major tonality. Sensitive note = 'D' Created 2020-12-05 21:18:01
 temperament bp3_Sa01(
-  description:"This is a derivation of scale ""Ma01"" (23 grades) in major tonality. Sensitive note = 'D' Created 2020-12-05 21:18:01",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -4232,8 +4003,8 @@ temperament bp3_Sa01(
   )
 )
 
+// @description This is a derivation of scale "Ma02" (23 grades) in major tonality. Sensitive note = 'G' Created 2020-12-05 21:18:59
 temperament bp3_Sa02(
-  description:"This is a derivation of scale ""Ma02"" (23 grades) in major tonality. Sensitive note = 'G' Created 2020-12-05 21:18:59",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -4264,8 +4035,8 @@ temperament bp3_Sa02(
   )
 )
 
+// @description This is a derivation of scale "Ma03" (23 grades) in major tonality. Sensitive note = 'C' Created 2020-12-05 22:00:48
 temperament bp3_Sa03(
-  description:"This is a derivation of scale ""Ma03"" (23 grades) in major tonality. Sensitive note = 'C' Created 2020-12-05 22:00:48",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -4296,8 +4067,8 @@ temperament bp3_Sa03(
   )
 )
 
+// @description This is a derivation of scale "Ma04" (23 grades) in major tonality. Sensitive note = 'F' Created 2020-12-05 21:26:05
 temperament bp3_Sa04(
-  description:"This is a derivation of scale ""Ma04"" (23 grades) in major tonality. Sensitive note = 'F' Created 2020-12-05 21:26:05",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -4328,8 +4099,8 @@ temperament bp3_Sa04(
   )
 )
 
+// @description This is a derivation of scale "Ma05" (23 grades) in major tonality. Sensitive note = 'Bb' Created 2020-12-05 21:26:54
 temperament bp3_Sa05(
-  description:"This is a derivation of scale ""Ma05"" (23 grades) in major tonality. Sensitive note = 'Bb' Created 2020-12-05 21:26:54",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -4360,8 +4131,8 @@ temperament bp3_Sa05(
   )
 )
 
+// @description This is a derivation of scale "Ma06" (23 grades) in major tonality. Sensitive note = 'Eb' Created 2020-12-05 21:27:42
 temperament bp3_Sa06(
-  description:"This is a derivation of scale ""Ma06"" (23 grades) in major tonality. Sensitive note = 'Eb' Created 2020-12-05 21:27:42",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -4393,8 +4164,8 @@ temperament bp3_Sa06(
   comma:81/80
 )
 
+// @description This is a derivation of scale "Ma07" (23 grades) in major tonality. Sensitive note = 'Ab' Created 2020-12-05 21:28:36
 temperament bp3_Sa07(
-  description:"This is a derivation of scale ""Ma07"" (23 grades) in major tonality. Sensitive note = 'Ab' Created 2020-12-05 21:28:36",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -4426,8 +4197,8 @@ temperament bp3_Sa07(
   comma:81/80
 )
 
+// @description This is a derivation of scale "Ma08" (23 grades) in major tonality. Sensitive note = 'Db' Created 2020-12-05 21:29:15
 temperament bp3_Sa08(
-  description:"This is a derivation of scale ""Ma08"" (23 grades) in major tonality. Sensitive note = 'Db' Created 2020-12-05 21:29:15",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -4459,8 +4230,9 @@ temperament bp3_Sa08(
   comma:81/80
 )
 
+// @description This is a derivation of scale "Ma09" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'F#' Created
+// 2021-01-05 14:44:42
 temperament bp3_Sa09(
-  description:"This is a derivation of scale ""Ma09"" (23 grades) in \u2018-cs.12_scales\u2019 in major tonality. Sensitive note = 'F#' Created 2021-01-05 14:44:42",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -4492,8 +4264,8 @@ temperament bp3_Sa09(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa09" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2021-01-05 15:11:29
 temperament bp3_Sa10(
-  description:"This is a transposition of scale ""Sa09"" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2021-01-05 15:11:29",
   source:"Bernard Bel / Bol Processor",
   period_ratio:1.9753,
   divisions:23,
@@ -4525,8 +4297,8 @@ temperament bp3_Sa10(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa10" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2021-01-05 15:49:01
 temperament bp3_Sa11(
-  description:"This is a transposition of scale ""Sa10"" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2021-01-05 15:49:01",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -4558,8 +4330,8 @@ temperament bp3_Sa11(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa11" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2021-01-05 15:51:22
 temperament bp3_Sa12(
-  description:"This is a transposition of scale ""Sa11"" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2021-01-05 15:51:22",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -4591,8 +4363,8 @@ temperament bp3_Sa12(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa12" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2021-01-05 15:52:00
 temperament bp3_Sa13(
-  description:"This is a transposition of scale ""Sa12"" (23 grades). From \u2018C\u2019 to \u2018F\u2019. Created 2021-01-05 15:52:00",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -4624,8 +4396,9 @@ temperament bp3_Sa13(
   comma:81/80
 )
 
+// @description A "5-limit" tuning framework for constructing chromatic scales using exclusively ratios of integers 2, 3, 5. Read:
+// http://www.tonalsoft.com/enc/j/just.aspx
 temperament bp3_base(
-  description:"A ""5-limit"" tuning framework for constructing chromatic scales using exclusively ratios of integers 2, 3, 5. Read: http://www.tonalsoft.com/enc/j/just.aspx",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -4656,8 +4429,10 @@ temperament bp3_base(
   )
 )
 
+// @description The Indian grama scale as conceptualized by E. J. Arnold. Publication: \u2018L'intonation juste dans la th\xE9orie ancienne de
+// l'Inde : les applications aux musiques modale et harmonique\u2019. Revue de Musicologie, vol. 71c n\xB0 1-2, 1985, p. 11-38. Edited and
+// translated by Bernard Bel This version has been modified to define 22 notes on 23 intervals: it has no "m4" (Ma tivra + pramana shruti).
 temperament bp3_grama(
-  description:"The Indian grama scale as conceptualized by E. J. Arnold. Publication: \u2018L'intonation juste dans la th\xE9orie ancienne de l'Inde : les applications aux musiques modale et harmonique\u2019. Revue de Musicologie, vol. 71c n\xB0 1-2, 1985, p. 11-38. Edited and translated by Bernard Bel This version has been modified to define 22 notes on 23 intervals: it has no ""m4"" (Ma tivra + pramana shruti).",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -4689,8 +4464,8 @@ temperament bp3_grama(
   comma:81/80
 )
 
+// @description Two series of perfect fifths including ascending major thirds (Asselin 2000 p.62) Created 2021-01-08 09:02:23
 temperament bp3_2_cycles_of_fifths(
-  description:"Two series of perfect fifths including ascending major thirds (Asselin 2000 p.62) Created 2021-01-08 09:02:23",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:29,
@@ -4728,8 +4503,9 @@ temperament bp3_2_cycles_of_fifths(
   comma:81/80
 )
 
+// @description Three series of perfect fifths including ascending and descending major thirds (Asselin 2000 p.62) Created 2021-01-08
+// 09:02:23
 temperament bp3_3_cycles_of_fifths(
-  description:"Three series of perfect fifths including ascending and descending major thirds (Asselin 2000 p.62) Created 2021-01-08 09:02:23",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:41,
@@ -4779,8 +4555,10 @@ temperament bp3_3_cycles_of_fifths(
   comma:81/80
 )
 
+// @description Created meantone upwards notes \u201Cdo, sol, re, la, mi, si, fa#, do#, sol#\u201D ratio 3/2 -2/7 comma (2021-01-11 18:00:22) Created
+// meantone downwards notes \u201Cdo, fa, sib, mib\u201D ratio 3/2 -2/7 comma (2021-01-11 18:05:45) Created meantone upwards notes \u201Cdo, sol\u201D ratio 3/2
+// -2/7 comma (2021-01-11 18:06:40)
 temperament bp3_Zarlino_temp(
-  description:"Created meantone upwards notes \u201Cdo, sol, re, la, mi, si, fa#, do#, sol#\u201D ratio 3/2 -2/7 comma (2021-01-11 18:00:22) Created meantone downwards notes \u201Cdo, fa, sib, mib\u201D ratio 3/2 -2/7 comma (2021-01-11 18:05:45) Created meantone upwards notes \u201Cdo, sol\u201D ratio 3/2 -2/7 comma (2021-01-11 18:06:40)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4788,8 +4566,12 @@ temperament bp3_Zarlino_temp(
   comma:81/80
 )
 
+// @description Created 2021-01-14 09:31:50 Created meantone upward notes \u201Cdo,mi,sol2#\u201D fraction 5/4 (2021-01-14 09:32:46) Created meantone
+// downward notes \u201Csol2#,do#\u201D fraction 3/2 (2021-01-14 09:33:55) Equalized intervals over series \u201Cdo,sol,re,la,mi,si,fa#,do#\u201D approx
+// fraction 3/2 adjusted -6.1 cents to ratio = 1.495 (2021-01-14 09:34:42) Created meantone downward notes \u201Csol,mib\u201D fraction 5/4
+// (2021-01-14 09:37:02) Equalized intervals over series \u201Cmib,sib,fa,do\u201D approx fraction 3/2 adjusted -5.2 cents to ratio = 1.495
+// (2021-01-14 09:38:54)
 temperament bp3_Zarlino_temp2(
-  description:"Created 2021-01-14 09:31:50 Created meantone upward notes \u201Cdo,mi,sol2#\u201D fraction 5/4 (2021-01-14 09:32:46) Created meantone downward notes \u201Csol2#,do#\u201D fraction 3/2 (2021-01-14 09:33:55) Equalized intervals over series \u201Cdo,sol,re,la,mi,si,fa#,do#\u201D approx fraction 3/2 adjusted -6.1 cents to ratio = 1.495 (2021-01-14 09:34:42) Created meantone downward notes \u201Csol,mib\u201D fraction 5/4 (2021-01-14 09:37:02) Equalized intervals over series \u201Cmib,sib,fa,do\u201D approx fraction 3/2 adjusted -5.2 cents to ratio = 1.495 (2021-01-14 09:38:54)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:13,
@@ -4797,8 +4579,10 @@ temperament bp3_Zarlino_temp2(
   comma:81/80
 )
 
+// @description Kellner's BACH meantone temperament (Asselin 2000 p.101) Created 2021-01-15 16:02:04Created meantone upward notes
+// \u201Cdo,sol,re,la,mi\u201D fraction 3/2 adjusted -1/5 comma (2021-01-15 16:10:04) Added fifths down: \u201Cdo,fa,sib,mib,lab,reb,solb\u201D starting
+// fraction 1/1 (2021-01-15 16:11:48) Created meantone upward notes \u201Cmi,si\u201D fraction 3/2 (2021-01-15 16:13:36)
 temperament bp3_meantone_BACH(
-  description:"Kellner's BACH meantone temperament (Asselin 2000 p.101) Created 2021-01-15 16:02:04Created meantone upward notes \u201Cdo,sol,re,la,mi\u201D fraction 3/2 adjusted -1/5 comma (2021-01-15 16:10:04) Added fifths down: \u201Cdo,fa,sib,mib,lab,reb,solb\u201D starting fraction 1/1 (2021-01-15 16:11:48) Created meantone upward notes \u201Cmi,si\u201D fraction 3/2 (2021-01-15 16:13:36)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4806,8 +4590,10 @@ temperament bp3_meantone_BACH(
   comma:81/80
 )
 
+// @description Barca meantone temperament (Asselin 2000 p.106) Created 2021-01-16 17:56:02 Added fifths down: \u201Cdo,fa,sib\u201D starting fraction
+// 1/1 (2021-01-16 17:57:57) Created meantone upward notes \u201Cdo,sol,re,la,mi,si,fa#\u201D fraction 3/2 adjusted -1/6 comma (2021-01-16 18:02:25)
+// Created meantone upward notes \u201Cfa#,do#,sol#,re#\u201D fraction 3/2 (2021-01-16 18:03:49)
 temperament bp3_meantone_barca(
-  description:"Barca meantone temperament (Asselin 2000 p.106) Created 2021-01-16 17:56:02 Added fifths down: \u201Cdo,fa,sib\u201D starting fraction 1/1 (2021-01-16 17:57:57) Created meantone upward notes \u201Cdo,sol,re,la,mi,si,fa#\u201D fraction 3/2 adjusted -1/6 comma (2021-01-16 18:02:25) Created meantone upward notes \u201Cfa#,do#,sol#,re#\u201D fraction 3/2 (2021-01-16 18:03:49)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4815,8 +4601,11 @@ temperament bp3_meantone_barca(
   comma:81/80
 )
 
+// @description B\xE9thisy meantone temperament (Asselin 2000 p.121) Created 2021-01-16 19:21:57 Created meantone upward notes
+// \u201Cdo,sol,re,la,mi\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 19:23:36) Created meantone downward notes \u201Cdo,fa,sib,mib\u201D fraction 3/2
+// adjusted 1/12 comma (2021-01-16 19:25:49) Created meantone downward notes \u201Cmib,sol#\u201D fraction 3/2 (2021-01-16 19:26:26) Equalized
+// intervals over series \u201Cmi,si,fa#,do#,sol#\u201D approx fraction 3/2 adjusted -1.7 cents to ratio = 1.499 (2021-01-16 19:28:09)
 temperament bp3_meantone_bethisy(
-  description:"B\xE9thisy meantone temperament (Asselin 2000 p.121) Created 2021-01-16 19:21:57 Created meantone upward notes \u201Cdo,sol,re,la,mi\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 19:23:36) Created meantone downward notes \u201Cdo,fa,sib,mib\u201D fraction 3/2 adjusted 1/12 comma (2021-01-16 19:25:49) Created meantone downward notes \u201Cmib,sol#\u201D fraction 3/2 (2021-01-16 19:26:26) Equalized intervals over series \u201Cmi,si,fa#,do#,sol#\u201D approx fraction 3/2 adjusted -1.7 cents to ratio = 1.499 (2021-01-16 19:28:09)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4824,8 +4613,10 @@ temperament bp3_meantone_bethisy(
   comma:81/80
 )
 
+// @description Chaumont meantone temperament (Asselin 2000 p.109) Created 2021-01-16 18:06:34 Created meantone upward notes
+// \u201Cdo,sol,re,la,mi,si,fa#,do#,sol#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 18:08:41) Created meantone downward notes \u201Cdo,fa,sib,mib\u201D
+// fraction 3/2 adjusted -1/4 comma (2021-01-16 18:09:41)
 temperament bp3_meantone_chaumont(
-  description:"Chaumont meantone temperament (Asselin 2000 p.109) Created 2021-01-16 18:06:34 Created meantone upward notes \u201Cdo,sol,re,la,mi,si,fa#,do#,sol#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 18:08:41) Created meantone downward notes \u201Cdo,fa,sib,mib\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 18:09:41)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4833,8 +4624,11 @@ temperament bp3_meantone_chaumont(
   comma:81/80
 )
 
+// @description This is an equal-tempered scale for BP3 + Csound. Created 2021-01-14 15:38:08 Created meantone upward notes
+// \u201Cdo,sol,re,la,mi,si,fa#,do#,sol#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:20) Created meantone downward notes \u201Cdo,fa,sib,mib\u201D
+// fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:57) Created meantone downward notes \u201Cdo,fa,sib,mib\u201D fraction 3/2 adjusted -1/4 comma
+// (2021-01-14 15:43:44)
 temperament bp3_meantone_classic(
-  description:"This is an equal-tempered scale for BP3 + Csound. Created 2021-01-14 15:38:08 Created meantone upward notes \u201Cdo,sol,re,la,mi,si,fa#,do#,sol#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:20) Created meantone downward notes \u201Cdo,fa,sib,mib\u201D fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:57) Created meantone downward notes \u201Cdo,fa,sib,mib\u201D fraction 3/2 adjusted -1/4 comma (2021-01-14 15:43:44)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4842,8 +4636,11 @@ temperament bp3_meantone_classic(
   comma:81/80
 )
 
+// @description Corrette meantone temperament (Asselin 2000 p.111) Created 2021-01-16 18:13:10 Created meantone upward notes
+// \u201Cfa,do,sol,re,la,mi,si,fa#,do#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 18:16:40) Created meantone downward notes \u201Cfa,sib,mib\u201D
+// fraction 3/2 adjusted 1/12 comma (2021-01-16 18:34:13) Created meantone upward notes \u201Cdo#,sol#\u201D fraction 3/2 adjusted 1/12 comma
+// (2021-01-16 18:38:14) Base note reset to \u2018do\u2019 (2021-01-16 18:40:53)
 temperament bp3_meantone_corrette(
-  description:"Corrette meantone temperament (Asselin 2000 p.111) Created 2021-01-16 18:13:10 Created meantone upward notes \u201Cfa,do,sol,re,la,mi,si,fa#,do#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 18:16:40) Created meantone downward notes \u201Cfa,sib,mib\u201D fraction 3/2 adjusted 1/12 comma (2021-01-16 18:34:13) Created meantone upward notes \u201Cdo#,sol#\u201D fraction 3/2 adjusted 1/12 comma (2021-01-16 18:38:14) Base note reset to \u2018do\u2019 (2021-01-16 18:40:53)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4851,8 +4648,11 @@ temperament bp3_meantone_corrette(
   comma:81/80
 )
 
+// @description D'Alembert-Rousseau meantone temperament (Asselin 2000 p.119) Created 2021-01-16 19:04:44 Created meantone upward notes
+// \u201Cdo,sol,re,la,mi\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 19:12:08) Created meantone downward notes \u201Cdo,fa,sib,mib,sol#\u201D fraction
+// 3/2 adjusted 1/12 comma (2021-01-16 19:17:25) Equalized intervals over series \u201Csol#,do#,fa#,si,mi\u201D approx fraction 2/3 adjusted 2.2 cents
+// to ratio = 0.668 (2021-01-16 19:19:34)
 temperament bp3_meantone_d_alembert_rousseau(
-  description:"D'Alembert-Rousseau meantone temperament (Asselin 2000 p.119) Created 2021-01-16 19:04:44 Created meantone upward notes \u201Cdo,sol,re,la,mi\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 19:12:08) Created meantone downward notes \u201Cdo,fa,sib,mib,sol#\u201D fraction 3/2 adjusted 1/12 comma (2021-01-16 19:17:25) Equalized intervals over series \u201Csol#,do#,fa#,si,mi\u201D approx fraction 2/3 adjusted 2.2 cents to ratio = 0.668 (2021-01-16 19:19:34)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4860,8 +4660,11 @@ temperament bp3_meantone_d_alembert_rousseau(
   comma:81/80
 )
 
+// @description Kirnberger II meantone temperament (Asselin 2000 p. 90) Created 2021-01-16 11:52:39 Added fifths down:
+// \u201Cdo,fa,sib,mib,lab,reb\u201D starting fraction 1/1 (2021-01-16 11:54:59) Added fifths up: \u201Cdo,sol,re\u201D starting fraction 1/1 (2021-01-16
+// 11:55:59) Created meantone upward notes \u201Cre,la,mi\u201D fraction 3/2 adjusted -1/2 comma (2021-01-16 11:57:13) Created meantone upward notes
+// \u201Cmi,si,fa#\u201D fraction 3/2 (2021-01-16 11:58:24)
 temperament bp3_meantone_kirnberger_2(
-  description:"Kirnberger II meantone temperament (Asselin 2000 p. 90) Created 2021-01-16 11:52:39 Added fifths down: \u201Cdo,fa,sib,mib,lab,reb\u201D starting fraction 1/1 (2021-01-16 11:54:59) Added fifths up: \u201Cdo,sol,re\u201D starting fraction 1/1 (2021-01-16 11:55:59) Created meantone upward notes \u201Cre,la,mi\u201D fraction 3/2 adjusted -1/2 comma (2021-01-16 11:57:13) Created meantone upward notes \u201Cmi,si,fa#\u201D fraction 3/2 (2021-01-16 11:58:24)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4869,8 +4672,10 @@ temperament bp3_meantone_kirnberger_2(
   comma:81/80
 )
 
+// @description Kirnberger III meantone temperament (Asselin 2000 p.92) Created 2021-01-16 12:02:11 Added fifths down:
+// \u201Cdo,fa,sib,mib,lab,reb\u201D starting fraction 1/1 (2021-01-16 12:03:52) Created meantone upward notes \u201Cdo,sol,re,la,mi\u201D fraction 3/2 adjusted
+// -1/4 comma (2021-01-16 12:05:20) Created meantone upward notes \u201Cmi,si,fa#\u201D fraction 3/2 (2021-01-16 12:06:10)
 temperament bp3_meantone_kirnberger_3(
-  description:"Kirnberger III meantone temperament (Asselin 2000 p.92) Created 2021-01-16 12:02:11 Added fifths down: \u201Cdo,fa,sib,mib,lab,reb\u201D starting fraction 1/1 (2021-01-16 12:03:52) Created meantone upward notes \u201Cdo,sol,re,la,mi\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 12:05:20) Created meantone upward notes \u201Cmi,si,fa#\u201D fraction 3/2 (2021-01-16 12:06:10)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4878,8 +4683,11 @@ temperament bp3_meantone_kirnberger_3(
   comma:81/80
 )
 
+// @description Marpourg meantone temperament (Asselin 2000 p.117) Created 2021-01-16 18:58:49 Created meantone upward notes
+// \u201Cfa,do,sol,re,la,mi,si,fa#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 19:00:42) Equalized intervals over series
+// \u201Cfa,la#,re#,sol#,do#,fa#\u201D approx fraction 2/3 adjusted -2.8 cents to ratio = 0.666 (2021-01-16 19:02:32) Base note reset to \u2018do\u2019
+// (2021-01-16 19:03:15)
 temperament bp3_meantone_marpourg(
-  description:"Marpourg meantone temperament (Asselin 2000 p.117) Created 2021-01-16 18:58:49 Created meantone upward notes \u201Cfa,do,sol,re,la,mi,si,fa#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 19:00:42) Equalized intervals over series \u201Cfa,la#,re#,sol#,do#,fa#\u201D approx fraction 2/3 adjusted -2.8 cents to ratio = 0.666 (2021-01-16 19:02:32) Base note reset to \u2018do\u2019 (2021-01-16 19:03:15)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4887,8 +4695,10 @@ temperament bp3_meantone_marpourg(
   comma:81/80
 )
 
+// @description Pure minor-thirds temperament (Asselin 2000 p.82) Created 2021-01-15 15:13:09 Created meantone upward notes
+// \u201Cmib,sib,fa,do,sol,re,la,mi,si,fa#,do#,sol#\u201D fraction 3/2 adjusted -1/3 comma (2021-01-15 15:15:22) Base note reset to \u2018do\u2019 (2021-01-15
+// 15:16:00)
 temperament bp3_meantone_pure_minor-thirds(
-  description:"Pure minor-thirds temperament (Asselin 2000 p.82) Created 2021-01-15 15:13:09 Created meantone upward notes \u201Cmib,sib,fa,do,sol,re,la,mi,si,fa#,do#,sol#\u201D fraction 3/2 adjusted -1/3 comma (2021-01-15 15:15:22) Base note reset to \u2018do\u2019 (2021-01-15 15:16:00)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4896,8 +4706,12 @@ temperament bp3_meantone_pure_minor-thirds(
   comma:81/80
 )
 
+// @description Rameau meantone in C temperament (Asselin 2000 p.113) Created 2021-01-16 18:41:56 Created meantone upward notes
+// \u201Cdo,sol,re,la,mi,si,fa#,do#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 18:44:03) Added fifths down: \u201Cdo,fa\u201D starting fraction 1/1
+// (2021-01-16 18:49:25) Created meantone upward notes \u201Cdo#,sol#\u201D fraction 3/2 adjusted -1/12 comma (2021-01-16 18:51:19) Created meantone
+// downward notes \u201Cfa,la#\u201D fraction 3/2 (2021-01-16 18:54:20) Equalized intervals over series \u201Csol#,re#,la#\u201D approx fraction 3/2 adjusted
+// 7.5 cents to ratio = 1.506 (2021-01-16 18:55:25)
 temperament bp3_meantone_rameau_en_do(
-  description:"Rameau meantone in C temperament (Asselin 2000 p.113) Created 2021-01-16 18:41:56 Created meantone upward notes \u201Cdo,sol,re,la,mi,si,fa#,do#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 18:44:03) Added fifths down: \u201Cdo,fa\u201D starting fraction 1/1 (2021-01-16 18:49:25) Created meantone upward notes \u201Cdo#,sol#\u201D fraction 3/2 adjusted -1/12 comma (2021-01-16 18:51:19) Created meantone downward notes \u201Cfa,la#\u201D fraction 3/2 (2021-01-16 18:54:20) Equalized intervals over series \u201Csol#,re#,la#\u201D approx fraction 3/2 adjusted 7.5 cents to ratio = 1.506 (2021-01-16 18:55:25)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4905,8 +4719,10 @@ temperament bp3_meantone_rameau_en_do(
   comma:81/80
 )
 
+// @description Sauveur meantone temperament (Asselin 2000 p. 81) Created 2021-01-16 10:37:52 Created meantone downward notes
+// \u201Cdo,fa,sib,mib\u201D fraction 3/2 adjusted -1/5 comma (2021-01-16 10:44:41) Created meantone upward notes \u201Cdo,sol,re,la,mi,si,fa#,do#,sol#\u201D
+// fraction 3/2 adjusted -1/5 comma (2021-01-16 10:48:56)
 temperament bp3_meantone_sauveur(
-  description:"Sauveur meantone temperament (Asselin 2000 p. 81) Created 2021-01-16 10:37:52 Created meantone downward notes \u201Cdo,fa,sib,mib\u201D fraction 3/2 adjusted -1/5 comma (2021-01-16 10:44:41) Created meantone upward notes \u201Cdo,sol,re,la,mi,si,fa#,do#,sol#\u201D fraction 3/2 adjusted -1/5 comma (2021-01-16 10:48:56)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4914,8 +4730,14 @@ temperament bp3_meantone_sauveur(
   comma:81/80
 )
 
+// @description Schlick meantone temperament (Asselin 2000 p.88) Created 2021-01-16 10:56:35 Created meantone downward notes
+// \u201Cla,re,sol,do,fa\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 10:58:50) Created meantone upward notes \u201Cla,mi,si\u201D fraction 3/2 adjusted
+// -1/4 comma (2021-01-16 10:59:48) Created meantone upward notes \u201Cla,do#\u201D fraction 5/4 (2021-01-16 11:04:11) Equalized intervals over
+// series \u201Csi,fa#,do#\u201D approx fraction 3/2 adjusted -5.4 cents to ratio = 1.495 (2021-01-16 11:05:59) Created meantone downward notes
+// \u201Csol,mib\u201D fraction 5/4 (2021-01-16 11:07:31) Equalized intervals over series \u201Cmib,sib,fa\u201D approx fraction 3/2 adjusted -5.3 cents to
+// ratio = 1.495 (2021-01-16 11:08:47) Created meantone downward notes \u201Cdo,lab\u201D fraction 5/4 (2021-01-16 11:13:58) Created meantone upward
+// notes \u201Cmi,sol#\u201D fraction 5/4 adjusted 2/3 comma (2021-01-16 11:23:39) [estimation] Base note reset to \u2018do\u2019 (2021-01-16 11:25:48)
 temperament bp3_meantone_schlick(
-  description:"Schlick meantone temperament (Asselin 2000 p.88) Created 2021-01-16 10:56:35 Created meantone downward notes \u201Cla,re,sol,do,fa\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 10:58:50) Created meantone upward notes \u201Cla,mi,si\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 10:59:48) Created meantone upward notes \u201Cla,do#\u201D fraction 5/4 (2021-01-16 11:04:11) Equalized intervals over series \u201Csi,fa#,do#\u201D approx fraction 3/2 adjusted -5.4 cents to ratio = 1.495 (2021-01-16 11:05:59) Created meantone downward notes \u201Csol,mib\u201D fraction 5/4 (2021-01-16 11:07:31) Equalized intervals over series \u201Cmib,sib,fa\u201D approx fraction 3/2 adjusted -5.3 cents to ratio = 1.495 (2021-01-16 11:08:47) Created meantone downward notes \u201Cdo,lab\u201D fraction 5/4 (2021-01-16 11:13:58) Created meantone upward notes \u201Cmi,sol#\u201D fraction 5/4 adjusted 2/3 comma (2021-01-16 11:23:39) [estimation] Base note reset to \u2018do\u2019 (2021-01-16 11:25:48)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:13,
@@ -4923,8 +4745,10 @@ temperament bp3_meantone_schlick(
   comma:81/80
 )
 
+// @description Tartini-Vallotti meantone temperament (Asselin 2000 p.104) Created 2021-01-16 17:45:36 Added fifths down:
+// \u201Cdo,fa,sib,mib,lab,reb,solb\u201D starting fraction 1/1 (2021-01-16 17:47:11) Created meantone upward notes \u201Cdo,sol,re,la,mi,si\u201D fraction 3/2
+// adjusted -1/6 comma (2021-01-16 17:48:49)
 temperament bp3_meantone_tartini-vallotti(
-  description:"Tartini-Vallotti meantone temperament (Asselin 2000 p.104) Created 2021-01-16 17:45:36 Added fifths down: \u201Cdo,fa,sib,mib,lab,reb,solb\u201D starting fraction 1/1 (2021-01-16 17:47:11) Created meantone upward notes \u201Cdo,sol,re,la,mi,si\u201D fraction 3/2 adjusted -1/6 comma (2021-01-16 17:48:49)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4932,8 +4756,10 @@ temperament bp3_meantone_tartini-vallotti(
   comma:81/80
 )
 
+// @description Werckmeister III meantone temperament (Asselin 2000 p.94) Created 2021-01-16 16:53:15 Added fifths down:
+// \u201Cdo,fa,sib,mib,lab,reb,solb\u201D starting fraction 1/1 (2021-01-16 16:55:35) Created meantone upward notes \u201Cdo,sol,re,la\u201D fraction 3/2
+// adjusted -1/4 comma (2021-01-16 16:57:00) Created meantone upward notes \u201Cla,mi,si\u201D fraction 3/2 (2021-01-16 16:58:34)
 temperament bp3_meantone_werckmeister_3(
-  description:"Werckmeister III meantone temperament (Asselin 2000 p.94) Created 2021-01-16 16:53:15 Added fifths down: \u201Cdo,fa,sib,mib,lab,reb,solb\u201D starting fraction 1/1 (2021-01-16 16:55:35) Created meantone upward notes \u201Cdo,sol,re,la\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 16:57:00) Created meantone upward notes \u201Cla,mi,si\u201D fraction 3/2 (2021-01-16 16:58:34)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4941,8 +4767,15 @@ temperament bp3_meantone_werckmeister_3(
   comma:81/80
 )
 
+// @description Werckmeister IV meantone temperament (Asselin 2000 p.96) Created 2021-01-16 17:02:48 Added fifths down: \u201Cdo,fa\u201D starting
+// fraction 1/1 (2021-01-16 17:07:10) Created meantone downward notes \u201Cfa,sib\u201D fraction 3/2 adjusted -1/3 comma (2021-01-16 17:08:04)
+// Created meantone downward notes \u201Csib,mib,sol#\u201D fraction 3/2 adjusted 1/3 comma (2021-01-16 17:09:18) Created meantone downward notes
+// \u201Csol#,do#\u201D fraction 3/2 (2021-01-16 17:11:01) Created meantone downward notes \u201Cdo#,fa#\u201D fraction 3/2 adjusted -1/3 comma (2021-01-16
+// 17:12:07) Created meantone downward notes \u201Cfa#,si\u201D fraction 3/2 (2021-01-16 17:13:21) Created meantone downward notes \u201Csi,mi\u201D fraction
+// 3/2 adjusted -1/3 comma (2021-01-16 17:14:45) Created meantone downward notes \u201Cmi,la\u201D fraction 3/2 (2021-01-16 17:16:07) Created meantone
+// upward notes \u201Cdo,sol\u201D fraction 3/2 adjusted -1/3 comma (2021-01-16 17:17:11) Created meantone upward notes \u201Csol,re\u201D fraction 3/2
+// (2021-01-16 17:17:49)
 temperament bp3_meantone_werckmeister_4(
-  description:"Werckmeister IV meantone temperament (Asselin 2000 p.96) Created 2021-01-16 17:02:48 Added fifths down: \u201Cdo,fa\u201D starting fraction 1/1 (2021-01-16 17:07:10) Created meantone downward notes \u201Cfa,sib\u201D fraction 3/2 adjusted -1/3 comma (2021-01-16 17:08:04) Created meantone downward notes \u201Csib,mib,sol#\u201D fraction 3/2 adjusted 1/3 comma (2021-01-16 17:09:18) Created meantone downward notes \u201Csol#,do#\u201D fraction 3/2 (2021-01-16 17:11:01) Created meantone downward notes \u201Cdo#,fa#\u201D fraction 3/2 adjusted -1/3 comma (2021-01-16 17:12:07) Created meantone downward notes \u201Cfa#,si\u201D fraction 3/2 (2021-01-16 17:13:21) Created meantone downward notes \u201Csi,mi\u201D fraction 3/2 adjusted -1/3 comma (2021-01-16 17:14:45) Created meantone downward notes \u201Cmi,la\u201D fraction 3/2 (2021-01-16 17:16:07) Created meantone upward notes \u201Cdo,sol\u201D fraction 3/2 adjusted -1/3 comma (2021-01-16 17:17:11) Created meantone upward notes \u201Csol,re\u201D fraction 3/2 (2021-01-16 17:17:49)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4950,8 +4783,12 @@ temperament bp3_meantone_werckmeister_4(
   comma:81/80
 )
 
+// @description Werckmeister V meantone temperament (Asselin 2000 p.99) Created 2021-01-16 17:29:54 Added fifths up: \u201Cdo,sol,re\u201D starting
+// fraction 1/1 (2021-01-16 17:31:53) Created meantone upward notes \u201Cre,la,mi\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 17:33:19)
+// Created meantone upward notes \u201Cmi,si,fa#\u201D fraction 3/2 (2021-01-16 17:34:05) Created meantone upward notes \u201Cfa#,do#,lab\u201D fraction 3/2
+// adjusted -1/4 comma (2021-01-16 17:35:20) Created meantone downward notes \u201Cdo,fa\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 17:36:08)
+// Created meantone downward notes \u201Cfa,sib,mib\u201D fraction 3/2 (2021-01-16 17:37:05)
 temperament bp3_meantone_werckmeister_5(
-  description:"Werckmeister V meantone temperament (Asselin 2000 p.99) Created 2021-01-16 17:29:54 Added fifths up: \u201Cdo,sol,re\u201D starting fraction 1/1 (2021-01-16 17:31:53) Created meantone upward notes \u201Cre,la,mi\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 17:33:19) Created meantone upward notes \u201Cmi,si,fa#\u201D fraction 3/2 (2021-01-16 17:34:05) Created meantone upward notes \u201Cfa#,do#,lab\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 17:35:20) Created meantone downward notes \u201Cdo,fa\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 17:36:08) Created meantone downward notes \u201Cfa,sib,mib\u201D fraction 3/2 (2021-01-16 17:37:05)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4959,8 +4796,10 @@ temperament bp3_meantone_werckmeister_5(
   comma:81/80
 )
 
+// @description Zarlino meantone temperament (Asselin 2000 p.85) Created meantone upwards notes \u201Cdo, sol, re, la, mi, si, fa#, do#, sol#\u201D
+// ratio 3/2 -2/7 comma (2021-01-11 18:00:22) Created meantone downwards notes \u201Cdo, fa, sib, mib\u201D ratio 3/2 -2/7 comma (2021-01-11 18:05:45)
+// Created meantone upwards notes \u201Cdo, sol\u201D ratio 3/2 -2/7 comma (2021-01-11 18:06:40)
 temperament bp3_meantone_zarlino(
-  description:"Zarlino meantone temperament (Asselin 2000 p.85) Created meantone upwards notes \u201Cdo, sol, re, la, mi, si, fa#, do#, sol#\u201D ratio 3/2 -2/7 comma (2021-01-11 18:00:22) Created meantone downwards notes \u201Cdo, fa, sib, mib\u201D ratio 3/2 -2/7 comma (2021-01-11 18:05:45) Created meantone upwards notes \u201Cdo, sol\u201D ratio 3/2 -2/7 comma (2021-01-11 18:06:40)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4968,16 +4807,16 @@ temperament bp3_meantone_zarlino(
   comma:81/80
 )
 
+// @description Tuning of a piano with perfect fifths and stretched octave
 temperament bp3_piano(
-  description:"Tuning of a piano with perfect fifths and stretched octave",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2.004,
   divisions:12,
   ratios(1, 1.06, 1.123, 1.19, 1.261, 1.336, 1.416, 1.5, 1.59, 1.684, 1.785, 1.891)
 )
 
+// @description Tuning of a piano with perfect fifths and stretched octave
 temperament bp3_stretched_octave-Indian(
-  description:"Tuning of a piano with perfect fifths and stretched octave",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2.004,
   divisions:12,
@@ -4985,8 +4824,10 @@ temperament bp3_stretched_octave-Indian(
   comma:81/80
 )
 
+// @description This is an equal-tempered scale for BP3 + Csound. Created 2021-01-15 16:02:04Created meantone upward notes \u201Cdo,sol,re,la,mi\u201D
+// fraction 3/2 adjusted -1/5 comma (2021-01-15 16:10:04) Added fifths down: \u201Cdo,fa,sib,mib,lab,reb,solb\u201D starting fraction 1/1 (2021-01-15
+// 16:11:48) Created meantone upward notes \u201Cmi,si\u201D fraction 3/2 (2021-01-15 16:13:36)
 temperament bp3_bach_temperament(
-  description:"This is an equal-tempered scale for BP3 + Csound. Created 2021-01-15 16:02:04Created meantone upward notes \u201Cdo,sol,re,la,mi\u201D fraction 3/2 adjusted -1/5 comma (2021-01-15 16:10:04) Added fifths down: \u201Cdo,fa,sib,mib,lab,reb,solb\u201D starting fraction 1/1 (2021-01-15 16:11:48) Created meantone upward notes \u201Cmi,si\u201D fraction 3/2 (2021-01-15 16:13:36)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -4994,8 +4835,10 @@ temperament bp3_bach_temperament(
   comma:81/80
 )
 
+// @description This is an equal-tempered scale for BP3 + Csound. Created 2021-01-15 15:13:09 Created meantone upward notes
+// \u201Cmib,sib,fa,do,sol,re,la,mi,si,fa#,do#,sol#\u201D fraction 3/2 adjusted -1/3 comma (2021-01-15 15:15:22) Base note reset to \u2018do\u2019 (2021-01-15
+// 15:16:00)
 temperament bp3_pure_minor-third_meantone(
-  description:"This is an equal-tempered scale for BP3 + Csound. Created 2021-01-15 15:13:09 Created meantone upward notes \u201Cmib,sib,fa,do,sol,re,la,mi,si,fa#,do#,sol#\u201D fraction 3/2 adjusted -1/3 comma (2021-01-15 15:15:22) Base note reset to \u2018do\u2019 (2021-01-15 15:16:00)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5003,8 +4846,8 @@ temperament bp3_pure_minor-third_meantone(
   comma:81/80
 )
 
+// @description A traditional scale constructed with 'simple' integer ratios
 temperament bp3_just_intonation(
-  description:"A traditional scale constructed with 'simple' integer ratios",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5012,8 +4855,13 @@ temperament bp3_just_intonation(
   comma:81/80
 )
 
+// @description Rameau meantone in B flat temperament (Asselin 2000 p.115) Created 2021-01-16 18:41:56 Created meantone upward notes
+// \u201Cdo,sol,re,la,mi,si\u201D fraction 3/2 adjusted -1/4 comma (2022-02-04 16:38:50) Created meantone downward notes \u201Cdo,fa,sib\u201D fraction 3/2
+// adjusted -1/4 comma (2022-02-04 16:40:08) Created meantone downward notes \u201Csib,mib\u201D fraction 3/2 (2022-02-04 16:58:49) Created meantone
+// upward notes \u201Csi,fa#\u201D fraction 3/2 adjusted -1/4 comma (2022-02-04 17:10:32) Created meantone downward notes \u201Cmib,lab\u201D fraction 3/2
+// (2022-02-04 17:16:00) Equalized intervals over series \u201Cfa#,reb,lab\u201D approx fraction 3/2 adjusted 10.6 cents to ratio = 1.509 (2022-02-04
+// 17:20:39)
 temperament bp3_rameau_en_sib(
-  description:"Rameau meantone in B flat temperament (Asselin 2000 p.115) Created 2021-01-16 18:41:56 Created meantone upward notes \u201Cdo,sol,re,la,mi,si\u201D fraction 3/2 adjusted -1/4 comma (2022-02-04 16:38:50) Created meantone downward notes \u201Cdo,fa,sib\u201D fraction 3/2 adjusted -1/4 comma (2022-02-04 16:40:08) Created meantone downward notes \u201Csib,mib\u201D fraction 3/2 (2022-02-04 16:58:49) Created meantone upward notes \u201Csi,fa#\u201D fraction 3/2 adjusted -1/4 comma (2022-02-04 17:10:32) Created meantone downward notes \u201Cmib,lab\u201D fraction 3/2 (2022-02-04 17:16:00) Equalized intervals over series \u201Cfa#,reb,lab\u201D approx fraction 3/2 adjusted 10.6 cents to ratio = 1.509 (2022-02-04 17:20:39)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5021,8 +4869,8 @@ temperament bp3_rameau_en_sib(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From \u2018dhak\u2019 to \u2018sa\u2019. Created 2020-12-17 17:19:51
 temperament bp3_Dha1_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From \u2018dhak\u2019 to \u2018sa\u2019. Created 2020-12-17 17:19:51",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5030,8 +4878,8 @@ temperament bp3_Dha1_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From \u2018dha\u2019 to \u2018sa\u2019. Created 2020-12-17 17:55:10
 temperament bp3_Dha3_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From \u2018dha\u2019 to \u2018sa\u2019. Created 2020-12-17 17:55:10",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5039,8 +4887,8 @@ temperament bp3_Dha3_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From \u2018gak\u2019 to \u2018sa\u2019. Created 2020-12-17 17:13:32
 temperament bp3_Ga1_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From \u2018gak\u2019 to \u2018sa\u2019. Created 2020-12-17 17:13:32",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5048,8 +4896,8 @@ temperament bp3_Ga1_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From \u2018ga\u2019 to \u2018sa\u2019. Created 2020-12-17 17:52:29
 temperament bp3_Ga3_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From \u2018ga\u2019 to \u2018sa\u2019. Created 2020-12-17 17:52:29",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5057,8 +4905,8 @@ temperament bp3_Ga3_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From \u2018ma\u2019 to \u2018sa\u2019. Created 2020-12-17 16:59:54
 temperament bp3_Ma1_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From \u2018ma\u2019 to \u2018sa\u2019. Created 2020-12-17 16:59:54",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5066,8 +4914,8 @@ temperament bp3_Ma1_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From \u2018ma#\u2019 to \u2018sa\u2019. Created 2020-12-17 19:45:32
 temperament bp3_Ma3_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From \u2018ma#\u2019 to \u2018sa\u2019. Created 2020-12-17 19:45:32",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5075,8 +4923,8 @@ temperament bp3_Ma3_murcchana(
   comma:81/80
 )
 
+// @description This is a derivation of scale "Ma01" (23 grades) in \u2018-cs.raga\u2019 Created 2020-12-07 09:27:54
 temperament bp3_Ma_grama_full(
-  description:"This is a derivation of scale ""Ma01"" (23 grades) in \u2018-cs.raga\u2019 Created 2020-12-07 09:27:54",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:23,
@@ -5108,8 +4956,8 @@ temperament bp3_Ma_grama_full(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From \u2018nik\u2019 to \u2018sa\u2019. Created 2020-12-17 17:09:41
 temperament bp3_Ni1_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From \u2018nik\u2019 to \u2018sa\u2019. Created 2020-12-17 17:09:41",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5117,8 +4965,8 @@ temperament bp3_Ni1_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From \u2018ni\u2019 to \u2018sa\u2019. Created 2020-12-17 17:43:30
 temperament bp3_Ni3_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From \u2018ni\u2019 to \u2018sa\u2019. Created 2020-12-17 17:43:30",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5126,8 +4974,8 @@ temperament bp3_Ni3_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From \u2018pa\u2019 to \u2018sa\u2019. Created 2020-12-17 18:03:15
 temperament bp3_Pa3_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From \u2018pa\u2019 to \u2018sa\u2019. Created 2020-12-17 18:03:15",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5135,8 +4983,8 @@ temperament bp3_Pa3_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From \u2018rek\u2019 to \u2018sa\u2019. Created 2020-12-17 17:27:47
 temperament bp3_Re1_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From \u2018rek\u2019 to \u2018sa\u2019. Created 2020-12-17 17:27:47",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5144,8 +4992,8 @@ temperament bp3_Re1_murcchana(
   comma:81/80
 )
 
+// @description This is a transposition of scale "Sa_murcchana" (12 grades). From \u2018re\u2019 to \u2018sa\u2019. Created 2020-12-17 18:00:02
 temperament bp3_Re3_murcchana(
-  description:"This is a transposition of scale ""Sa_murcchana"" (12 grades). From \u2018re\u2019 to \u2018sa\u2019. Created 2020-12-17 18:00:02",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5153,8 +5001,8 @@ temperament bp3_Re3_murcchana(
   comma:81/80
 )
 
+// @description This is a reduction to 12 grades of scale "Ma_grama_full" (23 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 15:44:19
 temperament bp3_Sa_murcchana(
-  description:"This is a reduction to 12 grades of scale ""Ma_grama_full"" (23 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 15:44:19",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5162,8 +5010,8 @@ temperament bp3_Sa_murcchana(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Dha3_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:57:24
 temperament bp3_asavari1(
-  description:"This is a reduction to 7 grades of scale ""Dha3_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:57:24",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5171,8 +5019,8 @@ temperament bp3_asavari1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Re3_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 18:01:33
 temperament bp3_asavari2(
-  description:"This is a reduction to 7 grades of scale ""Re3_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 18:01:33",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5180,8 +5028,8 @@ temperament bp3_asavari2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Pa3_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 18:04:25
 temperament bp3_asavari3(
-  description:"This is a reduction to 7 grades of scale ""Pa3_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 18:04:25",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5189,8 +5037,8 @@ temperament bp3_asavari3(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Sa_murcchana" (12 grades) in \u2018-cs.raga\u2019 Created 2020-12-17 18:45:55
 temperament bp3_bad-scale(
-  description:"This is a reduction to 7 grades of scale ""Sa_murcchana"" (12 grades) in \u2018-cs.raga\u2019 Created 2020-12-17 18:45:55",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5198,8 +5046,8 @@ temperament bp3_bad-scale(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ma3_murcchana" (12 grades) in \u2018-cs.raga\u2019 Created 2020-12-17 19:50:06
 temperament bp3_bhairao1(
-  description:"This is a reduction to 7 grades of scale ""Ma3_murcchana"" (12 grades) in \u2018-cs.raga\u2019 Created 2020-12-17 19:50:06",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5207,8 +5055,8 @@ temperament bp3_bhairao1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ni3_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:51:30
 temperament bp3_bhairao2(
-  description:"This is a reduction to 7 grades of scale ""Ni3_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:51:30",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5216,8 +5064,8 @@ temperament bp3_bhairao2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ni3_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:48:21
 temperament bp3_bhairavi1(
-  description:"This is a reduction to 7 grades of scale ""Ni3_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:48:21",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5225,8 +5073,8 @@ temperament bp3_bhairavi1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ga3_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:54:29
 temperament bp3_bhairavi2(
-  description:"This is a reduction to 7 grades of scale ""Ga3_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:54:29",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5234,8 +5082,8 @@ temperament bp3_bhairavi2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Dha3_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:59:10
 temperament bp3_bhairavi3(
-  description:"This is a reduction to 7 grades of scale ""Dha3_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:59:10",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5243,8 +5091,8 @@ temperament bp3_bhairavi3(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Re3_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 18:00:44
 temperament bp3_bhairavi4(
-  description:"This is a reduction to 7 grades of scale ""Re3_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 18:00:44",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5252,8 +5100,8 @@ temperament bp3_bhairavi4(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Sa_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 15:49:41
 temperament bp3_bilaval1(
-  description:"This is a reduction to 7 grades of scale ""Sa_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 15:49:41",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5261,8 +5109,8 @@ temperament bp3_bilaval1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ma_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:02:10
 temperament bp3_bilaval2(
-  description:"This is a reduction to 7 grades of scale ""Ma_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:02:10",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5270,8 +5118,8 @@ temperament bp3_bilaval2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ni_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:10:33
 temperament bp3_bilaval3(
-  description:"This is a reduction to 7 grades of scale ""Ni_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:10:33",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5279,8 +5127,8 @@ temperament bp3_bilaval3(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ma_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:07:12
 temperament bp3_kalyan1(
-  description:"This is a reduction to 7 grades of scale ""Ma_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:07:12",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5288,8 +5136,8 @@ temperament bp3_kalyan1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ni_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:11:52
 temperament bp3_kalyan2(
-  description:"This is a reduction to 7 grades of scale ""Ni_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:11:52",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5297,8 +5145,8 @@ temperament bp3_kalyan2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ga_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:14:50
 temperament bp3_kalyan3(
-  description:"This is a reduction to 7 grades of scale ""Ga_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:14:50",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5306,8 +5154,8 @@ temperament bp3_kalyan3(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Sa_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 15:46:42
 temperament bp3_kaphi1(
-  description:"This is a reduction to 7 grades of scale ""Sa_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 15:46:42",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5315,8 +5163,8 @@ temperament bp3_kaphi1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Re3_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 18:02:27
 temperament bp3_kaphi2(
-  description:"This is a reduction to 7 grades of scale ""Re3_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 18:02:27",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5324,8 +5172,8 @@ temperament bp3_kaphi2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Pa3_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 18:05:03
 temperament bp3_kaphi3(
-  description:"This is a reduction to 7 grades of scale ""Pa3_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 18:05:03",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5333,8 +5181,8 @@ temperament bp3_kaphi3(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Sa_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 15:48:50
 temperament bp3_khamaj1(
-  description:"This is a reduction to 7 grades of scale ""Sa_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 15:48:50",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5342,8 +5190,8 @@ temperament bp3_khamaj1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ma_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:04:13
 temperament bp3_khamaj2(
-  description:"This is a reduction to 7 grades of scale ""Ma_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:04:13",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5351,8 +5199,8 @@ temperament bp3_khamaj2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Pa3_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 18:06:06
 temperament bp3_khamaj3(
-  description:"This is a reduction to 7 grades of scale ""Pa3_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 18:06:06",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5360,8 +5208,8 @@ temperament bp3_khamaj3(
   comma:81/80
 )
 
+// @description This is a reduction to 8 grades of scale "Ma3_murcchana" (12 grades) in \u2018-cs.raga\u2019 Created 2020-12-19 14:23:28
 temperament bp3_lalit1(
-  description:"This is a reduction to 8 grades of scale ""Ma3_murcchana"" (12 grades) in \u2018-cs.raga\u2019 Created 2020-12-19 14:23:28",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:8,
@@ -5369,8 +5217,8 @@ temperament bp3_lalit1(
   comma:81/80
 )
 
+// @description This is a reduction to 8 grades of scale "Ni3_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:50:24
 temperament bp3_lalit2(
-  description:"This is a reduction to 8 grades of scale ""Ni3_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:50:24",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:8,
@@ -5378,8 +5226,8 @@ temperament bp3_lalit2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ni_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:12:34
 temperament bp3_marva1(
-  description:"This is a reduction to 7 grades of scale ""Ni_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:12:34",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5387,8 +5235,8 @@ temperament bp3_marva1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ga_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:17:10
 temperament bp3_marva2(
-  description:"This is a reduction to 7 grades of scale ""Ga_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:17:10",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5396,8 +5244,8 @@ temperament bp3_marva2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Dha_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:24:35
 temperament bp3_marva3(
-  description:"This is a reduction to 7 grades of scale ""Dha_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:24:35",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5405,8 +5253,8 @@ temperament bp3_marva3(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ga_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:18:42
 temperament bp3_purvi1(
-  description:"This is a reduction to 7 grades of scale ""Ga_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:18:42",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5414,8 +5262,8 @@ temperament bp3_purvi1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Dha_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:26:08
 temperament bp3_purvi2(
-  description:"This is a reduction to 7 grades of scale ""Dha_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:26:08",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5423,8 +5271,8 @@ temperament bp3_purvi2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Re_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:35:06
 temperament bp3_purvi3(
-  description:"This is a reduction to 7 grades of scale ""Re_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:35:06",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5432,8 +5280,8 @@ temperament bp3_purvi3(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Dha_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:26:59
 temperament bp3_todi1(
-  description:"This is a reduction to 7 grades of scale ""Dha_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:26:59",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5441,8 +5289,8 @@ temperament bp3_todi1(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Re_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:35:38
 temperament bp3_todi2(
-  description:"This is a reduction to 7 grades of scale ""Re_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:35:38",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5450,8 +5298,8 @@ temperament bp3_todi2(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ma3_murcchana" (12 grades) in \u2018-cs.raga\u2019 Created 2020-12-17 19:47:44
 temperament bp3_todi3(
-  description:"This is a reduction to 7 grades of scale ""Ma3_murcchana"" (12 grades) in \u2018-cs.raga\u2019 Created 2020-12-17 19:47:44",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5459,8 +5307,8 @@ temperament bp3_todi3(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Ga3_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:53:30
 temperament bp3_todi4(
-  description:"This is a reduction to 7 grades of scale ""Ga3_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:53:30",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:7,
@@ -5468,40 +5316,41 @@ temperament bp3_todi4(
   comma:81/80
 )
 
+// @description This is a reduction to 7 grades of scale "Re_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:35:38
 temperament bp3_todi_aak_2(
-  description:"This is a reduction to 7 grades of scale ""Re_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:35:38",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:2,
   ratios(1, 3/2)
 )
 
+// @description This is a reduction to 7 grades of scale "Re_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:35:38
 temperament bp3_todi_aak_3(
-  description:"This is a reduction to 7 grades of scale ""Re_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:35:38",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:2,
   ratios(1, 3/2)
 )
 
+// @description This is a reduction to 7 grades of scale "Re_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:35:38
 temperament bp3_todi_ka_3(
-  description:"This is a reduction to 7 grades of scale ""Re_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:35:38",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:3,
   ratios(1, 3/2, 243/128)
 )
 
+// @description This is a reduction to 7 grades of scale "Re_murcchana" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:35:38
 temperament bp3_todi_ka_4(
-  description:"This is a reduction to 7 grades of scale ""Re_murcchana"" (12 grades) in \u2018-cs.raga2\u2019 Created 2020-12-17 17:35:38",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:4,
   ratios(1, 3/2, 128/81, 243/128)
 )
 
+// @description Bohlen-Pierce scale "just intonation" https://midi.org/microtuning-and-alternative-intonation-systems
+// https://en.wikipedia.org/wiki/Bohlen-Pierce_scale Created 2024-10-03 12:33:18
 temperament bp3_Bohlen-Pierce(
-  description:"Bohlen-Pierce scale ""just intonation"" https://midi.org/microtuning-and-alternative-intonation-systems https://en.wikipedia.org/wiki/Bohlen-Pierce_scale Created 2024-10-03 12:33:18",
   source:"Bernard Bel / Bol Processor",
   period_ratio:3,
   divisions:13,
@@ -5509,8 +5358,9 @@ temperament bp3_Bohlen-Pierce(
   comma:81/80
 )
 
+// @description This is a new scale for BP3. Creation 2020-11-17 22:55:31 This scale has been imported from a SCALA file. Created 2024-08-22
+// 07:14:33
 temperament bp3_meantone_try(
-  description:"This is a new scale for BP3.  Creation 2020-11-17 22:55:31 This scale has been imported from a SCALA file. Created 2024-08-22 07:14:33",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2.022,
   divisions:12,
@@ -5518,8 +5368,9 @@ temperament bp3_meantone_try(
   comma:81/80
 )
 
+// @description This is a new scale for BP3. Creation 2020-11-17 22:55:31 Same as meantone_try except that the base key is #64. Created
+// 2024-08-22 07:14:33
 temperament bp3_meantone_try2(
-  description:"This is a new scale for BP3.  Creation 2020-11-17 22:55:31 Same as meantone_try except that the base key is #64. Created 2024-08-22 07:14:33",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2.022,
   divisions:12,
@@ -5527,8 +5378,8 @@ temperament bp3_meantone_try2(
   comma:81/80
 )
 
+// @description Goya-17 plus 484, 676, and 1180 cents This scale has been imported from a SCALA file. Created 2024-08-22 07:41:27
 temperament bp3_zest24-supergoya17plus3_Db(
-  description:"Goya-17 plus 484, 676, and 1180 cents This scale has been imported from a SCALA file. Created 2024-08-22 07:41:27",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:20,
@@ -5557,8 +5408,9 @@ temperament bp3_zest24-supergoya17plus3_Db(
   comma:81/80
 )
 
+// @description Quarter-comma meantone (Pietro Aron, 1523): the fifth is narrowed by a quarter of a syntonic comma, the major third 5/4 and
+// the minor sixth 8/5 are pure. Twelve degrees on the table C Db D Eb E F Gb G Ab A Bb B.
 temperament bp3_meantone1(
-  description:"Mesotonique au quart de comma syntonique (Pietro Aron, 1523) : la quinte est diminuee d'un quart de comma, la tierce majeure 5/4 et la sixte mineure 8/5 sont pures. Douze degres sur la table C Db D Eb E F Gb G Ab A Bb B.",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5578,8 +5430,10 @@ temperament bp3_meantone1(
   )
 )
 
+// @description Kellner's BACH temperament (Asselin 2000 p.101) Created meantone upward notes \u201Cdo,sol,re,la,mi\u201D fraction 3/2 adjusted -1/5
+// comma (2021-01-15 16:10:04) Added fifths down: \u201Cdo,fa,sib,mib,lab,reb,solb\u201D starting fraction 1/1 (2021-01-15 16:11:48) Created meantone
+// upward notes \u201Cmi,si\u201D fraction 3/2 (2021-01-15 16:13:36)
 temperament bp3_BACH(
-  description:"Kellner's BACH temperament (Asselin 2000 p.101) Created meantone upward notes \u201Cdo,sol,re,la,mi\u201D fraction 3/2 adjusted -1/5 comma (2021-01-15 16:10:04) Added fifths down: \u201Cdo,fa,sib,mib,lab,reb,solb\u201D starting fraction 1/1 (2021-01-15 16:11:48) Created meantone upward notes \u201Cmi,si\u201D fraction 3/2 (2021-01-15 16:13:36)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5587,16 +5441,18 @@ temperament bp3_BACH(
   comma:81/80
 )
 
+// @description A traditional scale constructed with simple integer ratios
 temperament bp3_Zarlino_natural(
-  description:"A traditional scale constructed with simple integer ratios",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
   ratios(1, 16/15, 9/8, 6/5, 5/4, 4/3, 64/45, 3/2, 8/5, 5/3, 16/9, 15/8)
 )
 
+// @description Barca temperament (Asselin 2000 p.106) Created 2021-01-16 17:56:02 Added fifths down: \u201Cdo,fa,sib\u201D starting fraction 1/1
+// (2021-01-16 17:57:57) Created meantone upward notes \u201Cdo,sol,re,la,mi,si,fa#\u201D fraction 3/2 adjusted -1/6 comma (2021-01-16 18:02:25)
+// Created meantone upward notes \u201Cfa#,do#,sol#,re#\u201D fraction 3/2 (2021-01-16 18:03:49)
 temperament bp3_barca(
-  description:"Barca temperament (Asselin 2000 p.106) Created 2021-01-16 17:56:02 Added fifths down: \u201Cdo,fa,sib\u201D starting fraction 1/1 (2021-01-16 17:57:57) Created meantone upward notes \u201Cdo,sol,re,la,mi,si,fa#\u201D fraction 3/2 adjusted -1/6 comma (2021-01-16 18:02:25) Created meantone upward notes \u201Cfa#,do#,sol#,re#\u201D fraction 3/2 (2021-01-16 18:03:49)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5604,8 +5460,11 @@ temperament bp3_barca(
   comma:81/80
 )
 
+// @description B\xE9thisy temperament (Asselin 2000 p.121) Created 2021-01-16 19:21:57 Created meantone upward notes \u201Cdo,sol,re,la,mi\u201D
+// fraction 3/2 adjusted -1/4 comma (2021-01-16 19:23:36) Created meantone downward notes \u201Cdo,fa,sib,mib\u201D fraction 3/2 adjusted 1/12 comma
+// (2021-01-16 19:25:49) Created meantone downward notes \u201Cmib,sol#\u201D fraction 3/2 (2021-01-16 19:26:26) Equalized intervals over series
+// \u201Cmi,si,fa#,do#,sol#\u201D approx fraction 3/2 adjusted -1.7 cents to ratio = 1.499 (2021-01-16 19:28:09)
 temperament bp3_bethisy(
-  description:"B\xE9thisy temperament (Asselin 2000 p.121) Created 2021-01-16 19:21:57 Created meantone upward notes \u201Cdo,sol,re,la,mi\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 19:23:36) Created meantone downward notes \u201Cdo,fa,sib,mib\u201D fraction 3/2 adjusted 1/12 comma (2021-01-16 19:25:49) Created meantone downward notes \u201Cmib,sol#\u201D fraction 3/2 (2021-01-16 19:26:26) Equalized intervals over series \u201Cmi,si,fa#,do#,sol#\u201D approx fraction 3/2 adjusted -1.7 cents to ratio = 1.499 (2021-01-16 19:28:09)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5613,8 +5472,10 @@ temperament bp3_bethisy(
   comma:81/80
 )
 
+// @description Chaumont temperament (Asselin 2000 p.109) Created 2021-01-16 18:06:34 Created meantone upward notes
+// \u201Cdo,sol,re,la,mi,si,fa#,do#,sol#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 18:08:41) Created meantone downward notes \u201Cdo,fa,sib,mib\u201D
+// fraction 3/2 adjusted -1/4 comma (2021-01-16 18:09:41)
 temperament bp3_chaumont(
-  description:"Chaumont temperament (Asselin 2000 p.109) Created 2021-01-16 18:06:34 Created meantone upward notes \u201Cdo,sol,re,la,mi,si,fa#,do#,sol#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 18:08:41) Created meantone downward notes \u201Cdo,fa,sib,mib\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 18:09:41)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5622,8 +5483,10 @@ temperament bp3_chaumont(
   comma:81/80
 )
 
+// @description Classic temperament (Asselin 2000 p.76) Equivalent to Chaumont (p.109) Created 2021-01-14 15:38:08 Created meantone upward
+// notes \u201Cdo,sol,re,la,mi,si,fa#,do#,sol#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:20) Created meantone downward notes
+// \u201Cdo,fa,sib,mib\u201D fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:57)
 temperament bp3_classic(
-  description:"Classic temperament (Asselin 2000 p.76) Equivalent to Chaumont (p.109) Created 2021-01-14 15:38:08 Created meantone upward notes \u201Cdo,sol,re,la,mi,si,fa#,do#,sol#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:20) Created meantone downward notes \u201Cdo,fa,sib,mib\u201D fraction 3/2 adjusted -1/4 comma (2021-01-14 15:40:57)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5631,8 +5494,11 @@ temperament bp3_classic(
   comma:81/80
 )
 
+// @description Corrette temperament (Asselin 2000 p.111) Created 2021-01-16 18:13:10 Created meantone upward notes
+// \u201Cfa,do,sol,re,la,mi,si,fa#,do#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 18:16:40) Created meantone downward notes \u201Cfa,sib,mib\u201D
+// fraction 3/2 adjusted 1/12 comma (2021-01-16 18:34:13) Created meantone upward notes \u201Cdo#,sol#\u201D fraction 3/2 adjusted 1/12 comma
+// (2021-01-16 18:38:14) Base note reset to \u2018do\u2019 (2021-01-16 18:40:53)
 temperament bp3_corrette(
-  description:"Corrette temperament (Asselin 2000 p.111) Created 2021-01-16 18:13:10 Created meantone upward notes \u201Cfa,do,sol,re,la,mi,si,fa#,do#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 18:16:40) Created meantone downward notes \u201Cfa,sib,mib\u201D fraction 3/2 adjusted 1/12 comma (2021-01-16 18:34:13) Created meantone upward notes \u201Cdo#,sol#\u201D fraction 3/2 adjusted 1/12 comma (2021-01-16 18:38:14) Base note reset to \u2018do\u2019 (2021-01-16 18:40:53)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5640,8 +5506,11 @@ temperament bp3_corrette(
   comma:81/80
 )
 
+// @description D'Alembert-Rousseau temperament (Asselin 2000 p.119) Created 2021-01-16 19:04:44 Created meantone upward notes
+// \u201Cdo,sol,re,la,mi\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 19:12:08) Created meantone downward notes \u201Cdo,fa,sib,mib,sol#\u201D fraction
+// 3/2 adjusted 1/12 comma (2021-01-16 19:17:25) Equalized intervals over series \u201Csol#,do#,fa#,si,mi\u201D approx fraction 2/3 adjusted 2.2 cents
+// to ratio = 0.668 (2021-01-16 19:19:34)
 temperament bp3_d_alembert_rousseau(
-  description:"D'Alembert-Rousseau temperament (Asselin 2000 p.119) Created 2021-01-16 19:04:44 Created meantone upward notes \u201Cdo,sol,re,la,mi\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 19:12:08) Created meantone downward notes \u201Cdo,fa,sib,mib,sol#\u201D fraction 3/2 adjusted 1/12 comma (2021-01-16 19:17:25) Equalized intervals over series \u201Csol#,do#,fa#,si,mi\u201D approx fraction 2/3 adjusted 2.2 cents to ratio = 0.668 (2021-01-16 19:19:34)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5649,8 +5518,8 @@ temperament bp3_d_alembert_rousseau(
   comma:81/80
 )
 
+// @description This is an equal-tempered scale for BP3 + Csound. Created 2021-02-13 19:09:08
 temperament bp3_equal_tempered(
-  description:"This is an equal-tempered scale for BP3 + Csound. Created 2021-02-13 19:09:08",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5658,8 +5527,11 @@ temperament bp3_equal_tempered(
   comma:81/80
 )
 
+// @description Kirnberger II temperament (Asselin 2000 p. 90) Created 2021-01-16 11:52:39 Added fifths down: \u201Cdo,fa,sib,mib,lab,reb\u201D
+// starting fraction 1/1 (2021-01-16 11:54:59) Added fifths up: \u201Cdo,sol,re\u201D starting fraction 1/1 (2021-01-16 11:55:59) Created meantone
+// upward notes \u201Cre,la,mi\u201D fraction 3/2 adjusted -1/2 comma (2021-01-16 11:57:13) Created meantone upward notes \u201Cmi,si,fa#\u201D fraction 3/2
+// (2021-01-16 11:58:24)
 temperament bp3_kirnberger_2(
-  description:"Kirnberger II temperament (Asselin 2000 p. 90) Created 2021-01-16 11:52:39 Added fifths down: \u201Cdo,fa,sib,mib,lab,reb\u201D starting fraction 1/1 (2021-01-16 11:54:59) Added fifths up: \u201Cdo,sol,re\u201D starting fraction 1/1 (2021-01-16 11:55:59) Created meantone upward notes \u201Cre,la,mi\u201D fraction 3/2 adjusted -1/2 comma (2021-01-16 11:57:13) Created meantone upward notes \u201Cmi,si,fa#\u201D fraction 3/2 (2021-01-16 11:58:24)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5667,8 +5539,10 @@ temperament bp3_kirnberger_2(
   comma:81/80
 )
 
+// @description Kirnberger III temperament (Asselin 2000 p.93) Created 2021-01-16 12:02:11 Added fifths down: \u201Cdo,fa,sib,mib,lab,reb\u201D
+// starting fraction 1/1 (2021-01-16 12:03:52) Created meantone upward notes \u201Cdo,sol,re,la,mi\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16
+// 12:05:20) Created meantone upward notes \u201Cmi,si,fa#\u201D fraction 3/2 (2021-01-16 12:06:10)
 temperament bp3_kirnberger_3(
-  description:"Kirnberger III temperament (Asselin 2000 p.93) Created 2021-01-16 12:02:11 Added fifths down: \u201Cdo,fa,sib,mib,lab,reb\u201D starting fraction 1/1 (2021-01-16 12:03:52) Created meantone upward notes \u201Cdo,sol,re,la,mi\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 12:05:20) Created meantone upward notes \u201Cmi,si,fa#\u201D fraction 3/2 (2021-01-16 12:06:10)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5676,8 +5550,11 @@ temperament bp3_kirnberger_3(
   comma:81/80
 )
 
+// @description Marpourg temperament (Asselin 2000 p.117) Created 2021-01-16 18:58:49 Created meantone upward notes
+// \u201Cfa,do,sol,re,la,mi,si,fa#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 19:00:42) Equalized intervals over series
+// \u201Cfa,la#,re#,sol#,do#,fa#\u201D approx fraction 2/3 adjusted -2.8 cents to ratio = 0.666 (2021-01-16 19:02:32) Base note reset to \u2018do\u2019
+// (2021-01-16 19:03:15)
 temperament bp3_marpourg(
-  description:"Marpourg temperament (Asselin 2000 p.117) Created 2021-01-16 18:58:49 Created meantone upward notes \u201Cfa,do,sol,re,la,mi,si,fa#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 19:00:42) Equalized intervals over series \u201Cfa,la#,re#,sol#,do#,fa#\u201D approx fraction 2/3 adjusted -2.8 cents to ratio = 0.666 (2021-01-16 19:02:32) Base note reset to \u2018do\u2019 (2021-01-16 19:03:15)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5685,8 +5562,10 @@ temperament bp3_marpourg(
   comma:81/80
 )
 
+// @description Pure minor-thirds temperament (Asselin 2000 p.82) Created 2021-01-15 15:13:09 Created meantone upward notes
+// \u201Cmib,sib,fa,do,sol,re,la,mi,si,fa#,do#,sol#\u201D fraction 3/2 adjusted -1/3 comma (2021-01-15 15:15:22) Base note reset to \u2018do\u2019 (2021-01-15
+// 15:16:00)
 temperament bp3_pure_minor-thirds(
-  description:"Pure minor-thirds temperament (Asselin 2000 p.82) Created 2021-01-15 15:13:09 Created meantone upward notes \u201Cmib,sib,fa,do,sol,re,la,mi,si,fa#,do#,sol#\u201D fraction 3/2 adjusted -1/3 comma (2021-01-15 15:15:22) Base note reset to \u2018do\u2019 (2021-01-15 15:16:00)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5694,8 +5573,12 @@ temperament bp3_pure_minor-thirds(
   comma:81/80
 )
 
+// @description Rameau meantone in C temperament (Asselin 2000 p.113) Created 2021-01-16 18:41:56 Created meantone upward notes
+// \u201Cdo,sol,re,la,mi,si,fa#,do#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 18:44:03) Added fifths down: \u201Cdo,fa\u201D starting fraction 1/1
+// (2021-01-16 18:49:25) Created meantone upward notes \u201Cdo#,sol#\u201D fraction 3/2 adjusted -1/4 comma (2022-02-04 18:09:16) Created meantone
+// downward notes \u201Cfa,la#\u201D fraction 3/2 (2021-01-16 18:54:20) Equalized intervals over series \u201Csol#,re#,la#\u201D approx fraction 3/2 adjusted
+// 9.1 cents to ratio = 1.508 (2022-02-04 18:10:27)
 temperament bp3_rameau_en_do(
-  description:"Rameau meantone in C temperament (Asselin 2000 p.113) Created 2021-01-16 18:41:56 Created meantone upward notes \u201Cdo,sol,re,la,mi,si,fa#,do#\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 18:44:03) Added fifths down: \u201Cdo,fa\u201D starting fraction 1/1 (2021-01-16 18:49:25) Created meantone upward notes \u201Cdo#,sol#\u201D fraction 3/2 adjusted -1/4 comma (2022-02-04 18:09:16) Created meantone downward notes \u201Cfa,la#\u201D fraction 3/2 (2021-01-16 18:54:20) Equalized intervals over series \u201Csol#,re#,la#\u201D approx fraction 3/2 adjusted 9.1 cents to ratio = 1.508 (2022-02-04 18:10:27)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5703,8 +5586,10 @@ temperament bp3_rameau_en_do(
   comma:81/80
 )
 
+// @description Sauveur temperament (Asselin 2000 p. 81) Created 2021-01-16 10:37:52 Created meantone downward notes \u201Cdo,fa,sib,mib\u201D
+// fraction 3/2 adjusted -1/5 comma (2021-01-16 10:44:41) Created meantone upward notes \u201Cdo,sol,re,la,mi,si,fa#,do#,sol#\u201D fraction 3/2
+// adjusted -1/5 comma (2021-01-16 10:48:56)
 temperament bp3_sauveur(
-  description:"Sauveur temperament (Asselin 2000 p. 81) Created 2021-01-16 10:37:52 Created meantone downward notes \u201Cdo,fa,sib,mib\u201D fraction 3/2 adjusted -1/5 comma (2021-01-16 10:44:41) Created meantone upward notes \u201Cdo,sol,re,la,mi,si,fa#,do#,sol#\u201D fraction 3/2 adjusted -1/5 comma (2021-01-16 10:48:56)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5712,8 +5597,8 @@ temperament bp3_sauveur(
   comma:81/80
 )
 
+// @description Two series of perfect fifths including ascending major thirds (Asselin 2000 p.62) Created 2021-01-08 09:02:23
 temperament bp3_scale_1(
-  description:"Two series of perfect fifths including ascending major thirds (Asselin 2000 p.62) Created 2021-01-08 09:02:23",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:29,
@@ -5750,8 +5635,14 @@ temperament bp3_scale_1(
   )
 )
 
+// @description Schlick temperament (Asselin 2000 p.88) Created 2021-01-16 10:56:35 [INCORRECT] Created meantone downward notes
+// \u201Cla,re,sol,do,fa\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 10:58:50) Created meantone upward notes \u201Cla,mi,si\u201D fraction 3/2 adjusted
+// -1/4 comma (2021-01-16 10:59:48) Created meantone upward notes \u201Cla,do#\u201D fraction 5/4 (2021-01-16 11:04:11) Equalized intervals over
+// series \u201Csi,fa#,do#\u201D approx fraction 3/2 adjusted -5.4 cents to ratio = 1.495 (2021-01-16 11:05:59) Created meantone downward notes
+// \u201Csol,mib\u201D fraction 5/4 (2021-01-16 11:07:31) Equalized intervals over series \u201Cmib,sib,fa\u201D approx fraction 3/2 adjusted -5.3 cents to
+// ratio = 1.495 (2021-01-16 11:08:47) Created meantone downward notes \u201Cdo,lab\u201D fraction 5/4 (2021-01-16 11:13:58) Created meantone upward
+// notes \u201Cmi,sol#\u201D fraction 5/4 adjusted 2/3 comma (2021-01-16 11:23:39) [estimation] Base note reset to \u2018do\u2019 (2021-01-16 11:25:48)
 temperament bp3_schlick_bad(
-  description:"Schlick temperament (Asselin 2000 p.88) Created 2021-01-16 10:56:35 [INCORRECT] Created meantone downward notes \u201Cla,re,sol,do,fa\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 10:58:50) Created meantone upward notes \u201Cla,mi,si\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 10:59:48) Created meantone upward notes \u201Cla,do#\u201D fraction 5/4 (2021-01-16 11:04:11) Equalized intervals over series \u201Csi,fa#,do#\u201D approx fraction 3/2 adjusted -5.4 cents to ratio = 1.495 (2021-01-16 11:05:59) Created meantone downward notes \u201Csol,mib\u201D fraction 5/4 (2021-01-16 11:07:31) Equalized intervals over series \u201Cmib,sib,fa\u201D approx fraction 3/2 adjusted -5.3 cents to ratio = 1.495 (2021-01-16 11:08:47) Created meantone downward notes \u201Cdo,lab\u201D fraction 5/4 (2021-01-16 11:13:58) Created meantone upward notes \u201Cmi,sol#\u201D fraction 5/4 adjusted 2/3 comma (2021-01-16 11:23:39) [estimation] Base note reset to \u2018do\u2019 (2021-01-16 11:25:48)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:13,
@@ -5759,8 +5650,10 @@ temperament bp3_schlick_bad(
   comma:81/80
 )
 
+// @description Tartini-Vallotti temperament (Asselin 2000 p.104) Created 2021-01-16 17:45:36 Added fifths down:
+// \u201Cdo,fa,sib,mib,lab,reb,solb\u201D starting fraction 1/1 (2021-01-16 17:47:11) Created meantone upward notes \u201Cdo,sol,re,la,mi,si\u201D fraction 3/2
+// adjusted -1/6 comma (2021-01-16 17:48:49)
 temperament bp3_tartini-vallotti(
-  description:"Tartini-Vallotti temperament (Asselin 2000 p.104) Created 2021-01-16 17:45:36 Added fifths down: \u201Cdo,fa,sib,mib,lab,reb,solb\u201D starting fraction 1/1 (2021-01-16 17:47:11) Created meantone upward notes \u201Cdo,sol,re,la,mi,si\u201D fraction 3/2 adjusted -1/6 comma (2021-01-16 17:48:49)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5768,8 +5661,10 @@ temperament bp3_tartini-vallotti(
   comma:81/80
 )
 
+// @description Werckmeister III temperament (Asselin 2000 p.94) Created 2021-01-16 16:53:15 Added fifths down: \u201Cdo,fa,sib,mib,lab,reb,solb\u201D
+// starting fraction 1/1 (2021-01-16 16:55:35) Created meantone upward notes \u201Cdo,sol,re,la\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16
+// 16:57:00) Created meantone upward notes \u201Cla,mi,si\u201D fraction 3/2 (2021-01-16 16:58:34)
 temperament bp3_werckmeister_3(
-  description:"Werckmeister III temperament (Asselin 2000 p.94) Created 2021-01-16 16:53:15 Added fifths down: \u201Cdo,fa,sib,mib,lab,reb,solb\u201D starting fraction 1/1 (2021-01-16 16:55:35) Created meantone upward notes \u201Cdo,sol,re,la\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 16:57:00) Created meantone upward notes \u201Cla,mi,si\u201D fraction 3/2 (2021-01-16 16:58:34)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5777,8 +5672,14 @@ temperament bp3_werckmeister_3(
   comma:81/80
 )
 
+// @description Werckmeister IV temperament (Asselin 2000 p.96) Created 2021-01-16 17:02:48 Added fifths down: \u201Cdo,fa\u201D starting fraction 1/1
+// (2021-01-16 17:07:10) Created meantone downward notes \u201Cfa,sib\u201D fraction 3/2 adjusted -1/3 comma (2021-01-16 17:08:04) Created meantone
+// downward notes \u201Csib,mib,sol#\u201D fraction 3/2 adjusted 1/3 comma (2021-01-16 17:09:18) Created meantone downward notes \u201Csol#,do#\u201D fraction
+// 3/2 (2021-01-16 17:11:01) Created meantone downward notes \u201Cdo#,fa#\u201D fraction 3/2 adjusted -1/3 comma (2021-01-16 17:12:07) Created
+// meantone downward notes \u201Cfa#,si\u201D fraction 3/2 (2021-01-16 17:13:21) Created meantone downward notes \u201Csi,mi\u201D fraction 3/2 adjusted -1/3
+// comma (2021-01-16 17:14:45) Created meantone downward notes \u201Cmi,la\u201D fraction 3/2 (2021-01-16 17:16:07) Created meantone upward notes
+// \u201Cdo,sol\u201D fraction 3/2 adjusted -1/3 comma (2021-01-16 17:17:11) Created meantone upward notes \u201Csol,re\u201D fraction 3/2 (2021-01-16 17:17:49)
 temperament bp3_werckmeister_4(
-  description:"Werckmeister IV temperament (Asselin 2000 p.96) Created 2021-01-16 17:02:48 Added fifths down: \u201Cdo,fa\u201D starting fraction 1/1 (2021-01-16 17:07:10) Created meantone downward notes \u201Cfa,sib\u201D fraction 3/2 adjusted -1/3 comma (2021-01-16 17:08:04) Created meantone downward notes \u201Csib,mib,sol#\u201D fraction 3/2 adjusted 1/3 comma (2021-01-16 17:09:18) Created meantone downward notes \u201Csol#,do#\u201D fraction 3/2 (2021-01-16 17:11:01) Created meantone downward notes \u201Cdo#,fa#\u201D fraction 3/2 adjusted -1/3 comma (2021-01-16 17:12:07) Created meantone downward notes \u201Cfa#,si\u201D fraction 3/2 (2021-01-16 17:13:21) Created meantone downward notes \u201Csi,mi\u201D fraction 3/2 adjusted -1/3 comma (2021-01-16 17:14:45) Created meantone downward notes \u201Cmi,la\u201D fraction 3/2 (2021-01-16 17:16:07) Created meantone upward notes \u201Cdo,sol\u201D fraction 3/2 adjusted -1/3 comma (2021-01-16 17:17:11) Created meantone upward notes \u201Csol,re\u201D fraction 3/2 (2021-01-16 17:17:49)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5786,8 +5687,12 @@ temperament bp3_werckmeister_4(
   comma:81/80
 )
 
+// @description Werckmeister V temperament (Asselin 2000 p.99) Created 2021-01-16 17:29:54 Added fifths up: \u201Cdo,sol,re\u201D starting fraction
+// 1/1 (2021-01-16 17:31:53) Created meantone upward notes \u201Cre,la,mi\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 17:33:19) Created
+// meantone upward notes \u201Cmi,si,fa#\u201D fraction 3/2 (2021-01-16 17:34:05) Created meantone upward notes \u201Cfa#,do#,lab\u201D fraction 3/2 adjusted
+// -1/4 comma (2021-01-16 17:35:20) Created meantone downward notes \u201Cdo,fa\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 17:36:08) Created
+// meantone downward notes \u201Cfa,sib,mib\u201D fraction 3/2 (2021-01-16 17:37:05)
 temperament bp3_werckmeister_5(
-  description:"Werckmeister V temperament (Asselin 2000 p.99) Created 2021-01-16 17:29:54 Added fifths up: \u201Cdo,sol,re\u201D starting fraction 1/1 (2021-01-16 17:31:53) Created meantone upward notes \u201Cre,la,mi\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 17:33:19) Created meantone upward notes \u201Cmi,si,fa#\u201D fraction 3/2 (2021-01-16 17:34:05) Created meantone upward notes \u201Cfa#,do#,lab\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 17:35:20) Created meantone downward notes \u201Cdo,fa\u201D fraction 3/2 adjusted -1/4 comma (2021-01-16 17:36:08) Created meantone downward notes \u201Cfa,sib,mib\u201D fraction 3/2 (2021-01-16 17:37:05)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5795,8 +5700,10 @@ temperament bp3_werckmeister_5(
   comma:81/80
 )
 
+// @description Zarlino temperament (Asselin 2000 p.85) Created meantone upwards notes \u201Cdo, sol, re, la, mi, si, fa#, do#, sol#\u201D ratio 3/2
+// -2/7 comma (2021-01-11 18:00:22) Created meantone downwards notes \u201Cdo, fa, sib, mib\u201D ratio 3/2 -2/7 comma (2021-01-11 18:05:45) Created
+// meantone upwards notes \u201Cdo, sol\u201D ratio 3/2 -2/7 comma (2021-01-11 18:06:40)
 temperament bp3_zarlino(
-  description:"Zarlino temperament (Asselin 2000 p.85) Created meantone upwards notes \u201Cdo, sol, re, la, mi, si, fa#, do#, sol#\u201D ratio 3/2 -2/7 comma (2021-01-11 18:00:22) Created meantone downwards notes \u201Cdo, fa, sib, mib\u201D ratio 3/2 -2/7 comma (2021-01-11 18:05:45) Created meantone upwards notes \u201Cdo, sol\u201D ratio 3/2 -2/7 comma (2021-01-11 18:06:40)",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:12,
@@ -5804,8 +5711,9 @@ temperament bp3_zarlino(
   comma:81/80
 )
 
+// @description Johnston final lattice for "The Un-tempered Pianos" and "K" This scale has been imported from a SCALA file. Created
+// 2024-08-22 07:44:18
 temperament bp3_johnston_unt3(
-  description:"Johnston final lattice for ""The Un-tempered Pianos"" and ""K"" This scale has been imported from a SCALA file. Created 2024-08-22 07:44:18",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:25,
@@ -5838,8 +5746,9 @@ temperament bp3_johnston_unt3(
   )
 )
 
+// @description Henri Arnaut De Zwolle's modified meantone tuning (c. 1440) This scale has been imported from a SCALA file. Created
+// 2024-08-22 07:39:55
 temperament bp3_zwolle2(
-  description:"Henri Arnaut De Zwolle's modified meantone tuning (c. 1440) This scale has been imported from a SCALA file. Created 2024-08-22 07:39:55",
   source:"Bernard Bel / Bol Processor",
   period_ratio:2,
   divisions:3,
@@ -5847,8 +5756,10 @@ temperament bp3_zwolle2(
   comma:81/80
 )
 
+// @description Native 22-shruti table from -to.tryShruti (BP3, 23 ratios over 23 degrees). Pythagorean convention at degree 12 (729/512).
+// DISTINCT from bp3_grama (Arnold's scholarly edition by B. Bel, 64/45 at the same degree) \u2014 two valid systems, this one is the native
+// engine's table.
 temperament bp3_shruti23_native(
-  description:"Table native 22-shruti de -to.tryShruti (BP3, 23 ratios sur 23 degr\xE9s). Convention pythagoricienne au degr\xE9 12 (729/512). DISTINCT de bp3_grama (\xE9dition savante d'Arnold par B. Bel, 64/45 au m\xEAme degr\xE9) \u2014 deux syst\xE8mes valides, celui-ci est la table du moteur natif.",
   source:bp3-engine/test-data/-to.tryShruti,
   period_ratio:2,
   divisions:23,
@@ -5882,8 +5793,8 @@ temperament bp3_shruti23_native(
 
 def test_alphabets(resolvedBy:Kairos, resolves:alphabet)
 
+// @description Single-character alphabet a-z (Bernard's -al.abc / -ho.abc)
 alphabet abc(
-  description:"Single-character alphabet a-z (Bernard's -al.abc / -ho.abc)",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
@@ -5943,8 +5854,8 @@ alphabet abc(
   )
 )
 
+// @description Single-character alphabet a-h (Bernard's -al.abc1 / -ho.abc1)
 alphabet abc1(
-  description:"Single-character alphabet a-h (Bernard's -al.abc1 / -ho.abc1)",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
@@ -5968,16 +5879,16 @@ alphabet abc1(
   )
 )
 
+// @description Conway look-and-say sequence digits
 alphabet conway(
-  description:"Conway look-and-say sequence digits",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
   terminals(d1(), d2(), d3())
 )
 
+// @description Kathak counting bols (ek-do-tin)
 alphabet kathak_count(
-  description:"Kathak counting bols (ek-do-tin)",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
@@ -6001,8 +5912,8 @@ alphabet kathak_count(
   )
 )
 
+// @description Opaque structural symbols for grammar tests (no pitch, no sound)
 alphabet structural(
-  description:"Opaque structural symbols for grammar tests (no pitch, no sound)",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
@@ -6033,24 +5944,24 @@ alphabet structural(
   )
 )
 
+// @description The ten bols of the native alphabet \`-al.dhati\`, reproduced as they stand
 alphabet dhati(
-  description:"Les dix bols de l'alphabet natif \`-al.dhati\`, reproduits tels quels",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
   terminals(dha(), dhee(), ge(), ke(), kt(), na(), ta(), tee(), ti(), tr())
 )
 
+// @description The seven terms of the native alphabet \`-al.checkhomo\`
 alphabet checkhomo(
-  description:"Les sept termes de l'alphabet natif \`-al.checkhomo\`",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
   terminals(a(), "a'"(), "a"""(), b(), "b'"(), c(), "c'"())
 )
 
+// @description The fourteen bols of the native alphabet \`-al.dhin--\`
 alphabet dhin(
-  description:"Les quatorze bols de l'alphabet natif \`-al.dhin--\`",
   runtime:audio,
   resolvesPitch:false,
   alterations(),
@@ -6059,394 +5970,142 @@ alphabet dhin(
 `, "fichier": "test_alphabets.bpsl" }, { "nom": "time", "format": "bpsl", "texte": `types
 
 // @documented
+// @description Time that ELAPSES \u2014 the scene's metronome. HEADER library, resolved by KRONOS.
 def time(
   resolvedBy:Kronos,
   resolves:time,
   name:time,
-  description:"Le temps qui S'\xC9COULE \u2014 le m\xE9tronome de la sc\xE8ne. Librairie d'EN-T\xCATE, r\xE9solue par KRONOS.",
   version:"1.0.0",
   section:subgrammar
 )
 
+// @description Absolute metronome of the scene or subgrammar, in BPM.
 def tempo(
   bp3:_mm,
   args("bpm"),
   unit:bpm,
-  description:"Metronome absolu de la scene ou de la sous-grammaire, en BPM.",
   scope("subgrammar", "scene"),
   unicite:metronome
 )
 
+// @description Clock catch-up delay when resuming after a wait point, in MILLISECONDS. Image of MIDIsyncDelay in the native engine.
 control syncdelay(
   section:controls,
   bp3:MIDIsyncDelay,
   args("duration"),
   unit:ms,
-  description:"Retard de rattrapage de l'horloge \xE0 la reprise apr\xE8s un point d'attente, en MILLISECONDES. Image de MIDIsyncDelay au moteur natif.",
   scope("scene")
 )
-`, "fichier": "time.bpsl" }, { "nom": "transpo/chromashift", "format": "bpsl", "texte": "control chromashift(\n  bp3:_transpose,\n  args(keys),\n  value:0,\n  description:\"Chromatic transposition on the 12-key grid \u2014 shift N chromatic keys (semitones), rename to target key + its tuning. Image of BP3 _transpose (Romain decision 2026-07-17). Distinct from scaleshift (diatonic degrees) and transpose (real, name preserved).\",\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:transpo,\n  rank:10,\n  params(\n    n(\n      from:value,\n      coerce:raw,\n      default:0,\n      description:\"Nombre de cl\xE9s chromatiques (demi-tons) de d\xE9calage sur la grille 12 (peut \xEAtre n\xE9gatif ; wrap \xE0 l'octave).\"\n    )\n  )\n) ``ts:\n// Corps de la MANIPULATION `chromashift` \u2014 AUTHORING F1 (vrai .ts TYP\xC9 contre le SDK Kairos).\n// Source de v\xE9rit\xE9 : ce fichier. Le chargeur le greffe sur le CONTR\xD4LE `chromashift` de `transpo`, qui\n// porte le mot \u2014 arbitrage de Romain, 2026-09-03 : le corps se rattache \xE0 l'objet qui le nomme.\n// Kairos transpile (sucrase, qui STRIPE l'`import type`) puis ex\xE9cute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.\n// \u26A0\uFE0F TRANSPOSITION CHROMATIQUE (grille 12 cl\xE9s) : image de BP3 _transpose (d\xE9cision Romain\n//    2026-07-17, hub/decisions/2026-07-17-bp3-transpose-est-scaleshift-sur-grille-12-cles.md).\n//    D\xE9cale le pas ABSOLU de N cl\xE9s chromatiques (N demi-tons) ; Kairos renomme vers la cl\xE9 cible\n//    et prend SON tuning (transposeToken). DISTINCT de `scaleshift` (diatonique, N degr\xE9s d'alphabet)\n//    et de `transpose` (r\xE9el, frameRatio, nom PR\xC9SERV\xC9). Trois gestes nets (Romain, option B).\nimport type { DigitalFn } from '@kairos/core';\n\n/** chromashift \u2014 transposition sur la GRILLE 12 CL\xC9S chromatiques : d\xE9cale le pas absolu de N\n *  positions (N demi-tons). `ctx.target.pitch.step` = pas ABSOLU sur la grille du temp\xE9rament\n *  (confirm\xE9 Kairos [504] : degr\xE9 + alt\xE9ration + registre\xB7divisions). Kairos re-projette le delta\n *  de step \u2192 renomme chromatiquement + retune sur la cl\xE9 d'arriv\xE9e. = BP3 _transpose(N)\n *  (Zouleb.c:555-574, key += Round(trans/100)). PORTER\u2260R\xC9SOUDRE : je d\xE9cale le pas, je ne r\xE9sous rien. */\nconst chromashift: DigitalFn = (ctx) => {\n  const p = ctx.target.pitch;\n  if (!p) return;\n  p.step += Number(ctx.params.n ?? 0);\n};\n\nexport default chromashift;\n``\n", "fichier": "transpo/chromashift.bpsl" }, { "nom": "transpo/keyxpand", "format": "bpsl", "texte": "control keyxpand(\n  bp3:_keyxpand,\n  args(pivot, factor),\n  value(pivot:0, factor:1),\n  description:\"Interval expansion/contraction around a pivot. factor=2 doubles, factor=-1 inverts, factor=0.5 contracts.\",\n  scope(symbol, group, rule, flow),\n  transportGroup:transpo,\n  rank:20,\n  params(\n    pivotStep(\n      from:pivot,\n      coerce:token-step,\n      default:0,\n      description:\"Pivot : token de note r\xE9solu en pas de grille par la coercition token-step de Kairos (crie si irr\xE9soluble) ; reste fixe.\"\n    ),\n    factor(\n      from:factor,\n      coerce:raw,\n      default:1,\n      description:\"Facteur d'\xE9chelle de l'\xE9cart au pivot (1 = identit\xE9, 2 = doubl\xE9, 0,5 = repli\xE9 ; peut \xEAtre n\xE9gatif = miroir).\"\n    )\n  )\n) ``ts:\n// Corps de la MANIPULATION `keyxpand` \u2014 AUTHORING F1 (vrai .ts TYP\xC9 contre le SDK Kairos).\n// Source de v\xE9rit\xE9 : ce fichier. Le chargeur le greffe sur le CONTR\xD4LE `keyxpand` de `transpo`, qui\n// porte le mot \u2014 arbitrage de Romain, 2026-09-03 : le corps se rattache \xE0 l'objet qui le nomme.\n// Kairos transpile (sucrase, qui STRIPE l'`import type`) puis ex\xE9cute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.\nimport type { DigitalFn } from '@kairos/core';\n\n/** keyxpand \u2014 dilate/contracte l'\xE9cart au pivot d'un facteur (le pivot reste fixe). facteur 1 = identit\xE9,\n *  2 = intervalles doubl\xE9s, 0,5 = repli\xE9s de moiti\xE9. R\xE9sultat arrondi au pas de grille le plus proche.\n *  Kairos pr\xE9-r\xE9sout le token pivot en `pivotStep` et passe `{pivotStep, factor}`. */\nconst keyxpand: DigitalFn = (ctx) => {\n  // Mutation de la COPIE (ctx.target) ; Kairos d\xE9rive le Hz APR\xC8S (delta net). `step` = axe de grille absolu.\n  if (ctx.target.pitch) {\n    const pivotStep = Number(ctx.params.pivotStep ?? 0);\n    const factor = Number(ctx.params.factor ?? 1);\n    ctx.target.pitch.step = pivotStep + Math.round((ctx.target.pitch.step - pivotStep) * factor);\n  }\n};\n\nexport default keyxpand;\n``\n", "fichier": "transpo/keyxpand.bpsl" }, { "nom": "transpo/scaleshift", "format": "bpsl", "texte": "control scaleshift(\n  args(degrees),\n  value:0,\n  description:\"Scalar (diatonic) transposition \u2014 shift N degrees in the alphabet. (scaleshift:2) : Sa->Ga, etc. Preserves degrees, not intervals (in unequal scales). Formerly rotate-HAUTEUR; distinct from the ![rotate] STRUCTURE control.\",\n  scope(symbol, group, rule, flow),\n  transportGroup:transpo,\n  rank:10,\n  params(\n    n(\n      from:value,\n      coerce:raw,\n      default:0,\n      description:\"Nombre de degr\xE9s de d\xE9calage dans l'alphabet (peut \xEAtre n\xE9gatif ; report de registre aux bornes).\"\n    )\n  )\n) ``ts:\n// Corps de la MANIPULATION `scaleshift` \u2014 AUTHORING F1 (vrai .ts TYP\xC9 contre le SDK Kairos).\n// Source de v\xE9rit\xE9 : ce fichier. Le chargeur le greffe sur le CONTR\xD4LE `scaleshift` de `transpo`, qui\n// porte le mot \u2014 arbitrage de Romain, 2026-09-03 : le corps se rattache \xE0 l'objet qui le nomme.\n// Kairos transpile (sucrase, qui STRIPE l'`import type`) puis ex\xE9cute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.\n// \u26A0\uFE0F TRANSPOSITION SCALAIRE (diatonique) : d\xE9calage de N DEGR\xC9S d'alphabet (Sa +2 \u2192 Ga), report de\n//    registre aux bornes. Anciennement `rotate` de HAUTEUR \u2014 renomm\xE9 (d\xE9cision 2026-07-11 : deux\n//    transpositions nomm\xE9es, r\xE9elle vs scalaire). RIEN \xC0 VOIR avec le ![rotate] de STRUCTURE\n//    (RotateSequence, rotation de s\xE9quence, moteur BPx), qui garde son nom.\nimport type { DigitalFn } from '@kairos/core';\n\n/** scaleshift \u2014 transposition scalaire : d\xE9cale de N degr\xE9s dans l'alphabet (Sa +2 \u2192 Ga). Recouvre le\n *  degr\xE9 depuis le pas via `models.alphabet.degrees`, tourne l'index (mod taille alphabet, avec report\n *  de registre), recompose. Pr\xE9serve les DEGR\xC9S, pas les intervalles (en gamme in\xE9gale). */\nconst scaleshift: DigitalFn = (ctx) => {\n  const p = ctx.target.pitch;\n  if (!p) return;\n  const degs = ctx.models.alphabet.degrees;   // pas de grille de chaque degr\xE9, ordonn\xE9 (ex. 12-TET [0,2,4,5,7,9,11])\n  const div = ctx.models.temperament.divisions;\n  const n = Number(ctx.params.n ?? 0);\n  const reg = Math.floor(p.step / div);\n  const inOct = ((p.step % div) + div) % div;\n  const idx = degs.indexOf(inOct);\n  if (idx < 0) return;                          // pas hors alphabet : identit\xE9 (best-effort)\n  const len = degs.length, raw = idx + n;\n  const ni = ((raw % len) + len) % len;\n  p.step = degs[ni] + (reg + Math.floor(raw / len)) * div;\n};\n\nexport default scaleshift;\n``\n", "fichier": "transpo/scaleshift.bpsl" }, { "nom": "transpo/transpose", "format": "bpsl", "texte": "control transpose(\n  args(interval),\n  argType:interval,\n  description:\"Real (chromatic) transposition \u2014 shift the alphabet anchor by a fixed interval (fraction 3/2, cents 700c, decimal 1.5). Preserves intervals AND note names; works in any tuning. A bare integer is a ratio N:1 (N-th harmonic): 2/4/8 = octaves; for semitones use cents (12 semitones = 1200c). The old grid-step regime is removed.\",\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:transpo,\n  rank:30,\n  params(\n    ratio(\n      from:value,\n      coerce:interval-ratio,\n      description:\"Intervalle normalis\xE9 en ratio par Kairos depuis la cha\xEEne 3-formats. Un transpose NUM\xC9RIQUE crie ici (cri de migration : l'ancien r\xE9gime par pas de grille est supprim\xE9).\"\n    ),\n    interval(\n      from:value,\n      coerce:raw,\n      description:\"La cha\xEEne d'intervalle brute (diagnostic) ; le corps ne la parse pas.\"\n    )\n  )\n) ``ts:\n// Corps de la MANIPULATION `transpose` \u2014 AUTHORING F1 (vrai .ts TYP\xC9 contre le SDK Kairos).\n// Source de v\xE9rit\xE9 : ce fichier. Le chargeur le greffe sur le CONTR\xD4LE `transpose` de `transpo`, qui\n// porte le mot \u2014 arbitrage de Romain, 2026-09-03 : le corps se rattache \xE0 l'objet qui le nomme.\n// Kairos transpile (sucrase, qui STRIPE l'`import type`) puis ex\xE9cute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.\n// \u26A0\uFE0F TRANSPOSITION R\xC9ELLE (chromatique) : d\xE9calage de l'ANCRE par un INTERVALLE fixe. Pr\xE9serve les\n//    intervalles ET le nom de chaque note (on d\xE9place le cadre, pas les notes contre un cadre fig\xE9).\n//    Marche dans TOUT accordage (\xE9gal ET in\xE9gal), et m\xEAme en temp\xE9rament param\xE9trique (sans grille).\n//    D\xE9cision 2026-07-11 : deux transpositions nomm\xE9es, r\xE9elle (ici) vs scalaire (scaleshift).\nimport type { DigitalFn } from '@kairos/core';\n\n/** transpose \u2014 transposition r\xE9elle : multiplie le facteur de cadre `frameRatio` par l'intervalle.\n *  `ctx.params.ratio` = intervalle D\xC9J\xC0 NORMALIS\xC9 par Kairos (fraction 3/2 | cents 700c | d\xE9cimal 1.5) ;\n *  `ctx.params.interval` = la cha\xEEne brute (diagnostic). Kairos SEUL applique `hz \xD7 frameRatio` en fin de\n *  r\xE9solution, APR\xC8S les ops de grille \u2014 noms/registres pr\xE9serv\xE9s par construction. Je ne parse RIEN. */\nconst transpose: DigitalFn = (ctx) => {\n  if (ctx.target.pitch) {\n    ctx.target.pitch.frameRatio = (ctx.target.pitch.frameRatio ?? 1) * Number(ctx.params.ratio);\n  }\n};\n\nexport default transpose;\n``\n", "fichier": "transpo/transpose.bpsl" }, { "nom": "transpo", "format": "bpsl", "texte": `transpo/transpose
+`, "fichier": "time.bpsl" }, { "nom": "transpo/chromashift", "format": "bpsl", "texte": "// @description Chromatic transposition on the 12-key grid \u2014 shift N chromatic keys (semitones), rename to target key + its tuning. Image of\n// BP3 _transpose (Romain decision 2026-07-17). Distinct from scaleshift (diatonic degrees) and transpose (real, name preserved).\ncontrol chromashift(\n  bp3:_transpose,\n  args(keys),\n  value:0,\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:transpo,\n  rank:10,\n  params(\n    // @description Number of chromatic keys (semitones) of shift on the 12-grid (may be negative; wraps at the octave).\n    n(\n      from:value,\n      coerce:raw,\n      default:0\n    )\n  )\n) ``ts:\n// Corps de la MANIPULATION `chromashift` \u2014 AUTHORING F1 (vrai .ts TYP\xC9 contre le SDK Kairos).\n// Source de v\xE9rit\xE9 : ce fichier. Le chargeur le greffe sur le CONTR\xD4LE `chromashift` de `transpo`, qui\n// porte le mot \u2014 arbitrage de Romain, 2026-09-03 : le corps se rattache \xE0 l'objet qui le nomme.\n// Kairos transpile (sucrase, qui STRIPE l'`import type`) puis ex\xE9cute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.\n// \u26A0\uFE0F TRANSPOSITION CHROMATIQUE (grille 12 cl\xE9s) : image de BP3 _transpose (d\xE9cision Romain\n//    2026-07-17, hub/decisions/2026-07-17-bp3-transpose-est-scaleshift-sur-grille-12-cles.md).\n//    D\xE9cale le pas ABSOLU de N cl\xE9s chromatiques (N demi-tons) ; Kairos renomme vers la cl\xE9 cible\n//    et prend SON tuning (transposeToken). DISTINCT de `scaleshift` (diatonique, N degr\xE9s d'alphabet)\n//    et de `transpose` (r\xE9el, frameRatio, nom PR\xC9SERV\xC9). Trois gestes nets (Romain, option B).\nimport type { DigitalFn } from '@kairos/core';\n\n/** chromashift \u2014 transposition sur la GRILLE 12 CL\xC9S chromatiques : d\xE9cale le pas absolu de N\n *  positions (N demi-tons). `ctx.target.pitch.step` = pas ABSOLU sur la grille du temp\xE9rament\n *  (confirm\xE9 Kairos [504] : degr\xE9 + alt\xE9ration + registre\xB7divisions). Kairos re-projette le delta\n *  de step \u2192 renomme chromatiquement + retune sur la cl\xE9 d'arriv\xE9e. = BP3 _transpose(N)\n *  (Zouleb.c:555-574, key += Round(trans/100)). PORTER\u2260R\xC9SOUDRE : je d\xE9cale le pas, je ne r\xE9sous rien. */\nconst chromashift: DigitalFn = (ctx) => {\n  const p = ctx.target.pitch;\n  if (!p) return;\n  p.step += Number(ctx.params.n ?? 0);\n};\n\nexport default chromashift;\n``\n", "fichier": "transpo/chromashift.bpsl" }, { "nom": "transpo/keyxpand", "format": "bpsl", "texte": "// @description Interval expansion/contraction around a pivot. factor=2 doubles, factor=-1 inverts, factor=0.5 contracts.\ncontrol keyxpand(\n  bp3:_keyxpand,\n  args(pivot, factor),\n  value(pivot:0, factor:1),\n  scope(symbol, group, rule, flow),\n  transportGroup:transpo,\n  rank:20,\n  params(\n    // @description Pivot: note token resolved into grid steps by Kairos's token-step coercion (cries if unresolvable); stays fixed.\n    pivotStep(\n      from:pivot,\n      coerce:token-step,\n      default:0\n    ),\n    // @description Scale factor of the distance to the pivot (1 = identity, 2 = doubled, 0.5 = folded; may be negative = mirror).\n    factor(\n      from:factor,\n      coerce:raw,\n      default:1\n    )\n  )\n) ``ts:\n// Corps de la MANIPULATION `keyxpand` \u2014 AUTHORING F1 (vrai .ts TYP\xC9 contre le SDK Kairos).\n// Source de v\xE9rit\xE9 : ce fichier. Le chargeur le greffe sur le CONTR\xD4LE `keyxpand` de `transpo`, qui\n// porte le mot \u2014 arbitrage de Romain, 2026-09-03 : le corps se rattache \xE0 l'objet qui le nomme.\n// Kairos transpile (sucrase, qui STRIPE l'`import type`) puis ex\xE9cute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.\nimport type { DigitalFn } from '@kairos/core';\n\n/** keyxpand \u2014 dilate/contracte l'\xE9cart au pivot d'un facteur (le pivot reste fixe). facteur 1 = identit\xE9,\n *  2 = intervalles doubl\xE9s, 0,5 = repli\xE9s de moiti\xE9. R\xE9sultat arrondi au pas de grille le plus proche.\n *  Kairos pr\xE9-r\xE9sout le token pivot en `pivotStep` et passe `{pivotStep, factor}`. */\nconst keyxpand: DigitalFn = (ctx) => {\n  // Mutation de la COPIE (ctx.target) ; Kairos d\xE9rive le Hz APR\xC8S (delta net). `step` = axe de grille absolu.\n  if (ctx.target.pitch) {\n    const pivotStep = Number(ctx.params.pivotStep ?? 0);\n    const factor = Number(ctx.params.factor ?? 1);\n    ctx.target.pitch.step = pivotStep + Math.round((ctx.target.pitch.step - pivotStep) * factor);\n  }\n};\n\nexport default keyxpand;\n``\n", "fichier": "transpo/keyxpand.bpsl" }, { "nom": "transpo/scaleshift", "format": "bpsl", "texte": "// @description Scalar (diatonic) transposition \u2014 shift N degrees in the alphabet. (scaleshift:2): Sa->Ga, etc. Preserves degrees, not\n// intervals (in unequal scales). Formerly rotate-PITCH; distinct from the ![rotate] STRUCTURE control.\ncontrol scaleshift(\n  args(degrees),\n  value:0,\n  scope(symbol, group, rule, flow),\n  transportGroup:transpo,\n  rank:10,\n  params(\n    // @description Number of degrees of shift in the alphabet (may be negative; register carry at the bounds).\n    n(\n      from:value,\n      coerce:raw,\n      default:0\n    )\n  )\n) ``ts:\n// Corps de la MANIPULATION `scaleshift` \u2014 AUTHORING F1 (vrai .ts TYP\xC9 contre le SDK Kairos).\n// Source de v\xE9rit\xE9 : ce fichier. Le chargeur le greffe sur le CONTR\xD4LE `scaleshift` de `transpo`, qui\n// porte le mot \u2014 arbitrage de Romain, 2026-09-03 : le corps se rattache \xE0 l'objet qui le nomme.\n// Kairos transpile (sucrase, qui STRIPE l'`import type`) puis ex\xE9cute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.\n// \u26A0\uFE0F TRANSPOSITION SCALAIRE (diatonique) : d\xE9calage de N DEGR\xC9S d'alphabet (Sa +2 \u2192 Ga), report de\n//    registre aux bornes. Anciennement `rotate` de HAUTEUR \u2014 renomm\xE9 (d\xE9cision 2026-07-11 : deux\n//    transpositions nomm\xE9es, r\xE9elle vs scalaire). RIEN \xC0 VOIR avec le ![rotate] de STRUCTURE\n//    (RotateSequence, rotation de s\xE9quence, moteur BPx), qui garde son nom.\nimport type { DigitalFn } from '@kairos/core';\n\n/** scaleshift \u2014 transposition scalaire : d\xE9cale de N degr\xE9s dans l'alphabet (Sa +2 \u2192 Ga). Recouvre le\n *  degr\xE9 depuis le pas via `models.alphabet.degrees`, tourne l'index (mod taille alphabet, avec report\n *  de registre), recompose. Pr\xE9serve les DEGR\xC9S, pas les intervalles (en gamme in\xE9gale). */\nconst scaleshift: DigitalFn = (ctx) => {\n  const p = ctx.target.pitch;\n  if (!p) return;\n  const degs = ctx.models.alphabet.degrees;   // pas de grille de chaque degr\xE9, ordonn\xE9 (ex. 12-TET [0,2,4,5,7,9,11])\n  const div = ctx.models.temperament.divisions;\n  const n = Number(ctx.params.n ?? 0);\n  const reg = Math.floor(p.step / div);\n  const inOct = ((p.step % div) + div) % div;\n  const idx = degs.indexOf(inOct);\n  if (idx < 0) return;                          // pas hors alphabet : identit\xE9 (best-effort)\n  const len = degs.length, raw = idx + n;\n  const ni = ((raw % len) + len) % len;\n  p.step = degs[ni] + (reg + Math.floor(raw / len)) * div;\n};\n\nexport default scaleshift;\n``\n", "fichier": "transpo/scaleshift.bpsl" }, { "nom": "transpo/transpose", "format": "bpsl", "texte": "// @description Real (chromatic) transposition \u2014 shift the alphabet anchor by a fixed interval (fraction 3/2, cents 700c, decimal 1.5).\n// Preserves intervals AND note names; works in any tuning. A bare integer is a ratio N:1 (N-th harmonic): 2/4/8 = octaves; for semitones\n// use cents (12 semitones = 1200c). The old grid-step regime is removed.\ncontrol transpose(\n  args(interval),\n  argType:interval,\n  scope(symbol, group, rule, flow, scene),\n  transportGroup:transpo,\n  rank:30,\n  params(\n    // @description Interval normalized into a ratio by Kairos from the 3-format string. A NUMERIC transpose cries here (migration cry: the\n    // old grid-step regime is removed).\n    ratio(\n      from:value,\n      coerce:interval-ratio\n    ),\n    // @description The raw interval string (diagnostic); the body does not parse it.\n    interval(\n      from:value,\n      coerce:raw\n    )\n  )\n) ``ts:\n// Corps de la MANIPULATION `transpose` \u2014 AUTHORING F1 (vrai .ts TYP\xC9 contre le SDK Kairos).\n// Source de v\xE9rit\xE9 : ce fichier. Le chargeur le greffe sur le CONTR\xD4LE `transpose` de `transpo`, qui\n// porte le mot \u2014 arbitrage de Romain, 2026-09-03 : le corps se rattache \xE0 l'objet qui le nomme.\n// Kairos transpile (sucrase, qui STRIPE l'`import type`) puis ex\xE9cute au load. Spec : docs/design/DIGITAL_FUNCTIONS.md.\n// \u26A0\uFE0F TRANSPOSITION R\xC9ELLE (chromatique) : d\xE9calage de l'ANCRE par un INTERVALLE fixe. Pr\xE9serve les\n//    intervalles ET le nom de chaque note (on d\xE9place le cadre, pas les notes contre un cadre fig\xE9).\n//    Marche dans TOUT accordage (\xE9gal ET in\xE9gal), et m\xEAme en temp\xE9rament param\xE9trique (sans grille).\n//    D\xE9cision 2026-07-11 : deux transpositions nomm\xE9es, r\xE9elle (ici) vs scalaire (scaleshift).\nimport type { DigitalFn } from '@kairos/core';\n\n/** transpose \u2014 transposition r\xE9elle : multiplie le facteur de cadre `frameRatio` par l'intervalle.\n *  `ctx.params.ratio` = intervalle D\xC9J\xC0 NORMALIS\xC9 par Kairos (fraction 3/2 | cents 700c | d\xE9cimal 1.5) ;\n *  `ctx.params.interval` = la cha\xEEne brute (diagnostic). Kairos SEUL applique `hz \xD7 frameRatio` en fin de\n *  r\xE9solution, APR\xC8S les ops de grille \u2014 noms/registres pr\xE9serv\xE9s par construction. Je ne parse RIEN. */\nconst transpose: DigitalFn = (ctx) => {\n  if (ctx.target.pitch) {\n    ctx.target.pitch.frameRatio = (ctx.target.pitch.frameRatio ?? 1) * Number(ctx.params.ratio);\n  }\n};\n\nexport default transpose;\n``\n", "fichier": "transpo/transpose.bpsl" }, { "nom": "transpo", "format": "bpsl", "texte": `transpo/transpose
 transpo/chromashift
 transpo/scaleshift
 transpo/keyxpand
 types
 
 // @documented
+// @description Pitch transformations resolved by Kairos.
 def transpo(
   resolves:transpo,
   resolvedBy:"Kairos",
   name:transpo,
-  description:"Transformations de hauteur r\xE9solues par Kairos.",
   section:controls
 )
 
+// @description Real (chromatic) transposition \u2014 shift the alphabet anchor by a fixed interval (fraction 3/2, cents 700c, decimal 1.5).
+// Preserves intervals AND note names; works in any tuning. A bare integer is a ratio N:1 (N-th harmonic): 2/4/8 = octaves; for semitones
+// use cents (12 semitones = 1200c). The old grid-step regime is removed.
 control transpose(
   args(interval),
   argType:interval,
-  description:"Real (chromatic) transposition \u2014 shift the alphabet anchor by a fixed interval (fraction 3/2, cents 700c, decimal 1.5). Preserves intervals AND note names; works in any tuning. A bare integer is a ratio N:1 (N-th harmonic): 2/4/8 = octaves; for semitones use cents (12 semitones = 1200c). The old grid-step regime is removed.",
   scope(symbol, group, rule, flow, scene),
   transportGroup:transpo,
   rank:30,
   params(
+    // @description Interval normalized into a ratio by Kairos from the 3-format string. A NUMERIC transpose cries here (migration cry: the
+    // old grid-step regime is removed).
     ratio(
       from:value,
-      coerce:interval-ratio,
-      description:"Intervalle normalis\xE9 en ratio par Kairos depuis la cha\xEEne 3-formats. Un transpose NUM\xC9RIQUE crie ici (cri de migration : l'ancien r\xE9gime par pas de grille est supprim\xE9)."
+      coerce:interval-ratio
     ),
+    // @description The raw interval string (diagnostic); the body does not parse it.
     interval(
       from:value,
-      coerce:raw,
-      description:"La cha\xEEne d'intervalle brute (diagnostic) ; le corps ne la parse pas."
+      coerce:raw
     )
   )
 )
 
+// @description Microtonal scale \u2014 name + base note. (scale:0 0) returns to equal temperament. The name and the base note are TWO values,
+// separated by a comma in the declarative part and by a space in the flow.
 control scale(
   bp3:_scale,
   args(name, blockkey),
   value(name:0, blockkey:0),
-  description:"Microtonal scale \u2014 name + base note. (scale:0 0) revient au temperament egal. Le nom et la note de base sont DEUX valeurs, separees par la virgule dans le declaratif et par l'espace dans le flux.",
   scope(symbol, group, rule, flow),
   transportGroup:transpo
 )
 
+// @description Scalar (diatonic) transposition \u2014 shift N degrees in the alphabet. (scaleshift:2): Sa->Ga, etc. Preserves degrees, not
+// intervals (in unequal scales). Formerly rotate-PITCH; distinct from the ![rotate] STRUCTURE control.
 control scaleshift(
   args(degrees),
   value:0,
-  description:"Scalar (diatonic) transposition \u2014 shift N degrees in the alphabet. (scaleshift:2) : Sa->Ga, etc. Preserves degrees, not intervals (in unequal scales). Formerly rotate-HAUTEUR; distinct from the ![rotate] STRUCTURE control.",
   scope(symbol, group, rule, flow),
   transportGroup:transpo,
   rank:10,
   params(
+    // @description Number of degrees of shift in the alphabet (may be negative; register carry at the bounds).
     n(
       from:value,
       coerce:raw,
-      default:0,
-      description:"Nombre de degr\xE9s de d\xE9calage dans l'alphabet (peut \xEAtre n\xE9gatif ; report de registre aux bornes)."
+      default:0
     )
   )
 )
 
+// @description Chromatic transposition on the 12-key grid \u2014 shift N chromatic keys (semitones), rename to target key + its tuning. Image of
+// BP3 _transpose (Romain decision 2026-07-17). Distinct from scaleshift (diatonic degrees) and transpose (real, name preserved).
 control chromashift(
   bp3:_transpose,
   args(keys),
   value:0,
-  description:"Chromatic transposition on the 12-key grid \u2014 shift N chromatic keys (semitones), rename to target key + its tuning. Image of BP3 _transpose (Romain decision 2026-07-17). Distinct from scaleshift (diatonic degrees) and transpose (real, name preserved).",
   scope(symbol, group, rule, flow, scene),
   transportGroup:transpo,
   rank:10,
   params(
+    // @description Number of chromatic keys (semitones) of shift on the 12-grid (may be negative; wraps at the octave).
     n(
       from:value,
       coerce:raw,
-      default:0,
-      description:"Nombre de cl\xE9s chromatiques (demi-tons) de d\xE9calage sur la grille 12 (peut \xEAtre n\xE9gatif ; wrap \xE0 l'octave)."
+      default:0
     )
   )
 )
 
+// @description Interval expansion/contraction around a pivot. factor=2 doubles, factor=-1 inverts, factor=0.5 contracts.
 control keyxpand(
   bp3:_keyxpand,
   args(pivot, factor),
   value(pivot:0, factor:1),
-  description:"Interval expansion/contraction around a pivot. factor=2 doubles, factor=-1 inverts, factor=0.5 contracts.",
   scope(symbol, group, rule, flow),
   transportGroup:transpo,
   rank:20,
   params(
+    // @description Pivot: note token resolved into grid steps by Kairos's token-step coercion (cries if unresolvable); stays fixed.
     pivotStep(
       from:pivot,
       coerce:token-step,
-      default:0,
-      description:"Pivot : token de note r\xE9solu en pas de grille par la coercition token-step de Kairos (crie si irr\xE9soluble) ; reste fixe."
+      default:0
     ),
+    // @description Scale factor of the distance to the pivot (1 = identity, 2 = doubled, 0.5 = folded; may be negative = mirror).
     factor(
       from:factor,
       coerce:raw,
-      default:1,
-      description:"Facteur d'\xE9chelle de l'\xE9cart au pivot (1 = identit\xE9, 2 = doubl\xE9, 0,5 = repli\xE9 ; peut \xEAtre n\xE9gatif = miroir)."
+      default:1
     )
   )
 )
-`, "fichier": "transpo.bpsl" }, { "nom": "tunings", "format": "bpsl", "texte": `types
-
-// @documented
-def tunings(resolvedBy:Kairos, resolves:tuning)
-
-tuning western_12TET(
-  description:"Standard Western equal temperament",
-  alphabet:western,
-  temperament:12TET,
-  degrees(0, 2, 4, 5, 7, 9, 11)
-)
-
-tuning western_pythagorean(
-  description:"Western in Pythagorean tuning \u2014 pure fifths",
-  alphabet:western,
-  temperament:pythagorean,
-  degrees(0, 2, 4, 5, 7, 9, 11)
-)
-
-tuning western_just(
-  description:"Western in 5-limit just intonation",
-  alphabet:western,
-  temperament:just_5limit,
-  degrees(0, 2, 4, 5, 7, 9, 11)
-)
-
-tuning western_meantone(
-  description:"Western in 1/4-comma meantone",
-  alphabet:western,
-  temperament:meantone_quarter,
-  degrees(0, 2, 4, 5, 7, 9, 11)
-)
-
-tuning sargam_12TET(
-  description:"Indian sargam in 12-TET (simplified, equal temperament)",
-  alphabet:sargam,
-  temperament:12TET,
-  degrees(0, 2, 4, 5, 7, 9, 11)
-)
-
-tuning bp3_indian_12TET(
-  description:"Convention de notes INDIAN du moteur BP3 natif, en 12-TET",
-  alphabet:bp3_indian,
-  temperament:12TET,
-  degrees(0, 2, 4, 5, 7, 9, 11)
-)
-
-tuning bp3_english_12TET(
-  description:"Convention de notes ENGLISH du moteur BP3 natif, en 12-TET",
-  alphabet:bp3_english,
-  temperament:12TET,
-  degrees(0, 2, 4, 5, 7, 9, 11)
-)
-
-tuning bp3_fr_12TET(
-  description:"Convention de notes FRENCH du moteur BP3 natif, en 12-TET",
-  alphabet:bp3_fr,
-  temperament:12TET,
-  degrees(0, 2, 4, 5, 7, 9, 11)
-)
-
-tuning sargam_22shruti(
-  description:"Indian sargam in 22-shruti system \u2014 full microtonal resolution",
-  alphabet:sargam,
-  temperament:22shruti,
-  degrees(0, 4, 8, 9, 13, 17, 21)
-)
-
-tuning solfege_12TET(
-  description:"Solf\xE8ge latin in 12-TET",
-  alphabet:solfege,
-  temperament:12TET,
-  degrees(0, 2, 4, 5, 7, 9, 11)
-)
-
-tuning arabic_24TET(
-  description:"Arabic maqam system \u2014 quarter-tone grid",
-  alphabet:arabic,
-  temperament:24TET,
-  degrees(0, 4, 8, 10, 14, 18, 22)
-)
-
-tuning turkish_53TET(
-  description:"Turkish makam \u2014 53-comma system",
-  alphabet:turkish,
-  temperament:53TET,
-  degrees(0, 4, 9, 13, 17, 22, 26, 31, 35, 39, 44, 48, 4, 9, 13, 17)
-)
-
-tuning gamelan_pelog(
-  description:"Javanese gamelan pelog \u2014 7-tone stretched octave",
-  alphabet:gamelan_pelog,
-  temperament:gamelan_pelog,
-  degrees(0, 1, 2, 3, 4, 5, 6)
-)
-
-tuning gamelan_slendro(
-  description:"Javanese gamelan slendro \u2014 5-tone near-equal, stretched octave",
-  alphabet:gamelan_slendro,
-  temperament:gamelan_slendro,
-  degrees(0, 1, 2, 3, 4)
-)
-
-tuning bohlen_pierce_just(
-  description:"Bohlen-Pierce just \u2014 13 tones in a tritave (3:1)",
-  alphabet:bohlen_pierce,
-  temperament:bohlen_pierce_just,
-  degrees(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
-)
-
-tuning bohlen_pierce_equal(
-  description:"Bohlen-Pierce equal \u2014 13 equal divisions of the tritave",
-  alphabet:bohlen_pierce,
-  temperament:bohlen_pierce_equal,
-  degrees(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
-)
-
-tuning shruti23_native(
-  description:"22-shruti nomm\xE9 BP3 \u2014 23 degr\xE9s sur le temp\xE9rament bp3_shruti23_native (table native -to.tryShruti verbatim, 729/512). Distinct de bp3_grama (Arnold).",
-  alphabet:shruti23,
-  temperament:bp3_shruti23_native,
-  degrees(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22)
-)
-
-tuning western_just_c(
-  description:"Western en intonation juste BP3, C-ancr\xE9 (tonique C4 = 261.63 Hz, table native -to.tryOneScale). Le 'j' de Cj/Aj/Gj = marqueur de degr\xE9, pars\xE9 C/A/G ; TOUTES les notes rendues par cette m\xEAme gamme juste (mod\xE8le Romain [428/429] : un tuning, pas d'alphabet parall\xE8le). Distinct de western_just (A440-ancr\xE9). Temp\xE9rament bp3_just_intonation = co\xEFncide avec just_5limit sur C/D/E/F/G/A (degr\xE9s 0,2,4,5,7,9).",
-  alphabet:western,
-  temperament:bp3_just_intonation,
-  degrees(0, 2, 4, 5, 7, 9, 11),
-  baseNote:C,
-  diapason:261.63
-)
-
-tuning shakuhachi_12TET(
-  description:"Shakuhachi 1.8 shaku \u2014 les cinq doigtes de base sur temperament egal",
-  alphabet:shakuhachi,
-  temperament:12TET,
-  degrees(0, 3, 5, 7, 10)
-)
-`, "fichier": "tunings.bpsl" }, { "nom": "types", "format": "bpsl", "texte": '// @documented\ndef types(resolves:types)\n\ndef scale(scope(scene))\nscale interval\nscale degree\ndegree directional\nscale composite\n\ndef sound(scope(scene))\n\ndef alphabet(scope(scene), octaves:western, sound terminals())\n\ndef temperament\ndef tuning(scope(scene))\ndef octaves(scope(scene))\ndef voice(scope(scene))\ndef eval(scope(scene))\ndef midi_default\n\ndef control\ndef addresskey\ndef enum\ndef flag\ndef symbol\n\ndef destination\ndestination audio(out:true, writable:true, params(gain:1))\ndestination midi(in:true, out:true, writable:true, params(ch:1))\ndestination osc(\n  in:true,\n  out:true,\n  writable:true,\n  params(host:"127.0.0.1", port:57120, addr:/kanopi)\n)\ndestination keyboard(in:true, writable:true)\ndestination dmx(out:true, writable:true, params(universe:0))\ndestination text(out:true, writable:false)\n\ndef actor(alphabet alphabet, tuning tuning, octaves octaves, destination out, eval eval)\n\ndef signal\nsignal pitch\nsignal phase\nsignal logic\n', "fichier": "types.bpsl" }, { "nom": "variation", "format": "bpsl", "texte": `types
-
-// @documented
-def variation(
-  resolves:variation,
-  resolvedBy:"Kairos",
-  name:variation,
-  description:"Modes de variation DISCRETS des param\xE8tres de jeu \u2014 fixe et paliers. Entre deux valeurs \xE9crites d'un m\xEAme param\xE8tre, le mode dit si la premi\xE8re TIENT jusqu'\xE0 la seconde (fixe) ou si elle GLISSE de note en note (paliers). Ces deux modes se r\xE9solvent \xE0 la note, donc avant qu'un son ne soit \xE9mis : ils appartiennent \xE0 Kairos. Le troisi\xE8me mode \u2014 continu \u2014 glisse PENDANT les notes, par messages interm\xE9diaires : il ne peut \xEAtre rendu que par celui qui \xE9met, et il vit donc dans la librairie de son param\xE8tre.",
-  version:0.1.0,
-  section:controls
-)
-
-control velfixed(
-  bp3:_velfixed,
-  description:"V\xE9locit\xE9 en mode FIXE \u2014 la valeur \xE9crite tient jusqu'\xE0 la suivante, saut net.",
-  scope(symbol, group, rule, flow)
-)
-
-control velstep(
-  bp3:_velstep,
-  description:"V\xE9locit\xE9 PAR PALIERS \u2014 la valeur glisse de note en note entre deux valeurs \xE9crites.",
-  scope(symbol, group, rule, flow)
-)
-
-control modfixed(
-  bp3:_modfixed,
-  description:"Modulation en mode FIXE \u2014 la valeur \xE9crite tient jusqu'\xE0 la suivante, saut net.",
-  scope(symbol, group, rule, flow)
-)
-
-control modstep(
-  bp3:_modstep,
-  description:"Modulation PAR PALIERS \u2014 la valeur glisse de note en note entre deux valeurs \xE9crites.",
-  scope(symbol, group, rule, flow)
-)
-
-control pitchfixed(
-  bp3:_pitchfixed,
-  description:"Pitchbend en mode FIXE \u2014 la valeur \xE9crite tient jusqu'\xE0 la suivante, saut net.",
-  scope(symbol, group, rule, flow)
-)
-
-control pitchstep(
-  bp3:_pitchstep,
-  description:"Pitchbend PAR PALIERS \u2014 la valeur glisse de note en note entre deux valeurs \xE9crites.",
-  scope(symbol, group, rule, flow)
-)
-
-control pressfixed(
-  bp3:_pressfixed,
-  description:"Pression en mode FIXE \u2014 la valeur \xE9crite tient jusqu'\xE0 la suivante, saut net.",
-  scope(symbol, group, rule, flow)
-)
-
-control presstep(
-  bp3:_presstep,
-  description:"Pression PAR PALIERS \u2014 la valeur glisse de note en note entre deux valeurs \xE9crites.",
-  scope(symbol, group, rule, flow)
-)
-
-control volumefixed(
-  bp3:_volumefixed,
-  description:"Volume en mode FIXE \u2014 la valeur \xE9crite tient jusqu'\xE0 la suivante, saut net.",
-  scope(symbol, group, rule, flow)
-)
-
-control volumestep(
-  bp3:_volumestep,
-  description:"Volume PAR PALIERS \u2014 la valeur glisse de note en note entre deux valeurs \xE9crites.",
-  scope(symbol, group, rule, flow)
-)
-
-control articulfixed(
-  bp3:_articulfixed,
-  description:"Articulation en mode FIXE \u2014 la valeur \xE9crite tient jusqu'\xE0 la suivante, saut net. L'articulation se pose par legato et staccato.",
-  scope(symbol, group, rule, flow)
-)
-
-control articulstep(
-  bp3:_articulstep,
-  description:"Articulation PAR PALIERS \u2014 la valeur glisse de note en note entre deux valeurs \xE9crites.",
-  scope(symbol, group, rule, flow)
-)
-
-control panfixed(
-  bp3:_panfixed,
-  description:"Panoramique en mode FIXE \u2014 la valeur \xE9crite tient jusqu'\xE0 la suivante, saut net.",
-  scope(symbol, group, rule, flow)
-)
-
-control panstep(
-  bp3:_panstep,
-  description:"Panoramique PAR PALIERS \u2014 la valeur glisse de note en note entre deux valeurs \xE9crites.",
-  scope(symbol, group, rule, flow)
-)
-
-control mapfixed(
-  bp3:_mapfixed,
-  description:"Carte de touches en mode FIXE \u2014 la carte \xE9crite tient jusqu'\xE0 la suivante, saut net.",
-  scope(symbol, group, rule, flow)
-)
-
-control mapstep(
-  bp3:_mapstep,
-  description:"Carte de touches PAR PALIERS \u2014 la carte glisse de note en note entre deux cartes \xE9crites.",
-  scope(symbol, group, rule, flow)
-)
-
-control transposefixed(
-  bp3:_transposefixed,
-  description:"Transposition en mode FIXE \u2014 la valeur \xE9crite tient jusqu'\xE0 la suivante, saut net.",
-  scope(symbol, group, rule, flow)
-)
-
-control transposestep(
-  bp3:_transposestep,
-  description:"Transposition PAR PALIERS \u2014 la valeur glisse de note en note entre deux valeurs \xE9crites.",
-  scope(symbol, group, rule, flow)
-)
-`, "fichier": "variation.bpsl" }, { "nom": "voices", "format": "bpsl", "texte": 'types\n\n// @documented\ndef voices(resolvedBy:Kairos, name:voices, resolves:voice)\n\nvoice wobble(\n  audio:"`js: (t, dur, env) => (2*((t*env.pitch)%1)-1) * (0.55+0.45*Math.sin(2*Math.PI*5.5*t)) * Math.max(0,1-t/dur)`",\n  section:objects\n)\nvoice fatbass(\n  audio:"`js: (t, dur, env) => ((2*((t*env.pitch)%1)-1) + (2*((t*env.pitch*1.01)%1)-1)) * 0.4 * Math.max(0,1-t/dur)`",\n  for(sub37(device(preset:bass-init, glide:0.2, osc1-wave:saw))),\n  section:objects\n)\nvoice bayan_open(\n  audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; const b = 2*(h-Math.floor(h))-1; return (Math.sin(2*Math.PI*80*t)*0.8 + b*0.2) * Math.exp(-t/0.35); }`",\n  section:objects\n)\nvoice bayan_muted(\n  audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; const b = 2*(h-Math.floor(h))-1; return (Math.sin(2*Math.PI*120*t)*0.5 + b*0.5) * Math.exp(-t/0.08); }`",\n  section:objects\n)\nvoice dayan_ring(\n  audio:"`js: (t) => (Math.sin(2*Math.PI*320*t) + Math.sin(2*Math.PI*480*t)) * 0.5 * Math.exp(-t/0.4)`",\n  section:objects\n)\nvoice dayan_tap(\n  audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; return (2*(h-Math.floor(h))-1) * Math.exp(-t/0.06); }`",\n  section:objects\n)\nvoice dayan_dry(\n  audio:"`js: (t) => (Math.sin(2*Math.PI*494*t) + Math.sin(2*Math.PI*587*t)) * 0.5 * Math.exp(-t/0.06)`",\n  section:objects\n)\nvoice dayan_open(\n  audio:"`js: (t) => (Math.sin(2*Math.PI*392*t) + Math.sin(2*Math.PI*494*t) + Math.sin(2*Math.PI*523*t) + Math.sin(2*Math.PI*587*t)) * 0.25 * Math.exp(-t/0.22)`",\n  section:objects\n)\nvoice dummy_csound_a(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_b(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_c(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_d(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_e(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_f(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_midiobject(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\n', "fichier": "voices.bpsl" }];
+`, "fichier": "transpo.bpsl" }, { "nom": "tunings", "format": "bpsl", "texte": "types\n\n// @documented\ndef tunings(resolvedBy:Kairos, resolves:tuning)\n\n// @description Standard Western equal temperament\ntuning western_12TET(\n  alphabet:western,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Western in Pythagorean tuning \u2014 pure fifths\ntuning western_pythagorean(\n  alphabet:western,\n  temperament:pythagorean,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Western in 5-limit just intonation\ntuning western_just(\n  alphabet:western,\n  temperament:just_5limit,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Western in 1/4-comma meantone\ntuning western_meantone(\n  alphabet:western,\n  temperament:meantone_quarter,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Indian sargam in 12-TET (simplified, equal temperament)\ntuning sargam_12TET(\n  alphabet:sargam,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description INDIAN note convention of the native BP3 engine, in 12-TET\ntuning bp3_indian_12TET(\n  alphabet:bp3_indian,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description ENGLISH note convention of the native BP3 engine, in 12-TET\ntuning bp3_english_12TET(\n  alphabet:bp3_english,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description FRENCH note convention of the native BP3 engine, in 12-TET\ntuning bp3_fr_12TET(\n  alphabet:bp3_fr,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Indian sargam in 22-shruti system \u2014 full microtonal resolution\ntuning sargam_22shruti(\n  alphabet:sargam,\n  temperament:22shruti,\n  degrees(0, 4, 8, 9, 13, 17, 21)\n)\n\n// @description Latin solf\xE8ge in 12-TET\ntuning solfege_12TET(\n  alphabet:solfege,\n  temperament:12TET,\n  degrees(0, 2, 4, 5, 7, 9, 11)\n)\n\n// @description Arabic maqam system \u2014 quarter-tone grid\ntuning arabic_24TET(\n  alphabet:arabic,\n  temperament:24TET,\n  degrees(0, 4, 8, 10, 14, 18, 22)\n)\n\n// @description Turkish makam \u2014 53-comma system\ntuning turkish_53TET(\n  alphabet:turkish,\n  temperament:53TET,\n  degrees(0, 4, 9, 13, 17, 22, 26, 31, 35, 39, 44, 48, 4, 9, 13, 17)\n)\n\n// @description Javanese gamelan pelog \u2014 7-tone stretched octave\ntuning gamelan_pelog(\n  alphabet:gamelan_pelog,\n  temperament:gamelan_pelog,\n  degrees(0, 1, 2, 3, 4, 5, 6)\n)\n\n// @description Javanese gamelan slendro \u2014 5-tone near-equal, stretched octave\ntuning gamelan_slendro(\n  alphabet:gamelan_slendro,\n  temperament:gamelan_slendro,\n  degrees(0, 1, 2, 3, 4)\n)\n\n// @description Bohlen-Pierce just \u2014 13 tones in a tritave (3:1)\ntuning bohlen_pierce_just(\n  alphabet:bohlen_pierce,\n  temperament:bohlen_pierce_just,\n  degrees(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)\n)\n\n// @description Bohlen-Pierce equal \u2014 13 equal divisions of the tritave\ntuning bohlen_pierce_equal(\n  alphabet:bohlen_pierce,\n  temperament:bohlen_pierce_equal,\n  degrees(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)\n)\n\n// @description 22-shruti as named by BP3 \u2014 23 degrees on the bp3_shruti23_native temperament (native table -to.tryShruti verbatim,\n// 729/512). Distinct from bp3_grama (Arnold).\ntuning shruti23_native(\n  alphabet:shruti23,\n  temperament:bp3_shruti23_native,\n  degrees(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22)\n)\n\n// @description Western in BP3 just intonation, C-anchored (tonic C4 = 261.63 Hz, native table -to.tryOneScale). The 'j' in Cj/Aj/Gj =\n// degree marker, parsed C/A/G; ALL notes rendered by this same just scale (Romain's model [428/429]: one tuning, no parallel alphabet).\n// Distinct from western_just (A440-anchored). Temperament bp3_just_intonation = coincides with just_5limit on C/D/E/F/G/A (degrees\n// 0,2,4,5,7,9).\ntuning western_just_c(\n  alphabet:western,\n  temperament:bp3_just_intonation,\n  degrees(0, 2, 4, 5, 7, 9, 11),\n  baseNote:C,\n  diapason:261.63\n)\n\n// @description Shakuhachi 1.8 shaku \u2014 the five base fingerings on equal temperament\ntuning shakuhachi_12TET(\n  alphabet:shakuhachi,\n  temperament:12TET,\n  degrees(0, 3, 5, 7, 10)\n)\n", "fichier": "tunings.bpsl" }, { "nom": "types", "format": "bpsl", "texte": '// @documented\ndef types(resolves:types)\n\ndef scale(scope(scene))\nscale interval\nscale degree\ndegree directional\nscale composite\n\ndef sound(scope(scene))\n\ndef alphabet(scope(scene), octaves:western, sound terminals())\n\ndef temperament\ndef tuning(scope(scene))\ndef octaves(scope(scene))\ndef voice(scope(scene))\ndef eval(scope(scene))\ndef midi_default\n\ndef control\ndef addresskey\ndef enum\ndef flag\ndef symbol\n\ndef destination\ndestination audio(out:true, writable:true, params(gain:1))\ndestination midi(in:true, out:true, writable:true, params(ch:1))\ndestination osc(\n  in:true,\n  out:true,\n  writable:true,\n  params(host:"127.0.0.1", port:57120, addr:/kanopi)\n)\ndestination keyboard(in:true, writable:true)\ndestination dmx(out:true, writable:true, params(universe:0))\ndestination text(out:true, writable:false)\n\ndef actor(alphabet alphabet, tuning tuning, octaves octaves, destination out, eval eval)\n\ndef signal\nsignal pitch\nsignal phase\nsignal logic\n', "fichier": "types.bpsl" }, { "nom": "variation", "format": "bpsl", "texte": 'types\n\n// @documented\n// @description DISCRETE variation modes of playing parameters \u2014 fixed and steps. Between two written values of the same parameter, the mode\n// says whether the first HOLDS until the second (fixed) or GLIDES from note to note (steps). These two modes resolve at the note, hence\n// before any sound is emitted: they belong to Kairos. The third mode \u2014 continuous \u2014 glides DURING notes, through intermediate messages: it\n// can only be rendered by whoever emits, and it therefore lives in the library of its parameter.\ndef variation(\n  resolves:variation,\n  resolvedBy:"Kairos",\n  name:variation,\n  version:0.1.0,\n  section:controls\n)\n\n// @description Velocity in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol velfixed(\n  bp3:_velfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Velocity BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol velstep(\n  bp3:_velstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Modulation in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol modfixed(\n  bp3:_modfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Modulation BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol modstep(\n  bp3:_modstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Pitchbend in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol pitchfixed(\n  bp3:_pitchfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Pitchbend BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol pitchstep(\n  bp3:_pitchstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Pressure in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol pressfixed(\n  bp3:_pressfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Pressure BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol presstep(\n  bp3:_presstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Volume in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol volumefixed(\n  bp3:_volumefixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Volume BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol volumestep(\n  bp3:_volumestep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Articulation in FIXED mode \u2014 the written value holds until the next one, clean jump. Articulation is set by legato and\n// staccato.\ncontrol articulfixed(\n  bp3:_articulfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Articulation BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol articulstep(\n  bp3:_articulstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Panning in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol panfixed(\n  bp3:_panfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Panning BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol panstep(\n  bp3:_panstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Key map in FIXED mode \u2014 the written map holds until the next one, clean jump.\ncontrol mapfixed(\n  bp3:_mapfixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Key map BY STEPS \u2014 the map glides from note to note between two written maps.\ncontrol mapstep(\n  bp3:_mapstep,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Transposition in FIXED mode \u2014 the written value holds until the next one, clean jump.\ncontrol transposefixed(\n  bp3:_transposefixed,\n  scope(symbol, group, rule, flow)\n)\n\n// @description Transposition BY STEPS \u2014 the value glides from note to note between two written values.\ncontrol transposestep(\n  bp3:_transposestep,\n  scope(symbol, group, rule, flow)\n)\n', "fichier": "variation.bpsl" }, { "nom": "voices", "format": "bpsl", "texte": 'types\n\n// @documented\ndef voices(resolvedBy:Kairos, name:voices, resolves:voice)\n\nvoice wobble(\n  audio:"`js: (t, dur, env) => (2*((t*env.pitch)%1)-1) * (0.55+0.45*Math.sin(2*Math.PI*5.5*t)) * Math.max(0,1-t/dur)`",\n  section:objects\n)\nvoice fatbass(\n  audio:"`js: (t, dur, env) => ((2*((t*env.pitch)%1)-1) + (2*((t*env.pitch*1.01)%1)-1)) * 0.4 * Math.max(0,1-t/dur)`",\n  for(sub37(device(preset:bass-init, glide:0.2, osc1-wave:saw))),\n  section:objects\n)\nvoice bayan_open(\n  audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; const b = 2*(h-Math.floor(h))-1; return (Math.sin(2*Math.PI*80*t)*0.8 + b*0.2) * Math.exp(-t/0.35); }`",\n  section:objects\n)\nvoice bayan_muted(\n  audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; const b = 2*(h-Math.floor(h))-1; return (Math.sin(2*Math.PI*120*t)*0.5 + b*0.5) * Math.exp(-t/0.08); }`",\n  section:objects\n)\nvoice dayan_ring(\n  audio:"`js: (t) => (Math.sin(2*Math.PI*320*t) + Math.sin(2*Math.PI*480*t)) * 0.5 * Math.exp(-t/0.4)`",\n  section:objects\n)\nvoice dayan_tap(\n  audio:"`js: (t) => { const h = Math.sin(t*99991)*43758.5453; return (2*(h-Math.floor(h))-1) * Math.exp(-t/0.06); }`",\n  section:objects\n)\nvoice dayan_dry(\n  audio:"`js: (t) => (Math.sin(2*Math.PI*494*t) + Math.sin(2*Math.PI*587*t)) * 0.5 * Math.exp(-t/0.06)`",\n  section:objects\n)\nvoice dayan_open(\n  audio:"`js: (t) => (Math.sin(2*Math.PI*392*t) + Math.sin(2*Math.PI*494*t) + Math.sin(2*Math.PI*523*t) + Math.sin(2*Math.PI*587*t)) * 0.25 * Math.exp(-t/0.22)`",\n  section:objects\n)\nvoice dummy_csound_a(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_b(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_c(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_d(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_e(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_f(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\nvoice dummy_csound_midiobject(\n  audio:"`js: (t) => Math.sin(2*Math.PI*220*t) * Math.exp(-t/0.2)`",\n  section:objects\n)\n', "fichier": "voices.bpsl" }];
 function sourcesDeLibrairie() {
   return SOURCES.map((s) => ({ ...s }));
 }
