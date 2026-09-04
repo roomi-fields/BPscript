@@ -26,6 +26,7 @@
     "garde:construire": "node scripts/construire.mjs --verifier && node scripts/deriver-files.mjs --verifier"
   },
   "devDependencies": {
+    "@codemirror/language": "^6.12.4",
     "@lezer/generator": "^1.8.0",
     "@lezer/highlight": "^1.2.3",
     "@lezer/lr": "^1.4.8",
