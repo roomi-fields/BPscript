@@ -28,11 +28,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { FICHIER_CORRESPONDANCE } from './corpus.mjs';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
-/** La table vit chez Kanopi, à côté du corpus qu'elle décrit. */
-export const FICHIER_TABLE = path.resolve(ICI, '..', '..', 'kanopi', 'packages', 'library',
-  'test-assets', 'bp3', 'correspondance.json');
+// La table vit chez Kanopi, à côté du corpus qu'elle décrit — son adresse est DÉCLARÉE là-bas,
+// jamais recomposée ici : un chemin recopié rend zéro en silence le jour où la racine bouge.
+export const FICHIER_TABLE = FICHIER_CORRESPONDANCE;
 
 let _cache = null;
 function charger() {

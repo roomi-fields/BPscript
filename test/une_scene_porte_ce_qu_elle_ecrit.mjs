@@ -20,6 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compileToBPxAST } from '../src/transpiler/index.js';
+import { DIR_SAMPLES } from './corpus.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let passe = 0;
@@ -28,7 +29,7 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 // LES DEUX DOMICILES, comme le garde de canonicité : mes démos, et les scènes de langage chez
 // kanopi. Un écart qui n'existerait que chez le voisin doit rougir ici aussi.
-const RACINES = [path.join(ROOT, 'public'), path.join(ROOT, '..', '.publie', 'kanopi', 'packages', 'library', 'scenes', 'samples')];
+const RACINES = [path.join(ROOT, 'public'), DIR_SAMPLES];
 
 const scenes = [];
 for (const r of RACINES) {

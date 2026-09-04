@@ -17,7 +17,7 @@
  *
  * Usage :  node test/corpus_unique.mjs
  */
-import { readdirSync, statSync, existsSync } from 'node:fs';
+import { readdirSync, statSync, existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { DIR_BPS, DIR_GR } from './corpus.mjs';
 
@@ -78,5 +78,63 @@ if (copies.length) {
   process.exit(1);
 }
 
+/**
+ * ── ET AUCUN FICHIER DE CODE NE RECOMPOSE LE CHEMIN DU CORPUS ────────────────────────────────────
+ *
+ * ⛔ CE VOLET EST UNE DETTE PAYÉE, ET LE GARDE AU-DESSUS L'AVAIT LAISSÉE PASSER DEUX FOIS. Il
+ * interdisait de copier un FICHIER du corpus ; il ne disait rien du CHEMIN. Or `corpus.mjs` se
+ * déclare « le seul endroit qui le sait » et sa propre règle est écrite : « ne recompose JAMAIS le
+ * chemin à la main dans un test ; douze chemins recopiés, c'est douze occasions de diverger ».
+ *
+ * ⇒ MESURÉ LE 2026-09-04, sous enveloppe : DEUX gardes le recomposaient, dont un en chemin ABSOLU.
+ *   Ils ont rendu ZÉRO scène en silence quand la racine a changé — un l'a dit, l'autre a compté
+ *   zéro et conclu. Aucun des deux n'était visible avant que la frontière existe.
+ *
+ * Un COMMENTAIRE peut nommer le chemin : c'est de la documentation, pas une lecture. Seule une
+ * ligne de code compte.
+ */
+const CODE = /\.(m?js|cjs|ts)$/;
+const fichiersDeCode = (dir, acc = []) => {
+  for (const e of readdirSync(dir)) {
+    if (e === 'node_modules' || e === '.git') continue;
+    const p = path.join(dir, e);
+    let st; try { st = statSync(p); } catch { continue; }   // un lien mort ne fait pas tomber le balayage
+    if (st.isDirectory()) fichiersDeCode(p, acc);
+    else if (CODE.test(e)) acc.push(p);
+  }
+  return acc;
+};
+const RACINE = path.resolve(ICI, '..');
+// ⚠️ DEUX FICHIERS SONT HORS D'ATTEINTE, ET POUR DEUX RAISONS DIFFÉRENTES : `corpus.mjs` PORTE la
+// déclaration — c'est son travail — et ce garde-ci porte le MOTIF qui la traque, donc il s'accuse
+// lui-même. Un juge ne peut pas être son propre accusé quand l'accusation est écrite dans sa main.
+const DECLARATION = path.join(ICI, 'corpus.mjs');
+const MOI_MEME = path.join(ICI, 'corpus_unique.mjs');
+const recomposent = [];
+let examines = 0;
+for (const f of fichiersDeCode(RACINE)) {
+  if (f === DECLARATION || f === MOI_MEME) continue;
+  examines++;
+  const lignes = readFileSync(f, 'utf8').split('\n');
+  lignes.forEach((l, i) => {
+    if (/^\s*(\/\/|\*|\/\*)/.test(l)) return;                 // un commentaire documente, il ne lit pas
+    if (/kanopi['"/\s,)\]]*[^\n]*packages['"/\s,)\]]*[^\n]*library/.test(l)) {
+      recomposent.push(`${path.relative(RACINE, f)}:${i + 1}  ${l.trim().slice(0, 90)}`);
+    }
+  });
+}
+if (examines < 100) {
+  console.log(`  FAIL  garde CREUX : ${examines} fichier(s) de code examiné(s) — un périmètre qui fond ne prouve rien`);
+  process.exit(1);
+}
+if (recomposent.length) {
+  for (const r of recomposent) console.log(`  FAIL  ${r}`);
+  console.log(`\n  ${recomposent.length} chemin(s) du corpus recomposé(s) à la main. La déclaration unique est `
+            + `test/corpus.mjs — importer DIR_BPS, DIR_GR, bpsPath ou toutesLesScenes. Un chemin recopié `
+            + `rend ZÉRO en silence le jour où la racine bouge, et un garde qui compte zéro conclut.`);
+  process.exit(1);
+}
+
 console.log(`  OK   aucune scène ni grammaire du corpus n'est hébergée sous test/ — 1 assertion, `
           + `${NOMS_CORPUS.size} nom(s) du corpus confrontés à l'arborescence de test/`);
+console.log(`  OK   aucun des ${examines} fichier(s) de code ne recompose le chemin du corpus — 2 assertions`);

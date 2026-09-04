@@ -25,6 +25,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { compileToBPxAST } from '../src/transpiler/index.js';
+import { DIR_SAMPLES } from './corpus.mjs';
 
 let echecs = 0;
 const ok = (cond, quoi) => { if (!cond) { echecs++; console.log('  ÉCHEC ' + quoi); } };
@@ -39,7 +40,7 @@ const ok = (cond, quoi) => { if (!cond) { echecs++; console.log('  ÉCHEC ' + qu
 // examiner », fermée neuf fois ici.
 const DOMICILES = [
   { racine: 'public', socle: 50, quoi: 'les démos de ce dépôt' },
-  { racine: '../.publie/kanopi/packages/library/scenes/samples', socle: 30, quoi: 'les scènes de langage, chez Kanopi' },
+  { racine: DIR_SAMPLES, absolu: true, socle: 30, quoi: 'les scènes de langage, chez Kanopi' },
 ];
 
 const walk = (d, acc = []) => {

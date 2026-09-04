@@ -44,6 +44,20 @@ export const LIBRARY = process.env.KANOPI_LIBRARY
   ? path.resolve(process.env.KANOPI_LIBRARY)
   : path.resolve(ICI, '..', '..', '.publie', 'kanopi', 'packages', 'library');
 
+/**
+ * ⛔ TOUT CE QUI VIT DANS LA BIBLIOTHÈQUE SE DÉCLARE ICI, et pas seulement les deux répertoires des
+ * 113. Mesuré le 2026-09-04 : quatre fichiers recomposaient un chemin vers elle à la main — les
+ * scènes d'échantillon et la table de correspondance n'avaient pas d'adresse déclarée, donc chacun
+ * s'en écrivait une. Le garde `corpus_unique` les refuse désormais, et il ne peut le faire que si
+ * la déclaration porte ce dont les gardes ont besoin.
+ */
+
+/** Les scènes d'ÉCHANTILLON — celles qui enseignent le langage, distinctes des 113. */
+export const DIR_SAMPLES = path.join(LIBRARY, 'scenes', 'samples');
+
+/** La table de correspondance BP3, chez Kanopi, à côté du corpus qu'elle décrit. */
+export const FICHIER_CORRESPONDANCE = path.join(LIBRARY, 'test-assets', 'bp3', 'correspondance.json');
+
 /** Les deux répertoires fixés par Romain (décision du 2026-07-20). */
 export const DIR_GR = path.join(LIBRARY, 'scenes', 'BP3-tests');
 export const DIR_BPS = path.join(LIBRARY, 'scenes', 'BPScript-tests');

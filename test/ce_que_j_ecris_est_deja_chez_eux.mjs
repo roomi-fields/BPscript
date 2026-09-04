@@ -29,7 +29,7 @@
  *    « clame » que Kairos a mesurée chez lui le même jour. Le mécanisme qui agirait au bon moment
  *    reste à trouver.
  */
-import { readdirSync, existsSync, lstatSync, realpathSync } from 'node:fs';
+import { readdirSync, existsSync, lstatSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import '../src/transpiler/index.js';
 import { leRegistre } from '../src/transpiler/libs.js';
@@ -38,7 +38,49 @@ import path from 'node:path';
 
 const ICI = path.dirname(new URL(import.meta.url).pathname);
 const MOI = path.resolve(ICI, '..');
-const ATELIER = path.resolve(MOI, '..');
+/**
+ * ⛔ CE QUE JE PEUX LIRE D'UN VOISIN EST SON ÉTAT PUBLIÉ — arbitrage de l'architecte, 2026-09-04,
+ * après l'épreuve d'enveloppe. Son arbre de travail n'existe plus pour moi.
+ *
+ * ⚠️ ET LA QUESTION A CHANGÉ D'OBJET, PAS SEULEMENT DE CHEMIN. Ce garde cherchait qui me lit par les
+ * LIENS SYMBOLIQUES posés dans les arbres des voisins ; depuis le cloisonnement, un tel lien est mort
+ * PAR CONSTRUCTION. Son rouge ne disait pas « je ne sais plus mesurer », il disait « l'objet a
+ * disparu ». La question qui a un sens aujourd'hui est « qui lit mon état PUBLIÉ ».
+ *
+ * ⇒ J'AVAIS D'ABORD POINTÉ L'ATELIER SUR `.publie` EN GARDANT LA QUESTION DES LIENS, et je l'ai
+ *   ANNULÉ : le garde serait devenu vert en mesurant autre chose — un lecteur ne se déclare pas par
+ *   une archive extraite. Ce qui manquait n'était pas un autre atelier, c'était l'autre question.
+ */
+const ATELIER = path.resolve(MOI, '..', '.publie');
+
+/**
+ * LE RELEVÉ DE LA TOUR — l'autorité sur QUI me lit, et le seul instrument qui voie tous les dépôts.
+ *
+ * Le hub est atteignable depuis mon cloisonnement : c'est un APPEL, jamais une copie. Il rend, par
+ * dépôt, un compte de fichiers et le RÉGIME par lequel il m'atteint — son arbre ou son état publié.
+ *
+ * ⚠️ C'EST UN PLANCHER, ET IL LE DIT LUI-MÊME : la dérivation lit les fichiers SUIVIS, donc un
+ * fragment recopié à la main dans un fichier non publié lui échappe. Je ne conclus jamais « personne
+ * ne lit » sur ce compte, seulement « au moins ceux-ci ».
+ */
+function releveDeLaTour() {
+  const table = new Map();
+  const sortie = execFileSync('node', [path.join(ATELIER, '..', 'hub', 'tour.cjs'), 'lecteurs', 'bpscript'],
+    { encoding: 'utf-8' });
+  for (const ligne of sortie.split('\n')) {
+    const m = /^\s{2}([A-Za-z0-9_-]+)\s+(\d+) fichier\(s\)\s+\[(publié|arbre)\]/.exec(ligne);
+    if (m) table.set(m[1].toLowerCase(), { compte: Number(m[2]), regime: m[3] });
+  }
+  return table;
+}
+const RELEVE = releveDeLaTour();
+
+/** Le dossier d'un voisin dans l'espace publié — sa casse y est la sienne, pas la mienne. */
+const dossierPublie = (depot) => {
+  const d = readdirSync(ATELIER, { withFileTypes: true })
+    .find((e) => e.isDirectory() && e.name.toLowerCase() === depot.toLowerCase());
+  return d ? path.join(ATELIER, d.name) : null;
+};
 
 /**
  * LES CONSOMMATEURS CONNUS, MESURÉS LE 2026-07-30. Le nombre de fichiers est un ORDRE DE GRANDEUR
@@ -231,15 +273,15 @@ const MOTIFS = [
 ];
 
 function lecteurs(depot) {
-  const racine = path.join(ATELIER, depot);
-  if (!existsSync(racine)) return null;
+  const racine = dossierPublie(depot);
+  if (!racine) return null;
   return MOTIFS.reduce((t, m) => t + comptePour(racine, m.regex), 0);
 }
 
 /** Le détail par régime — ce qui dit QUAND prévenir, pas seulement QUI. */
 function regimes(depot) {
-  const racine = path.join(ATELIER, depot);
-  if (!existsSync(racine)) return {};
+  const racine = dossierPublie(depot);
+  if (!racine) return {};
   return Object.fromEntries(MOTIFS.map((m) => [m.nom, comptePour(racine, m.regex)]));
 }
 
@@ -261,25 +303,14 @@ function comptePour(racine, motif) {
   } catch { return 0; }
 }
 
-/** Le dépôt pointe-t-il vers mon arbre par un lien symbolique ? */
-function lienVersMoi(depot) {
-  const racine = path.join(ATELIER, depot);
-  if (!existsSync(racine)) return false;
-  try {
-    const sortie = execFileSync('bash', ['-c',
-      `find ${JSON.stringify(racine)} -maxdepth 8 -type l -not -path '*/.git/*' `
-      + "-not -path '*/.claude/worktrees/*' 2>/dev/null | head -400",
-    ], { encoding: 'utf-8' });
-    for (const l of sortie.split('\n').filter(Boolean)) {
-      try { if (realpathSync(l) === MOI) return true; } catch { /* lien mort */ }
-    }
-  } catch { /* rien */ }
-  return false;
-}
+// ⛔ `lienVersMoi` A ÉTÉ RETIRÉE ICI, ET C'EST LE RETRAIT QUI EST LA RÉPARATION. Elle cherchait un
+// lien symbolique vers mon arbre dans l'arbre d'un voisin : les deux termes ont disparu du monde
+// mesurable. Le régime — sa frappe m'atteint-elle, ou seulement ma publication ? — se lit désormais
+// dans le relevé de la tour, qui le tient pour tous.
 
-const presents = readdirSync(ATELIER, { withFileTypes: true })
-  .filter((e) => e.isDirectory() && existsSync(path.join(ATELIER, e.name, '.git')))
-  .map((e) => e.name);
+// ⛔ ET LA LISTE DES DÉPÔTS NE SE DÉRIVE PLUS D'UN `.git` SUR DISQUE : un dossier publié est une
+// archive extraite, il n'en porte pas. Elle vient du relevé.
+const presents = [...RELEVE.keys()];
 
 // ── SOCLE : un garde qui n'examine rien ne prouve rien ────────────────────────
 ok(presents.length > 1, `SOCLE — l'atelier doit contenir plusieurs dépôts (vu : ${presents.length})`);
@@ -288,17 +319,18 @@ ok(existsSync(MOI), 'SOCLE — ce dépôt existe');
 // ── CHAQUE CONSOMMATEUR DÉCLARÉ EN EST TOUJOURS UN ────────────────────────────
 console.log('[surface partagée] ce que j\'écris part chez :');
 for (const c of CONSOMMATEURS) {
-  if (!presents.includes(c.depot)) {
+  if (!presents.includes(c.depot.toLowerCase())) {
     console.log(`   ${c.depot.padEnd(14)} ABSENT de cette machine — non mesurable ici`);
     continue;
   }
   const n = lecteurs(c.depot);
-  const lien = lienVersMoi(c.depot);
+  const vuParLaTour = RELEVE.get(c.depot.toLowerCase());
   const r = regimes(c.depot);
   const detail = Object.entries(r).filter(([, v]) => v > 0).map(([k, v]) => `${v} ${k}`).join(', ');
-  console.log(`   ${c.depot.padEnd(14)} ${String(n).padStart(3)} fichier(s)`
-    + `${detail ? `  (${detail})` : ''}${lien ? '  + LIEN DIRECT vers mon arbre de travail' : ''}`);
-  ok(n > 0 || lien,
+  console.log(`   ${c.depot.padEnd(14)} ${String(n).padStart(3)} fichier(s) publié(s)`
+    + `${detail ? `  (${detail})` : ''}`
+    + `${vuParLaTour ? `  — la tour en compte ${vuParLaTour.compte}, régime ${vuParLaTour.regime}` : ''}`);
+  ok(n > 0 || (vuParLaTour && vuParLaTour.compte > 0),
     `${c.depot} est déclaré consommateur mais ne lit plus rien — AVANT DE LE RETIRER, vérifier que `
     + 'ce ne sont pas MES MOTIFS qui sont périmés : un voisin qui change de régime d\'accès (import '
     + 'par chemin → lecture au commit) disparaît de ce compte sans perdre une seule lecture. '
@@ -315,14 +347,21 @@ for (const c of CONSOMMATEURS) {
   // qu'aucun de mes gestes ne change — et c'était muet. Posé le 2026-09-04, le jour où kanopi a
   // bougé dans le sens inoffensif ; le sens dangereux ne s'est encore jamais produit, ce qui est
   // exactement la raison de l'écrire maintenant.
-  ok(lien === Boolean(c.lienDirect),
-    `${c.depot} : le régime de lien DÉCLARÉ (${c.lienDirect ? 'lié à mon arbre' : 'non lié'}) ne `
-    + `correspond plus au régime MESURÉ (${lien ? 'lié à mon arbre' : 'non lié'}). `
-    + (lien
-      ? 'UN LIEN EST APPARU : mes fichiers NON COMMITÉS sont désormais chez lui, mon préavis se '
-        + 'donne AVANT la frappe et plus avant la publication. Déclarer `lienDirect: true`, daté.'
-      : 'LE LIEN A DISPARU : mes fichiers non commités cessent d\'être chez lui, il ne me lit plus '
-        + 'qu\'à ma publication. Déclarer `lienDirect: false`, daté, avec la cible qu\'il vise.'));
+  // ⛔ LE RÉGIME SE COMPARE DANS LES DEUX SENS, et c'est le second qui protège — la règle est celle
+  // du volet des liens qu'il remplace. « Publié ⇒ arbre » fait passer mon exposition de ma
+  // PUBLICATION à ma FRAPPE sans qu'aucun de mes gestes ne change ; « arbre ⇒ publié » l'allège,
+  // donc il ne rougirait jamais tout seul. Les deux sens sont écrits.
+  // ⚠️ ET LA SOURCE N'EST PLUS MOI : c'est la tour, seul instrument qui voie tous les dépôts depuis
+  // le cloisonnement. Je ne peux plus mesurer le régime d'un voisin depuis chez moi.
+  const regimeDeclare = c.lienDirect ? 'arbre' : 'publié';
+  ok(!vuParLaTour || vuParLaTour.regime === regimeDeclare,
+    `${c.depot} : le régime DÉCLARÉ (${regimeDeclare}) ne correspond plus à celui que la TOUR mesure `
+    + `(${vuParLaTour && vuParLaTour.regime}). `
+    + (vuParLaTour && vuParLaTour.regime === 'arbre'
+      ? 'IL LIT MON ARBRE : mes fichiers NON COMMITÉS sont chez lui, mon préavis se donne AVANT la '
+        + 'frappe et plus avant la publication. Déclarer `lienDirect: true`, daté.'
+      : 'IL NE LIT QUE MON PUBLIÉ : mes fichiers non commités cessent d\'être chez lui. Déclarer '
+        + '`lienDirect: false`, daté, avec la cible qu\'il vise.'));
 }
 
 // ── CHAQUE VOISIN DIT COMMENT IL LIT, ET CE MODE EST OPPOSABLE ───────────────
@@ -363,7 +402,7 @@ for (const c of CONSOMMATEURS) {
   // Je décrivais son régime sans l'avoir mesuré, dans l'axe même que je venais d'ajouter pour
   // cesser de le faire.
   for (const c of CONSOMMATEURS) {
-    if (c.mode !== 'nomme' || !presents.includes(c.depot)) continue;
+    if (c.mode !== 'nomme' || !presents.includes(c.depot.toLowerCase())) continue;
     let cites = [];
     try {
       const sortie = execFileSync('bash', ['-c',
@@ -380,7 +419,7 @@ for (const c of CONSOMMATEURS) {
         // saut de ligne n'en est pas une dans une classe — elle y désigne le backslash et la
         // lettre N. Le motif refusait donc toute ligne contenant un « n », c'est-à-dire toutes.
         // Grep travaille par ligne : le point suffit, et la classe était du zèle.
-        `find ${JSON.stringify(path.join(ATELIER, c.depot))} `
+        `find ${JSON.stringify(dossierPublie(c.depot))} `
         + "\\( -name '*.ts' -o -name '*.js' -o -name '*.mjs' -o -name '*.svelte' \\) "
         // ⛔ ET ON EXCLUT LES DOSSIERS CACHÉS, parce qu'un voisin y range une COPIE DE MOI.
         // Kairos porte `.traducteur/` — un instantané vendu de mon transpileur, bundle compris.
@@ -464,17 +503,25 @@ function depotPartageAvec(depot) {
     if (!commun || commun === '.git') return null;      // dépôt à part entière
     const absolu = path.resolve(racine, commun);
     for (const c of CONSOMMATEURS) {
-      if (absolu.startsWith(path.join(ATELIER, c.depot) + path.sep)) return c.depot;
+      const d = dossierPublie(c.depot);
+      if (d && absolu.startsWith(d + path.sep)) return c.depot;
     }
     return null;
   } catch { return null; }
 }
 
-const declares = new Set(CONSOMMATEURS.map((c) => c.depot));
+// La tour nomme les dépôts en minuscules, mes déclarations gardent la casse de leur propriétaire.
+const declares = new Set(CONSOMMATEURS.map((c) => c.depot.toLowerCase()));
 const arbresDeTravail = [];
 const nouveaux = presents
-  .filter((d) => d !== path.basename(MOI) && !declares.has(d))
-  .filter((d) => lecteurs(d) > 0 || lienVersMoi(d))
+  .filter((d) => d !== path.basename(MOI).toLowerCase() && !declares.has(d))
+  // ⛔ CITER N'EST PAS LIRE, ET J'AI FAILLI INSCRIRE HUIT FAUX CONSOMMATEURS. Mon premier filtre
+  //   acceptait le compte de la tour comme preuve de lecture : il a désigné hub, bp3-engine, kronos,
+  //   dedale et les quatre runtimes. Mesuré ensuite, motif par motif, sur leur état publié : ZÉRO
+  //   lecture chez les huit — ils me NOMMENT, dans de la prose, des backlogs, des commentaires.
+  // ⇒ La tour fait autorité sur QUI EXISTE et sur son RÉGIME ; sur ce qu'un dépôt LIT, c'est le
+  //   contenu qui tranche. La tour le dit elle-même en tête de son relevé, et je l'ai lu après.
+  .filter((d) => lecteurs(d) > 0)
   .filter((d) => {
     const parent = depotPartageAvec(d);
     if (parent) { arbresDeTravail.push(`${d} → ${parent}`); return false; }
@@ -486,6 +533,20 @@ if (arbresDeTravail.length) {
   console.log(`[chez eux] arbre(s) de travail rattaché(s) à un consommateur déjà déclaré : `
     + `${arbresDeTravail.join(', ')}`);
 }
+// ⚠️ LES CITATIONS S'AFFICHENT, ELLES NE CONCLUENT PAS. Un dépôt qui me nomme sans me lire n'est
+// pas un consommateur — mais il devient le premier à casser le jour où il se met à me lire, et le
+// voir passer de « cite » à « lit » vaut mieux que de le découvrir dans un rouge.
+{
+  const citent = [...RELEVE.entries()]
+    .filter(([d]) => d !== path.basename(MOI).toLowerCase() && !declares.has(d))
+    .filter(([d]) => lecteurs(d) === 0 || lecteurs(d) === null)
+    .map(([d, v]) => `${d}(${v.compte})`);
+  if (citent.length) {
+    console.log(`   ── me CITENT sans me lire, selon la tour : ${citent.join(' ')}`);
+    console.log('      (des noms dans de la prose ou des commentaires — aucune lecture mesurée chez eux)');
+  }
+}
+
 // TÉMOIN D'INSTRUMENT — le critère doit savoir dire NON, sinon il écarterait tout.
 ok(depotPartageAvec(path.basename(MOI)) === null,
    "l'écart des arbres de travail doit rendre `null` sur un dépôt à part entière — sinon il "

@@ -34,6 +34,7 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { DIR_BPS } from './corpus.mjs';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const RACINE = path.resolve(ICI, '..');
@@ -120,7 +121,7 @@ const baseline = {
     seed: native.seed ?? null,
     chaine: '.bps → compileToBPxAST → BPx (derive / produceAll) → Kairos (hauteur) → Kronos (temps)',
     comparateur: 'test/compare_modal.cjs — juge unique des deux voies',
-    corpus_scenes: 'kanopi/packages/library/scenes/BPScript-tests',
+    corpus_scenes: DIR_BPS,
     action_repliquee: 'la même que le natif : single (une réalisation, graine posée) ou '
       + 'produce-all (énumération), selon le champ `action` de la baseline native',
   },
