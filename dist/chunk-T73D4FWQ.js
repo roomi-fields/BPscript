@@ -6151,9 +6151,10 @@ function loadLibsFromDirectives(directives) {
           range: [0, 127],
           default: 0,
           description: `User CC${cc.number}`,
-          transportGroup: "midi",
           ccNumber: cc.number
         };
+        const resolveurDeLaDirective = (loadJsonFile(dir.name) || {}).resolvedBy;
+        if (resolveurDeLaDirective) ctx.controlResolvedBy[cc.name] = resolveurDeLaDirective;
         ctx.controlNames.add(cc.name);
         ctx.dispatcherOnlyControls.add(cc.name);
       }
@@ -6184,24 +6185,6 @@ function loadLibsFromDirectives(directives) {
         ([nom, def]) => nom !== "_comment" && def && Array.isArray(def.scope) && def.scope.includes("flow")
       ));
       if (Object.keys(dansLeFlux).length) controlSources.push({ source: dansLeFlux, isEngine: true, section: "subgrammar" });
-    }
-    if (lib.groups && typeof lib.groups === "object" && !Array.isArray(lib.groups)) {
-      for (const [groupName, groupContent] of Object.entries(lib.groups)) {
-        if (groupName === "_comment") continue;
-        if (typeof groupContent === "object" && groupContent !== null && !Array.isArray(groupContent)) {
-          const hasNestedDefs = Object.values(groupContent).some(
-            (v) => typeof v === "object" && v !== null && ("args" in v || "description" in v)
-          );
-          if (hasNestedDefs) {
-            for (const [name, def] of Object.entries(groupContent)) {
-              if (name.startsWith("_")) continue;
-              controlSources.push({ source: { [name]: { ...def, transportGroup: groupName } }, isEngine: false, section: `groups.${groupName}` });
-            }
-            continue;
-          }
-        }
-        controlSources.push({ source: { [groupName]: groupContent }, isEngine: false, section: "groups" });
-      }
     }
     for (const { source, isEngine, section } of controlSources) {
       for (const [name, def] of Object.entries(source)) {
@@ -6594,7 +6577,7 @@ function describeVocabulary(directives = []) {
   return {
     voices: nomsDe("voice"),
     keywords: [...ctx.reservedDirectiveNames],
-    controls: Object.entries(ctx.controls).map(([name, def]) => ({ name, ...pick(def || {}, ["args", "range", "values", "value", "description", "transportGroup"]) })),
+    controls: Object.entries(ctx.controls).map(([name, def]) => ({ name, ...pick(def || {}, ["args", "range", "values", "value", "description", "resolvedBy", "transportGroup"]) })),
     values: Object.entries(ctx.valueRegistry).map(([name, spec]) => ({ name, ...pick(spec || {}, ["range", "unit", "values", "description"]) })),
     // ⛔ UNE FONCTION EST UN MOT QUI PORTE SON CORPS — arbitrage de Romain, 2026-09-03 : une
     // manipulation est un contrôle du langage, et son corps se rattache à lui (`lib/transpo/

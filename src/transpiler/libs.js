@@ -751,8 +751,17 @@ function loadLibsFromDirectives(directives) {
         declarer(cc.name, `le contrôleur nommé 'cc ${cc.name}' de la scène`);
         ctx.controls[cc.name] = {
           args: ['value'], range: [0, 127], default: 0,
-          description: `User CC${cc.number}`, transportGroup: 'midi', ccNumber: cc.number
+          description: `User CC${cc.number}`, ccNumber: cc.number
         };
+        // ⛔ LE RÉSOLVEUR NE S'ÉCRIT PAS EN DUR ICI — Romain, 2026-09-04 : « le compilateur ne pose
+        //   pas un truc en dur ; même dans une librairie MIDI on spécifie resolvedBy, c'est la
+        //   règle ». Ce site posait `transportGroup: 'midi'`, une valeur que le compilateur
+        //   connaissait sans que personne puisse la lire ni la surcharger.
+        // ⇒ Un contrôleur que la scène invente hérite du résolveur de la LIBRAIRIE QUI DÉCLARE SA
+        //   DIRECTIVE — `cc` est déclarée par `midi.bpsl`, qui porte son `resolvedBy`. C'est le même
+        //   mécanisme que pour tout contrôle, appliqué ici au lieu d'être contourné.
+        const resolveurDeLaDirective = (loadJsonFile(dir.name) || {}).resolvedBy;
+        if (resolveurDeLaDirective) ctx.controlResolvedBy[cc.name] = resolveurDeLaDirective;
         // ⛔ ET LE TROISIÈME SITE FABRIQUAIT AUSSI, celui-là sans même consulter une déclaration :
         // `cc kick 36` posait l'image `_kick`. Un contrôleur que LA SCÈNE nomme n'a par
         // construction aucune image dans le moteur — le nom vient d'être inventé par qui écrit.
@@ -816,33 +825,6 @@ function loadLibsFromDirectives(directives) {
       const dansLeFlux = Object.fromEntries(Object.entries(lib.subgrammar).filter(
         ([nom, def]) => nom !== '_comment' && def && Array.isArray(def.scope) && def.scope.includes('flow')));
       if (Object.keys(dansLeFlux).length) controlSources.push({ source: dansLeFlux, isEngine: true, section: 'subgrammar' });
-    }
-    // `groups` (ex-`runtime`, RENOMMÉ 2026-08-10 — le nom `runtime` est retiré partout, remplacé
-    // par `resolvedBy` qui nomme l'outil DIRECTEMENT) : la SECTION de `lib/controls.json` qui
-    // groupe ses sous-groupes de contrôles RUNTIME (musical/midi/audio/dispatcher/generic). Ne
-    // collisionne plus avec le champ `runtime` d'un alphabet (sortie par défaut de la collection,
-    // une chaîne — prototype de `LANGUAGE.md`), qui garde son nom : deux notions, deux noms.
-    if (lib.groups && typeof lib.groups === 'object' && !Array.isArray(lib.groups)) {
-      // Iterate sub-groups: each value that is an object with nested control defs
-      for (const [groupName, groupContent] of Object.entries(lib.groups)) {
-        if (groupName === '_comment') continue;
-        if (typeof groupContent === 'object' && groupContent !== null && !Array.isArray(groupContent)) {
-          // Check if this is a sub-group (has nested objects with 'args' or 'description')
-          const hasNestedDefs = Object.values(groupContent).some(
-            v => typeof v === 'object' && v !== null && ('args' in v || 'description' in v)
-          );
-          if (hasNestedDefs) {
-            // Sub-group: iterate its controls, tag each with transportGroup
-            for (const [name, def] of Object.entries(groupContent)) {
-              if (name.startsWith('_')) continue;  // clé de DOCUMENTATION, cf. estUneDeclarationDeControle
-              controlSources.push({ source: { [name]: { ...def, transportGroup: groupName } }, isEngine: false, section: `groups.${groupName}` });
-            }
-            continue;
-          }
-        }
-        // Flat control (backwards compat): treat as ungrouped runtime control
-        controlSources.push({ source: { [groupName]: groupContent }, isEngine: false, section: 'groups' });
-      }
     }
     for (const { source, isEngine, section } of controlSources) {
       for (const [name, def] of Object.entries(source)) {

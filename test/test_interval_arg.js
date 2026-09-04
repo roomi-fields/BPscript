@@ -40,13 +40,15 @@ for (const name of ['alphabets', 'expression', 'midi', 'audio', 'transpo', 'engi
 registerAll(libs);
 
 // ── Lib de TEST éphémère : un contrôle interval-typé, sans toucher la prod ──
-// ⚠️ `runtime` RENOMMÉ `groups` le 2026-08-10 (mise en conformité des librairies — le nom
-// `runtime` est retiré partout, remplacé par `resolvedBy` qui nomme l'outil directement).
+// ⛔ LA SECTION EST `controls`, ET `groups` EST SORTIE DU FORMAT — décision de Romain, 2026-09-04 :
+// « le seul qui est légitime est resolvedBy ». Ce banc posait son contrôle dans `groups.dispatcher`,
+// une section que le compilateur acceptait encore et qu'aucune librairie n'écrivait ; il était donc
+// le dernier à la tenir en vie. Il déclare maintenant sa librairie comme les vingt-deux vraies.
 registerLib('ivltest', {
-  name: 'ivltest', type: 'controls',
-  groups: { dispatcher: {
+  name: 'ivltest', type: 'controls', resolvedBy: 'Kairos',
+  controls: {
     ivl: { args: ['interval'], argType: 'interval', default: 0, description: 'test interval control' },
-  } },
+  },
 });
 
 let passed = 0, failed = 0;

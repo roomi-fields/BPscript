@@ -50,16 +50,17 @@ const CONTROLE_VALIDE = { args: ['value'], description: 'contrôle bien formé' 
      `1. AUCUN nom de contrôle ne doit commencer par '_' — reçu : ${JSON.stringify(prose)}`);
 }
 
-// ─── 2. LES TROIS PLACEMENTS, pas celui du ticket ────────────────────────────────────────────
-// Une section de contrôles se déclare de trois façons dans une librairie : `controls`, `engine`,
-// et `groups` (ex-`runtime`, renommé 2026-08-10 — le nom `runtime` est retiré partout, remplacé
-// par `resolvedBy` ; lui-même en sous-groupes OU à plat). La clé fautive était dans UNE d'entre
-// elles ; garder cette seule-là aurait laissé les autres ouvertes.
+// ─── 2. TOUS LES PLACEMENTS, pas celui du ticket ─────────────────────────────────────────────
+// Une section de contrôles se déclare de deux façons dans une librairie : `controls` et `engine`.
+// La clé fautive était dans UNE d'entre elles ; garder cette seule-là aurait laissé l'autre ouverte.
+//
+// ⛔ LA TROISIÈME EST SORTIE AVEC SA SECTION — décision de Romain, 2026-09-04 : « le seul qui est
+//   légitime est resolvedBy ». `groups` désignait la famille d'un contrôle, ce que son résolveur dit
+//   déjà ; ses deux formes — en sous-groupes et à plat — étaient éprouvées ici et nulle part
+//   ailleurs. Ce garde était, avec `test_interval_arg`, le dernier à tenir la section en vie.
 const PLACEMENTS = [
   ['controls', (e) => ({ controls: { vel: CONTROLE_VALIDE, ...e } })],
   ['engine', (e) => ({ engine: { vel: CONTROLE_VALIDE, ...e } })],
-  ['groups en sous-groupe', (e) => ({ groups: { musical: { vel: CONTROLE_VALIDE, ...e } } })],
-  ['groups à plat', (e) => ({ groups: { vel: CONTROLE_VALIDE, ...e } })],
 ];
 
 // 2a. La documentation préfixée passe, sous toutes ses formes — c'est la convention du dépôt.
