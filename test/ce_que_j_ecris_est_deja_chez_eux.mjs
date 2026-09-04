@@ -44,7 +44,15 @@ const ATELIER = path.resolve(MOI, '..');
  * rougirait à chaque fichier ajouté chez un voisin serait débranché en une semaine.
  */
 const CONSOMMATEURS = [
-  { depot: 'kanopi', mode: 'nomme', lienDirect: true, note: 'packages/ui/node_modules/bpscript est un LIEN vers mon arbre : il consomme mes fichiers NON COMMITÉS',
+  // ⛔ SON LIEN A CHANGÉ DE CIBLE LE 2026-09-04, ET MA FRONTIÈRE AVEC LUI AVEC. Son
+  // `node_modules/bpscript` pointait vers MON ARBRE ; il pointe désormais vers `.publie/BPscript`, et
+  // son manifeste écrit `file:../../../../bp/.publie/BPscript`. Ce n'est plus ma frappe qui
+  // l'atteint, c'est ma PUBLICATION — un fichier que j'enregistre sans pousser n'est plus chez lui.
+  // C'est la décision du 2026-08-24 (« un dépôt ne lit que le paquet publié ») arrivée jusqu'à lui.
+  // ⚠️ CE GARDE L'A VU AVANT MOI, et c'est précisément ce pour quoi il déclare le régime au lieu de
+  // le mesurer seulement : un changement de nature du risque qui ne casse RIEN passe autrement
+  // inaperçu — il allège, il ne rougit pas.
+  { depot: 'kanopi', mode: 'nomme', lienDirect: false, note: 'packages/ui/node_modules/bpscript pointe vers mon ESPACE PUBLIÉ : il consomme ce que je POUSSE',
     lit: ["l'arbre — deux natures seulement"],
     porte: ['les CINQ catalogues de hauteur, VERBATIM, jusqu\'à kairos — il ne les ouvre jamais'] },
   // ⚠️ SA LECTURE A CHANGÉ DE NATURE LE 2026-08-13, sur arbitrage de Romain, et c'est ce garde qui
@@ -299,11 +307,20 @@ for (const c of CONSOMMATEURS) {
     console.log(`   ${' '.repeat(14)} ⚠️ ${c.depot} lit AU COMMIT — mon enregistrement l'atteint, `
       + 'poussé ou non : le préavis se donne AVANT de committer');
   }
-  if (c.lienDirect) {
-    ok(lien,
-      `${c.depot} portait un LIEN vers mon arbre et ne l'a plus — c'est un changement de la nature du `
-      + 'risque, pas un détail : sans lien, mes fichiers non commités cessent d\'être chez lui');
-  }
+  // ⛔ LE LIEN SE COMPARE DANS LES DEUX SENS, et c'est le second qui protège. Ce volet n'exigeait
+  // que « déclaré lié ⇒ toujours lié » : un lien qui DISPARAÎT allège mon exposition, donc il ne
+  // fait perdre personne. Un lien qui APPARAÎT la fait passer de ma publication à ma FRAPPE, sans
+  // qu'aucun de mes gestes ne change — et c'était muet. Posé le 2026-09-04, le jour où kanopi a
+  // bougé dans le sens inoffensif ; le sens dangereux ne s'est encore jamais produit, ce qui est
+  // exactement la raison de l'écrire maintenant.
+  ok(lien === Boolean(c.lienDirect),
+    `${c.depot} : le régime de lien DÉCLARÉ (${c.lienDirect ? 'lié à mon arbre' : 'non lié'}) ne `
+    + `correspond plus au régime MESURÉ (${lien ? 'lié à mon arbre' : 'non lié'}). `
+    + (lien
+      ? 'UN LIEN EST APPARU : mes fichiers NON COMMITÉS sont désormais chez lui, mon préavis se '
+        + 'donne AVANT la frappe et plus avant la publication. Déclarer `lienDirect: true`, daté.'
+      : 'LE LIEN A DISPARU : mes fichiers non commités cessent d\'être chez lui, il ne me lit plus '
+        + 'qu\'à ma publication. Déclarer `lienDirect: false`, daté, avec la cible qu\'il vise.'));
 }
 
 // ── CHAQUE VOISIN DIT COMMENT IL LIT, ET CE MODE EST OPPOSABLE ───────────────
@@ -542,8 +559,17 @@ ok(nouveaux.length === 0,
 
 // ── TÉMOIN ANTI-RÉTRÉCISSEMENT ───────────────────────────────────────────────
 ok(CONSOMMATEURS.length >= 7, 'TÉMOIN — la liste ne s\'est pas vidée');
-ok(CONSOMMATEURS.some((c) => c.lienDirect),
-  'TÉMOIN — au moins un consommateur par LIEN doit être suivi : c\'est le cas où écrire = publier');
+// ⛔ CE TÉMOIN EXIGEAIT UN FAIT QUE JE NE DÉCIDE PAS. Il demandait qu'au moins un consommateur me
+// lise par LIEN — « c'est le cas où écrire = publier ». Le 2026-09-04, kanopi, le dernier, est passé
+// à mon espace publié : le témoin serait devenu rouge sur un mouvement de MON VOISIN, sans qu'aucun
+// geste de moi puisse le verdir. Un garde qu'on ne peut pas satisfaire se débranche, et c'est ainsi
+// qu'on perd la mesure qu'il portait.
+// ⇒ Ce qu'il protégeait vraiment n'est pas l'existence d'un lien, c'est que le RÉGIME de chacun soit
+//   suivi. Cela se tient par la comparaison déclaré ⇄ mesuré, faite plus haut, dans les deux sens.
+//   Ici on garde le seul fait qui dépende de moi : chaque consommateur DIT son régime de lien.
+ok(CONSOMMATEURS.every((c) => typeof c.lienDirect === 'boolean'),
+  'TÉMOIN — chaque consommateur déclare son régime de lien : sans déclaration, la comparaison '
+  + 'déclaré ⇄ mesuré ne peut rien voir apparaître ni disparaître');
 
 if (echecs.length) {
   console.error(`[surface partagée] ${echecs.length} ÉCHEC(S) :`);

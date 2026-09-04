@@ -536,8 +536,30 @@ const RETARD_BLOCS = new Map([
   // maintenant au lieu de buter sur la barre de fraction de sa valeur.
 ]);
 
+/**
+ * ⛔ LES FRAGMENTS — DES BLOCS QUI NE SONT PAS DES SCÈNES, ET QUI N'ONT PAS À LE DEVENIR.
+ *
+ * Décision de Romain, 2026-09-04 : « ce sont des fragments ». Un encadré de la bible peut montrer
+ * une FORME sans montrer une scène — deux déclarations côte à côte, une clé isolée, un choix entre
+ * trois écritures. Le compiler entier demande de lui coudre un contexte, et ce contexte est une
+ * invention : il ne vient pas de la bible, il vient de moi.
+ *
+ * ⚠️ CE REGISTRE N'EST PAS UNE EXEMPTION, C'EST UNE NATURE DÉCLARÉE. Un fragment porte le refus
+ * exact que son incomplétude produit, et le cliquet exige de le retrouver — un fragment qui se
+ * mettrait à compiler entier sort d'ici, daté. La différence avec `RETARD_BLOCS` est la CAUSE :
+ * là-bas le parser ne sait pas encore, ici le bloc ne prétend pas être une scène.
+ */
+const FRAGMENTS = new Map([
+  // Deux acteurs montrés l'un sous l'autre, pour illustrer qu'un acteur déclare son alphabet et sa
+  // sortie. Ce n'est pas une scène : `moteur` évalue du JS, `cuivres` sort en MIDI, et rien ne dit
+  // lequel joue. Tout acteur héritant l'alphabet de `core` depuis le 2026-09-02, un `C4` nu leur
+  // appartient aux deux — c'est le principe de désambiguïsation qui parle, et il a raison.
+  ['actor moteur #0', /Ambiguous symbol "C4"[\s\S]*moteur, cuivres/],
+]);
+
 let blocs = 0;
 const retardBlocsRetrouve = new Set();
+const fragmentsRetrouves = new Set();
 for (const p of SPECS) {
   if (!existsSync(p)) continue;
   const nom = path.basename(p);
@@ -574,26 +596,29 @@ for (const p of SPECS) {
       // unique et ne se pose que si le bloc n'a pas déjà le sien.
       const aDelimiteur = /^-----/m.test(src);
       const socle = (aCore ? '' : 'core\n') + (aAlphabet ? '' : 'alphabet.western\n');
-      // ⚠️ UN BLOC QUI DÉCLARE DES ACTEURS REÇOIT UNE NOTE PRÉFIXÉE PAR LE PREMIER. Depuis le
-      // 2026-09-02 tout acteur hérite l'alphabet que `core` déclare (Romain : aucune exception), donc
-      // deux acteurs d'un même bloc portent `western` et un `C4` nu est AMBIGU — c'est le principe de
-      // désambiguïsation du langage, pas un défaut de la bible. Le harnais préfixe, comme l'auteur le
-      // ferait ; sans acteur déclaré, la note nue va à l'acteur implicite.
-      const premierActeur = (src.match(/^actor\s+([A-Za-z_][\w]*)/m) || [])[1];
-      const note = premierActeur ? `${premierActeur}.C4` : 'C4';
+      // ⛔ LA QUEUE EST UN POINT DE DÉPART, JAMAIS UNE DÉSAMBIGUÏSATION. Elle a porté un temps
+      // `<premier acteur>.C4` : un bloc qui déclarait DEUX acteurs rendait `C4` ambigu — ce qui est
+      // le principe de désambiguïsation du langage, exact — et le harnais préfixait « comme l'auteur
+      // le ferait ». Sauf qu'il n'y a pas d'auteur : ce bloc n'est pas une scène tronquée, c'est un
+      // FRAGMENT, deux déclarations d'acteur montrées côte à côte, et lui coudre une note jouée par
+      // l'un des deux fabrique une scène que la bible n'écrit pas. Romain, 2026-09-04 : « ce sont des
+      // fragments ». Un fragment s'inscrit au registre avec sa cause, il ne se complète pas.
       const texte = socle + (aRegle && !aDelimiteur ? '-----\n' : '') + src
-                  + (aRegle ? '\n' : `\nmode:ord\n-----\nS -> ${note}\n`);
+                  + (aRegle ? '\n' : '\nmode:ord\n-----\nS -> C4\n');
       let msg;
       try { msg = (compileToBPxAST(texte).errors || []).map((e) => e.message || e).join(' | '); }
       catch (e) { msg = e.message; }
       if (!msg) continue;
       const cause = RETARD_BLOCS.get(cle);
       if (cause && cause.test(msg)) { retardBlocsRetrouve.add(cle); continue; }
+      const nature = FRAGMENTS.get(cle);
+      if (nature && nature.test(msg)) { fragmentsRetrouves.add(cle); continue; }
       ok(false,
          `2quater. ${nom} : un bloc que la bible déclare BPScript est REFUSÉ, HORS RETARD `
          + `INVENTORIÉ — « ${cle.slice(0, 60)} » → ${msg.replace(/\s+/g, ' ').slice(0, 110)}. `
          + `La bible fait foi : soit le parser rattrape le bloc, soit il entre dans RETARD_BLOCS `
-         + `avec sa cause. Un bloc muet est un mensonge que personne ne verra.`);
+         + `(le parser ne sait pas encore) ou dans FRAGMENTS (le bloc n'est pas une scène), avec sa `
+         + `cause. Un bloc muet est un mensonge que personne ne verra.`);
       continue;
     }
     if (dans) bloc.push(brut);
@@ -603,6 +628,16 @@ for (const p of SPECS) {
 ok(blocs >= 60,
    `2quater. SOCLE : ${blocs} bloc(s) déclarés BPScript extraits des specs — sous ce seuil, `
    + `l'extracteur ne lit plus les blocs et « aucun refus » ne veut plus rien dire.`);
+// CLIQUET DES FRAGMENTS — même mordant, autre cause. Un fragment que le harnais finirait par
+// compiler entier n'est plus un fragment : ou la bible l'a complété, ou l'enveloppe a repris
+// l'habitude d'inventer un contexte. Les deux se voient ici, et aucune ne passe en silence.
+for (const [cle] of FRAGMENTS) {
+  ok(fragmentsRetrouves.has(cle),
+     `2quater-fragment. le bloc « ${cle.slice(0, 60)} » est inscrit comme FRAGMENT mais ne refuse `
+     + `plus avec sa nature — la bible l'a complété, ou l'enveloppe lui fabrique un contexte. `
+     + `RETIRE-le, daté : un fragment qui compile entier est une scène.`);
+}
+
 // CLIQUET — le retard ne descend jamais tout seul, et il ne remonte pas en silence.
 for (const [cle] of RETARD_BLOCS) {
   ok(retardBlocsRetrouve.has(cle),
@@ -866,7 +901,8 @@ if (echecs.length) {
 } else {
   console.log(`✅ les documents enseignent des formes vivantes — ${passe} vérification(s) passée(s) : `
             + `${blocs} BLOC(S) que la bible déclare BPScript compilés ENTIERS, dont `
-            + `${retardBlocsRetrouve.size} au retard inventorié(${blocs - retardBlocsRetrouve.size} `
+            + `${retardBlocsRetrouve.size} au retard inventorié et ${fragmentsRetrouves.size} `
+            + `déclaré(s) FRAGMENT(${blocs - retardBlocsRetrouve.size - fragmentsRetrouves.size} `
             + `passent), `
             + `${regles} RÈGLE(S) des specs compilées dont ${retardRetrouve.size} en retard `
             + `inventorié (le parser rattrape la bible), `

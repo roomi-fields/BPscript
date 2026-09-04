@@ -80,6 +80,11 @@ const compterAssertions = (sortie) => {
 const PREFIXE_REGIME = '[régime]';
 let mentionsDeRegime = 0;
 
+// ⛔ LE NOM DE CHAQUE GARDE VERT, PAS SEULEMENT LEUR NOMBRE. Un compte ne distingue pas « un garde
+// est parti » de « un garde est parti et un autre est arrivé » — les deux rendent le même nombre.
+// La liste, elle, nomme le disparu. Voir la comparaison en fin de fichier.
+const verts = [];
+
 for (const f of fichiers) {
   const r = spawnSync('node', [path.join(ICI, f)], { encoding: 'utf-8', timeout: 300000 });
   const n = compterAssertions((r.stdout || '') + (r.stderr || ''));
@@ -91,6 +96,7 @@ for (const f of fichiers) {
   }
   if (r.status === 0) {
     passes++;
+    verts.push(f);
     if (verbeux) console.log(`  ok   ${f}${n === null ? '' : `  (${n} assertions)`}`);
   } else {
     echecs++;
@@ -105,6 +111,7 @@ for (const s of SEUILS) {
   const n = s.mesure((r.stdout || '') + (r.stderr || ''));
   if (n >= s.plancher) {
     passes++;
+    verts.push(`${s.fichier} [seuil]`);
     if (verbeux) console.log(`  ok   ${s.fichier} — ${n} ${s.unite} (plancher ${s.plancher})`);
   } else {
     echecs++;
@@ -147,6 +154,7 @@ for (const s of SEUILS) {
     }
   } else {
     passes++;
+    verts.push('anti-vacuité [interne]');
     if (verbeux) console.log(`  ok   anti-vacuité — ${temoins.map((t) => `${t.vu} ${t.quoi}`).join(', ')}`);
   }
 }
@@ -168,12 +176,44 @@ console.log(`[gardes] ${assertions} assertion(s) RÉELLEMENT exécutée(s)`
 //
 // ⇒ La référence ne monte JAMAIS toute seule : `--maj` est un geste explicite, et le diff le montre.
 // Une hausse est annoncée sans mordre — ajouter un garde est légitime ; c'est la BAISSE qui se refuse.
+// ⛔ ET LE COMPTE DE GARDES ÉTAIT ÉCRIT SANS ÊTRE JAMAIS RELU — le même défaut d'un cran plus haut.
+// La référence portait `"gardes": 236` depuis qu'elle existe, et aucune ligne ne le comparait : un
+// garde renommé, déplacé hors du portillon ou supprimé sortait des DEUX ensembles comparés et ne
+// laissait aucune trace. Ses assertions manquaient, mais une hausse ailleurs les compense — et une
+// hausse « ne mord pas ».
+//
+// ⇒ **La forme qui voit un garde partir est la LISTE, pas le nombre.** Un compte ne distingue pas
+// « il en manque un » de « il en manque un et un autre est arrivé » : les deux rendent 236. La liste
+// nomme le disparu, ce qui est précisément ce qu'un compte ne peut pas faire.
 const REFERENCE = new URL('./assertions-du-portillon.json', import.meta.url);
+verts.sort();
 if (process.argv.includes('--maj')) {
-  writeFileSync(REFERENCE, `${JSON.stringify({ assertions, gardes: passes }, null, 1)}\n`);
-  console.log(`[gardes] référence mise à jour — ${assertions} assertion(s), ${passes} garde(s).`);
+  writeFileSync(REFERENCE, `${JSON.stringify({ assertions, gardes: verts }, null, 1)}\n`);
+  console.log(`[gardes] référence mise à jour — ${assertions} assertion(s), ${verts.length} garde(s).`);
 } else if (existsSync(REFERENCE)) {
   const ref = JSON.parse(readFileSync(REFERENCE, 'utf8'));
+  if (!Array.isArray(ref.gardes)) {
+    echecs++;
+    console.error("  ÉCHEC — la référence ne porte pas la LISTE de ses gardes, seulement un compte :");
+    console.error('         node test/run_guards.mjs --maj');
+  } else {
+    const ici = new Set(verts);
+    const partis = ref.gardes.filter((g) => !ici.has(g));
+    const neufs = verts.filter((g) => !ref.gardes.includes(g));
+    if (partis.length > 0) {
+      echecs++;
+      console.error(`  ÉCHEC ⛔ ${partis.length} GARDE(S) ONT DISPARU DU PORTILLON :`);
+      for (const g of partis) console.error(`         · ${g}`);
+      console.error('         Renommé, déplacé hors du portillon, supprimé, ou en échec : un garde absent '
+        + 'ne préviendra jamais.');
+      console.error('         Vérifier CE QUI A DISPARU, puis, si le retrait est voulu : '
+        + 'node test/run_guards.mjs --maj');
+    }
+    if (neufs.length > 0) {
+      console.log(`[gardes] +${neufs.length} garde(s) depuis la référence — une hausse ne mord pas. `
+        + "'--maj' pour la fixer.");
+    }
+  }
   if (assertions < ref.assertions) {
     echecs++;
     console.error(`  ÉCHEC ⛔ LE PORTILLON A PERDU ${ref.assertions - assertions} ASSERTION(S) — `
