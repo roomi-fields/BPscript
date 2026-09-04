@@ -222,3 +222,54 @@ dépendre de la prose. Inscrit par l'architecte le 2026-09-03, sur un fait mesur
 ⇒ La forme marche déjà ici — `bp3-settings.test.ts` la montre.
 ⚠️ CE N'EST PAS UNE EXIGENCE SUR LA FRAPPE DE LA TRADUCTION : kanopi ne l'a pas demandé pour celle-ci
   et n'attend rien. C'est un item consigné, pas une autorisation de travailler dessus.
+
+- **BPS-109** `ouvert` [P1] — ⏳ **CE QUI EST PRÊT ET MESURÉ MAIS PAS ENCORE POSÉ, au 2026-09-04 17:05.**
+Inscrit à la demande de Romain, parce que la tâche en cours peut durer et que rien de ceci ne doit
+se perdre. Chaque point est **mesuré**, préparé hors du dépôt, et attend un geste — pas une décision.
+
+⇒ **1. DEUX COMMITS NON POUSSÉS** — `6a4d133` (sept lectures de portillon rebranchées sur l'espace
+  publié) et `dca7b5b` (« qui me lit » change de source). Ils étaient bloqués par `order_parity`,
+  débloqué depuis : bp3-engine a publié ses binaires de campagne le 2026-09-04 (`ba25ea0`).
+
+⇒ **2. `order_parity` REPOINTÉ SUR L'ESPACE PUBLIÉ** — patch prêt. `BP3_DIR` vise l'arbre de
+  bp3-engine ; il doit viser `.publie/bp3-engine`. Le banc ne fait que LIRE (son dérivé naît dans
+  `/tmp` depuis le 2026-08-30), donc le repointage est sûr.
+  ⇒ ⚠️ **ET L'EMPREINTE DE L'ORACLE DOIT ÊTRE VÉRIFIÉE, PAS CITÉE.** Le banc écrit `fb6df5ad…` dans
+    une prose et ne la contrôle pas, alors que sa propre phrase dit qu'une référence invérifiable est
+    pire que fausse. Mesuré : les deux campagnes publiées portent `fb6df5ad5ee18a0398ae3cdb1817287d`
+    et `372dd047bc52fd152ff51ec6715fae74`, identiques à ce que bp3-engine annonce. Un binaire refiglé
+    sous le même nom doit faire ROUGIR — c'est arrivé quatre fois en un jour sous le même 3.5.1.
+
+⇒ **3. LA PROSE SORT DE LA DONNÉE** — décision de Romain, 2026-09-04, et sa convention : la marque
+  `// @description` se pose en **préfixe** de l'objet. Transformateur écrit et éprouvé sur copie :
+  **555 descriptions déplacées, 0 orpheline, 35 virgules pendantes nettoyées, 21/21 sources
+  compilent**. Aucun piège de graphie — 0 description multi-ligne, 0 guillemet interne.
+  ⇒ **LE DISCRIMINANT DOIT CHANGER D'ABORD** : `libs.js:464` reconnaît un contrôle à `args` **et**
+    `description`. Remesuré comme il avait été posé — **115 objets portent les deux, ZÉRO porte
+    `args` seul**, 442 portent `description` seule. Donc le critère devient `args`, sans rien perdre
+    ni rien élargir.
+  ⇒ **ET UN SECOND SITE EST DU CODE MORT** : `libs.js:825-838` lit `lib.groups` — **aucune source ne
+    porte `groups`**. À amputer pour voir qui crie, puis à retirer.
+  ⇒ ⛔ **PRÉAVIS DÛ à atlas et kanopi** : ils lisent `description` pour AFFICHER l'aide (atlas
+    `:453`, `:829-830` · kanopi `:186`, `:230`, `:237`). Question posée à Romain, sans réponse à ce
+    jour : où lisent-ils la prose après la bascule — proposition, leur offrir la source publiée
+    `.publie/BPscript/lib/*.bpsl`, qui est du texte et non un import.
+
+⇒ **4. LE PORTILLON — demande de Romain relayée le 2026-09-04** (« on fait faire ça à tout le
+  monde »). Fait : **30 gardes marqués `// @isole`**, identifiés par ce qu'ils FONT — écriture disque
+  ou mutation du registre — jamais par supposition. Prêt : le branchement de `run_guards.mjs` sur
+  `hub/tools/lancer-gardes.mjs`, et le dépliage des **sept alias `npm run` exclusifs à `verify`**
+  (dont `bundle:check`, doublon exact d'une moitié de `arch`, donc du travail refait à chaque
+  passage). Reste : appliquer, **éprouver par injection** — jamais sur « même liste verte » — et
+  rendre le compte.
+  ⇒ ⚠️ **CE COMPTE NE PORTERA AUCUN RATIO DE DURÉES**, l'architecte l'a retiré de sa demande le
+    2026-09-04 après avoir retiré son propre chiffre : sur une machine à 12 cœurs portant seize
+    sessions, un rapport de durées est un instantané de charge. Ce qui est dû : le nombre de
+    maillons, combien restent isolés et pourquoi, ce que le parallèle groupe, ce que les injections
+    prouvent.
+  ⇒ Référence prise pour mémoire, avec son biais nommé : **21 min 41 au mur, 11 min 02 de CPU**.
+
+⇒ **5. LE LEVIER « MAX, PAS SOMME » N'EST PAS ENTAMÉ** — les maillons indépendants de `verify` qui ne
+  font que lire peuvent partir ensemble. Deux conditions non négociables : le refus **nomme** qui
+  refuse, et **l'absence de verdict refuse**. C'est le seul levier dont le gain ne dépend pas de la
+  charge, et le seul qui reste entier.

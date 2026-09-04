@@ -1,3 +1,4 @@
+// @isole — il ECRIT sur le disque : dans un processus partage il contaminerait ses voisins.
 // order_parity.mjs — NON-RÉGRESSION d'ordre, voie texte.
 //
 // Capture la sortie canonique NATIVE (`bp3 … -o`) pour les grammaires TEXTE,
@@ -43,10 +44,26 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tokenizeOrder } from '../src/transpiler/orderTokens.js';
 import { coupleDe, metaTable } from './correspondance.mjs';
+import { createHash } from 'node:crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
-const BP3_DIR = path.resolve(ROOT, '..', 'bp3-engine');
+/**
+ * ⛔ L'ORACLE SE LIT DANS L'ESPACE PUBLIÉ DE bp3-engine, JAMAIS DANS SON ARBRE — décision du
+ * 2026-08-24. Mesuré le 2026-09-04 sous enveloppe : son arbre n'existe plus pour moi, et ce banc
+ * était le dernier des neuf lectures d'arbre à ne pas pouvoir se rebrancher — `builds/` n'était pas
+ * publié. bp3-engine l'a publié le jour même, sur arbitrage.
+ *
+ * ⚠️ ET CE QUE L'EMPREINTE DE SON ESPACE PUBLIÉ NE COUVRE PAS, je l'écris plutôt que de le laisser
+ * croire : `builds/` vient de son ARBRE DE TRAVAIL et n'est donc pas certifié par son commit. C'est
+ * la seule forme possible pour un binaire compilé — mais une mesure qui s'y appuie porte la limite.
+ *
+ * ⇒ C'EST POURQUOI L'EMPREINTE DU BINAIRE SE VÉRIFIE ICI, plus bas, au lieu d'être citée dans une
+ *   prose. Ce fichier disait déjà pourquoi : *« une référence dont le producteur a disparu ne se
+ *   rejoue pas : elle ne devient pas fausse, elle devient invérifiable, ce qui est pire parce que
+ *   rien ne le signale »*. La phrase était juste et rien ne la tenait.
+ */
+const BP3_DIR = path.resolve(ROOT, '..', '.publie', 'bp3-engine');
 const TD = path.resolve(BP3_DIR, 'test-data');
 /**
  * L'ORACLE DE LA CAMPAGNE EST UN BINAIRE ARCHIVÉ, PAS LE BINAIRE DE TRAVAIL.
@@ -68,12 +85,33 @@ const TD = path.resolve(BP3_DIR, 'test-data');
  * échoué en silence et mesuré vingt minutes contre l'ancien.
  */
 const BP3 = path.resolve(BP3_DIR, 'builds', 'v3.5.1-iso.1', 'bp3');
+/** Le répertoire DEPUIS lequel le moteur se lance — il y trouve ses chaînes et ses ressources. */
+const CAPTURE_RUN = path.resolve(BP3_DIR, 'capture-run');
+/**
+ * L'EMPREINTE DE L'ORACLE, VÉRIFIÉE ET NON CITÉE — figée par bp3-engine le 2026-08-11 et rappelée
+ * dans la prose ci-dessus. Un binaire reconstruit sous le même nom rendrait un vert dont on
+ * ignorerait le moteur : c'est arrivé QUATRE fois en un jour, sous le même numéro 3.5.1.
+ */
+const EMPREINTE_ORACLE = 'fb6df5ad';
 if (!fs.existsSync(BP3)) {
   console.error(`❌ oracle de campagne introuvable : ${BP3}\n`
     + `   Ce banc ne mesure QUE contre l'archive figée par bp3-engine. Il n'y a pas de repli sur\n`
     + `   'bp3-engine/bp3' : un repli rendrait un vert dont on ignorerait le moteur.`);
   process.exit(1);
 }
+// ⛔ ET L'ORACLE PRÉSENT N'EST PAS L'ORACLE ATTENDU TANT QUE SON EMPREINTE NE LE DIT PAS.
+{
+  const vue = createHash('md5').update(fs.readFileSync(BP3)).digest('hex');
+  if (!vue.startsWith(EMPREINTE_ORACLE)) {
+    console.error(`❌ ORACLE INATTENDU — ${BP3}\n`
+      + `   empreinte vue     ${vue.slice(0, 16)}\n`
+      + `   empreinte attendue ${EMPREINTE_ORACLE}…  (figée par bp3-engine le 2026-08-11)\n`
+      + `   Le binaire a été reconstruit sous le même nom : mes instantanés qualifiés ne se rejouent\n`
+      + `   pas contre celui-ci, et un vert ne dirait pas contre quel moteur il a été pris.`);
+    process.exit(1);
+  }
+}
+
 
 /**
  * L'ESTAMPILLE D'UN INSTANTANÉ NATIF — version, empreinte du binaire, ET COMMANDE COMPLÈTE.
@@ -333,7 +371,15 @@ function nativeOrder(name, opts = {}) {
   const commande = `bash "${GUARD}" "${BP3}" ${args.map((a) => `"${a}"`).join(' ')}`;
   derniereCommande = commande;
   dernieresEntrees = null;
-  try { execSync(commande, { cwd: BP3_DIR, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe'] }); } catch {}
+  // ⛔ LE RÉPERTOIRE DE LANCEMENT EST `capture-run/`, ET CE N'EST PAS UN DÉTAIL DE CONFORT.
+  //   Le moteur cherche `console_strings.json` au RÉPERTOIRE COURANT, sur un nom nu, sans chemin de
+  //   recherche (`Inits.c:753`) — lancé d'ailleurs il ne produit RIEN, et le dit par une ligne qui
+  //   ressemble à un avertissement. Mesuré le 2026-09-04 : 27 grammaires sur 27 en « no output ».
+  // ⚠️ ET IL Y A UNE SECONDE RAISON, QUI SE VERRAIT PLUS TARD : le moteur préfixe `../` EN DUR au
+  //   chemin Csound d'un `-so.*` (`SaveLoads1.c:855`), sans pouvoir l'écraser. Depuis `capture-run/`,
+  //   ce `../` tombe sur les ressources publiées ; d'ailleurs, les grammaires qui sérialisent Csound
+  //   échoueraient — après coup, et pour une autre cause apparente. Rendu par bp3-engine.
+  try { execSync(commande, { cwd: CAPTURE_RUN, timeout: 120000, stdio: ['pipe', 'pipe', 'pipe'] }); } catch {}
   try { fs.unlinkSync(path.join(TD, `_ord_tmp_${name}.gr`)); } catch {} // temp grammaire normalisée
   if (!fs.existsSync(prodFile)) return { error: 'no output' };
   // Garde anti-démesure : une dérivation non terminante (Improvize, livecode2) peut écrire
