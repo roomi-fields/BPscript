@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il ECRIT sur le disque : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — aucun `git status` que MON PORTILLON lance chez un VOISIN ne peut prendre son verrou.
  *

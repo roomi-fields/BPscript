@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il ECRIT sur le disque et il MUTE un etat global : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — la prudence du juge partagé regarde LES DEUX CÔTÉS, jamais la seule référence.
  *

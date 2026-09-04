@@ -1,3 +1,4 @@
+// @isole — il ECRIT sur le disque : dans un processus partage il contaminerait ses voisins.
 /**
  * UNE MESURE NE SE PREND PAS SUR UN RÉPERTOIRE VIVANT.
  *

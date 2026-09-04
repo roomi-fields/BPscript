@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il MUTE un etat global : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — tout réglage qui voyage dans l'arbre porte le DESTINATAIRE déclaré par sa librairie.
  *

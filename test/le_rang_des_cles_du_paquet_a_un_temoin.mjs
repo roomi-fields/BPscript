@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il ECRIT sur le disque : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — LE RANG DES CLÉS DU PAQUET A UN TÉMOIN, ET IL NE L'AVAIT PAS.
  *

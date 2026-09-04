@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il ECRIT sur le disque : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — LA DÉRIVATION SE RÉSOUT À L'ÉTAGE, UNE FOIS, ET DES DEUX CÔTÉS.
  *

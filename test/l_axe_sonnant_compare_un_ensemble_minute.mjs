@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il ECRIT sur le disque et il MUTE un etat global : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — l'axe SONNANT compare un ENSEMBLE MINUTE ; l'axe TEXTE compare une SUITE.
  *

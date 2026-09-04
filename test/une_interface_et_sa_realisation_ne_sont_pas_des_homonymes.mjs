@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il MUTE un etat global : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — la clé `implements` : une INTERFACE et sa RÉALISATION ne sont pas deux homonymes.
  *

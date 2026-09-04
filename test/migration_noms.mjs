@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il ECRIT sur le disque : dans un processus partage il contaminerait ses voisins.
 /**
  * OUTIL DE MIGRATION — renommer les noms en collision SANS changer la musique.
  *

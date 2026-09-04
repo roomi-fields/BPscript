@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il ECRIT sur le disque : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — UN LITTÉRAL ET UNE SUITE SE LISENT PAREIL À TOUTES LES PROFONDEURS.
  *

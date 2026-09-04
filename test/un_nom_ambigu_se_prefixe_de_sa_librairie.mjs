@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il MUTE un etat global : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — deux librairies peuvent déclarer le même contrôle, et l'appel se PRÉFIXE alors.
  *

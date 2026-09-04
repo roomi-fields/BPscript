@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il MUTE un etat global : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — un geste déclaré pour le ROUTAGE n'entre pas au VOCABULAIRE.
  *

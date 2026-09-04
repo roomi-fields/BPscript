@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il MUTE un etat global : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — un mot GÉNÉRIQUE écrit pour une sortie qui ne le réalise pas est REFUSÉ.
  *

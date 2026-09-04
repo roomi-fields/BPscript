@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il ECRIT sur le disque : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — LA CONVERSION D'UN CATALOGUE PRÉSERVE L'ORDRE, ET DONNE UNE GRAPHIE AUX NOMS QU'ELLE
  * NE PEUT PAS ÉCRIRE NUS.

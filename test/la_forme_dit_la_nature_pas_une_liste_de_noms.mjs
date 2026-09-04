@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il ECRIT sur le disque : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — LA NATURE D'UNE VALEUR SE LIT DANS SON ÉCRITURE, ET AUCUNE LISTE DE NOMS NE LA DÉCIDE.
  *

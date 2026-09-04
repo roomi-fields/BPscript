@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il ECRIT sur le disque : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — L'ÉTAGE QUI RÉSOUT EXISTE, ET LA VOIE DE COMPILATION LE TRAVERSE.
  *

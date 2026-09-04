@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il MUTE un etat global : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — le destinataire d'un contrôle se SURCHARGE : le fichier donne le défaut, l'entrée tranche.
  *

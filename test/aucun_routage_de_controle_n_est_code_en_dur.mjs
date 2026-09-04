@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il MUTE un etat global : dans un processus partage il contaminerait ses voisins.
 // AUCUN ROUTAGE DE CONTRÔLE N'EST CODÉ EN DUR DANS LE PARSEUR — la donnée dit le COMPORTEMENT
 // (l'énumération d'une valeur), le parseur le LIT.
 //

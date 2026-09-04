@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il ECRIT sur le disque : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — LE CONVERTISSEUR REND TOUTE ENTRÉE, OU IL REFUSE. JAMAIS « OUI » EN RENDANT MOINS.
  *

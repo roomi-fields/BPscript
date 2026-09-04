@@ -1,3 +1,4 @@
+// @isole — il MUTE un etat global : dans un processus partage il contaminerait ses voisins.
 // LA VOIX N'EST PLUS UNE CLÉ D'ACTEUR — pierre tombale et intégrité de la librairie.
 //
 // ⚠️ CE FICHIER A CHANGÉ DE SUJET LE 2026-08-06, ET LE POURQUOI IMPORTE.

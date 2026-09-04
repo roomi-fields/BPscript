@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il ECRIT sur le disque : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — CHAQUE CATALOGUE QUI DÉCLARE UN MOT DIT S'IL ENTRE DANS L'AIDE PUBLIÉE.
  *

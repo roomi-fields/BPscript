@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il ECRIT sur le disque : dans un processus partage il contaminerait ses voisins.
 /**
  * SCELLER LA BASELINE DE LA VOIE `.bps` — sur l'assiette des 96 natives, et sur elle seule.
  *

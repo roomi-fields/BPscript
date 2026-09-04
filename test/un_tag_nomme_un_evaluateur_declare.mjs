@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @isole — il MUTE un etat global : dans un processus partage il contaminerait ses voisins.
 /**
  * GARDE — un tag de backtick nomme un ÉVALUATEUR DÉCLARÉ, pas n'importe quel mot.
  *
