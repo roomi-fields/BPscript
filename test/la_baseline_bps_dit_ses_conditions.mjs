@@ -30,7 +30,7 @@ import { fileURLToPath } from 'node:url';
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const RACINE = path.resolve(ICI, '..');
 const FICHIER = path.join(ICI, 'baseline-bps', 'baseline.json');
-const SCELLE_NATIF = path.resolve(RACINE, '..', 'bp3-engine', 'baseline-native', 'SCELLE.json');
+const SCELLE_NATIF = path.resolve(RACINE, '..', '.publie', 'bp3-engine', 'baseline-native', 'SCELLE.json');
 
 let passe = 0;
 const echecs = [];

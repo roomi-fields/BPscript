@@ -54,7 +54,14 @@ function fichiersDeCode(dir, out = []) {
   for (const e of readdirSync(dir)) {
     if (e === 'node_modules' || e === '.git' || e === 'dist' || e === 'lib') continue;
     const p = path.join(dir, e);
-    if (statSync(p).isDirectory()) fichiersDeCode(p, out);
+    // ⛔ UN LIEN MORT NE FAIT PAS TOMBER LE BALAYAGE. `statSync` SUIT le lien et lève quand la cible
+    // manque : le garde s'arrêtait en EXCEPTION, donc il DISPARAISSAIT du portillon au lieu d'y
+    // rougir. Trouvé le 2026-09-04 sous enveloppe, sur `.claude/worktrees/bp3-engine` — un lien vers
+    // l'arbre d'un voisin, posé le 2026-07-03, JAMAIS VERSIONNÉ. Un clone neuf de ce dépôt ne l'a
+    // jamais eu : mon balayage dépendait d'un fait que rien ne déclare.
+    let st;
+    try { st = statSync(p); } catch { continue; }
+    if (st.isDirectory()) fichiersDeCode(p, out);
     else if(/\.(m?js|ts)$/.test(e) && !/\.d\.ts$/.test(e)) out.push(p);
   }
   return out;

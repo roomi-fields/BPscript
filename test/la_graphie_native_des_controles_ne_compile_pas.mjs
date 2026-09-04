@@ -24,6 +24,7 @@
 import { createRequire } from 'node:module';
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
+import { DIR_BPS } from './corpus.mjs';
 
 const require = createRequire(import.meta.url);
 const { compileToBPxAST } = require('../src/transpiler/index.js');
@@ -97,7 +98,11 @@ verifier(compile('S -> C4 _ _ _ D4').errors.length === 0, 'trois prolongations d
 
 // ── LE CORPUS EST DU BON CÔTÉ — la migration est faite, et ça se prouve sur les scènes ────────
 {
-  const D = '/home/romi/dev/bp/kanopi/packages/library/scenes/BPScript-tests';
+  // ⛔ LE CORPUS A UNE DÉCLARATION UNIQUE, ET CE GARDE EN PORTAIT UNE COPIE — en chemin ABSOLU,
+  // vers l'arbre d'un voisin. `test/corpus.mjs` se dit « le seul endroit qui le sait » et un garde
+  // d'unicité est censé refuser une copie : celle-ci lui a échappé, en dur, depuis le début.
+  // Trouvée le 2026-09-04 sous enveloppe, quand elle a rendu ZÉRO scène.
+  const D = DIR_BPS;
   let scenes = [];
   try { scenes = readdirSync(D).filter((f) => f.endsWith('.bps')); } catch { /* corpus absent */ }
   verifier(scenes.length > 100, `le corpus de scènes est lisible(${scenes.length} scènes)`);

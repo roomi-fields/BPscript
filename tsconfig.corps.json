@@ -1,6 +1,7 @@
 {
   "//": "Chaine TS d'AUTHORING — les CORPS de librairie, extraits de leurs backticks tagues `ts` par scripts/typer-les-corps.mjs (Romain, 2026-09-03 : le corps s'ecrit entre backticks, comme partout ailleurs dans le langage).",
   "//2": "BPScript reste JS pur ; ce tsconfig ne type-check QUE les corps extraits, contre le SDK @kairos/core. Le dossier .corps-types est JETABLE : il nait, il se type, il meurt — jamais une seconde autorite.",
+  "//3": "Le SDK voisin se lit dans son PAQUET PUBLIE, jamais dans son arbre de travail — decision du 2026-08-24. Mesure du 2026-09-04, sous enveloppe : `../kairos/dist` n'existe plus, `node_modules/@kairos/core` n'a jamais existe, et mon portillon typait donc contre l'etat NON COMMITE d'un voisin. Les deux chemins morts sont sortis.",
   "compilerOptions": {
     "noEmit": true,
     "strict": true,
@@ -8,7 +9,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "paths": {
-      "@kairos/core": ["./node_modules/@kairos/core/dist/index.d.ts", "../kairos/dist/index.d.ts"]
+      "@kairos/core": ["../.publie/kairos/dist/index.d.ts"]
     },
     "types": [],
     "skipLibCheck": true

@@ -25,10 +25,24 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 
 const ICI = path.dirname(new URL(import.meta.url).pathname);
 
-/** Racine de la bibliothèque Kanopi. Surchargeable pour mesurer sur une révision donnée. */
+/**
+ * Racine de la bibliothèque Kanopi. Surchargeable pour mesurer sur une révision donnée.
+ *
+ * ⛔ ET C'EST SON ESPACE PUBLIÉ, JAMAIS SON ARBRE DE TRAVAIL — décision du 2026-08-24, « un dépôt ne
+ * lit que le paquet publié ». Mesuré le 2026-09-04, sous enveloppe : `../kanopi/packages/library`
+ * n'existe plus, et le banc de conformité a refusé de conclure sur zéro source.
+ *
+ * ⇒ L'ENVELOPPE N'A PAS CRÉÉ CE DÉFAUT, ELLE L'A RENDU VISIBLE. Mon corpus emprunté se lisait dans
+ *   l'état NON COMMITÉ d'un voisin : une scène qu'il venait d'éditer sans l'enregistrer entrait dans
+ *   mon verdict, et une scène qu'il avait publiée mais pas encore rebasculée n'y entrait pas. Le
+ *   verdict dépendait de ce qu'il avait sous la main à cet instant.
+ *
+ * ⚠️ Le publié porte le corpus entier — 177 scènes BPScript et 113 grammaires BP3, mesurées le jour
+ *   de la bascule. Ce n'est pas un sous-ensemble.
+ */
 export const LIBRARY = process.env.KANOPI_LIBRARY
   ? path.resolve(process.env.KANOPI_LIBRARY)
-  : path.resolve(ICI, '..', '..', 'kanopi', 'packages', 'library');
+  : path.resolve(ICI, '..', '..', '.publie', 'kanopi', 'packages', 'library');
 
 /** Les deux répertoires fixés par Romain (décision du 2026-07-20). */
 export const DIR_GR = path.join(LIBRARY, 'scenes', 'BP3-tests');

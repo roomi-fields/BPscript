@@ -39,7 +39,7 @@ const ok = (cond, quoi) => { if (!cond) { echecs++; console.log('  ÉCHEC ' + qu
 // examiner », fermée neuf fois ici.
 const DOMICILES = [
   { racine: 'public', socle: 50, quoi: 'les démos de ce dépôt' },
-  { racine: '../kanopi/packages/library/scenes/samples', socle: 30, quoi: 'les scènes de langage, chez Kanopi' },
+  { racine: '../.publie/kanopi/packages/library/scenes/samples', socle: 30, quoi: 'les scènes de langage, chez Kanopi' },
 ];
 
 const walk = (d, acc = []) => {

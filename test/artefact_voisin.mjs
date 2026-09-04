@@ -30,7 +30,12 @@ import { fileURLToPath } from 'node:url';
 // ⛔ LE CHEMIN SE DÉRIVE DE MA RACINE, IL NE S'ÉCRIT PAS EN ABSOLU. Un chemin absolu ne se déclare
 // nulle part et ne se voit qu'au moment où il ÉCHOUE, sur une machine qui n'est pas celle où il a
 // été écrit. Mesuré chez moi le 2026-08-14 : 39 fichiers, dont SIX au portillon.
-const ATELIER = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+// ⛔ ET C'EST L'ESPACE PUBLIÉ, JAMAIS L'ARBRE DE TRAVAIL DU VOISIN — décision du 2026-08-24, « un
+// dépôt ne lit que le paquet publié ». Mesuré le 2026-09-04, sous enveloppe : `../BPx/dist/index.js`
+// n'existe plus, et le portillon s'est arrêté là. ⇒ Ce n'est pas l'enveloppe qui a créé le défaut,
+// elle l'a RENDU VISIBLE : mes bancs typaient contre l'état NON COMMITÉ d'un voisin, donc leur
+// verdict dépendait de ce qu'il avait sous la main à cet instant.
+const ATELIER = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '.publie');
 
 /**
  * LES VOISINS QUI PUBLIENT UN ARTEFACT CONSTRUIT, et le chemin de leur entrée DANS LEUR arbre.
@@ -61,11 +66,11 @@ export async function importerArtefact(voisin) {
   const chemin = cheminArtefact(voisin);
   if (!existsSync(chemin)) {
     throw new Error(
-      `ARTEFACT DU VOISIN ABSENT — ${chemin} n'existe pas.\n`
-      + `  Ce fichier est un PRODUIT DE CONSTRUCTION de ${voisin}, pas un fichier de ce dépôt : il\n`
-      + '  disparaît le temps qu\'il reconstruit. Ce rouge ne dit RIEN sur le code d\'ici.\n'
-      + `  Vérifier chez ${voisin} que sa construction est terminée, puis rejouer. Si l'absence\n`
-      + '  dure, c\'est une panne de son côté, pas un défaut du garde.',
+      `ARTEFACT PUBLIÉ DU VOISIN ABSENT — ${chemin} n'existe pas.\n`
+      + `  C'est l'artefact que ${voisin} PUBLIE, pas un fichier de ce dépôt, et pas son arbre de\n`
+      + '  travail : ce rouge ne dit RIEN sur le code d\'ici.\n'
+      + `  Cause probable : ${voisin} n'a pas encore publié, ou publie en ce moment. Vérifier\n`
+      + `  l'EMPREINTE de son espace publié, puis rejouer. Si l'absence dure, c'est chez lui.`,
     );
   }
   return import(chemin);

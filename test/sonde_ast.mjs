@@ -38,7 +38,7 @@ const { compileToBPxAST } = require('../src/transpiler/index.js');
 
 let parseBP3;
 try {
-  ({ parseBP3 } = await import('/home/romi/dev/bp/bp3-frontend/src/index.ts'));
+  ({ parseBP3 } = await import(new URL('../../.publie/bp3-frontend/src/index.ts', import.meta.url).pathname));
 } catch (e) {
   console.error('SONDE INUTILISABLE — la Voie A (bp3-frontend/src/index.ts) ne se charge pas :');
   console.error(`  ${e.message}`);
