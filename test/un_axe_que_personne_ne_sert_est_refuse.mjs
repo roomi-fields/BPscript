@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// @isole — il ENREGISTRE des axes fabriqués dans le registre : dans un processus partagé, l'axe
+//          `ivltest` survit au garde suivant, qui le voit servi alors qu'il ne devrait pas l'être.
 // ⛔ MIGRE LE 2026-08-22 : une librairie s invoque par le mot qu elle DECLARE, jamais par le nom
 // de son fichier (decision de Romain du 2026-08-17, frappee ce jour). `temperaments` →
 // `temperament`, `test_alphabets` → `alphabet`, `voices` → `voice`, `tunings` → `tuning`,

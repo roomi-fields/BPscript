@@ -29,6 +29,8 @@ export const MODULES = new Map([
   ['compare_modal.cjs', 'comparateur importé par voie_b_status et les mesures'],
   ['kairos_bridge.mjs', 'pont vers Kairos/Kronos, importé par les mesures'],
   ['resolve_bin.cjs', 'résolution du tag de binaire, importé par la lane moteur'],
+  ['gate_classification.mjs', 'CETTE classification elle-même — source unique lue par le portillon. Elle se comptait comme un garde VERT : un module qui s\'importe sans rien examiner sort 0, et rien ne l\'en distinguait.'],
+  ['empreinte_voisins.mjs', 'INSTRUMENT qui prend l\'empreinte des artefacts construits des trois voisins gardés, importé par le garde de source voisine. Il n\'a pas de verdict propre, et il se comptait comme un garde vert.'],
   ['corpus.mjs', 'déclaration UNIQUE de où vit le corpus des 113 (bibliothèque Kanopi), importée par tous ses lecteurs'],
   ['correspondance.mjs', 'lecteur UNIQUE du couple grammaire↔auxiliaires depuis la table de bp3-engine, importé par les mesures — ce qu il porte est gardé par le_couple_ne_vient_que_de_la_table.mjs, qui est AU portillon'],
 ]);
