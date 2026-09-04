@@ -203,10 +203,20 @@ for (const [quoi, src] of REFUS) {
 // cinq passes ont déménagé de `bpxAst.js` vers `resolution.js` : un message de refus est sorti du
 // balayage avec sa fonction, et ce garde est resté VERT en couvrant un refus de moins.
 // ⚠️ Les fichiers GÉNÉRÉS sont écartés — ils ne portent aucun refus et pèsent des mégaoctets.
-const SOURCES = readdirSync(RACINE_SRC)
-  .filter((f) => f.endsWith('.js') && !f.endsWith('-data.js'))
-  .sort()
-  .map((f) => join(RACINE_SRC, f));
+// ⛔ ET LE CATALOGUE DES MESSAGES EN FAIT PARTIE — depuis le 2026-09-04, la PROSE des refus n'est
+// plus écrite au site du refus mais dans `messages/<langue>.js` (décision de Romain : des codes
+// stables, un texte qui vit à côté). Un balayage qui n'énumère que le dossier plat de `src/
+// transpiler` est donc passé de 143 prescriptions à 8, et il l'a DIT — c'est son socle de
+// non-vacuité qui a mordu, pas moi qui l'ai vu.
+// ⚠️ C'EST LE MÊME MOTIF QU'IL DÉNONCE : un balayage écrit pour un ESPACE, et l'espace a bougé.
+const SOURCES = [
+  ...readdirSync(RACINE_SRC)
+    .filter((f) => f.endsWith('.js') && !f.endsWith('-data.js'))
+    .map((f) => join(RACINE_SRC, f)),
+  ...readdirSync(join(RACINE_SRC, 'messages'))
+    .filter((f) => f.endsWith('.js'))
+    .map((f) => join(RACINE_SRC, 'messages', f)),
+].sort();
 
 /** Les messages littéraux d'un fichier : le contenu de chaque `new ParseError(...)` / `LexError`,
  *  parenthèses comptées, interpolations neutralisées. */
@@ -221,7 +231,11 @@ function messagesEcrits(chemin) {
   // Ce garde couvrait donc UN refus sur QUARANTE-DEUX dans l'émetteur. Un garde écrit pour une
   // CONSTRUCTION ne couvre pas l'ESPACE des refus — c'est le motif de la journée, appliqué à
   // moi-même : un motif identifie une chaîne, pas une forme.
-  const RE = /new (?:Parse|Lex)Error\(|\bmessage:\s*(?=[`'"])/g;
+  // ⚠️ ET LE CATALOGUE ÉCRIT SES MESSAGES EN VALEUR D'UNE CLÉ — `CODE_EN_MAJUSCULES:` suivi du
+  //   texte. Troisième graphie d'un refus, après le JET et la POUSSÉE, et elle porte désormais la
+  //   quasi-totalité de la prose. Un motif identifie une chaîne, pas une forme : chaque fois que la
+  //   prose déménage, ce balayage doit apprendre son nouveau domicile.
+  const RE = /new (?:Parse|Lex)Error\(|\bmessage:\s*(?=[`'"])|^\s{2}[A-Z][A-Z0-9_]{4,}:\s*$(?=\n\s*[`'"])|^\s{2}[A-Z][A-Z0-9_]{4,}:\s*(?=[`'"])/gm;
   let m;
   while ((m = RE.exec(texte)) !== null) {
     const jet = m[0].startsWith('new');
@@ -245,6 +259,10 @@ function messagesEcrits(chemin) {
   for (const t of texte.matchAll(/\[\s*'(?:\\.|[^'])*'\s*,\s*("(?:\\.|[^"])*")\s*\]/g)) out.push(t[1]);
   return out.map((brut) => brut
     .replace(/\$\{[^}]*\}/g, 'X')       // interpolation → un nom neutre
+    // ⛔ ET LE TROU DU CATALOGUE EST LA MÊME CHOSE SOUS UNE AUTRE GRAPHIE. `{nom}` remplace
+    //   `${nom}` depuis que la prose vit hors du code : sans cette ligne, le garde lisait le trou
+    //   comme un mot et accusait « une forme morte » sur une phrase parfaitement juste.
+    .replace(/\{\w+\}/g, 'X')
     .replace(/\\'/g, "'")
     .replace(/\\n/g, ' ')
     .replace(/[`"]/g, '')

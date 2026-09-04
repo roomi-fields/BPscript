@@ -469,11 +469,14 @@ export function resoudreSource(source, environnement) {
     // FINAL, et elle est la dernière chose qui s'y ajoute.
     result.errors.push(...joindreLesLibrairies(ast));
   } catch (e) {
-    if (e instanceof ParseError) result.errors.push({ message: e.message, line: e.token && e.token.line });
+    // ⛔ LE CODE VOYAGE AVEC LE MESSAGE — sans quoi il ne sert à personne. Une erreur qui porte son
+    // code À L'INTÉRIEUR du compilateur et le perd à la porte laisse les consommateurs exactement où
+    // ils étaient : accrochés à ma prose. Posé le 2026-09-04 avec le catalogue de messages.
+    if (e instanceof ParseError) result.errors.push({ message: e.message, line: e.token && e.token.line, code: e.code });
     // Un caractère illisible est une erreur de COMPILATION, pas un plantage. Elle arrivait ici en
     // `Error` nue et repartait par le `throw` ci-dessous : l'appelant qui attend `{ast, errors}`
     // recevait une exception. Mesuré le 2026-07-28 sur une faute de frappe d'UN caractère.
-    else if (e instanceof LexError) result.errors.push({ message: e.message, line: e.line });
+    else if (e instanceof LexError) result.errors.push({ message: e.message, line: e.line, code: e.code });
     else throw e;
   }
   return result;

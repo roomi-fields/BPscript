@@ -1,3 +1,5 @@
+import { texteDuDiagnostic } from './diagnostics.js';
+
 /**
  * BPScript Tokenizer
  * Source: BPSCRIPT_EBNF.md — Couche 5 (Lexèmes)
@@ -18,11 +20,17 @@
  * Le découpeur ne peut pas emprunter l'erreur de l'analyseur (l'analyseur importe le découpeur —
  * l'inverse ferait un cycle, et le portillon d'architecture le refuse). D'où un type à lui, que
  * la façade attrape au même endroit.
+ *
+ * ⛔ ET ELLE PORTE UN CODE, DEPUIS LE 2026-09-04. Le texte d'un refus était la seule surface à
+ * laquelle un consommateur pouvait s'accrocher — kanopi y a perdu 11 bancs sur une TRADUCTION,
+ * kairos un banc sur une REFORMULATION. Le code est ce qui ne bouge pas ; le message est écrit dans
+ * `messages/<langue>.js` et il a le droit de changer. Décision de Romain.
  */
 class LexError extends Error {
-  constructor(message, line, col) {
-    super(message);
+  constructor(code, params, line, col) {
+    super(texteDuDiagnostic(code, { ...params, line, col }));
     this.name = 'LexError';
+    this.code = code;
     this.line = line;
     this.col = col;
   }
@@ -234,10 +242,7 @@ function tokenize(source, opts = {}) {
           // vingt lignes plus bas, décrit exactement la faute que ma première écriture a refaite :
           // « il partait en Error nue, que la façade relançait, donc l'appelant PLANTAIT au lieu de
           // recevoir une erreur de compilation ». La forme d'un refus compte autant que le refus.
-          throw new LexError(
-            `Texte ouvert à la ligne ${ouvert.line}, colonne ${ouvert.col} et jamais fermé — il avale `
-            + `tout ce qui suit, et la scène compile à vide. Un texte se ferme par un guillemet ; un `
-            + `guillemet À L'INTÉRIEUR d'un texte se double.`, ouvert.line, ouvert.col);
+          throw new LexError('LEX_TEXT_UNCLOSED', {}, ouvert.line, ouvert.col);
         }
         advance();                              // le guillemet qui ferme… ou le premier des deux
         if (peek() === '"') { str += advance(); continue; }   // doublé → un guillemet littéral
@@ -273,10 +278,7 @@ function tokenize(source, opts = {}) {
       let code = '';
       for (;;) {
         if (i >= source.length) {
-          throw new LexError(
-            `A code block opened with ${n} backtick${n > 1 ? 's' : ''} at line ${ouvert.line}, `
-            + `column ${ouvert.col} is never closed — it swallows everything that follows. Close it `
-            + `with the same run of ${n} backtick${n > 1 ? 's' : ''}.`, ouvert.line, ouvert.col);
+          throw new LexError('LEX_CODE_BLOCK_UNCLOSED', { n, s: n > 1 ? 's' : '' }, ouvert.line, ouvert.col);
         }
         if (peek() === '`' && source.startsWith(cloture, i)
             && source[i + n] !== '`') { i += n; col += n; break; }
@@ -330,11 +332,7 @@ function tokenize(source, opts = {}) {
       while (peek(j) === '-') j++;
       if (peek(j) === '>') {
         const fleche = '-'.repeat(j) + '>';
-        throw new LexError(
-          `'${fleche}' est la flèche du moteur historique, elle n'existe pas en BPScript — la règle `
-          + `s'écrit avec '->'. Ce sont deux langages distincts : ce qui s'écrit ainsi dans une `
-          + `grammaire native ne se recopie pas ici. (Un SILENCE en membre gauche, lui, reste `
-          + `permis : il s'écrit détaché, '- V V -> …'.) Ligne ${line}, colonne ${col}.`, line, col);
+        throw new LexError('LEX_NATIVE_ARROW', { fleche }, line, col);
       }
     }
 
@@ -470,8 +468,7 @@ function tokenize(source, opts = {}) {
     // compilation. Une faute de frappe d'un caractère ne doit jamais tomber hors du canal.
     const aide = CARACTERES_CONNUS_MAIS_ETRANGERS.get(ch)
       ?? "ce caractère n'a aucun sens dans le langage — vérifier la frappe (docs/spec/LANGUAGE.md).";
-    throw new LexError(
-      `Caractère inattendu '${ch}' à la ligne ${line}, colonne ${col} — ${aide}`, line, col);
+    throw new LexError('LEX_UNEXPECTED_CHAR', { ch, aide }, line, col);
   }
 
   emit(T.EOF, null);
@@ -524,18 +521,13 @@ function refuserUnPointACheval(tokens) {
     // ⚠️ RIEN DERRIÈRE N'EST PAS « DÉTACHÉ » : proposer '`gauche`.' comme réécriture serait proposer
     // une forme qui ne qualifie rien. Le refus dit ce qui manque, il ne recopie pas la faute.
     if (!droite) {
-      throw new LexError(
-        `'${gauche}.' : nom attendu après le point — il est collé à '${gauche}' et RIEN ne le suit, `
-        + `il n'a donc rien à qualifier. Écrire le nom ('${gauche}.<nom>'), ou le détacher pour en faire `
-        + `une frontière ('${gauche} .'). Ligne ${line}, colonne ${col}.`, line, col);
+      throw new LexError('LEX_DOT_TRAILING', { gauche }, line, col);
     }
-    throw new LexError(
-      `'${gauche}${separeAvant ? ' ' : ''}.${separeApres ? ' ' : ''}${droite}' : le point est `
-      + `${separeAvant ? 'DÉTACHÉ à gauche et COLLÉ à droite' : 'COLLÉ à gauche et DÉTACHÉ à droite'}, `
-      + `et il ne dit alors ni l'un ni l'autre de ses deux rôles. COLLÉ des deux côtés il QUALIFIE `
-      + `le terme de gauche par celui de droite ('${gauche}.${droite}') ; DÉTACHÉ des deux côtés il `
-      + `SÉPARE — frontière entre fragments de durée égale ('${gauche} . ${droite}'). Écrire l'une `
-      + `des deux. Ligne ${line}, colonne ${col}.`, line, col);
+    throw new LexError('LEX_DOT_HALF_ATTACHED', {
+      ecrit: `${gauche}${separeAvant ? ' ' : ''}.${separeApres ? ' ' : ''}${droite}`,
+      cote: separeAvant ? 'DÉTACHÉ à gauche et COLLÉ à droite' : 'COLLÉ à gauche et DÉTACHÉ à droite',
+      gauche, droite,
+    }, line, col);
   }
 }
 

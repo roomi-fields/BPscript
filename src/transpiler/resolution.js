@@ -589,10 +589,8 @@ export function canonicalizeContexts(ast) {
           if (i === 0) declared.push({ ...rc, side: 'left' });
           else if (i === assembled.length - 1) declared.push({ ...rc, side: 'right' });
           else {
-            throw new ParseError(
-              `contexte distant en milieu de motif (autorisé : début ou fin de LHS)`,
-              { line: rule.line ?? 0, col: 0 }
-            );
+            throw new ParseError('RESOLVE_REMOTE_CONTEXT_MID_PATTERN', {},
+              { line: rule.line ?? 0, col: 0 });
           }
         }
         rule.lhs = assembled.filter((x) => !x || !x.__remote);

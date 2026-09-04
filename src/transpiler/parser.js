@@ -15,10 +15,28 @@ import { BP3_OPERATORS } from './constants.js';
 // ⛔ LE SCHÉMA DE SYNTAXE N'EST PAS UNE LIBRAIRIE — il se lit par SA PROPRE PORTE, jamais par le
 // registre des librairies. Décision Romain, 2026-08-20.
 import { SYNTAXE } from './syntaxe-data.js';
+import { texteDuDiagnostic } from './diagnostics.js';
 
+/**
+ * Erreur d'ANALYSE — et elle porte un CODE depuis le 2026-09-04.
+ *
+ * ⛔ POURQUOI. Le TEXTE d'un refus était la seule surface à laquelle un consommateur pouvait
+ * s'accrocher, et elle n'était déclarée nulle part : kanopi y a perdu 11 bancs sur 939 par ma seule
+ * TRADUCTION, kairos un banc sur une REFORMULATION — même porte, même cause, même étage, seule la
+ * phrase avait bougé. *Un garde bâti sur la graphie d'un voisin mesure sa rédaction, jamais son
+ * comportement* (kairos, 2026-09-04).
+ *
+ * ⇒ Le CODE est ce qui ne bouge pas. Le message vit dans `messages/<langue>.js` et il a le droit de
+ *   changer souvent — c'est le but du catalogue, décision de Romain : « des codes d'erreurs, et
+ *   sortir le texte du compilateur, le mettre à côté pour facilement faire des traductions ».
+ *
+ * ⚠️ ET LA POSITION RESTE DANS LE MESSAGE. `at line L:C` est ajouté ici, hors du catalogue : c'est
+ * une donnée, pas une phrase, et la traduire n'aurait aucun sens.
+ */
 class ParseError extends Error {
-  constructor(msg, token) {
-    super(`${msg} at line ${token.line}:${token.col}`);
+  constructor(code, params, token) {
+    super(`${texteDuDiagnostic(code, { ...params, line: token.line, col: token.col })} at line ${token.line}:${token.col}`);
+    this.code = code;
     this.token = token;
   }
 }
@@ -214,14 +232,10 @@ const outChannels = memoDuRegistre(() => {
 function refuserCanalDeSortieInconnu(name, subkey, tok) {
   if (name !== 'out' || !subkey) return;
   if (!outChannels().has(subkey)) {
-    throw new ParseError(
-      `'${subkey}' is not an output — the output channels are `
-      + `${[...outChannels()].join(', ')}. The list is CLOSED.`, tok);
+    throw new ParseError('PARSE_SUBKEY_OUTPUT_OUTPUT_CHANNELS', { subkey, p1: [...outChannels()].join(', ') }, tok);
   }
   if (!writableChannels().has(subkey)) {
-    throw new ParseError(
-      `'out.${subkey}' is refused — this channel is a DESTINATION of the architecture, routed like `
-      + `the other outputs, but its WRITE from a scene still awaits its dedicated device.`, tok);
+    throw new ParseError('PARSE_OUT_SUBKEY_REFUSED_CHANNEL', { subkey }, tok);
   }
 }
 
@@ -255,10 +269,7 @@ function refuserModeInvalide(name, runtime, value, tok) {
   // lieu d'être toléré ici.
   const ecrit = runtime ?? (value == null ? null : String(value));
   if (ecrit == null) {
-    throw new ParseError(
-      `'mode' expects the derivation mode it sets — 'mode:<mode>'. Written alone, it governs `
-      + `NOTHING: the sub-grammar keeps the mode it had, and the line disappears without a trace. `
-      + `The modes are ${declares.join(', ')}.`, tok);
+    throw new ParseError('PARSE_MODE_EXPECTS_DERIVATION_MODE', { p1: declares.join(', ') }, tok);
   }
   // ⛔ ET LA VALEUR EST REFUSÉE DEPUIS LE 2026-08-19, EN DERNIER DES TROIS ÉTAPES. Elle ne pouvait
   // pas l'être avant, et deux mesures successives l'ont arrêtée :
@@ -274,9 +285,7 @@ function refuserModeInvalide(name, runtime, value, tok) {
   // Refuser avant l'un ou l'autre aurait cassé le FIDÈLE pendant que l'infidèle passait. Les sites
   // ont migré, l'alias est sorti, le refus part en dernier — c'est tout le sens de cet ordre.
   if (!declares.includes(ecrit)) {
-    throw new ParseError(
-      `'mode:${ecrit}': '${ecrit}' is not a derivation mode — the modes are `
-      + `${declares.join(', ')}. The list is CLOSED.`, tok);
+    throw new ParseError('PARSE_MODE_ECRIT_ECRIT_DERIVATION', { ecrit, p1: declares.join(', ') }, tok);
   }
 }
 
@@ -345,18 +354,12 @@ function isTypedBacktick(v) {
 function assertVoiceRef(name, where, token) {
   const entry = voicesIndex().get(name);
   if (!entry) {
-    throw new ParseError(
-      `${where}: unknown voice '${name}' — no entry '${name}' `
-      + `in the catalog of the 'voice' word (LANG-SONS §3).`, token,
-    );
+    throw new ParseError('PARSE_WHERE_UNKNOWN_VOICE_NAME', { where, name }, token);
   }
   const defs = [...(entry.base ? [entry.base] : []), ...Object.values(entry.forDevices)];
   for (const def of defs) {
     if (def.audio !== undefined && !isTypedBacktick(def.audio)) {
-      throw new ParseError(
-        `${where}: voice '${name}' — invalid 'audio' realization in the catalog of the 'voice' word: a `
-        + `TYPED backtick is required (\`js: …\`, \`faust: …\`); received ${JSON.stringify(def.audio)}.`, token,
-      );
+      throw new ParseError('PARSE_WHERE_VOICE_NAME_INVALID', { where, name, p1: JSON.stringify(def.audio) }, token);
     }
   }
 }
@@ -520,7 +523,7 @@ function parse(tokens, opts = {}) {
   function advance() { return tokens[pos++]; }
   function expect(type) {
     const tok = current();
-    if (tok.type !== type) throw new ParseError(`Expected ${type}, got ${tok.type} (${tok.value})`, tok);
+    if (tok.type !== type) throw new ParseError('PARSE_EXPECTED_TYPE_GOT', { type, p1: tok.type, p2: tok.value }, tok);
     return advance();
   }
   /**
@@ -557,7 +560,7 @@ function parse(tokens, opts = {}) {
    */
   function lireNomDEntree(tok) {
     if (!at(T.IDENT) && !at(T.INT)) {
-      throw new ParseError(`Expected ${T.IDENT}, got ${current().type} (${current().value})`, tok || current());
+      throw new ParseError('PARSE_EXPECTED_GOT', { p1: T.IDENT, p2: current().type, p3: current().value }, tok || current());
     }
     const chiffreDAbord = at(T.INT);
     const depart = current();
@@ -569,10 +572,7 @@ function parse(tokens, opts = {}) {
     // ⛔ « AU MOINS UNE LETTRE » FERME LA SEULE AMBIGUÏTÉ RÉELLE : sans elle, `12` en tête serait à
     // la fois un nom et un nombre.
     if (chiffreDAbord && !/[A-Za-z]/.test(nom)) {
-      throw new ParseError(
-        `'${nom}' is a NUMBER, not a name. A name that starts with a digit carries at least one `
-        + `letter — '12TET' and '22shruti' are names, '${nom}' is not one.`,
-        depart);
+      throw new ParseError('PARSE_NOM_NUMBER_NAME_NAME', { nom }, depart);
     }
     return nom;
   }
@@ -765,10 +765,7 @@ function parse(tokens, opts = {}) {
       // qui n en veut pas.
       if (premiereLigne && !ligneSansFleche()) break;
       if (!at(T.BACKTICK) && !atProductionBlock() && !ligneSansFleche()) {
-        throw new ParseError(
-          `a rule is written BEFORE the delimiter: the line '-----' is missing between the declarative `
-          + `part and the production. Since the at-sign left the language, it is POSITION that `
-          + `qualifies a line — before the '-----' it declares, after it produces.`, current());
+        throw new ParseError('PARSE_RULE_WRITTEN_BEFORE_DELIMITER', {}, current());
       }
       if (!at(T.BACKTICK) && !atProductionBlock()) {
         const dir = parseDirective();
@@ -1148,9 +1145,7 @@ function parse(tokens, opts = {}) {
         const sortie = (el && typeof el === 'object' && el.name) ? corpsPour(el, formes) : null;
         if (sortie) {
           if (!reste) {
-            throw new ParseError(
-              `'${el.name}' expands without end — a definition ends up invoking itself. `
-              + `A form that contains itself does not expand.`, jetonDe(el));
+            throw new ParseError('PARSE_EXPANDS_WITHOUT_END_DEFINITION', { p1: el.name }, jetonDe(el));
           }
           n.splice(i, 1, ...sortie);
           i += sortie.length - 1;
@@ -1178,19 +1173,13 @@ function parse(tokens, opts = {}) {
 
     if (el.type === 'SymbolCall') {
       if (def.kind !== 'transformation') {
-        throw new ParseError(
-          `'${el.name}' is ${def.kind === 'prereglage' ? 'a preset' : 'a structure'}: it is `
-          + `placed BARE, without arguments. Write '${el.name}'. A parameter list is declared with `
-          + `the name ('def ${el.name}(x) …'), and only then does the call carry any.`, jetonDe(el));
+        throw new ParseError('PARSE_PLACED_BARE_WITHOUT_ARGUMENTS', { p1: el.name, p2: def.kind === 'prereglage' ? 'a preset' : 'a structure' }, jetonDe(el));
       }
       return corpsSubstitue(def, el);
     }
     if (el.type !== 'Symbol') return null;
     if (def.kind === 'transformation') {
-      throw new ParseError(
-        `'${el.name}' is a transformation on ${def.params.join(', ')}: it is called with its `
-        + `arguments. Write '${el.name}(${def.params.map(() => '…').join(', ')})'. Placed bare, the name `
-        + `would come out of the tree as a terminal and sound.`, jetonDe(el));
+      throw new ParseError('PARSE_TRANSFORMATION_CALLED_ARGUMENTS_WRITE', { p1: el.name, p2: def.params.join(', '), p3: def.params.map(() => '…').join(', ') }, jetonDe(el));
     }
     if (def.kind === 'prereglage') {
       // Le nœud EXACT que produit `!(vel:120)` écrit à la même place — pas une forme voisine :
@@ -1211,17 +1200,10 @@ function parse(tokens, opts = {}) {
     const args = appel.args || [];
     const nommes = args.filter((a) => a && a.key != null);
     if (nommes.length) {
-      throw new ParseError(
-        `'${def.name}(…)': a transformation argument is given by POSITION, never by name — `
-        + `received '${nommes[0].key}:'. Write '${def.name}(${def.params.map(() => '…').join(', ')})', `
-        + `the parameters in the order of the definition (${def.params.join(', ')}).`, jetonDe(appel));
+      throw new ParseError('PARSE_TRANSFORMATION_ARGUMENT_GIVEN_POSITION', { p1: def.name, p2: nommes[0].key, p3: def.params.map(() => '…').join(', '), p4: def.params.join(', ') }, jetonDe(appel));
     }
     if (args.length !== def.params.length) {
-      throw new ParseError(
-        `'${def.name}' is defined with ${def.params.length} parameter(s) (${def.params.join(', ')}) `
-        + `and is called here with ${args.length} argument(s). A transformation called wrongly `
-        + `would leave a parameter unsubstituted in the tree, in the form of a terminal that `
-        + `would sound.`, jetonDe(appel));
+      throw new ParseError('PARSE_DEFINED_PARAMETER_CALLED_HERE', { p1: def.name, p2: def.params.length, p3: def.params.join(', '), p4: args.length }, jetonDe(appel));
     }
     const valeurs = new Map();
     def.params.forEach((p, i) => {
@@ -1229,9 +1211,7 @@ function parse(tokens, opts = {}) {
       // Le site d'appel ne lit qu'un TERME NU : c'est ce que le langage accepte aujourd'hui, et ce
       // qu'un argument d'une autre forme produirait ne se devine pas — il se refuse.
       if (!v || v.type !== 'Literal' || (typeof v.value !== 'string' && typeof v.value !== 'number')) {
-        throw new ParseError(
-          `'${def.name}(…)': the argument '${p}' is not a term. A transformation argument `
-          + `is a NAME (a terminal, a rule head), written bare.`, jetonDe(appel));
+        throw new ParseError('PARSE_ARGUMENT_TERM_TRANSFORMATION_ARGUMENT', { p1: def.name, p }, jetonDe(appel));
       }
       valeurs.set(p, String(v.value));
     });
@@ -1373,10 +1353,10 @@ function parse(tokens, opts = {}) {
     // a écrit trois états inconnus doit voir les trois, pas les découvrir un par un en trois
     // compilations. Le premier porte le refus, les autres le suivent dans le même message.
     if (criFlags.length) {
-      throw new ParseError(
-        criFlags.length === 1 ? criFlags[0]
+      throw new ParseError('PARSE_FLAG_USAGES_DESIGNATE_NOTHING', {
+        cri: criFlags.length === 1 ? criFlags[0]
           : `${criFlags.length} flag usages designate nothing:\n  · ${criFlags.join('\n  · ')}`,
-        { line: 0, col: 0 });
+      }, { line: 0, col: 0 });
     }
   }
 
@@ -1894,13 +1874,7 @@ function parse(tokens, opts = {}) {
         && (at(T.IDENT) || at(T.INT) || at(T.FLOAT))) {
       const reste = current().value;
       const ecrit = value != null ? String(value) : (runtime != null ? String(runtime) : '');
-      throw new ParseError(
-        `the value of '${dirName}' reads '${ecrit}', and '${reste}' remains stuck to it without being `
-        + `read as part of it. A directive value is BARE: a number, a ratio ('3/4'), or a name. Remove `
-        + `'${reste}' if it is a unit — no directive carries one — or space it out if what `
-        + `follows is something else.`,
-        current(),
-      );
+      throw new ParseError('PARSE_VALUE_DIRNAME_READS_ECRIT', { dirName, ecrit, reste }, current());
     }
     return { value, runtime };
   }
@@ -1951,18 +1925,12 @@ function parse(tokens, opts = {}) {
       // tranché — tant qu'il ne l'est pas, cette forme-là vit.
       if (!dansLeFlux) {
         const ecrit = value !== null && value !== undefined ? `:${value}` : (runtime ? `:${runtime}` : '');
-        throw new ParseError(
-          `'[${name}${ecrit}]': a production directive is written at the top of the scene, before the `
-          + `delimiter — '${name}${ecrit}'. A block that grouped several keys is rewritten as `
-          + `that many lines. The bracket carries what belongs to DERIVATION: a flag, `
-          + `a procedure, a rank.`, atTok);
+        throw new ParseError('PARSE_NAME_ECRIT_PRODUCTION_DIRECTIVE', { name, ecrit }, atTok);
       }
       // DANS LE FLUX, seule la re-semence a un sens : c'est la seule de ces clés à avoir un
       // contrôle de flux natif (`_srand`).
       if (name !== 'seed') {
-        throw new ParseError(
-          `'![${name}…]': only 'seed' makes sense in the flow (re-seed _srand); `
-          + `'${name}' is placed at the top of the scene, '${name}'.`, atTok);
+        throw new ParseError('PARSE_NAME_SEED_MAKES_SENSE', { name }, atTok);
       }
       dirs.push({ type: 'Directive', name, subkey: null, runtime, value,
                   aliases: null, modifiers: null, line: atTok.line });
@@ -2084,50 +2052,37 @@ function parse(tokens, opts = {}) {
     // `in` EST un mot de la grammaire (schéma de syntaxe) : c'est pour cela que ce refus existe et
     // qu'il porte sa réécriture. Ce qui l'éteindrait est qu'une librairie invoquée déclare `in`.
     if (mot === 'in' && peek(1).type === T.IDENT && !libCtx.portees.has('in')) {
-      throw new ParseError(`'in ${peek(1).value}' is refused — an input declares its CHANNEL: `
-        + `'in.<channel> ${peek(1).value}'. The input channels are ${[...inChannels()].join(', ')}. `
-        + `Without it, no runtime is addressed and nothing triggers.`, tok);
+      throw new ParseError('PARSE_REFUSED_INPUT_DECLARES_CHANNEL', { p1: peek(1).value, p2: [...inChannels()].join(', ') }, tok);
     }
     if (mot === 'in' && peek(1).type === T.PERIOD && !peek(1).spaceBefore
         && peek(2).type === T.IDENT) {
       advance(); advance();                        // in .
       const canal = expect(T.IDENT).value;
       if (at(T.LPAREN)) {
-        throw new ParseError(`'in.${canal}(…)' is refused — an input carries NO `
-          + `port name. A port name comes from the system and changes from machine to machine; the scene `
-          + `names a ROLE, the user associates the device, and the association lives outside the `
-          + `scene.`, tok);
+        throw new ParseError('PARSE_CANAL_REFUSED_INPUT_CARRIES', { canal }, tok);
       }
       // LISTE FERMÉE PROPRE AUX ENTRÉES (`lib/core.json` schema.channels).
       if (!inChannels().has(canal)) {
-        throw new ParseError(`'${canal}' is not an input — the input channels are `
-          + `${[...inChannels()].join(', ')}. The list is CLOSED.`, tok);
+        throw new ParseError('PARSE_CANAL_INPUT_INPUT_CHANNELS', { canal, p1: [...inChannels()].join(', ') }, tok);
       }
       if (!at(T.IDENT)) {
-        throw new ParseError(`'in.${canal}' must name the ROLE that the input holds — `
-          + `'in.${canal} <role>'. The type comes first, the name next.`, current());
+        throw new ParseError('PARSE_CANAL_MUST_NAME_ROLE', { canal }, current());
       }
       const roleName = advance().value;
       let table = null;
       while (at(T.IDENT)) {
         const cle = advance().value;
         if (!at(T.PERIOD)) {
-          throw new ParseError(`in.${canal} ${roleName}: '${cle}' must CALL a component with `
-            + `a period ('mapping.<table>') — the period CALLS, the colon ASSIGNS.`, tok);
+          throw new ParseError('PARSE_CANAL_ROLENAME_CLE_MUST', { canal, roleName, cle }, tok);
         }
         advance();
         const valeur = expect(T.IDENT).value;
         if (cle === 'mapping') {
           table = valeur;
         } else if (cle === 'alphabet') {
-          throw new ParseError(`in.${canal} ${roleName}: an input carries NO alphabet. There `
-            + `is nothing to resolve on input — the event is DISCRETE, not a signal to `
-            + `interpret. It is the TABLE (mapping.<name>) that declares the vocabulary the `
-            + `labels draw from, and it does so in a library, not in the scene.`, tok);
+          throw new ParseError('PARSE_CANAL_ROLENAME_INPUT_CARRIES', { canal, roleName }, tok);
         } else {
-          throw new ParseError(`in.${canal} ${roleName}: unknown property '${cle}' — an `
-            + `input declares its channel and, optionally, its table ('mapping.<table>'). `
-            + `Nothing else.`, tok);
+          throw new ParseError('PARSE_CANAL_ROLENAME_UNKNOWN_PROPERTY', { canal, roleName, cle }, tok);
         }
       }
       // Aucune table par défaut : `mapping` reste null quand rien n'est déclaré.
@@ -2153,10 +2108,7 @@ function parse(tokens, opts = {}) {
     // lire avant que `core` soit chargé.
     if (mot === 'def' || mot === 'init') return null;
     if (mot === 'object' && ouvreUnNom(1)) {
-      throw new ParseError(
-        `'object ${peek(1).value}': 'object' has LEFT the language — the root of a family is `
-        + `declared with 'def ${peek(1).value}(…)', and an instance by its type in front `
-        + `('${peek(1).value} <name>(…)'). Only one word declares: 'def'.`, tok);
+      throw new ParseError('PARSE_OBJECT_OBJECT_LEFT_LANGUAGE', { p1: peek(1).value }, tok);
     }
     // ── `actor` — un objet du socle dont le corps a une FORME PROPRE ──────────────────────────
     // Décision de Romain, 2026-09-02 : `def` et `init` sont les deux mots racines, `actor` devient
@@ -2165,8 +2117,7 @@ function parse(tokens, opts = {}) {
     // Sans `types` en portée, `actor basse (…)` est refusé comme tout type absent.
     if (mot === 'actor' && ouvreUnNom(1)) {
       if (!prototypesDeclares.has('actor')) {
-        throw new ParseError(`'actor ${peek(1).value}': 'actor' is not a type in scope. It is `
-          + `an object of 'types' — invoke 'types', 'core', or a library that invokes 'types'.`, tok);
+        throw new ParseError('PARSE_ACTOR_ACTOR_TYPE_SCOPE', { p1: peek(1).value }, tok);
       }
       return null;
     }
@@ -2199,9 +2150,7 @@ function parse(tokens, opts = {}) {
         // ⚠️ CE REFUS ÉNUMÉRAIT LE CATALOGUE DE MODULES, et il l'a perdu avec lui : un refus qui
         // nomme une forme la ressuscite pour son lecteur. C'est le troisième domicile d'un mot
         // retiré, après le parseur et les librairies — et aucun garde ne compile un message.
-        throw new ParseError(`'${mot} ${peek(1).value}': '${mot}' is not a type in scope. A `
-          + `type in front is an object in scope — declared by the scene, or brought by a library `
-          + `invoked at the top (the base lives in 'types') — or in.<channel>.`, tok);
+        throw new ParseError('PARSE_MOT_MOT_TYPE_SCOPE', { mot, p1: peek(1).value }, tok);
       }
       return null;
     }
@@ -2217,8 +2166,7 @@ function parse(tokens, opts = {}) {
       // n'invoque rien.
       if (peek(1).type === T.NEWLINE || peek(1).type === T.EOF) {
         if (loadLib(mot) || catalogAxisKeys().has(mot)) return null;
-        throw new ParseError(`'${mot}' must name what it declares — the type comes first, the `
-          + `name next ('${mot} <name>').`, tok);
+        throw new ParseError('PARSE_MOT_MUST_NAME_WHAT', { mot }, tok);
       }
       return null;
     }
@@ -2265,16 +2213,11 @@ function parse(tokens, opts = {}) {
       // rendait `states` rempli et `initiale` ABSENTE. Elle était donc incompatible avec « on
       // initie » : un drapeau à états ne pouvait pas dire d'où il part.
       if (!at(T.COLON)) {
-        throw new ParseError(
-          `flag ${premier}: a flag carries its initial value — 'flag ${premier}:<integer>'. `
-          + `That is the only form: neither the name alone, nor named states in parentheses. `
-          + `A flag counts and is compared to integers.`, current());
+        throw new ParseError('PARSE_FLAG_PREMIER_FLAG_CARRIES', { premier }, current());
       }
       advance();
       if (!at(T.INT)) {
-        throw new ParseError(`flag ${premier}: the initial value is an INTEGER — `
-          + `'flag ${premier}:<integer>'. A flag counts and is compared to integers.`,
-          current());
+        throw new ParseError('PARSE_FLAG_PREMIER_INITIAL_VALUE', { premier }, current());
       }
       const initiale = Number(advance().value);
       return { type: 'VarDirective', names: [premier],
@@ -2319,16 +2262,13 @@ function parse(tokens, opts = {}) {
       advance();
       const t = current();
       if (t.spaceBefore) {
-        throw new ParseError(`${mot} ${nom}: a starting value STICKS to its sign — `
-          + `'${nom}:<value>', never '${nom}: <value>'. The space separates two terms, `
-          + `sticking them together joins them.`, t);
+        throw new ParseError('PARSE_MOT_NOM_STARTING_VALUE', { mot, nom }, t);
       }
       if (at(T.INT) || at(T.FLOAT)) { advance(); return Number(t.value); }
       if (at(T.IDENT)) { advance(); return t.value; }
       const aTiretBas = lireNomATiretBas();
       if (aTiretBas !== null) return aTiretBas;
-      throw new ParseError(`${mot} ${nom}: a starting value is placed after ':' — a number or `
-        + `a name. Received '${t.value ?? t.type}'.`, t);
+      throw new ParseError('PARSE_MOT_NOM_STARTING_VALUE_2', { mot, nom, p1: t.value ?? t.type }, t);
     };
     const departs = [];
     const d0 = lireDepart(premier);
@@ -2449,10 +2389,7 @@ function parse(tokens, opts = {}) {
     const tok = current();
     if (at(T.AT)) {
       const apres = peek(1);
-      throw new ParseError(
-        `the at-sign has LEFT the language — write `
-        + `'${apres && apres.value ? apres.value : '<directive>'}' without it. What qualifies a `
-        + `line is its POSITION: before the '-----' it declares, after it produces.`, tok);
+      throw new ParseError('PARSE_SIGN_LEFT_LANGUAGE_WRITE', { p1: apres && apres.value ? apres.value : '<directive>' }, tok);
     }
     // @+ is a special case — PLUS token instead of IDENT
     let name, subkey = null, directiveParams = null;
@@ -2769,10 +2706,7 @@ function parse(tokens, opts = {}) {
 
   function refuserLeSigneEgal(directive, nom) {
     if (!at(T.EQUALS)) return;
-    throw new ParseError(
-      `${directive} ${nom}: the sign '=' has been REMOVED from the whole language — `
-      + `write '${directive} ${nom} <value>' with nothing between the two.`,
-      current());
+    throw new ParseError('PARSE_DIRECTIVE_NOM_SIGN_BEEN', { directive, nom }, current());
   }
 
     // ─── PIERRE TOMBALE — `flag` (directive de tête de scène) n'existe plus (référence
@@ -2838,12 +2772,7 @@ function parse(tokens, opts = {}) {
     if (name === 'def' || name === 'terminal') {
       const motDeclarant = name;
       if (!ouvreUnNom()) {
-        throw new ParseError(
-          `'${motDeclarant}' must name what it defines: '${motDeclarant} <name> <body>'. The name `
-          + `comes first, what it is worth next — like 'actor'. A NAME STARTS WITH A LETTER, `
-          + `or with a digit if it carries at least one letter: 'western', 'a_b', '12TET' are ones; `
-          + `'12', '_ab', '#a', '-ab' and '"ab"' are not. Received: `
-          + `${JSON.stringify(String(current().value ?? current().type))}.`, tok);
+        throw new ParseError('PARSE_MOTDECLARANT_MUST_NAME_WHAT', { motDeclarant, p1: JSON.stringify(String(current().value ?? current().type)) }, tok);
       }
       const defName = lireNomDEntree(tok);
       // ⛔ LE JETON QUI SUIT LE NOM, CAPTURÉ ICI. Quand aucun corps n'est lisible, c'est LUI qui dit
@@ -2865,7 +2794,7 @@ function parse(tokens, opts = {}) {
         const cle = expect(T.IDENT).value;
         if (at(T.PERIOD) && !current().spaceBefore) {
           advance();
-          if (!at(T.IDENT)) throw new ParseError(`'def ${defName}': name expected after '${cle}.'`, current());
+          if (!at(T.IDENT)) throw new ParseError('PARSE_DEF_DEFNAME_NAME_EXPECTED', { defName, cle }, current());
           let val = String(advance().value);
           while ((at(T.IDENT) || at(T.INT)) && !current().spaceBefore) val += String(advance().value);
           // ⛔ UN CATALOGUE S'ADRESSE PAR UN SEUL NIVEAU, ET LE REFUS DOIT LE DIRE.
@@ -2889,11 +2818,7 @@ function parse(tokens, opts = {}) {
           if (at(T.PERIOD) && !current().spaceBefore) {
             const suite = peek(1);
             const interne = suite && suite.value != null ? String(suite.value) : null;
-            throw new ParseError(
-              `'${cle}.${val}${interne ? `.${interne}` : ''}…' addresses a catalog by TWO levels — `
-              + `only one is written. The period calls an ENTRY, never the structure that holds it: `
-              + `write '${cle}.${interne ?? '<entry>'}' if '${interne ?? '…'}' is the entry wanted, `
-              + `or '${cle}.${val}' if it is '${val}'.`, kTok);
+            throw new ParseError('PARSE_CLE_VAL_ADDRESSES_CATALOG', { cle, val, p1: interne ? `.${interne}` : '', p2: interne ?? '<entry>', p3: interne ?? '…' }, kTok);
           }
           cles[cle] = { kind: 'ref', value: val };
           lu++;
@@ -2901,7 +2826,7 @@ function parse(tokens, opts = {}) {
         }
         if (at(T.COLON) && !current().spaceBefore) {
           advance();
-          if (atEnd() || at(T.NEWLINE)) throw new ParseError(`'def ${defName}': value expected after '${cle}:'`, current());
+          if (atEnd() || at(T.NEWLINE)) throw new ParseError('PARSE_DEF_DEFNAME_VALUE_EXPECTED', { defName, cle }, current());
           // ── UNE VALEUR VA JUSQU'AU BOUT DE LA LIGNE, ET L'ESPACE EN SÉPARE LES PARTIES ────────
           // C'est la règle du langage — « l'espace ne sépare que les PARTIES d'une valeur » — et ce
           // lecteur ne la tenait PAS. Il s'arrêtait au premier IDENT espacé et laissait le reste
@@ -2961,19 +2886,10 @@ function parse(tokens, opts = {}) {
             // ma propre liste annonçait comme couvert. Il porte une voix de code : il ouvre une
             // valeur, il ne la prolonge pas.
             if (current().type === T.BACKTICK && (parties.length || courante !== '')) {
-              throw new ParseError(
-                `'def ${defName}': typed code cannot follow another part in the value `
-                + `of '${cle}'. Typed code IS the value — write it alone after the colon.`,
-                current());
+              throw new ParseError('PARSE_DEF_DEFNAME_TYPED_CODE', { defName, cle }, current());
             }
             if (!PARTIE.has(current().type)) {
-              throw new ParseError(
-                `'def ${defName}': '${current().value ?? current().type}' is not readable in the `
-                + `value of '${cle}'. A value is made of WORDS — a name, a number, a text `
-                + `in quotes, a ratio — and the space separates its parts. This sign opens `
-                + `a structure, and a structure is not placed in a value: write it in the `
-                + `body in parentheses of the declaration.`,
-                current());
+              throw new ParseError('PARSE_DEF_DEFNAME_READABLE_VALUE', { defName, p1: current().value ?? current().type, cle }, current());
             }
             if (courante !== '' && current().spaceBefore) { parties.push(courante); courante = ''; }
             courante += String(advance().value);
@@ -2986,11 +2902,7 @@ function parse(tokens, opts = {}) {
           lu++;
           return;
         }
-        throw new ParseError(
-          `'def ${defName}': '${cle}' is neither a component call nor an assignment. `
-          + `A terminal key is written '${cle}.<name>' to call a component, or `
-          + `'${cle}:<value>' to assign a value — the period calls, the colon assigns.`,
-          kTok);
+        throw new ParseError('PARSE_DEF_DEFNAME_CLE_NEITHER', { defName, cle }, kTok);
       };
 
       // ── QUEL CORPS ? Le discriminant est la PONCTUATION COLLÉE, pas le nom ──────────────
@@ -3082,9 +2994,7 @@ function parse(tokens, opts = {}) {
           expect(T.RPAREN);
           const corps = parseRhsElements();
           if (corps.length === 0) {
-            throw new ParseError(
-              `'def ${defName}(${params.join(', ')})': transformation without a body. What the `
-              + `definition DOES with its parameters is written after them.`, tok);
+            throw new ParseError('PARSE_DEF_DEFNAME_TRANSFORMATION_WITHOUT', { defName, p1: params.join(', ') }, tok);
           }
           return { type: 'DefDirective', name: defName, kind: 'transformation',
                    params, body: corps, line: tok.line };
@@ -3127,11 +3037,7 @@ function parse(tokens, opts = {}) {
       // déjà ce qu'il déclare. Le laisser passer rendrait un `kind:'terminal'` sur une structure,
       // c'est-à-dire un nœud plausible et faux.
       if (motDeclarant === 'terminal' && at(T.IDENT) && !cleEnTete()) {
-        throw new ParseError(
-          `'terminal ${defName}': a terminal is declared by its KEYS — 'voice.<name>', 'hz:<n>', `
-          + `'degree:<n>', 'register:<n>', 'sounding:<true|false>', 'duration:<n>', `
-          + `'tuning.<name>', 'octaves.<name>'. A sequence of terms is a STRUCTURE, and it `
-          + `is written 'def ${defName} <terms>'.`, current());
+        throw new ParseError('PARSE_TERMINAL_DEFNAME_TERMINAL_DECLARED', { defName }, current());
       }
       if (at(T.IDENT) && !cleEnTete()) {
         // ── UNE STRUCTURE — un nom vaut une suite de termes, qu'on réinvoque d'un mot ────────
@@ -3144,8 +3050,7 @@ function parse(tokens, opts = {}) {
         // et les qualificatifs marchent donc sans une ligne de plus, parce que ce sont les mêmes.
         const corps = parseRhsElements();
         if (corps.length === 0) {
-          throw new ParseError(
-            `'def ${defName}': empty structure. A name worth nothing is not reinvoked.`, tok);
+          throw new ParseError('PARSE_DEF_DEFNAME_EMPTY_STRUCTURE', { defName }, tok);
         }
         // ⛔ UN CORPS DE CODE N'EST PAS UNE STRUCTURE — et sans ce refus il en devenait une.
         // `def fondu phase \`js: …\`` (LANGUAGE.md:312) commence lui aussi par un terme nu ; il
@@ -3158,12 +3063,7 @@ function parse(tokens, opts = {}) {
         // décider sur un vocabulaire de types ferait dépendre la forme d'une liste de mots.
         const backtick = corps.find((e) => e && typeof e.type === 'string' && e.type.includes('Backtick'));
         if (backtick) {
-          throw new ParseError(
-            `'def ${defName}' carries CODE, not a structure — this stage reads "a name is worth a `
-            + `sequence of terms" ('def cadence sa re ga pa'). The typed code body `
-            + `('def ${defName} <type> \`language: …\`', types 'signal', 'pitch', 'phase', 'logic') `
-            + `is NOT yet read; it is refused here rather than being read the wrong way — otherwise the `
-            + `type would become a terminal and the code a neighboring element.`, tok);
+          throw new ParseError('PARSE_DEF_DEFNAME_CARRIES_CODE', { defName }, tok);
         }
         return { type: 'DefDirective', name: defName, kind: 'structure', body: corps, line: tok.line };
       }
@@ -3178,9 +3078,7 @@ function parse(tokens, opts = {}) {
         // Un corps ouvert se referme. Le refus NOMME ce qui manque : sans lui, une parenthèse
         // oubliée sortirait par « Expected IDENT » sur la ligne suivante, qui n'apprend rien.
         if (!at(T.RPAREN)) {
-          throw new ParseError(
-            `'terminal ${defName}': the body opened by '(' is not closed — ')' is missing.`,
-            current());
+          throw new ParseError('PARSE_TERMINAL_DEFNAME_BODY_OPENED', { defName }, current());
         }
         advance();
       }
@@ -3216,22 +3114,17 @@ function parse(tokens, opts = {}) {
                  settings: { type: 'SettingBag', pairs: [] }, line: tok.line };
       }
       if (lu === 0) {
-        throw new ParseError(
+        throw new ParseError('PARSE_DECLARES_NOTHING', {
           // ⚠️ LE NOM CITÉ EST CELUI QUI A ÉTÉ LU, pas celui qui a été écrit. Quand un signe COLLÉ
           // l'a arrêté, le message doit le dire avant tout le reste : sans ça, l'auteur relit sa
           // ligne, y voit son nom entier, et cherche la faute dans le corps.
-          `${apresLeNom && apresLeNom.spaceBefore === false && apresLeNom.type !== T.EOF
+          arret: apresLeNom && apresLeNom.spaceBefore === false && apresLeNom.type !== T.EOF
             ? `the name read stops at '${defName}': the sign `
               + `${JSON.stringify(String(apresLeNom.value ?? apresLeNom.type))} that follows it does `
               + `not belong to a name, and what remains does not read as any body. `
-            : ''}`
-          + `'${motDeclarant} ${defName}' declares nothing. This stage reads TWO bodies: the TERMINAL `
-          + `DECLARATION — a name then its keys, on the same line ('def ${defName}  voice.sec') or `
-          + `in an indented block, one key per line — and the STRUCTURE, a name that is worth a `
-          + `sequence of terms ('def ${defName} sa re ga pa'). The other bodies the specification `
-          + `describes — a wiring, typed code, a preset, a parameterized or structural `
-          + `transformation — are NOT yet read; they will be, and until then they are refused `
-          + `here rather than being read the wrong way.`, tok);
+            : '',
+          motDeclarant, defName,
+        }, tok);
       }
       return { type: 'DefDirective', name: defName, kind: 'terminal', keys: cles, line: tok.line };
     }
@@ -3257,10 +3150,7 @@ function parse(tokens, opts = {}) {
       // langage écrit avec un point qu'il n'admet pas se refuse AVEC sa forme, lue dans la donnée.
       if (subkey) {
         const forme = formeDuMot('init');
-        throw new ParseError(
-          `'init.${subkey}': 'init' is a word of the LANGUAGE, it is not qualified by a period`
-          + `${forme ? ` — it is written '${forme}'` : ''}, and gathers what belongs to the whole `
-          + `scene: tagged code, or a bag of starting values.`, current());
+        throw new ParseError('PARSE_INIT_SUBKEY_INIT_WORD', { subkey, p1: forme ? ` — it is written '${forme}'` : '' }, current());
       }
       // LA FORME DE L'ARBRE EST CELLE QUE LA SPEC ÉCRIT : `init: InitEntry[] | null`, un tableau
       // PLAT (AST.md:30, :201-204). Pas de `{codes, valeurs}` de mon invention — une seconde forme
@@ -3317,10 +3207,7 @@ function parse(tokens, opts = {}) {
       // refuse en le nommant, avec sa forme lue dans la donnée.
       if (subkey) {
         const forme = formeDuMot('actor');
-        throw new ParseError(
-          `'actor.${subkey}': 'actor' is a word of the LANGUAGE, it is not qualified by a period`
-          + `${forme ? ` — it is written '${forme}'` : ''}. The period carries the DERIVATION of an `
-          + `actor, after its name: 'actor <name>.<kind>'.`, current());
+        throw new ParseError('PARSE_ACTOR_SUBKEY_ACTOR_WORD', { subkey, p1: forme ? ` — it is written '${forme}'` : '' }, current());
       }
       let actorName = lireNomDEntree(tok);
       // Le POINT porte la dérivation — `extends` a été effacé pour ça (même décision, « ce qui
@@ -3373,7 +3260,7 @@ function parse(tokens, opts = {}) {
             while (!atEnd() && !at(T.COMMA) && !at(T.RPAREN) && !at(T.NEWLINE)) {
               brut += advance().value;
             }
-            if (brut === '') throw new ParseError(`value expected after '${paramKey}:'`, current());
+            if (brut === '') throw new ParseError('PARSE_VALUE_EXPECTED_AFTER_PARAMKEY', { paramKey }, current());
             paramVal = brut;
           }
           params[paramKey] = paramVal;
@@ -3490,11 +3377,7 @@ function parse(tokens, opts = {}) {
         // sans ce garde il tomberait en silence hors de la boucle (traité comme début de règle)
         // au lieu de crier. `out` porte désormais la direction de sortie.
         if (key === 'transport' && (next === T.PERIOD || next === T.COLON) && !peek(1).spaceBefore) {
-          throw new ParseError(
-            `actor '${actorName}': this key does not exist. The output direction is written `
-            + `'out.<channel>' — for example 'out.audio' or 'out.midi(ch:3)'.`,
-            current(),
-          );
+          throw new ParseError('PARSE_ACTOR_ACTORNAME_KEY_DOES', { actorName }, current());
         }
 
         // Les CINQ clés d'entité — `alphabet.X`, `tuning.X`, `octaves.X`, `out.X[(…)]`, `eval.X`.
@@ -3524,10 +3407,7 @@ function parse(tokens, opts = {}) {
               : key === 'sound' || key === 'sounds'
                 ? ` — a sound object prototype lives in a library, it is not placed on the actor`
                 : '';
-            throw new ParseError(
-              `'${key}.…' is not an actor key${perimee ? ' (removed)' : ''}${ou}. `
-              + `The keys of an actor are: ${[...actorKeysData().valides].join(', ')}`,
-              current());
+            throw new ParseError('PARSE_KEY_ACTOR_KEY_KEYS', { key, p1: perimee ? ' (removed)' : '', ou, p2: [...actorKeysData().valides].join(', ') }, current());
           }
           // Le jeton de la CLÉ, pris AVANT de la consommer : c'est lui qui porte la ligne que le
           // refus d'un doublon doit nommer. Après `advance()`, elle n'est plus atteignable.
@@ -3576,11 +3456,10 @@ function parse(tokens, opts = {}) {
           // c'est un composant, pas une valeur : `out.midi(ch:3)`.
           if (actorKeysData().toutes.has(key)) {
             const canon = key === 'sounds' ? 'sound' : key;
-            throw new ParseError(
-              `'${key}:…' refused — ':' does not assign a value to a component. `
-              + `Write '${canon}.<name>'`
-              + (key === 'out' ? ' with its params in () — e.g. out.midi(ch:3)' : '')
-              + ` (rule: '.' CALLS the component, ':' ASSIGNS a value).`,
+            throw new ParseError('PARSE_COLON_ON_COMPONENT', {
+              key, canon,
+              params: key === 'out' ? ' with its params in () — e.g. out.midi(ch:3)' : '',
+            },
               current(),
             );
           }
@@ -3608,9 +3487,7 @@ function parse(tokens, opts = {}) {
       // Un corps ouvert se referme. Le refus NOMME ce qui manque : sans lui, une parenthèse
       // oubliée sortirait par « Expected IDENT » sur la ligne suivante, qui n'apprend rien.
       if (corpsParenthese && !at(T.RPAREN)) {
-        throw new ParseError(
-          `actor '${actorName}': the body opened by '(' is not closed — ')' is missing.`,
-          current());
+        throw new ParseError('PARSE_ACTOR_ACTORNAME_BODY_OPENED', { actorName }, current());
       }
       if (corpsParenthese) advance();
 
@@ -3633,20 +3510,10 @@ function parse(tokens, opts = {}) {
       // de toute façon (plus vaguement), mais porte SA propre raison datée, nommément testée. video/
       // visual est de cette famille — case B, pas un contrôle à faire lire par une librairie.
       if (properties.eval && properties.transport) {
-        throw new ParseError(
-          `actor '${actorName}': a producer 'eval.${properties.eval}' outputs natively — `
-          + `no 'out' (it produces and outputs by its own means; its native `
-          + `output is not routed). Remove the 'out' from this actor.`,
-          tok,
-        );
+        throw new ParseError('PARSE_ACTOR_ACTORNAME_PRODUCER_EVAL', { actorName, p1: properties.eval }, tok);
       }
       if (properties.transport && (properties.transport.key === 'video' || properties.transport.key === 'visual')) {
-        throw new ParseError(
-          `actor '${actorName}': 'out.${properties.transport.key}' does not exist — the `
-          + `visual channel has been REMOVED (embedded visuals output natively on their canvas). `
-          + `Output channel = audio/midi/osc only.`,
-          tok,
-        );
+        throw new ParseError('PARSE_ACTOR_ACTORNAME_OUT_DOES', { actorName, p1: properties.transport.key }, tok);
       }
       // ⛔ LA LISTE DES CANAUX PÉRIMÉS EST SORTIE avec le schéma de `core` (Romain, 2026-09-03) :
       // un canal retiré se refuse comme un canal inventé, par la liste positive ci-dessous
@@ -3659,11 +3526,7 @@ function parse(tokens, opts = {}) {
       // résolu aval) : la fusion des deux catalogues applique désormais la MÊME liste fermée
       // aux deux formes (@actor explicite ET raccord `alphabet.X:<sortie>` implicite).
       if (properties.transport && !outChannels().has(properties.transport.key)) {
-        throw new ParseError(
-          `actor '${actorName}': '${properties.transport.key}' is not an output — the `
-          + `output channels are ${[...outChannels()].join(', ')}. The list is CLOSED.`,
-          tok,
-        );
+        throw new ParseError('PARSE_ACTOR_ACTORNAME_OUTPUT_OUTPUT', { actorName, p1: properties.transport.key, p2: [...outChannels()].join(', ') }, tok);
       }
       // DIRECTION ≠ ÉCRITURE (décision Romain 2026-08-04). Un canal peut porter la sortie
       // (vérifié ci-dessus) et rester REFUSÉ à l'écriture : c'est le cas de 'text', routé comme
@@ -3672,12 +3535,7 @@ function parse(tokens, opts = {}) {
       // `schema.channels.<canal>.writable`).
       if (properties.transport && outChannels().has(properties.transport.key)
           && !writableChannels().has(properties.transport.key)) {
-        throw new ParseError(
-          `actor '${actorName}': 'out.${properties.transport.key}' is refused — this channel is `
-          + `a DESTINATION of the architecture, routed like the other outputs, but its `
-          + `WRITE from a scene still awaits its dedicated device.`,
-          tok,
-        );
+        throw new ParseError('PARSE_ACTOR_ACTORNAME_OUT_REFUSED', { actorName, p1: properties.transport.key }, tok);
       }
       // LANG-SONS-2 ([438], spec §2-§3) : `voice.<nom>` doit référencer une voix de lib/voices
       // (formes valides : audio = backtick typé) ; le binding alphabet→voix de l'alphabet lié
@@ -3722,10 +3580,7 @@ function parse(tokens, opts = {}) {
     // qu'un silence — c'est la leçon de la journée, appliquée à ma propre addition.
     if (name === 'sound' && !subkey && at(T.COLON) && peek(1).type === T.IDENT
         && (describeVocabulary().components.sound || []).includes(peek(1).value)) {
-      throw new ParseError(
-        `'sound:<X>' refused — ':' does not assign a value to a component. Write 'sound.<name>' `
-        + `(rule: ':' assigns, '.' calls).`,
-        tok);
+      throw new ParseError('PARSE_SOUND_REFUSED_DOES_ASSIGN', {}, tok);
     }
 
     // @sound [.libname[:variant]] [{ ... }|name { ... }]+ — bloc déclaratif (v0.8)
@@ -3776,11 +3631,7 @@ function parse(tokens, opts = {}) {
       const hint = name === 'tuning'
         ? " ; reference frequency → 'diapason:<N>'"
         : '';
-      throw new ParseError(
-        `'${name}:<X>' refused — ':' does not assign a value to a component. Write '${name}.<name>' `
-        + `(rule: ':' assigns, '.' calls)${hint}.`,
-        current(),
-      );
+      throw new ParseError('PARSE_NAME_REFUSED_DOES_ASSIGN', { name, hint }, current());
     }
 
     if (at(T.COLON)) {
@@ -3799,11 +3650,7 @@ function parse(tokens, opts = {}) {
       const hint = runtime === 'sc'
           ? ` The old sugar ':sc' (= transport+eval sc) is ABOLISHED — an eval is declared on an actor ('eval.<X>'); the implicit actor's shorthand names only a channel.`
           : '';
-      throw new ParseError(
-        `'alphabet.${subkey}:${runtime}' refused — the output shorthand of the implicit actor `
-        + `only accepts {audio, midi, osc} (closed positive list).${hint}`,
-        current(),
-      );
+      throw new ParseError('PARSE_ALPHABET_SUBKEY_RUNTIME_REFUSED', { subkey, runtime, hint }, current());
     }
     // DIRECTION ≠ ÉCRITURE, même règle qu'au raccord explicite `actor … out.<canal>` ci-dessus :
     // un canal peut être une sortie du catalogue (vérifié juste au-dessus) et rester refusé à
@@ -3811,12 +3658,7 @@ function parse(tokens, opts = {}) {
     // raison, jamais « n'est pas une sortie ».
     if (name === 'alphabet' && subkey && runtime && outChannels().has(runtime)
         && !writableChannels().has(runtime)) {
-      throw new ParseError(
-        `'alphabet.${subkey}:${runtime}' refused — this channel is a DESTINATION of the architecture, `
-        + `routed like the other outputs, but its WRITE from a scene still awaits its `
-        + `dedicated device.`,
-        current(),
-      );
+      throw new ParseError('PARSE_ALPHABET_SUBKEY_RUNTIME_REFUSED_2', { subkey, runtime }, current());
     }
     // LANG-SONS-2 ([438]) : liaison d'alphabet à la scène (acteur implicite) → même validation
     // du binding alphabet→voix qu'à la ligne d'acteur (spec §7, champ `voices` de l'alphabet).
@@ -3847,24 +3689,19 @@ function parse(tokens, opts = {}) {
         const portees = libCtx.portees.get(modName) || null;
         if (!portees) {
           const declarants = librairiesQuiDeclarent(modName);
-          throw new ParseError(
-            `'mode:${runtime || '…'}(${modName})': '${modName}' is not declared by any `
-            + `invoked library. A sub-grammar modifier is a library word like `
-            + `any other — ${declarants.length
+          throw new ParseError('PARSE_MODE_MODNAME_MODNAME_DECLARED', { p1: runtime || '…', modName, p2: declarants.length
                 ? `invoke at the top the one that carries it (${declarants.map((l) => `'${l}'`).join(' or ')})`
-                : 'no library in the registry declares it: remove the word'}.`, tokModName);
+                : 'no library in the registry declares it: remove the word' }, tokModName);
         }
         if (!portees.includes('subgrammar')) {
-          throw new ParseError(
-            `'${modName}' does not apply to a sub-grammar — its declared scope is `
-            + `${JSON.stringify(portees)}. ${portees.includes('scene')
+          throw new ParseError('PARSE_MODNAME_DOES_APPLY_SUB', { modName, p1: JSON.stringify(portees), p2: portees.includes('scene')
               // ⛔ LA RÉÉCRITURE DONNE LA FORME VIVANTE, et elle a survécu à DEUX retraits sous
               // cette seule ligne : l'arobase, sortie du langage le 2026-08-17, et le nom `tempo`
               // écrit EN DUR pour lui coller ':<N>' — devenu inatteignable le 2026-08-18, quand le
               // métronome a gagné la portée `subgrammar`. Un refus qui enseigne une forme morte
               // coûte plus que pas de refus du tout.
               ? `It is written at the top of the scene: '${modName}'.`
-              : `It is worth ${portees.map((p) => `'${p}'`).join(', ')}.`}`, tokModName);
+              : `It is worth ${portees.map((p) => `'${p}'`).join(', ')}.` }, tokModName);
         }
         let modValue = true;
         if (at(T.COLON)) {
@@ -4012,7 +3849,7 @@ function parse(tokens, opts = {}) {
       return { kind: 'number', value: n };
     }
     if (at(T.IDENT)) return { kind: 'ref', name: advance().value };
-    throw new ParseError('value expected after ":"', current());
+    throw new ParseError('PARSE_VALUE_EXPECTED_AFTER', {}, current());
   }
 
   // ============================================================
@@ -4075,13 +3912,7 @@ function parse(tokens, opts = {}) {
     const used = macroBodyMentions(body);
     const unused = params.filter((p) => !used.has(p));
     if (unused.length > 0) {
-      throw new ParseError(
-        `Macro '${macroName}': parameter(s) declared but absent from the body: `
-        + `${unused.join(', ')}. A macro is a textual substitution `
-        + `(EBNF §macro l.59/273) — each parameter MUST appear in the body `
-        + `(e.g. accent(x) = x(vel:120)). A declaration name(target, transport) = curve `
-        + `(CV/signal form) is not a valid macro: syntax pending arbitration.`,
-        tok);
+      throw new ParseError('PARSE_MACRO_MACRONAME_PARAMETER_DECLARED', { macroName, p1: unused.join(', ') }, tok);
     }
   }
 
@@ -4170,7 +4001,7 @@ function parse(tokens, opts = {}) {
         advance();
         if (at(T.INT)) val = -Number(advance().value);
         else if (at(T.FLOAT)) val = -Number(advance().value);
-        else throw new ParseError('Expected number after - in prop value', current());
+        else throw new ParseError('PARSE_EXPECTED_NUMBER_AFTER_PROP', {}, current());
       } else if (at(T.INT)) {
         const num = advance().value;
         if (at(T.SLASH) && peek(1).type === T.INT) {
@@ -4190,7 +4021,7 @@ function parse(tokens, opts = {}) {
         else if (id === 'false') val = false;
         else val = id;
       } else {
-        throw new ParseError('Expected value (INT/FLOAT/STRING/IDENT) in prop pair', current());
+        throw new ParseError('PARSE_EXPECTED_VALUE_INT_FLOAT', {}, current());
       }
       props[key] = val;
     }
@@ -4307,7 +4138,7 @@ function parse(tokens, opts = {}) {
     let currentModifiers = initialModifiers || null;
 
     while (!atEnd()) {
-      if (++safety > 200) throw new ParseError('Subgrammar parse loop safety limit', current());
+      if (++safety > 200) throw new ParseError('PARSE_SUBGRAMMAR_PARSE_LOOP_SAFETY', {}, current());
       skipNewlines();
       if (atEnd()) break;
 
@@ -4315,13 +4146,13 @@ function parse(tokens, opts = {}) {
       // règle/sous-grammaire n'est pas dans la décision 2026-06-11), plutôt
       // qu'une troncature silencieuse de la scène.
       if (atProductionBlock()) {
-        throw new ParseError(`Production block [@…]: allowed at the top of the scene only`, current());
+        throw new ParseError('PARSE_PRODUCTION_BLOCK_ALLOWED_TOP', {}, current());
       }
       // ![@…] : réserve de composition future (re-semer PENDANT le jeu,
       // hub/principes-syntaxe.md §3) — non implémentée. Erreur franche plutôt
       // que l'absorption silencieuse de la scène.
       if (at(T.BANG) && peek(1).type === T.LBRACKET && peek(2).type === T.AT) {
-        throw new ParseError(`Form '![@…]' reserved (production directive in the flow) — not implemented`, current());
+        throw new ParseError('PARSE_FORM_RESERVED_PRODUCTION_DIRECTIVE', {}, current());
       }
 
       // Parse @mode:X(modifiers) directive at the start of a sub-grammar block
@@ -4342,7 +4173,7 @@ function parse(tokens, opts = {}) {
         // rendrait « ligne non reconnue » — un message qui ressemble à une coquille et n'aide
         // personne à migrer.
         if (at(T.IDENT) && current().value === 'templates') {
-          throw new ParseError(`'templates' (plural, v0.7) no longer exists — write 'template' (singular)`, current());
+          throw new ParseError('PARSE_TEMPLATES_PLURAL_LONGER_EXISTS', {}, current());
         }
         const dirTok = current();
         // Le NOM se lit sur le jeton, pas sur le nœud produit : certaines directives (`var`…)
@@ -4399,19 +4230,9 @@ function parse(tokens, opts = {}) {
                             + '(`mode:<mode>(<setting>)`)', rule: 'on a rule', group: 'on a group',
                             symbol: 'on an element', flow: 'in the flow' };
             const ou = porteesDuMot.map((x) => PLACE[x] ?? x);
-            throw new ParseError(
-              `'${dirNom}' is not a declaration: it is a setting, and it is not written alone `
-              + `on a line. It applies ${ou.length === 1 ? ou[0] : ou.slice(0, -1).join(', ') + ' or ' + ou[ou.length - 1]}.`,
-              dirTok,
-            );
+            throw new ParseError('PARSE_DIRNOM_DECLARATION_SETTING_WRITTEN', { dirNom, p1: ou.length === 1 ? ou[0] : ou.slice(0, -1).join(', ') + ' or ' + ou[ou.length - 1] }, dirTok);
           }
-          throw new ParseError(
-            `'${dirNom}' is written AFTER rules, and in this place it declares NOTHING: `
-            + `it was accepted then silently discarded. Declarations precede the rules — `
-            + `move this line up before the scene's first rule. `
-            + `(Only 'mode' is placed here: it governs the sub-grammar that follows.)`,
-            dirTok,
-          );
+          throw new ParseError('PARSE_DIRNOM_WRITTEN_AFTER_RULES', { dirNom }, dirTok);
         }
         skipNewlines();
       }
@@ -4419,7 +4240,7 @@ function parse(tokens, opts = {}) {
       const rules = [];
       let ruleSafety = 0;
       while (!atEnd() && !at(T.SEPARATOR)) {
-        if (++ruleSafety > 200) throw new ParseError('Rule parse loop safety limit', current());
+        if (++ruleSafety > 200) throw new ParseError('PARSE_RULE_PARSE_LOOP_SAFETY', {}, current());
         skipNewlines();
         if (atEnd() || at(T.SEPARATOR)) break;
         // ⛔ LA SECTION `template` BORNE LE BLOC DE RÈGLES, et c'est l'arobase qui le faisait :
@@ -4440,7 +4261,7 @@ function parse(tokens, opts = {}) {
           // sortait, `rules` restait vide, la grammaire disparaissait sans une erreur).
           // Erreur franche — même parti que le bloc de production `[@…]` ci-dessus.
           if (!atEnd() && !at(T.SEPARATOR) && !at(T.AT)) {
-            throw new ParseError(`unrecognized line at rule level: expected a rule, 'directive', '-----' or the end of the scene`, current());
+            throw new ParseError('PARSE_UNRECOGNIZED_LINE_RULE_LEVEL', {}, current());
           }
           break;
         }
@@ -4503,7 +4324,7 @@ function parse(tokens, opts = {}) {
     // de sous-grammaires, seul point où la forme est réellement vue. Écrit ici, il aurait été
     // du code mort qui rassure — le contraire d'un fail-loud.
     if (kw.value !== 'template') {
-      throw new ParseError(`Expected 'template'`, kw);
+      throw new ParseError('PARSE_EXPECTED_TEMPLATE', {}, kw);
     }
     skipNewlines();
 
@@ -4542,10 +4363,7 @@ function parse(tokens, opts = {}) {
       // exact que ce transport répare : un catalogue qui disparaît sans un mot. Un appelant qui
       // parse sans passer la source doit l'apprendre ici, pas le découvrir en aval.
       if (brute == null) {
-        throw new ParseError(
-          `the template catalog is transported VERBATIM: the parser needs the SOURCE to `
-          + `render the line as it is written. The caller must pass 'source' to parse().`,
-          ouvre);
+        throw new ParseError('PARSE_TEMPLATE_CATALOG_TRANSPORTED_VERBATIM', {}, ouvre);
       }
       entries.push({ type: 'TemplateEntry', line: brute });
       skipNewlines();
@@ -4575,12 +4393,7 @@ function parse(tokens, opts = {}) {
         // Mesuré : `[1] /1 ?1 ? .` ne gardait qu'un seul `TemplateWildcard`, ' ? .'
         // disparaissait de l'AST sans warning ni erreur.
         if (at(T.INT)) {
-          throw new ParseError(
-            `'?${current().value}': a numbered wildcard only makes sense in a rule `
-            + `(the number unifies with the arrow, which replays the choice). A @template `
-            + `catalog line has no arrow — its wildcards are always anonymous ('?'), never numbered.`,
-            current(),
-          );
+          throw new ParseError('PARSE_NUMBERED_WILDCARD_MAKES_SENSE', { p1: current().value }, current());
         }
         elements.push({ type: 'TemplateWildcard', count });
       }
@@ -4659,7 +4472,7 @@ function parse(tokens, opts = {}) {
     if (at(T.ARROW_R)) { arrow = '->'; advance(); }
     else if (at(T.ARROW_L)) { arrow = '<-'; advance(); }
     else if (at(T.ARROW_BI)) { arrow = '<>'; advance(); }
-    else throw new ParseError(`Expected arrow (-> <- <>), got ${current().type}`, current());
+    else throw new ParseError('PARSE_EXPECTED_ARROW_GOT', { p1: current().type }, current());
 
     // RHS
     const rhs = parseRhsElements();
@@ -4676,7 +4489,7 @@ function parse(tokens, opts = {}) {
       const inner = rhs.splice(0, rhs.length);
       rhs.push(cadreDuree(dur, inner));
       if (atRhsElementStart()) {
-        throw new ParseError(`duration isolated in the flow: ':N' sticks to a terminal (A4:1/2), a group ({A B}:2) or the whole rule (at the end of the RHS) — never in the middle of the flow`, current());
+        throw new ParseError('PARSE_DURATION_ISOLATED_FLOW_STICKS', {}, current());
       }
     }
 
@@ -4736,10 +4549,7 @@ function parse(tokens, opts = {}) {
         if (scanValues.includes(pair.value)) {
           ruleMode = pair.value;
         } else {
-          throw new ParseError(
-            `(scan:${pair.value}): unknown value (expected: ${scanValues.join(', ')})`,
-            { line: tok.line, col: 0 }
-          );
+          throw new ParseError('PARSE_SCAN_UNKNOWN_VALUE_EXPECTED', { p1: pair.value, p2: scanValues.join(', ') }, { line: tok.line, col: 0 });
         }
       }
     }
@@ -4832,17 +4642,17 @@ function parse(tokens, opts = {}) {
         operator = '='; advance();
         if (at(T.INT)) value = Number(advance().value);
         else if (at(T.IDENT)) value = advance().value;
-        else throw new ParseError('Expected flag value', current());
+        else throw new ParseError('PARSE_EXPECTED_FLAG_VALUE', {}, current());
       } else if (at(T.PLUS)) {
         operator = '+'; advance();
         if (at(T.INT)) value = Number(advance().value);
         else if (at(T.IDENT)) value = advance().value;
-        else throw new ParseError('Expected flag value', current());
+        else throw new ParseError('PARSE_EXPECTED_FLAG_VALUE_2', {}, current());
       } else if (at(T.REST)) {
         operator = '-'; advance();
         if (at(T.INT)) value = Number(advance().value);
         else if (at(T.IDENT)) value = advance().value;
-        else throw new ParseError('Expected flag value', current());
+        else throw new ParseError('PARSE_EXPECTED_FLAG_VALUE_3', {}, current());
       }
       // else: bare flag [Atrans] → operator=null, value=null
       flags.push({ type: 'FlagExpr', flag: rawFlag, operator, value });
@@ -4896,11 +4706,7 @@ function parse(tokens, opts = {}) {
         // garde (docs/spec/LANGUAGE.md:301 — comparaison avant le LHS, calcul dans la RHS).
         // Le parseur criait déjà, mais par un « Expected RBRACKET » illisible (constat atlas
         // 2026-07-10, qui l'a pris pour une troncature silencieuse). On nomme la faute.
-        throw new ParseError(
-          `guard '[${flag}=…]': '=' is a MUTATION, it is written at the end of the rule ` +
-          `('S -> C4 [${flag}=…]'). To TEST the value of a flag before the LHS, compare ` +
-          `with '==' ('[${flag}==…] S -> C4')`,
-          current());
+        throw new ParseError('PARSE_GUARD_FLAG_MUTATION_WRITTEN', { flag }, current());
       }
       else {
         // Bare flag test: [Ideas] → non-zero test
@@ -4912,7 +4718,7 @@ function parse(tokens, opts = {}) {
       let value;
       if (at(T.INT)) value = Number(advance().value);
       else if (at(T.IDENT)) value = advance().value;
-      else throw new ParseError(`Expected value after operator`, current());
+      else throw new ParseError('PARSE_EXPECTED_VALUE_AFTER_OPERATOR', {}, current());
 
       result = { type: 'Guard', flag, operator: op, value, mutates: false };
     }
@@ -5054,12 +4860,7 @@ function parse(tokens, opts = {}) {
         // perdu en silence . Il ne l est pas — le contexte DROIT vit dans le membre gauche, par
         // construction. Chercher au mauvais endroit et conclure a l absence, une fois de plus.
         if (elements.length > 0 && !finDeMembreGauche()) {
-          throw new ParseError(
-            `a CONTEXT is only placed at the EXTREMITIES of the left-hand side — at the front `
-            + `('(A) x B -> …') or at the tail ('x B (A) -> …'). Here it follows '${elements.length}' `
-            + `element(s) and precedes others: the engine does not know this place, and the tree `
-            + `produced would be readable by no one.`,
-            current());
+          throw new ParseError('PARSE_CONTEXT_PLACED_EXTREMITIES_LEFT', { p1: elements.length }, current());
         }
         // Right positive context: `Sym (B) -> X`. `(` must have a space before
         // (sinon c'est un runtime qualifier suffixe sur le LHS précédent : `C(vel:80)`).
@@ -5080,10 +4881,7 @@ function parse(tokens, opts = {}) {
         const dollarTok = current();
         const nextTok = peek(1);
         if (!nextTok.spaceBefore && (nextTok.type === T.IDENT || nextTok.type === T.LBRACE)) {
-          throw new ParseError(
-            `"$" stuck to an identifier is forbidden in LHS — use "$ " (dollar isolated with a space)`,
-            dollarTok
-          );
+          throw new ParseError('PARSE_STUCK_IDENTIFIER_FORBIDDEN_LHS', {}, dollarTok);
         }
         advance();  // consomme le $
         elements.push({ type: 'TemplateAnchor', kind: 'master' });
@@ -5137,7 +4935,7 @@ function parse(tokens, opts = {}) {
         elements.push({ type: 'InstantControl', qualifier: parseRuntimeQualifier(), conjoint: false });
         continue;
       }
-      if (++safety > 500) throw new ParseError('RHS parse loop safety limit', current());
+      if (++safety > 500) throw new ParseError('PARSE_RHS_PARSE_LOOP_SAFETY', {}, current());
       // Unbalanced } or , at top level — embedding pattern
       if (atAny(T.RBRACE, T.COMMA) && isNewRuleAhead()) break;
       if (at(T.RBRACE)) {
@@ -5486,10 +5284,7 @@ function parse(tokens, opts = {}) {
   function readIntervalLiteral(ctrlName) {
     const startTok = current();
     const bad = (why) => {
-      throw new ParseError(
-        `Malformed interval for '${ctrlName}'${why ? ': ' + why : ''} — expected a fraction (3/2), cents (700c) or a decimal (1.5)`,
-        startTok
-      );
+      throw new ParseError('PARSE_MALFORMED_INTERVAL_CTRLNAME_EXPECTED', { ctrlName, p1: why ? ': ' + why : '' }, startTok);
     };
     let neg = '';
     if (at(T.REST)) { advance(); neg = '-'; }   // intervalle descendant : -200c, -1.5
@@ -5497,10 +5292,7 @@ function parse(tokens, opts = {}) {
     // transpose:"1200c") — cf. décision architecte 2026-07-11 (forme (A) nue en source).
     // Nommer les guillemets plutôt que laisser croire que la forme en cents serait refusée.
     if (at(T.STRING)) {
-      throw new ParseError(
-        `Interval in quotes not supported for '${ctrlName}': write the BARE form '${current().value}' (without quotes) — an interval is written as a fraction (3/2), cents (700c) or a decimal (1.5)`,
-        startTok
-      );
+      throw new ParseError('PARSE_INTERVAL_QUOTES_SUPPORTED_CTRLNAME', { ctrlName, p1: current().value }, startTok);
     }
     if (!at(T.INT) && !at(T.FLOAT)) bad(`'${current().value ?? current().type}' is not a number`);
     const a = advance().value;
@@ -5537,10 +5329,7 @@ function parse(tokens, opts = {}) {
   //   alors qu'un retour à la ligne vaut une espace partout ailleurs. Les deux sont refusés désormais.
   function refuserEspaceAvantLeSac(nomDeclare, tokenDuNom) {
     if (!at(T.LPAREN) || current().spaceBefore !== true) return;
-    throw new ParseError(
-      `'${nomDeclare} (…)': a space between a declared word and its bag separates them into two `
-      + `terms — a bag is attached to the word it describes. Write '${nomDeclare}(…)'.`,
-      current());
+    throw new ParseError('PARSE_NOMDECLARE_SPACE_BETWEEN_DECLARED', { nomDeclare }, current());
   }
 
   function parseRuntimeQualifier({ imbrique = false } = {}) {
@@ -5579,17 +5368,9 @@ function parse(tokens, opts = {}) {
       // qu'un refus muet, parce qu'elle envoie chercher ailleurs.
       // Le collage ne dit RIEN de ce que le signe vaudra : il dit ce que ce lecteur sait lire.
       if (peek(k).spaceBefore === false && peek(k).type !== T.NEWLINE) {
-        throw new ParseError(
-          `the sign '${peek(k).value ?? peek(k).type}' is not readable in a member: a member `
-          + `is a name, a number or a text in quotes. The members already read are `
-          + `'${pairs.map((p) => p.key).join(', ')}'.`,
-          peek(k));
+        throw new ParseError('PARSE_SIGN_READABLE_MEMBER_MEMBER', { p1: peek(k).value ?? peek(k).type, p2: pairs.map((p) => p.key).join(', ') }, peek(k));
       }
-      throw new ParseError(
-        `two terms are separated by a space: before the delimiter, only the comma separates — `
-        + `the space separates nothing there, it is formatting. Write `
-        + `'${pairs.map((p) => p.key).join(', ')}, ${peek(k).value ?? ''}'.`,
-        peek(k));
+      throw new ParseError('PARSE_TERMS_SEPARATED_SPACE_BEFORE', { p1: pairs.map((p) => p.key).join(', '), p2: peek(k).value ?? '' }, peek(k));
     };
     while (!at(T.RPAREN) && !atEnd()) {
       // ── LA FORME LONGUE S'ÉCRIT SUR PLUSIEURS LIGNES, PARENTHÈSE OUVRANTE ET FERMANTE ───────
@@ -5786,25 +5567,16 @@ function parse(tokens, opts = {}) {
       if (at(T.PERIOD) && libCtx.componentControls.has(key)) {
         advance(); // .
         if (!at(T.INT)) {
-          throw new ParseError(
-            `'${key}.…' names a NUMBERED component: it expects a number, not '${current().value}' `
-            + `(example: '(${key}.98:45)'). Controllers that have a name are written by their name`,
-            current());
+          throw new ParseError('PARSE_KEY_NAMES_NUMBERED_COMPONENT', { key, p1: current().value }, current());
         }
         const component = Number(advance().value);
         if (!at(T.COLON)) {
-          throw new ParseError(
-            `'${key}.${component}' names a component without assigning it a value — `
-            + `':value' is missing (example: '(${key}.${component}:45)')`,
-            current());
+          throw new ParseError('PARSE_KEY_COMPONENT_NAMES_COMPONENT', { key, component }, current());
         }
         advance(); // :
         // Même règle que partout : la valeur commence immédiatement après le deux-points.
         if (current().spaceBefore) {
-          throw new ParseError(
-            `'${key}.${component}: ' — no space after the colon: the value begins `
-            + `immediately ('${key}.${component}:${current().value}')`,
-            current());
+          throw new ParseError('PARSE_KEY_COMPONENT_SPACE_AFTER', { key, component, p1: current().value }, current());
         }
         let valeur;
         if (at(T.REST)) { advance(); valeur = -Number(expect(T.INT).value); }
@@ -5827,9 +5599,7 @@ function parse(tokens, opts = {}) {
         const composant = advance().value;           // le port
         advance();                                   // :
         if (current().spaceBefore) {
-          throw new ParseError(
-            `'${key}.${composant}: ' — no space after the colon: the value begins `
-            + `immediately ('${key}.${composant}:${current().value}')`, current());
+          throw new ParseError('PARSE_KEY_COMPOSANT_SPACE_AFTER', { key, composant, p1: current().value }, current());
         }
         let valeur;
         if (at(T.REST)) { advance(); valeur = -Number(expect(T.INT).value); }
@@ -5867,14 +5637,9 @@ function parse(tokens, opts = {}) {
         if (prefixesConnus.has(key)) {
           const estControle = (libCtx.controlNames || new Set()).has(composant);
           if (!estControle && (libCtx.reservedDirectiveNames || new Set()).has(composant)) {
-            throw new ParseError(
-              `'${key}.${composant}:…' — '${composant}' is a SCENE directive: it is written at the `
-              + `top, before the delimiter, never in a parenthesis. The prefix changes nothing here, `
-              + `'${composant}:…' bare is refused too.`, keyTok);
+            throw new ParseError('PARSE_KEY_COMPOSANT_COMPOSANT_SCENE', { key, composant }, keyTok);
           }
-          throw new ParseError(
-            `'${key}.${composant}:…' — the library '${key}' does not declare any control `
-            + `'${composant}'. The prefix is correct, the control is not part of it.`, keyTok);
+          throw new ParseError('PARSE_KEY_COMPOSANT_LIBRARY_KEY', { key, composant }, keyTok);
         }
         // ⛔ ET CE REFUS ACCUSAIT « PAS UNE LIBRAIRIE INVOQUÉE » UNE LIBRAIRIE QUI L'EST.
         //
@@ -5897,16 +5662,9 @@ function parse(tokens, opts = {}) {
           if (lib && typeof lib.resolves === 'string' && lib.resolves) motsInvoques.add(lib.resolves);
         }
         if (motsInvoques.has(key)) {
-          throw new ParseError(
-            `'${key}.${composant}:…' — the library '${key}' is indeed invoked, and it does not declare `
-            + `ANY control: nothing is assigned there through a parenthesis. The prefix is correct, the `
-            + `library is not one of those that carry controls.`, keyTok);
+          throw new ParseError('PARSE_KEY_COMPOSANT_LIBRARY_KEY_2', { key, composant }, keyTok);
         }
-        throw new ParseError(
-          `'${key}.${composant}:…' assigns a value to the component '${composant}' of `
-          + `'${key}' — but '${key}' is neither an invoked library, nor a control with components, `
-          + `nor an instance declared in this scene. Declare the instance first: '<module> ${key}'`,
-          keyTok);
+        throw new ParseError('PARSE_KEY_COMPOSANT_ASSIGNS_VALUE', { key, composant }, keyTok);
       }
       // ⛔ UNE RÉFÉRENCE POINTÉE EST **UN NOM**, JAMAIS UNE PAIRE. Ce site rendait
       // `{key:'tuning', value:'diapason'}` pour `tuning.diapason` — c'est-à-dire **exactement ce
@@ -5960,10 +5718,7 @@ function parse(tokens, opts = {}) {
         // le signe à deux métiers qu'on a passé la journée à supprimer.
         // ⚠️ L'espace ENTRE les parties reste légitime : `(keymap:C3 C3 C5 C5)` est juste.
         if (!at(T.RPAREN) && !atEnd() && current().spaceBefore) {
-          throw new ParseError(
-            `'${key}: ' — no space after the colon: the value begins immediately `
-            + `('${key}:${current().value}…'). The space only separates the PARTS of a value`,
-            current());
+          throw new ParseError('PARSE_KEY_SPACE_AFTER_COLON', { key, p1: current().value }, current());
         }
         // RÉGLAGE RÉSERVÉ — même lecteur de valeur que le résidu `[]` (readQualifierValue),
         // pour que `(weight:50-12)` et `(meter:4+4/6)` gardent le même format qu'avant leur
@@ -5986,20 +5741,13 @@ function parse(tokens, opts = {}) {
             // `qualifierKey` depuis le 2026-08-08 (décision Romain, `lib/core.json`
             // schema.qualifierKeys), donc cette branche ne pouvait plus l'atteindre.
             const exemple = (specReglage && Array.isArray(specReglage.values) && specReglage.values[0]) || '…';
-            throw new ParseError(
-              `'(${key}:)' assigns no value — the colon expects one (for example `
-              + `'(${key}:${exemple})')`,
-              keyTok);
+            throw new ParseError('PARSE_KEY_ASSIGNS_VALUE_COLON', { key, exemple }, keyTok);
           }
           // DEUX ÉLÉMENTS SÉPARÉS PAR UNE ESPACE, SANS VIRGULE — même garde que le résidu `[]`
           // (gardeElement, parseQualifier) : sans elle, `(mode:random weight:50)` avalait le
           // second élément en silence au lieu de réclamer sa virgule.
           if (at(T.IDENT) && peek(1).type === T.COLON) {
-            throw new ParseError(
-              `'(${key}:… ${current().value}:…)': two ELEMENTS of the bag separated by a SPACE — `
-              + `they are missing a COMMA ('(${key}:…, ${current().value}:…)'). The space only `
-              + `separates the PARTS of a single value`,
-              current());
+            throw new ParseError('PARSE_KEY_ELEMENTS_BAG_SEPARATED', { key, p1: current().value }, current());
           }
           pairs.push({ key, value, decrement, ...sub, ...pos });
           finirTerme();
@@ -6070,13 +5818,7 @@ function parse(tokens, opts = {}) {
             // valeurs, et plusieurs valeurs s'écrivent par une parenthèse et des noms. Le refus
             // porte sa RÉÉCRITURE : un mot hors de sa place se refuse avec la forme qui le remplace.
             if (enDeclaratif) {
-              throw new ParseError(
-                `'${key}:${parts.join('')} ${current().value}…': in the DECLARATIVE part, only `
-                + `the comma separates — the space separates nothing there. A value has only ONE part; `
-                + `several parts are several values, and they are written with a parenthesis `
-                + `and names: '${key}(${parts.join('')}, ${current().value}…)'. In the FLOW, `
-                + `after the delimiter, the space separates terms as before.`,
-                current());
+              throw new ParseError('PARSE_KEY_DECLARATIVE_PART_COMMA', { key, p1: parts.join(''), p2: current().value }, current());
             }
             parts.push(' ');
           }
@@ -6099,35 +5841,16 @@ function parse(tokens, opts = {}) {
         // interdirait sinon un mot anglais dans une prose, et la donnée en porte déjà un cas
         // (« many » dans la note sur les makams turcs). Le flux n'est pas touché.
         if (enDeclaratif && (brut === 'required' || brut === 'many')) {
-          throw new ParseError(
-            `'${key}:${brut}': '${brut}' has LEFT the language — `
-            + `the requirement is read from the ABSENCE of a default, the multiplicity from the EXEMPLAR. `
-            + `Write '${key}' alone for a required member, or '${key}()' for a required `
-            + `collection; a value given after ':' makes it an optional member for which it is `
-            + `the default.`, current());
+          throw new ParseError('PARSE_KEY_BRUT_BRUT_LEFT', { key, brut }, current());
         }
         if (elementAvale) {
-          throw new ParseError(
-            `'(${key}:${brut} ${elementAvale.value}…)': '${key}' expects only ONE value, so `
-            + `'${elementAvale.value}' is another ELEMENT of the bag — it is missing its COMMA `
-            + `('${key}:${brut}, ${elementAvale.value}…'). The space only separates the PARTS of a `
-            + `single value`,
-            elementAvale);
+          throw new ParseError('PARSE_KEY_BRUT_KEY_EXPECTS', { key, brut, p1: elementAvale.value }, elementAvale);
         }
         if (deuxPointsEnTrop) {
-          throw new ParseError(
-            `'(${key}:${brut})': the colon ASSIGNS a value, it does not separate its parts `
-            + `— a pair carries only one. To name a numbered component, the period calls it `
-            + `('(${key}.${brut.split(':')[0]}:${brut.split(':').slice(1).join(':')})'); for several `
-            + `parts, the space separates them`,
-            deuxPointsEnTrop);
+          throw new ParseError('PARSE_KEY_BRUT_COLON_ASSIGNS', { key, brut, p1: brut.split(':')[0], p2: brut.split(':').slice(1).join(':') }, deuxPointsEnTrop);
         }
         if (jetons === 0) {
-          throw new ParseError(
-            `'(${key}:)' assigns no value — the colon expects one (for example `
-            + `'(${key}:80)'), and a control without an argument is written bare, without a colon. An `
-            + `EMPTY text is written '${key}:""': the delimiter, with nothing inside`,
-            keyTok);
+          throw new ParseError('PARSE_KEY_ASSIGNS_VALUE_COLON_2', { key }, keyTok);
         }
         // Une valeur d'UNE SEULE partie numérique reste un NOMBRE (`vel:80` → 80, `pan:-1` → -1) :
         // les consommateurs la lisent ainsi. Plusieurs parties = chaîne portée brute, découpée
@@ -6183,11 +5906,7 @@ function parse(tokens, opts = {}) {
         // coup : instrumenter CHAQUE site avec son numéro de ligne et lire lequel parle. Deviner
         // où passe le code coûte plus cher que le tracer, et laisse des traces derrière soi.
         if (isNoArgControl(key)) {
-          throw new ParseError(
-            `'(${key}:${brut})': '${key}' takes NO argument — its declaration names none. `
-            + `Write '${key}' alone. A value placed here would travel all the way to the runtime `
-            + `with no recipient, with nothing signaling it serves no purpose.`,
-            keyTok);
+          throw new ParseError('PARSE_KEY_BRUT_KEY_TAKES', { key, brut }, keyTok);
         }
         pairs.push({ key, value: val, ...(valeurEstUnTexte ? { texte: true } : {}), ...sub, ...pos });
       } else {
@@ -6226,12 +5945,7 @@ function parse(tokens, opts = {}) {
   function refuserSuffixeArobase() {
     if (!at(T.AT) || current().spaceBefore) return;
     const nom = peek(1).type === T.IDENT ? peek(1).value : 'nom';
-    throw new ParseError(
-      `the suffix '${nom}' attached to an element has been REMOVED from the language. `
-      + `Two forms replace it, depending on what was intended. To ASSOCIATE `
-      + `a gesture with an element IN THE PRODUCTION: the exclamation mark, `
-      + `'C4!${nom}' — the gesture triggers at the instant of the terminal without occupying a step. To `
-      + `DECLARE A LABEL: the declarative part, with 'def'.`, current());
+    throw new ParseError('PARSE_SUFFIX_NOM_ATTACHED_ELEMENT', { nom }, current());
   }
 
   function parseRhsElement() {
@@ -6283,12 +5997,10 @@ function parse(tokens, opts = {}) {
         // là rendrait la première venue, c'est-à-dire justement celle qu'il ne faut pas nommer.
         const cle = Object.keys(libCtx.controls || {}).find((k) => libCtx.controls[k].bp3 === `_${nom}`) || nom;
         const renomme = cle !== nom;
-        throw new ParseError(
-          `the form "_${nom}(…)" is that of the native BP3 engine, it does not belong to BPScript — `
-          + `write "!(${cle}:…)" instead`
-          + (renomme ? ` (the native "_${nom}" is called "${cle}" in BPScript, and the key "${nom}" designates a DIFFERENT gesture)` : ''),
-          peek(1),
-        );
+        throw new ParseError('PARSE_NATIVE_UNDERSCORE_FORM', {
+          nom, cle,
+          renomme: renomme ? ` (the native "_${nom}" is called "${cle}" in BPScript, and the key "${nom}" designates a DIFFERENT gesture)` : '',
+        }, peek(1));
       }
       advance();
       return { type: 'Prolongation' };
@@ -6375,7 +6087,7 @@ function parse(tokens, opts = {}) {
         }
         return { type: 'TieEnd', symbol: name };
       }
-      throw new ParseError('Expected symbol after ~', tok);
+      throw new ParseError('PARSE_EXPECTED_SYMBOL_AFTER', {}, tok);
     }
 
     // Standalone ! → out-time object, instant control, or simultaneous
@@ -6423,12 +6135,7 @@ function parse(tokens, opts = {}) {
       if (at(T.LPAREN) && (peek(1).type === T.SLASH
                            || (peek(1).type === T.STAR && peek(2).type !== T.COLON))) {
         if (collated) {
-          throw new ParseError(
-            `'!(…)' attached to a term carries a CONJOINT flow, which travels with that term and `
-            + `replicates with it — a speed change does neither: it runs from `
-            + `where it is placed to the end of the field. It is detached by a space: `
-            + `'… ! (${peek(1).type === T.STAR ? '*N/M' : '/N'})'`,
-            current());
+          throw new ParseError('PARSE_ATTACHED_TERM_CARRIES_CONJOINT', { p1: peek(1).type === T.STAR ? '*N/M' : '/N' }, current());
         }
         return { type: 'InstantControl', qualifier: parseVitesseParenthese(), conjoint: false };
       }
@@ -6480,12 +6187,8 @@ function parse(tokens, opts = {}) {
         if (CROCHET_EN_FLUX.has(nom) && !libCtx.portees.has(nom) && !motReserve(nom)) {
           const declarants = librairiesQuiDeclarent(nom);
           throw new ParseError(
-            declarants.length
-              ? `'![${nom}:…]': '${nom}' is not in scope: no invoked library declares it — `
-                + `invoke it at the top (${declarants.map((l) => `'${l}'`).join(' or ')}).`
-              : `'![${nom}:…]': '${nom}' is not declared by any library. The re-seeding in the flow `
-                + `translates the native '_srand(N)', and the word that carries it comes from a `
-                + `library like all the others.`, current());
+            declarants.length ? 'PARSE_FLOW_WORD_NOT_IN_SCOPE' : 'PARSE_FLOW_WORD_UNDECLARED',
+            { nom, declarants: declarants.map((l) => `'${l}'`).join(' or ') }, current());
         }
         if (CROCHET_EN_FLUX.has(nom)) {
           const ouvre = current();
@@ -6505,15 +6208,9 @@ function parse(tokens, opts = {}) {
         const ouvre = current();
         const nom = peek(2).type === T.IDENT ? peek(2).value : '…';
         if (nom === 'seed') {
-          throw new ParseError(
-            `'![seed:N]': re-seeding in the flow is written WITHOUT the at-sign — '![seed:N]'. `
-            + `The bracket carries what governs the derivation, and re-seeding is such a `
-            + `procedure; the at-sign remains at the top of the scene, where 'seed:N' sets the production.`,
-            ouvre);
+          throw new ParseError('PARSE_SEED_SEEDING_FLOW_WRITTEN', {}, ouvre);
         }
-        throw new ParseError(
-          `'![${nom}…]': only re-seeding makes sense in the flow, and it is written `
-          + `'![seed:N]'; '${nom}' is placed at the top of the scene, '${nom}'.`, ouvre);
+        throw new ParseError('PARSE_NOM_SEEDING_MAKES_SENSE', { nom }, ouvre);
       }
       // ⛔ LE CROCHET NE SE POSE PAS DANS LE FLUX — arbitrage de Romain, 2026-08-08 :
       // « `![Ideas]` dans le flux n'a aucun sens et doit être interdit ».
@@ -6544,21 +6241,9 @@ function parse(tokens, opts = {}) {
         const q = parseQualifier('relative');
         const procedure = (q.pairs || []).find((p) => p && libCtx.ruleScopeControls.has(p.key));
         if (procedure) {
-          throw new ParseError(
-            `'![${procedure.key}: …]': '${procedure.key}' is a RULE-level procedure, it `
-            + `is not placed in the flow — it applies to the whole rule. Write `
-            + `'[${procedure.key}:${procedure.value === true ? '…' : procedure.value}]' as a `
-            + `rule suffix. In the flow, it never reaches the rule and leaves an inert `
-            + `control token in the production`,
-            current());
+          throw new ParseError('PARSE_RULE_LEVEL_PROCEDURE_PLACED', { p1: procedure.key, p2: procedure.value === true ? '…' : procedure.value }, current());
         }
-        throw new ParseError(
-          `a bracket is NOT placed in the flow: the bracket `
-          + `governs DERIVATION — a guard, a flag assignment, a procedure, a template `
-          + `rank — and none of that applies at an instant. A control placed in the flow `
-          + `is written in PARENTHESES: '!(shuffle)', '!(retro)', '!(vel:80)'. `
-          + `(Only '![seed:N]' remains, because it re-seeds the production and not the derivation.)`,
-          current());
+        throw new ParseError('PARSE_BRACKET_PLACED_FLOW_BRACKET', {}, current());
       }
 
       // !symbol → out-time object
@@ -6566,7 +6251,7 @@ function parse(tokens, opts = {}) {
         const name = advance().value;
         return { type: 'OutTimeObject', name };
       }
-      throw new ParseError('Expected symbol, (...) or [...] after !', current());
+      throw new ParseError('PARSE_EXPECTED_SYMBOL_AFTER_2', {}, current());
     }
 
     // Trigger in <!
@@ -6698,7 +6383,7 @@ function parse(tokens, opts = {}) {
       // 2026-07-26. On le NOMME donc, avec sa réécriture, et le sac dépend de la nature du
       // contrôle : la donnée le dit, on ne le devine pas.
       if (!actor && at(T.LPAREN) && isControlName(name)) {
-        throw new ParseError(refusFormeAppel(name), tok);
+        throw new ParseError('PARSE_CALL_FORM_DOES_NOT_EXIST', paramsFormeAppel(name), tok);
       }
 
       // Control without args: striated, smooth, destru, stop
@@ -6743,9 +6428,7 @@ function parse(tokens, opts = {}) {
           : (places.length
             ? `its declaration gives it only ${places.length > 1 ? 'these places' : 'this place'}: ${places.join(', ')}`
             : `its declaration gives it no place in a rule`);
-        throw new ParseError(
-          `'${name}' has no bare form in the flow — ${commentEcrire}. A word of the vocabulary `
-          + `encountered where it cannot be is refused; it does not disappear.`, tok);
+        throw new ParseError('PARSE_NAME_BARE_FORM_FLOW', { name, commentEcrire }, tok);
       }
 
       if (!actor && !at(T.LPAREN) && isControlName(name) && isNoArgControl(name)) {
@@ -6795,13 +6478,8 @@ function parse(tokens, opts = {}) {
         // décision pour tout nom ferait dire au compilateur que l'appel n'existe pas, alors que la
         // référence l'écrit — exactement l'inverse de la hiérarchie.
         if (!sacBienForme()) {
-          if (isControlName(name)) throw new ParseError(refusFormeAppel(name), tok);
-          throw new ParseError(
-            `'${name}(${texteDuSac()})' is readable neither as a SETTING BAG — its content `
-            + `is not made of 'key:value' pairs — nor as a CALL: calling requires a `
-            + `declared definition, and none carries the name '${name}'. To set '${name}', `
-            + `write '${name}(key:value)'; to call it, declare it first with `
-            + `'def ${name}(x) …'`, tok);
+          if (isControlName(name)) throw new ParseError('PARSE_CALL_FORM_DOES_NOT_EXIST', paramsFormeAppel(name), tok);
+          throw new ParseError('PARSE_NAME_READABLE_NEITHER_SETTING', { name, p1: texteDuSac() }, tok);
         }
         return { type: 'Symbol', name: normalizeName(name), line: tok.line, ...(actor ? { actor } : {}) };
       }
@@ -6847,7 +6525,7 @@ function parse(tokens, opts = {}) {
       // 2026-07-26. On le NOMME donc, avec sa réécriture, et le sac dépend de la nature du
       // contrôle : la donnée le dit, on ne le devine pas.
       if (!actor && at(T.LPAREN) && isControlName(name)) {
-        throw new ParseError(refusFormeAppel(name), tok);
+        throw new ParseError('PARSE_CALL_FORM_DOES_NOT_EXIST', paramsFormeAppel(name), tok);
       }
 
       return { type: 'Symbol', name: normalizeName(name), line: tok.line, ...(actor ? { actor } : {}) };
@@ -6868,14 +6546,21 @@ function parse(tokens, opts = {}) {
 
   /** Message de refus de la forme d'appel — il RÉÉCRIT au lieu de constater. Le sac vient de la
    *  DONNÉE (`libCtx.engineControls`), jamais d'une liste de noms en dur ici. */
-  function refusFormeAppel(name) {
+  /**
+   * ⛔ ELLE REND LES PARAMÈTRES, PLUS LE TEXTE — 2026-09-04. Le message vit au catalogue, sous
+   * `PARSE_CALL_FORM_DOES_NOT_EXIST` ; ce qui reste ici est le CALCUL, et il doit y rester : la
+   * graphie de la réécriture dépend de la nature du contrôle, que seule la donnée dit. Un catalogue
+   * traduisible par quelqu'un qui ne lit pas le code ne peut pas contenir cette condition.
+   */
+  function paramsFormeAppel(name) {
     const moteur = libCtx.bp3NativeControls && libCtx.bp3NativeControls.has(name)
                 && !(libCtx.dispatcherOnlyControls && libCtx.dispatcherOnlyControls.has(name));
-    const cible = moteur ? `![${name}:…]` : `!(${name}:…)`;
-    return `the call form '${name}(${texteDuSac()})' does not exist in BPScript — `
-      + `write '${cible}' to place it in the flow, or '${moteur ? `[${name}:…]` : `(${name}:…)`}' `
-      + `as containment. The colon ASSIGNS the value, the space separates its parts `
-      + `('[goto:3 0]'), the comma separates the elements of the bag ('(vel:80, pan:64)')`;
+    return {
+      name,
+      sac: texteDuSac(),
+      flux: moteur ? `![${name}:…]` : `!(${name}:…)`,
+      contenance: moteur ? `[${name}:…]` : `(${name}:…)`,
+    };
   }
 
   function isControlName(name) {
@@ -6918,23 +6603,13 @@ function parse(tokens, opts = {}) {
    */
   function refuserCrochetColle() {
     parseQualifier();
-    throw new ParseError(
-      `a bracket ATTACHED to an element no longer exists: the bracket `
-      + `governs DERIVATION — a flag test, an assignment, a procedure `
-      + `('[goto:…]', '[repeat:…]', '[failed:…]', '[stop]'), a template rank — and none of `
-      + `these places is an element suffix. An attached bag is written in PARENTHESES: `
-      + `'…(shuffle)', '…(retro)', '…(vel:80)'.`,
-      current());
+    throw new ParseError('PARSE_BRACKET_ATTACHED_ELEMENT_LONGER', {}, current());
   }
 
   function refuserSecondSac(rang, el) {
     if (rang < 2) return;
     const nom = el && (el.name || el.symbol) ? `'${el.name || el.symbol}'` : 'this element';
-    throw new ParseError(
-      `${nom} carries TWO attached setting bags — an element carries only one. Merge the pairs `
-      + `into the same bag: the comma separates them, '(key:value, key:value)'. The two forms `
-      + `already said the same thing; this one no longer is one.`,
-      current());
+    throw new ParseError('PARSE_NOM_CARRIES_ATTACHED_SETTING', { nom }, current());
   }
 
   /**
@@ -7050,7 +6725,7 @@ function parse(tokens, opts = {}) {
         // = 0 channel 1)` sortait un « Expected argument value » orphelin, alors que la vraie
         // cause est que `script` n'est pas un contrôle et que sa prose n'est pas une liste
         // d'arguments.
-        throw new ParseError(`Expected argument value in '${name}(…)'`, current());
+        throw new ParseError('PARSE_EXPECTED_ARGUMENT_VALUE_NAME', { name }, current());
       }
       args.push({ type: 'Arg', key, value });
       if (at(T.COMMA)) advance();
@@ -7106,11 +6781,7 @@ function parse(tokens, opts = {}) {
           // (`pitchbend(+200)`, `chromashift(-12)`) ou un `=` en attente de sa valeur
           // (`repeat(K1 = 3)`) ne finit pas par un alphanumérique et reste légitime.
           if (arg.length > 0 && /[a-zA-Z0-9]$/.test(arg)) {
-            throw new ParseError(
-              `malformed control argument in '${name}(…)': '${arg} ${t.value}' — two values `
-              + `follow each other without a separator. A control takes arguments separated by ','; it `
-              + `does not take a sentence (the generic function 'script(…)' has been removed from the language)`,
-              t);
+            throw new ParseError('PARSE_MALFORMED_CONTROL_ARGUMENT_NAME', { name, arg, p1: t.value }, t);
           }
           arg += advance().value;
         } else if (t.type === T.EQUALS) {
@@ -7129,7 +6800,7 @@ function parse(tokens, opts = {}) {
           // Unexpected token in args — break inner loop to avoid infinite loop.
           // If no arg was accumulated, throw to signal the unexpected token explicitly.
           if (arg.length === 0) {
-            throw new ParseError(`Unexpected token ${t.type} (${t.value}) in control args`, t);
+            throw new ParseError('PARSE_UNEXPECTED_TOKEN_CONTROL_ARGS', { p1: t.type, p2: t.value }, t);
           }
           break;
         }
@@ -7248,7 +6919,7 @@ function parse(tokens, opts = {}) {
         continue;
       }
 
-      throw new ParseError('Expected symbol after !', current());
+      throw new ParseError('PARSE_EXPECTED_SYMBOL_AFTER_3', {}, current());
     }
 
     return secondaries;
@@ -7438,11 +7109,7 @@ function parse(tokens, opts = {}) {
       // cause, ni le geste. Un site rouge dont le message ne dit pas quoi faire coûte plus cher
       // que le défaut lui-même : BPx a dû réduire le cas à quatre sondes pour le nommer.
       if (at(T.SLASH) && !current().spaceBefore) {
-        throw new ParseError(
-          `'${num}/${den}/…': two numbers touch, and nothing says where the first ends — `
-          + `'${num}/${den}' followed by an attached digit can be read '${num}' then '${String(den).slice(0, 1)}…', `
-          + `or otherwise. Numbers are never juxtaposed: separate with a SPACE`,
-          current());
+        throw new ParseError('PARSE_NUM_DEN_NUMBERS_TOUCH', { num, den, p1: String(den).slice(0, 1) }, current());
       }
       return { type: 'NumericDuration', numerator: Number(num), denominator: Number(den) };
     }
@@ -7485,13 +7152,7 @@ function parse(tokens, opts = {}) {
     expect(T.PIPE);
     const name = expect(T.IDENT).value;
     expect(T.PIPE);
-    throw new ParseError(
-      `'|${name}|': the name between bars has left the language — write '${name}' bare. `
-      + `The form remains readable on BP3 input, it is no longer written in a BPScript scene. `
-      + `⚠️ Check that no terminal of the alphabet in scope is already named '${name}': `
-      + `the bars used to distinguish the non-terminal, the bare name no longer does.`,
-      tok,
-    );
+    throw new ParseError('PARSE_NAME_NAME_BETWEEN_BARS', { name }, tok);
   }
 
   function parseWildcard() {
@@ -7531,13 +7192,7 @@ function parse(tokens, opts = {}) {
       // ⛔ CETTE BOUCLE NE DOIT JAMAIS PIÉTINER — un tour qui ne consomme aucun jeton tourne sans
       // fin. Un refus nommé vaut toujours mieux qu'une machine à genoux.
       if (pos === avant) {
-        throw new ParseError(
-          `'${sigil}${nom}(…${current().value}…)': '${current().value}' has no place in the `
-          + `arguments of a template — they are written 'name:value', separated by commas. `
-          + `To place a SETTING on the rule, a SPACE detaches it from the template `
-          + `('${sigil}${nom} (${key || 'key'}:…)'); for a SPEED, which is not a pair, `
-          + `the exclamation mark places it in the flow ('${sigil}${nom} ! (*2/3)')`,
-          current());
+        throw new ParseError('PARSE_SIGIL_NOM_PLACE_ARGUMENTS', { sigil, nom, p1: current().value, p2: key || 'key' }, current());
       }
     }
     expect(T.RPAREN);
@@ -7629,10 +7284,7 @@ function parse(tokens, opts = {}) {
     // Mesuré avant le refus : ZÉRO scène du périmètre — 885 fichiers, seize dépôts — n'écrit la
     // forme espacée. Le refus n'invalide aucune écriture vivante.
     if (at(T.IDENT) && current().spaceBefore) {
-      throw new ParseError(
-        `'<! ${current().value}': nothing comes between the wait point and what it `
-        + `waits for — they form a single term. Write '<!${current().value}'.`,
-        current());
+      throw new ParseError('PARSE_NOTHING_COMES_BETWEEN_WAIT', { p1: current().value }, current());
     }
     const name = expect(T.IDENT).value;
     // ADRESSE DE LA SOURCE, collée au point de réception — symétrique de l'adresse de destination
@@ -7670,11 +7322,7 @@ function parse(tokens, opts = {}) {
       // adresse, il obtient une note qu'il n'a pas écrite. Ça ne se voyait que si le nom parasite
       // tombait hors alphabet ; dans le cas contraire, la note serait passée sans un mot.
       if ((at(T.IDENT) || at(T.INT)) && !current().spaceBefore) {
-        throw new ParseError(
-          `'<!${name}.${jeton.value}${current().value}': the address is FOLLOWED BY '${current().value}' `
-          + `with no separator. An address is A SINGLE token — an identifier ('<!${name}.next') or `
-          + `an integer ('<!${name}.60'). Separate with a space what must be a distinct term.`,
-          current());
+        throw new ParseError('PARSE_NAME_ADDRESS_FOLLOWED_SEPARATOR', { name, p1: jeton.value, p2: current().value }, current());
       }
     } else if (colle) {
       // ⚠️ LE CAS MIXTE VIVAIT ICI — point collé au nom, valeur détachée — et il portait la règle
@@ -7694,12 +7342,7 @@ function parse(tokens, opts = {}) {
       // PROMISCUE : la pièce repart au premier événement venu, l'exact contraire de ce qui est
       // écrit. Et l'aval ne peut RIEN rattraper : il ne distingue pas une attente écrite sans
       // adresse d'une adresse évaporée. L'information est détruite ici, donc le refus est ici.
-      throw new ParseError(
-        `'<!${name}.' followed by '${peek(1).value ?? peek(1).type}': this is not an address. An `
-        + `address is an identifier ('<!${name}.next') or an integer ('<!${name}.60'), attached to the `
-        + `period on both sides. Without an address, write '<!${name}' alone — the wait then lifts on `
-        + `any event of that role, and that is a different form, not a shortcut.`,
-        current());
+      throw new ParseError('PARSE_NAME_FOLLOWED_ADDRESS_ADDRESS', { name, p1: peek(1).value ?? peek(1).type }, current());
     }
     // Le point d'attente est le TROISIÈME site où un crochet collé se lisait — après la règle et
     // le groupe polymétrique. Il a survécu à deux passes parce qu'il n'appelle pas la boucle de
@@ -7751,13 +7394,7 @@ function parse(tokens, opts = {}) {
   // MUET, le pire des deux. Le mot doit REFUSER, et nommer sa relève.
   function refuserTempx(key, tok, signeOuvrant) {
     if (key !== 'tempx' && key !== 'tempo') return;
-    throw new ParseError(
-      `'${signeOuvrant === '[' ? '[' : '('}${key}:…${signeOuvrant === '[' ? ']' : ')'}': `
-      + `'${key}' is not written in a rule — the speed multiplier IS the operator, `
-      + `and it is placed in the flow: '! (/N)' slows down, '! (*N/M)' writes the same thing in `
-      + `inverse fraction. The scene's metronome, on the other hand, is written `
-      + `at the top: 'tempo:120'`,
-      tok);
+    throw new ParseError('PARSE_KEY_KEY_WRITTEN_RULE', { p1: signeOuvrant === '[' ? '[' : '(', key, p2: signeOuvrant === '[' ? ']' : ')' }, tok);
   }
 
   function checkQualifierKey(key, tok) {
@@ -7765,12 +7402,12 @@ function parse(tokens, opts = {}) {
     // `[speed:N]` SUPPRIMÉ (décision 2026-06-26-trois-concepts-temps-duree) : `speed` est
     // subsumé par la DURÉE, qui s'écrit avec ':' collé — `{A B}:2`, `A4:1/2`, `}:N`.
     if (key === 'speed') {
-      throw new ParseError(`'[speed:N]' has been removed — duration is written with ':': '{A B}:2' (group), 'A4:1/2' (note) or '}:N' (embedding)`, tok);
+      throw new ParseError('PARSE_SPEED_BEEN_REMOVED_DURATION', {}, tok);
     }
     // `[shuffle:N]` RETIRÉ (décision 2026-06-14-shuffle-seed-orthogonaux) : brasser et
     // re-semer sont deux atomes BP3 distincts. `[shuffle]` (nu) reste = _rndseq.
     if (key === 'shuffle') {
-      throw new ParseError(`'[shuffle:N]' removed — the seed is written 'seed:N' (at the top of the scene) or '![seed:N]' (in the flow); '[shuffle]' shuffles alone`, tok);
+      throw new ParseError('PARSE_SHUFFLE_REMOVED_SEED_WRITTEN', {}, tok);
     }
     // UN SIGNE, UNE NATURE (décision Romain 2026-08-02, LANGUAGE.md:773-800). Le crochet ne
     // garde que trois emplois : un test de drapeau (garde), une affectation de drapeau (fin de
@@ -7781,12 +7418,7 @@ function parse(tokens, opts = {}) {
     // donc crochets » disparaît avec cette décision : ce n'est plus la déclaration `engine` de
     // `controls.json` qui tranche pour un réglage réservé, c'est sa nature de réglage.
     if (libCtx.qualifierKeys.has(key)) {
-      throw new ParseError(
-        `'[${key}:…]': '${key}' is a setting, it is written in PARENTHESES — '(${key}:…)' `
-        + `. The bracket now carries only what `
-        + `governs the derivation itself: a flag test ('[flag]', '[flag==1]'), an `
-        + `assignment ('[flag=1]'), or the rank of a template form ('[3]')`,
-        tok);
+      throw new ParseError('PARSE_KEY_KEY_SETTING_WRITTEN', { key }, tok);
     }
     // ⛔ LA LIBRAIRIE DIT QUI REÇOIT — ELLE NE DIT PAS QUEL SIGNE (rectifié 2026-08-08, Romain).
     // Ce refus reste juste pour ce qu'il garde — un contrôle de RUNTIME n'a rien à faire dans un
@@ -7810,17 +7442,9 @@ function parse(tokens, opts = {}) {
       const valeurNumerique = (at(T.INT) || at(T.FLOAT))
         && (peek(1).type === T.RBRACKET || peek(1).type === T.COMMA || peek(1).type === T.SLASH);
       if (key === 'scale' && valeurNumerique) {
-        throw new ParseError(
-          `'[scale:N]' has been REMOVED — the temporal scaling `
-          + `of a group is written with the ATTACHED DURATION: '{A B}:N'. (Not to be confused with the `
-          + `microtonal scale, which is a runtime control: '(scale:name key)'.)`,
-          tok);
+        throw new ParseError('PARSE_SCALE_BEEN_REMOVED_TEMPORAL', {}, tok);
       }
-      throw new ParseError(
-        `'[${key}:…]': '${key}' is a RUNTIME control, it is written in PARENTHESES — `
-        + `'(${key}:…)', or '!(${key}:…)' to place it in the flow. Brackets are addressed to the `
-        + `ENGINE`,
-        tok);
+      throw new ParseError('PARSE_KEY_KEY_RUNTIME_CONTROL', { key }, tok);
     }
     // ⛔ LE CROCHET NE PORTE QUE CE QUI GOUVERNE LA DÉRIVATION — arbitrage de Romain, 2026-08-08.
     // Le tableau de `LANGUAGE.md` §« Le crochet » compte désormais QUATRE places : un test de
@@ -7845,24 +7469,13 @@ function parse(tokens, opts = {}) {
       // vraie place. Ne pas doubler ce refus par un message plus vague — mesuré : sans cette
       // ligne, `[mode:…]` perdait sa réécriture `mode:…` en tête de sous-grammaire.
       if (!libCtx.ruleAllowedControls.has(key)) return;
-      throw new ParseError(
-        `'[${key}:…]': the bracket carries only what governs DERIVATION — a flag test `
-        + `('[flag]', '[flag==1]'), an assignment ('[flag=1]'), a derivation procedure `
-        + `('[goto:…]', '[repeat:…]', '[failed:…]', '[stop]') or the rank of a template form `
-        + `('[3]'). '${key}' describes what the derivation PRODUCES: it is written in PARENTHESES `
-        + `.`,
-        tok);
+      throw new ParseError('PARSE_KEY_BRACKET_CARRIES_WHAT', { key }, tok);
     }
     // Ne JAMAIS suggérer « utiliser (clé:…) » : les deux formes ne sont pas des synonymes
     // (constat bpx 2026-07-10). `![rotate:N]` réordonne la séquence (contrôle moteur sériel) ;
     // `(rotate:N)` transpose (paramètre de runtime, opaque). Suivre la suggestion ferait perdre
     // le réordre EN SILENCE. On nomme les deux familles, on n'en recommande aucune.
-    throw new ParseError(
-      `unknown key '[${key}:…]' — neither a library control, a guard, an assignment, nor a template ` +
-      `rank; check the spelling, or the library that declares it. '[${key}:…]' and ` +
-      `'![${key}:…]' (engine control) are NOT interchangeable with '(${key}:…)' (runtime ` +
-      `parameter)`,
-      tok);
+    throw new ParseError('PARSE_UNKNOWN_KEY_KEY_NEITHER', { key }, tok);
   }
 
   // tempoScope : 'absolute' (défaut — A[/N] suffixe d'élément, [/N] niveau-règle)
@@ -7886,9 +7499,7 @@ function parse(tokens, opts = {}) {
     } else if (at(T.FLOAT)) {
       value = Number(advance().value);
     } else {
-      throw new ParseError(
-        `'! (${operator}…)' expects a number or a fraction — '! (/2)', '! (*3/2)', '! (/1.5)'`,
-        current());
+      throw new ParseError('PARSE_OPERATOR_EXPECTS_NUMBER_FRACTION', { operator }, current());
     }
     expect(T.RPAREN);
     // `scope: 'relative'` — une vitesse posée dans le flux se compose avec celle en cours ; c'est
@@ -7913,12 +7524,7 @@ function parse(tokens, opts = {}) {
     // un élément de flux, ce que le message dit.
     if (atAny(T.SLASH, T.STAR)) {
       const signe = at(T.STAR) ? '*' : '/';
-      throw new ParseError(
-        `'[${signe}N]': the speed operator is written in PARENTHESES and placed in the `
-        + `FLOW — '! (${signe}N)'. It lives nowhere else: `
-        + `neither as a rule suffix, nor attached to an element. '/N' speeds up, '*N/M' writes the same `
-        + `thing in inverse fraction`,
-        current());
+      throw new ParseError('PARSE_SIGNE_SPEED_OPERATOR_WRITTEN', { signe }, current());
     }
 
     const pairs = [];
@@ -7936,10 +7542,7 @@ function parse(tokens, opts = {}) {
       checkQualifierKey(key, keyTok);
       // Même règle dans le sac moteur — le format est le MÊME des deux côtés.
       if (!at(T.RBRACKET) && !atEnd() && current().spaceBefore) {
-        throw new ParseError(
-          `'${key}: ' — no space after the colon: the value begins immediately `
-          + `('${key}:${current().value}…'). The space only separates the PARTS of a value`,
-          current());
+        throw new ParseError('PARSE_KEY_SPACE_AFTER_COLON_2', { key, p1: current().value }, current());
       }
       void apresDeuxPoints;
 
@@ -7961,11 +7564,7 @@ function parse(tokens, opts = {}) {
             const ouvreUnElement = suite.type === T.IDENT
               && (peek(2).type === T.COLON || peek(2).type === T.RBRACKET || peek(2).type === T.COMMA);
             if (!ouvreUnElement) {
-              throw new ParseError(
-                `'[${key}: ${rawValue.trim()},…]': the comma separates the ELEMENTS of the bag, not the `
-                + `parts of a value (positional list removed) — write `
-                + `'[${key}:${rawValue.trim()} …]', the parts separated by a SPACE`,
-                current());
+              throw new ParseError('PARSE_KEY_COMMA_SEPARATES_ELEMENTS', { key, p1: rawValue.trim() }, current());
             }
             break;
           }
@@ -7973,11 +7572,7 @@ function parse(tokens, opts = {}) {
           // Mêmes deux règles que dans le sac runtime — le format est le MÊME dans les deux sacs :
           // le deux-points AFFECTE (une paire n'en porte qu'un), et il attend une valeur.
           if (t.type === T.COLON) {
-            throw new ParseError(
-              `'[${key}: ${rawValue.trim()}:…]': the colon ASSIGNS a value, it does not separate `
-              + `its parts — a pair carries only one. The parts of a value are separated `
-              + `by a SPACE ('[${key}:3 0]')`,
-              t);
+            throw new ParseError('PARSE_KEY_COLON_ASSIGNS_VALUE', { key, p1: rawValue.trim() }, t);
           }
           if (rawValue.length > 0 && t.type !== T.RPAREN && t.type !== T.COMMA) {
             const lastChar = rawValue[rawValue.length - 1];
@@ -7994,10 +7589,7 @@ function parse(tokens, opts = {}) {
         }
         rawValue = rawValue.trim();
         if (rawValue === '') {
-          throw new ParseError(
-            `'[${key}:]' assigns no value — the colon expects one (for example `
-            + `'[${key}:3 0]'), and a control without an argument is written bare, without a colon`,
-            keyTok);
+          throw new ParseError('PARSE_KEY_ASSIGNS_VALUE_COLON_3', { key }, keyTok);
         }
         pairs.push({ type: 'QualPair', key, value: rawValue, decrement: null });
         if (at(T.COMMA)) advance();
@@ -8010,11 +7602,7 @@ function parse(tokens, opts = {}) {
       // en nommant la librairie qui le déclare.
       const gardeElement = () => {
         if (at(T.IDENT) && peek(1).type === T.COLON) {
-          throw new ParseError(
-            `'[${key}:… ${current().value}:…]': two ELEMENTS of the bag separated by a SPACE — `
-            + `they are missing a COMMA ('[${key}:…, ${current().value}:…]'). The space only separates `
-            + `the PARTS of a single value`,
-            current());
+          throw new ParseError('PARSE_KEY_ELEMENTS_BAG_SEPARATED_2', { key, p1: current().value }, current());
         }
       };
       const { value, decrement } = readQualifierValue();
