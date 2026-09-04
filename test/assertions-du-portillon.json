@@ -1,5 +1,5 @@
 {
- "assertions": 19647,
+ "assertions": 19673,
  "gardes": [
   "alias_est_sorti_du_langage.mjs",
   "anti-vacuité [interne]",
@@ -86,6 +86,7 @@
   "le_mode_ne_change_pas_en_cours_de_tirage.mjs",
   "le_mot_transport_est_sorti_du_langage.mjs",
   "le_nom_d_un_homomorphisme_est_un_marqueur.mjs",
+  "le_nom_declare_porte_au_moins_une_lettre.mjs",
   "le_prefixe_par_la_librairie_ne_contourne_aucun_refus.mjs",
   "le_rang_des_cles_du_paquet_a_un_temoin.mjs",
   "le_registre_est_une_propriete_de_l_alphabet.mjs",

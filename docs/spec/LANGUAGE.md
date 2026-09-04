@@ -323,7 +323,7 @@ noms ; `12` est un nombre. La position qualifie : en tete de declaration le mot 
 valeur c'est une grandeur avec son unite.
 
 ```text
-def 12TET (divisions:12)
+def 12TET(divisions:12)
 def w(a:100c, b:20ms)
 ```
 
@@ -1902,7 +1902,7 @@ Ils gardent le même sens dans la partie déclarative et dans le flux.
 
 | Signe      | Sens                                      | Exemple                                           |
 | ---------- | ----------------------------------------- | ------------------------------------------------- |
-| espace     | sépare deux termes                        | `def souffle (vel:60)`                           |
+| espace     | sépare deux termes                        | `S -> C4 D4`                                      |
 | collage    | réunit deux termes en un seul             | `def accent(x) x(vel:120)`                       |
 | `.`        | désigne un élément dans un espace de noms | `alphabet.tabla`, `out.midi`                 |
 | `:`        | lie un sujet à une valeur                 | `dha:midi`, `time.tempo:120`, `(vel:100)`        |
@@ -1918,8 +1918,8 @@ peuvent se suivre, le collage porte une information et le langage la lit.
 
 | Écriture                    | Lecture                                                   |
 | --------------------------- | --------------------------------------------------------- |
-| `def accent(x) x(vel:120)` | `(x)` collé au nom = liste de paramètres de la définition |
-| `def souffle (vel:60)`     | `(vel:60)` séparé du nom = corps de la définition         |
+| `def accent(x) x(vel:120)` | des noms nus dans le sac, puis un corps = transformation   |
+| `def souffle(vel:60)`      | des clés dans le sac, sans corps qui suit = objet          |
 | `C4(vel:80)`                | qualificateur du terminal `C4`                            |
 | `C4 D4 (weight:50)`         | qualificateur de la règle entière                         |
 | `C4!(vel:100)`              | flux ancré à `C4`, il voyage avec lui (`conjoint: true`)  |

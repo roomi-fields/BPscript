@@ -97,7 +97,7 @@ def_directive = ( "def" | "terminal" ) , NOM_DECLARE , [ param_list ] , [ CONVEN
 param_list = "(" , IDENT , { "," , IDENT } , ")" ;      (* collé au nom *)
 
 def_body = terminal_block            (* def cloche  degree:0  voice.wobble *)
-         | setting_bag               (* def kick (vel:120) — un nom et un sac : un objet RACINE, sans parent *)
+         | setting_bag               (* def kick(vel:120) — un nom et un sac : un objet RACINE, sans parent *)
          | backtick_inline           (* def fondu phase `js: (t, dur) => 1 - t / dur` *)
          | rhs ;                     (* def cadence sa re ga pa   def accent(x) x(vel:120) *)
 
@@ -115,7 +115,7 @@ TERMINAL_VALUE = "degree" | "register" | "hz" | "sounding" | "duration" ;
 d'abord, ce qu'il vaut ensuite. La liste de paramètres se **colle** au nom ; un corps qui commence
 par une parenthèse en est séparé par une espace. Le nom se pose ensuite à sa place dans une règle.
 
-**Un nom et un sac déclarent un objet racine** — `def scale (scope(scene))`, `def kick (vel:120)` :
+**Un nom et un sac déclarent un objet racine** — `def scale(scope(scene))`, `def kick(vel:120)` :
 le premier objet d'une famille, celui qui ne dérive de rien. Ses exemplaires se déclarent ensuite par
 leur type en tête — `scale degree`, `degree bilaval (…)`. Un nom nu vaut un objet vide. `def` est le
 seul mot qui déclare ; il n'y a pas de mot `object`.
@@ -746,7 +746,7 @@ STRING      = '"' , { (* tout caractère sauf " *) } , '"' ;
 value       = [ "-" ] , INT | FLOAT | IDENT
             | INT , { "+" , INT } , "/" , INT ;   (* 7/8, 4+4/4 — la signature rythmique *)
 KEY         = IDENT | TEXTE ;   (* nue quand c'est un identifiant, entre guillemets sinon *)
-NOM_DECLARE = IDENT | ( digit+ , { letter | digit } ) ;   (* au moins une lettre *)
+NOM_DECLARE = IDENT | ( digit+ , IDENT ) ;   (* 12TET, 22shruti — jamais un chiffre pur *)
 TAG         = IDENT ;
 CODE        = (* tout caractère sauf ` non échappé *) ;
 TEXT        = (* tout caractère jusqu'à fin de ligne *) ;

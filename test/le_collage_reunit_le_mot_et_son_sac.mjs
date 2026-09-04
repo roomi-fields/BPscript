@@ -133,7 +133,37 @@ let motsDeclarants = [];
   }
 }
 
-const ATTENDU = 4 + 2 + 8 + 1 + 4 + 2 + 1 + motsDeclarants.length;
+// ── 7. AUCUN EXEMPLE DE LA SPÉCIFICATION N'ÉCRIT LA FORME REFUSÉE ────────────────────────────────
+//
+// ⛔ UN EXEMPLE EST UNE PRESCRIPTION. La forme espacée était sortie du langage le 2026-09-03 et elle
+// vivait encore, le 2026-09-04, dans DEUX tableaux de la seule section « Conventions de notation » —
+// dont un qui lui donnait un SENS : « `(vel:60)` séparé du nom = corps de la définition ». La règle
+// habitait la même section, six lignes plus haut. Une forme retirée du langage revient par l'exemple
+// qu'on répare, jamais par une décision.
+//
+// Un CONTRE-exemple reste permis : une ligne qui montre la forme POUR la refuser porte le mot.
+let lignesDeSpec = 0;
+{
+  const FICHIERS = ['docs/spec/LANGUAGE.md', 'docs/spec/EBNF.md', 'docs/spec/AST.md'];
+  const fautives = [];
+  for (const f of FICHIERS) {
+    let texte;
+    try { texte = readFileSync(new URL(`../${f}`, import.meta.url), 'utf8'); } catch { continue; }
+    const lignes = texte.split('\n');
+    lignesDeSpec += lignes.length;
+    lignes.forEach((l, i) => {
+      if (/refus|interdit|obsolete|obsolète|périm|perim/i.test(l)) return;   // le contre-exemple s'annonce
+      for (const mot of motsDeclarants) {
+        if (new RegExp(`\\b${mot}\\s+[A-Za-z0-9_.'#-]+\\s+\\(`).test(l)) fautives.push(`${f}:${i + 1}  ${l.trim()}`);
+      }
+    });
+  }
+  ok(lignesDeSpec > 2000, `7. SOCLE : ${lignesDeSpec} ligne(s) de spécification balayée(s) — un périmètre qui fond ne prouve rien`);
+  ok(fautives.length === 0,
+    `7. ⛔ la spécification écrit une forme que le compilateur REFUSE — un exemple est une prescription :\n     ${fautives.join('\n     ')}`);
+}
+
+const ATTENDU = 4 + 2 + 8 + 1 + 4 + 2 + 1 + motsDeclarants.length + 2;
 ok(passe + echecs.length === ATTENDU,
   `le garde doit éprouver ${ATTENDU} cas — ${passe + echecs.length} seulement`);
 

@@ -162,8 +162,8 @@ VarType =
   | { kind: "type",       type: string | null }   // le PARENT ; null = une racine, qui ne dérive de rien
 ```
 
-Un objet se déclare par son type en tête — `alphabet western (…)`, `degree bilaval (…)` — et
-`varType.type` nomme ce parent. Une **racine** se déclare par `def` — `def scale (…)`, `def kick
+Un objet se déclare par son type en tête — `alphabet western(…)`, `degree bilaval(…)` — et
+`varType.type` nomme ce parent. Une **racine** se déclare par `def` — `def scale(…)`, `def kick
 (vel:120)` — et `varType.type` vaut `null` : elle ne dérive de rien. Les deux portent leur corps dans
 `settings`, le même sac ; la parenthèse absente vaut parenthèse vide.
 
@@ -179,7 +179,7 @@ aucune valeur, et il porte une entrée par nom qui en écrit une — `symbol a:1
 | `in`          | une valeur qui vient du dehors : un **rôle**, et le canal qui l'apporte             |
 | `convention`  | un flux de nombres, et la façon dont le récepteur le lit                            |
 | `module`      | une **instance** de ce module — elle ne porte aucun corps propre                    |
-| `type`        | un **objet** : `type` nomme son parent, ou vaut `null` pour une racine (`def x (…)`) |
+| `type`        | un **objet** : `type` nomme son parent, ou vaut `null` pour une racine (`def x(…)`) |
 | *(aucun)*     | un symbole du flux qui n'est ni une note ni un nom de règle                         |
 
 Un flag porte sa valeur initiale en même temps que lui-même, et une règle s'y conditionne par un
@@ -188,7 +188,7 @@ le 2026-08-22 continue de le lire sans casser, et sa vacuité dit que rien ne le
 
 **Une variable porte la nature `var` dans le flux**, sauf si la racine de son type est `sound` :
 elle est alors un objet sonore, de nature `sounding`, et ses membres déclarés voyagent dans
-`payload.params` (`sound metro (vel:120)` → `params: {vel: 120}`, l'occurrence gagnant sur le
+`payload.params` (`sound metro(vel:120)` → `params: {vel: 120}`, l'occurrence gagnant sur le
 membre). L'aval la porte opaquement, et la résolution la laisse telle quelle.
 
 ### `DefDirective`
@@ -212,7 +212,7 @@ DefDirective {
 // qui lui correspond — `keys`, `settings` ou `body` selon la sorte. Les deux disent la même chose ;
 // c'est le TYPE qui était en retard sur le code, et un dérivé se fait correspondre. La table
 // ci-dessous reste comme lecture des QUATRE SORTES et de ce que chacune porte.
-// ⚠️ `def kick (vel:120)` — un nom et un sac — n'est PAS une définition : c'est un objet RACINE, et
+// ⚠️ `def kick(vel:120)` — un nom et un sac — n'est PAS une définition : c'est un objet RACINE, et
 // il vit dans `vars` comme un `VarDirective` dont `varType.type` vaut `null`. `def` est le mot
 // unique de la déclaration ; ce qu'il déclare se lit sur le corps qui suit le nom.
 DefBody =
