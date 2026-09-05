@@ -27,7 +27,7 @@ Toute investigation **commence** par l'index : `rtfm_search` pour *le quoi*, `co
 
 - **Seuls usages shell légitimes** : `grep <motif> <fichier NOMMÉ>` · `sed`/`cat` en **édition** · le
   filtrage d'une **sortie de commande**, qui n'est pas un fichier.
-- **Une recherche qui ne trouve rien renseigne sur la recherche** : reformuler, jamais retomber sur `grep`.
+- **Une recherche qui ne trouve rien renseigne sur la recherche** : reformuler, jamais `grep`.
 - **L'index d'un VOISIN se lit par `~/dev/bp/hub/tools/rtfm-tour.sh <dépôt> "<requête>"`** ; `--tous`
   interroge toute la tour.
 
@@ -70,14 +70,14 @@ Repris de `LANGUAGE.md`, qui fait foi. **Toute forme absente de ce tableau se li
 | --- | --- |
 | espace · `.` · `:` | sépare deux termes, le **collage** les réunit · élément d'un espace de noms · lie un sujet à sa valeur |
 | `()` · `[]` · `{ , }` | réglages, le **domaine de la clé** adressant le destinataire · ce qui appartient à la dérivation : drapeau, rang · polymétrie et groupement temporel |
-| `@` · `//` · `-----` | ouvre une ligne déclarative · commentaire · séparateur de sous-grammaires |
-| `->` · `<-` · `<>` | **production**, le gauche réécrit en droit · **analyse**, la droite réduite au symbole gauche · les deux sens |
+| `@` · `//` · `-----` | ligne déclarative · commentaire · séparateur de sous-grammaires |
+| `->` · `<-` · `<>` | **production**, le gauche réécrit en droit · **analyse**, la droite réduite au gauche · les deux sens |
 | `-` · `_` · `...` | silence, il occupe du temps · prolongation de l'événement précédent · repos indéterminé, calculé par le moteur |
 | `~` · `\|[ ]` | liaison — `C4~` début, `~C4` fin, `~C4~` continuation · objet composé : des notes sur une seule unité d'ordonnancement |
-| `!` · `<!` | simultanéité : partage l'instant d'attaque du précédent · point d'attente : la dérivation attend le trigger nommé |
+| `!` · `<!` | simultanéité : partage l'instant d'attaque du précédent · point d'attente : attend le trigger nommé |
 | `*` · `=` | sujet universel — tous les terminaux de la portée ; dans une vitesse, ralentit · affectation de drapeau, en fin de règle |
-| `?` · `$` · `&` · `#` | joker · gabarit maître, capture un motif · le rejoue · contexte négatif, `#?` apparie la frontière de la chaîne |
-| `lambda` · `` ` `` | chaîne vide : le non-terminal s'efface · code externe, exécuté par l'interpréteur que son tag nomme |
+| `?` · `$` · `&` · `#` | joker · gabarit maître, capture un motif · le rejoue · contexte négatif, `#?` apparie la frontière |
+| `lambda` · `` ` `` | chaîne vide : le non-terminal s'efface · code externe, exécuté par l'interpréteur de son tag |
 
 ## ⛔ Ce que je construis est un COMPILATEUR, de bout en bout
 
@@ -101,8 +101,8 @@ Repris de `LANGUAGE.md`, qui fait foi. **Toute forme absente de ce tableau se li
 
 ## Coder, et les librairies
 
-- **Le code mort s'élague** dans le mouvement qui le rend mort ; une branche sans appelant vivant sort.
-- **La librairie d'abord** : ce qui peut se déclarer ou se retrouver en librairie y vit.
+- **Le code mort s'élague** dans le mouvement qui le rend mort : une branche sans appelant sort.
+- **La librairie d'abord** : ce qui peut se déclarer en librairie y vit.
 - **Les commentaires sont utiles et proportionnés** : ils disent ce que le code ne montre pas, dont
   ce qui a rendu un seuil nécessaire. **Un renommage global va du plus long au plus court.**
 - **Après une reprise verbatim, je relis mon diff en RETRAIT** : ce qui disparaît ne rougit nulle
@@ -118,7 +118,7 @@ Repris de `LANGUAGE.md`, qui fait foi. **Toute forme absente de ce tableau se li
   `orderTokens`, l'appui d'éditeur ; mes sources ne sont pas importables, sans quoi ma structure de
   fichiers est une interface publique que je ne contrôle pas.
 - **L'autorité d'un axe se décide par le TRI, jamais par l'ordre d'arrivée** : le premier PAR SON NOM
-  fait autorité, et `libs.js:motsDInvocation` est le seul endroit où cela se tranche.
+  fait autorité, et `libs.js:motsDInvocation` le tranche seul.
 
 ## ⛔ « Fait », et les gardes
 
@@ -128,16 +128,17 @@ que GIT EXÉCUTE — lu par `core.hooksPath` : au mauvais chemin, un fichier lui
 pas. Un vert se juge sur son **code de sortie** ; il est nécessaire et insuffisant.
 
 - **Un garde qu'on n'a pas vu mordre par injection est une hypothèse** : injecter la faute dans
-  l'accusé **puis dans le juge**. **Un garde compte ce qu'il a examiné** et refuse d'avoir vu zéro.
+  l'accusé **puis dans le juge**. **Un garde compte ce qu'il a examiné** et refuse zéro.
 - **Un garde s'écrit pour la construction**, jamais pour la forme signalée : toutes les formes du
   parser, dans **toutes** ses sections — une matrice, pas une liste. Et il **répare l'espace où le
   défaut peut vivre**, jamais l'endroit où il s'est montré : la portée **et son complément**.
-- **Un garde se prouve sur la graphie que le code écrit**, jamais sur celle qu'on croit.
+- **Un garde se prouve sur la graphie que le code écrit**, jamais celle qu'on croit.
 - **Un garde hors du portillon est invisible** : il s'inscrit dans `test/run_guards.mjs`. **Un garde
   qui peut se sauter doit ÉCHOUER, jamais avertir**, et **un garde en EXCEPTION disparaît du
   portillon** au lieu d'y être rouge.
 - **Une empreinte compare tout**, sauf le hors-sujet prouvé : choisir les champs comparés, c'est
   choisir ce qu'on ne verra pas.
+- **Un crochet placé devant un outil ne voit pas ce que fait un programme lancé par cet outil.**
 - **Deux refus dans un même script sont DEUX gardes** : un garde né d'un mécanisme retiré ne part pas
   si sa **fonction** lui survit.
 
@@ -157,6 +158,8 @@ pas. Un vert se juge sur son **code de sortie** ; il est nécessaire et insuffis
 - **Un chemin qui résout ne dit pas que le geste est encore permis** : une clause qui prescrit un
   geste se vérifie sur le geste. **L'oracle d'une permission est la décision, jamais le système de
   fichiers** — un essai d'écriture qui réussit prouve qu'elle passerait par inadvertance.
+- **Une commande qui RÉPOND n'est pas une commande qui marche** — **un reste qui répond enseigne
+  qu'il vit** : exercer le chemin et lire son code de sortie, jamais sa page d'aide.
 - **COMPTER dit ce qui est écrit ; EXERCER dit ce qui se passe** — deux questions, pas deux degrés
   de rigueur. Un catalogue vide et un catalogue mort ont la même empreinte ; **un filtre qui ne
   filtre plus rien a la même forme qu'un filtre qui n'a rien à filtrer**. **L'absence ne se distingue
@@ -212,28 +215,23 @@ qui écrit : ce qui change, ce qu'il **périme chez lui**, une prédiction falsi
 - **Le courrier se relit au moment d'ÉCRIRE, pas au réveil** : un préavis reçu entre-temps porte
   peut-être sur ce que je m'apprête à écraser.
 - **Rendre une forme invalide casse les consommateurs en minutes** : passer leur corpus au
-  compilateur **avant** de livrer, puis les prévenir forme par forme avec la migration attendue.
+  compilateur **avant** de livrer, puis prévenir forme par forme avec la migration attendue.
 - **Déclarer un mot confisque un nom, et la casse est MUETTE** — une scène qui le portait est
   tronquée sans un signe. Le plus local gagne, l'ombrage s'annonce, un mot déplacé est **refusé avec
   sa réécriture**.
-- **Un artefact dérivé lu par un autre dépôt est une frontière** : quel artefact devient faux ? Le
-  régénérer dans le même commit, validé sur un lot.
+- **Un artefact dérivé lu par un autre dépôt est une frontière** : lequel devient faux ? Le régénérer
+  dans le même commit, validé sur un lot.
 - **Écrire chez un autre : signer, prévenir, ne rien déclarer**, selon **ses** règles de dérivation ;
   l'écriture est livrée quand son propriétaire l'a committée.
-- **Chez un voisin, je rends la MESURE et je m'arrête là** — lui seul voit les autres chemins, et
-  **une pièce juste ne fait pas une pièce de la conclusion qui l'accompagne**.
+- **Chez un voisin, je rends la MESURE et je m'arrête là** — lui seul voit les autres chemins ; **une
+  pièce juste ne fait pas une pièce de la conclusion qui l'accompagne**.
 - **Une affirmation fausse sur MON code, je la retire de mon code ; sur celui d'un VOISIN, elle ne
   vit que dans un courrier et aucun geste ne la rattrape** — elle voyage jusqu'à ce que son
   propriétaire mesure. **Retirer une affirmation du CODE dans le même geste** que du message : un
   commentaire se relit comme une preuve, et **une description fausse d'un garde juste** lui survit.
-- **Éprouver un garde écrit DEUX FOIS dans le code de production**, et c'est le cas qui échappe.
-- ⛔ **CE QUI ME PROTÈGE PENDANT UNE FENÊTRE EST UNE DISCIPLINE, PAS UN MÉCANISME** : le crochet de
-  gel intercepte **mes outils d'édition**, jamais un **processus que je lance**. ⇒ **Ne lancer aucune
-  construction, régénération ni publication tant qu'une fenêtre est ouverte**, et traiter une commande
-  LONGUE comme une écriture qui dure ; **le garde de POUSSÉE, lui, reste mécanique**.
-- **Pendant la fenêtre d'un voisin, je n'enregistre RIEN — pas « rien sous ses racines »** : le
-  périmètre qu'il relève est le sien, la seule chose que je contrôle est **ce que j'enregistre**.
-  **Et je prépare sans écrire** — lire, mesurer, rédiger hors du dépôt, poser d'un coup à la fermeture.
+- **Éprouver un garde écrit DEUX FOIS dans le code de production** — c'est le cas qui échappe.
+- **Ce que mes gardes lisent dehors se lit à l'état PUBLIÉ ou à une copie figée** — `tour last`
+  épingle la version d'un voisin, qui ne bouge alors qu'à ma décision.
 
 ## Tour de contrôle
 
@@ -246,9 +244,9 @@ préfixe `BP_AGENT=bpscript ~/dev/bp/hub/tour <commande>`.
    un livrable poussé se route dans le même geste que le push **s'il entre dans l'un des quatre motifs
    ci-dessous**. **Sans matière, je m'arrête sans écrire** : arbre propre et portillon vert sont un
    état normal, pas un rapport.
-3. `tour send <dest>` porte une **demande** et réveille ; `tour note <dest>` porte une
-   **information**, lue à la prochaine levée. Je dépose, je ne pingue personne.
-4. **Un contrat partagé se propose avant d'être figé**, par `tour` ; le code interne reste autonome.
+3. `tour send <dest>` porte une **demande** et réveille ; `tour note <dest>` une **information**, lue
+   à la prochaine levée. Je dépose, je ne pingue personne.
+4. **Un contrat partagé se propose avant d'être figé** ; le code interne reste autonome.
 5. **Fin de session** : mon entrée de `baseline-status.json`. **Le code fait foi** : un statut se
    vérifie sur pièces.
 
