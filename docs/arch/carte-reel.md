@@ -5,7 +5,7 @@
 > vit dans le document d'architecture, chez Atlas, qui cite celui-ci.
 ## Ce qui est mesuré
 
-- **24 modules** dans `src/transpiler/`, **15920 lignes**.
+- **24 modules** dans `src/transpiler/`, **15982 lignes**.
 - Le **rôle** est lu dans l'en-tête de chaque fichier, verbatim — jamais interprété.
 - Les **arêtes** sont les imports d'un module vers un voisin du même dossier.
 
@@ -20,14 +20,14 @@
 | `bpxAst.js` | 590 | 10 | 2 | L'ARBRE D'UNE SCÈNE RÉSOLUE — les axes de premier niveau que cet étage écrit et relit. |
 | `actorResolver.js` | 582 | 3 | 2 | BPScript Actor Resolver |
 | `tokenizer.js` | 535 | 1 | 2 | BPScript Tokenizer |
-| `index-des-objets.js` | 390 | 3 | 6 | L'INDEX DES OBJETS — ce que les librairies déclarent, rendu comme des objets, pour la porte |
+| `index-des-objets.js` | 435 | 3 | 6 | L'INDEX DES OBJETS — ce que les librairies déclarent, rendu comme des objets, pour la porte |
 | `librairies-jointes.js` | 145 | 2 | 1 | L'ARBRE JOINT LE CONTENU DES LIBRAIRIES QU'IL INVOQUE — décision de Romain, 2026-09-02. |
 | `syntaxe-data.js` *(généré)* | 126 | 0 | 4 | — |
 | `orderTokens.js` | 123 | 0 | 0 | — |
 | `controlValidation.js` | 107 | 1 | 1 | Collecte récursivement toutes les paires de SettingBag de l'AST. |
+| `vocabulaire.js` | 106 | 3 | 4 | LE VOCABULAIRE DU LANGAGE — la porte d'éditeur, DÉRIVÉE de la porte des objets. |
 | `libs-champs.js` | 98 | 0 | 3 | LES CHAMPS DE FICHIER D'UNE LIBRAIRIE — déclarés UNE FOIS, pour tous mes lecteurs. |
 | `diagnostics.js` | 95 | 0 | 8 | LES DIAGNOSTICS — UN CODE STABLE, UN TEXTE QUI VIT AILLEURS. |
-| `vocabulaire.js` | 89 | 3 | 4 | LE VOCABULAIRE DU LANGAGE — la porte d'éditeur, DÉRIVÉE de la porte des objets. |
 | `syntaxe-bundle.mjs` | 88 | 0 | 0 | GÉNÉRATEUR DE LA PORTE DU SCHÉMA DE SYNTAXE. |
 | `segmentation.js` | 81 | 0 | 1 | LA SEGMENTATION D'UN NOM COLLÉ — plus long préfixe, glouton, sans retour arrière. |
 | `gabarits-bundle.mjs` | 57 | 0 | 0 | GÉNÉRATEUR DE LA PORTE DES GABARITS DE RÉGLAGES NATIFS. |

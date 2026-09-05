@@ -1,23 +1,58 @@
+/**
+ * UN OBJET DÉCLARÉ PAR UNE LIBRAIRIE — ce que la porte `bpscript/objets` rend.
+ *
+ * ⛔ CES FORMES SONT ÉCRITES ICI PARCE QUE LA DÉRIVATION NE LES DEVINE PAS. Sans elles, mes quatre
+ * fonctions publiques se décrivaient toutes en `any`, et un consommateur ne pouvait pas distinguer
+ * « ce champ n'existe pas » de « ce champ n'a pas été inféré ». Mesuré chez kanopi le 2026-09-05,
+ * à l'exécution sur ce que je publie : *une dérivation ferme la divergence, elle ne fonde pas la
+ * complétude.*
+ *
+ * `membres` reste OUVERT, et c'est mesuré : ce qu'un objet porte est ce que sa librairie déclare —
+ * fermer la forme ici ferait de ce fichier une seconde autorité, plus pauvre que la donnée.
+ *
+ * @typedef {object} ObjetDeclare
+ * @property {string} nom                        Le nom sous lequel la scène le désigne.
+ * @property {string} famille                    Le mot d'invocation de sa famille.
+ * @property {string | null} derive              Le prototype dont il dérive, s'il en a un.
+ * @property {{ [membre: string]: any }} membres Ce que sa librairie lui donne.
+ * @property {string[]} [chaine]                 Sa chaîne de dérivation, de lui vers sa racine.
+ */
+/**
+ * UNE FAMILLE — un mot d'invocation, ses membres propres, et ses entrées.
+ *
+ * @typedef {object} FamilleDeclaree
+ * @property {string} nom
+ * @property {{ [membre: string]: any }} membres
+ * @property {string[]} places                   Les places où ce mot peut s'écrire.
+ * @property {ObjetDeclare[]} entrees            Dans l'ordre de la donnée.
+ */
 /** Les familles — les mots qu'on invoque — dans l'ordre du paquet. */
-export function familles(): any[];
+/** @returns {string[]} */
+export function familles(): string[];
 /**
  * Une famille : sa racine (membres propres) et ses entrées, dans l'ordre de la donnée.
  * Rend `null` quand aucune librairie ne déclare ce mot.
+ *
+ * @param {string} mot
+ * @returns {FamilleDeclaree | null}
  */
-export function famille(mot: any): {
-    nom: any;
-    membres: any;
-    places: any[];
-    entrees: any;
-} | null;
+export function famille(mot: string): FamilleDeclaree | null;
 /**
  * Résout un nom écrit comme une chaîne — `alphabet.western`, ou un suffixe non ambigu — vers l'objet
  * qu'il désigne. Rend l'objet ; `null` si rien ne porte ce nom ; `{ ambigu: [chaines] }` quand
  * plusieurs objets finissent par ce suffixe : l'ambiguïté se constate à l'usage, jamais par une liste.
+ *
+ * @param {string} chaine
+ * @returns {ObjetDeclare | { ambigu: string[] } | null}
  */
-export function objet(chaine: any): any;
-/** Tous les objets, à plat — pour qui inventorie. */
-export function objets(): any[];
+export function objet(chaine: string): ObjetDeclare | {
+    ambigu: string[];
+} | null;
+/**
+ * Tous les objets, à plat — pour qui inventorie.
+ * @returns {ObjetDeclare[]}
+ */
+export function objets(): ObjetDeclare[];
 /**
  * ⛔ LE SCHÉMA DE `core` EST DISSOUS — arbitrage de Romain, 2026-09-03 (point 2 des cinq
  * arbitrages) : chaque champ vit sur l'objet qu'il décrit, ou se dérive. Rien n'est en portée sans
@@ -74,5 +109,63 @@ export function lesDefauts(ast: any): any;
  * déclare le sien (Romain, 2026-09-02).
  */
 export function motsInvoques(ast: any): Set<any>;
-/** Un objet par son nom, s'il est EN PORTÉE de la scène — sa famille invoquée — sinon `null`. */
-export function objetEnPortee(nom: any, ast: any): any;
+/**
+ * Un objet par son nom, s'il est EN PORTÉE de la scène — sa famille invoquée — sinon `null`.
+ * @param {string} nom
+ * @param {object} ast
+ * @returns {ObjetDeclare | null}
+ */
+export function objetEnPortee(nom: string, ast: object): ObjetDeclare | null;
+/**
+ * UN OBJET DÉCLARÉ PAR UNE LIBRAIRIE — ce que la porte `bpscript/objets` rend.
+ *
+ * ⛔ CES FORMES SONT ÉCRITES ICI PARCE QUE LA DÉRIVATION NE LES DEVINE PAS. Sans elles, mes quatre
+ * fonctions publiques se décrivaient toutes en `any`, et un consommateur ne pouvait pas distinguer
+ * « ce champ n'existe pas » de « ce champ n'a pas été inféré ». Mesuré chez kanopi le 2026-09-05,
+ * à l'exécution sur ce que je publie : *une dérivation ferme la divergence, elle ne fonde pas la
+ * complétude.*
+ *
+ * `membres` reste OUVERT, et c'est mesuré : ce qu'un objet porte est ce que sa librairie déclare —
+ * fermer la forme ici ferait de ce fichier une seconde autorité, plus pauvre que la donnée.
+ */
+export type ObjetDeclare = {
+    /**
+     * Le nom sous lequel la scène le désigne.
+     */
+    nom: string;
+    /**
+     * Le mot d'invocation de sa famille.
+     */
+    famille: string;
+    /**
+     * Le prototype dont il dérive, s'il en a un.
+     */
+    derive: string | null;
+    /**
+     * Ce que sa librairie lui donne.
+     */
+    membres: {
+        [membre: string]: any;
+    };
+    /**
+     * Sa chaîne de dérivation, de lui vers sa racine.
+     */
+    chaine?: string[] | undefined;
+};
+/**
+ * UNE FAMILLE — un mot d'invocation, ses membres propres, et ses entrées.
+ */
+export type FamilleDeclaree = {
+    nom: string;
+    membres: {
+        [membre: string]: any;
+    };
+    /**
+     * Les places où ce mot peut s'écrire.
+     */
+    places: string[];
+    /**
+     * Dans l'ordre de la donnée.
+     */
+    entrees: ObjetDeclare[];
+};

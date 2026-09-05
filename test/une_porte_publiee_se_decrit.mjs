@@ -24,7 +24,7 @@
  * qui FABRIQUE le cas tranche.* Le cas fabriqué est donc du code FAUX : il ne peut être refusé que
  * par une description effectivement lue.
  */
-import { readFileSync, mkdirSync, copyFileSync, writeFileSync, mkdtempSync, rmSync, existsSync } from 'node:fs';
+import { readFileSync, mkdirSync, copyFileSync, writeFileSync, mkdtempSync, rmSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -103,6 +103,49 @@ try {
   const faux = juger(dans, 'faux.ts');
   ok(faux.refus >= 2, `⛔ le code FAUX est passé — ${faux.refus} refus au lieu de 2 au moins. La `
     + `description n'atteint pas le consommateur, ou elle ne lui oppose rien. Sortie : ${faux.sortie.slice(0, 300)}`);
+
+  // ── ⛔ UNE DESCRIPTION EN `any` N'OPPOSE RIEN — elle a la forme d'une description et n'en est pas ─
+  //
+  // Mesuré chez kanopi le 2026-09-05, à l'exécution sur ce que je publie : mes onze portes étaient
+  // décrites, et la description de la principale disait `controls: {name}[]`, `components: {}`,
+  // `voices: any` — 25 erreurs chez lui sur des champs qui EXISTENT tous. Ma source est du
+  // JavaScript non annoté : l'inférence prend la forme la plus ÉTROITE qu'elle voit construire.
+  //
+  // ⇒ *Une dérivation ferme la divergence, elle ne fonde pas la complétude.* Le garde de
+  //   construction ne pouvait pas le voir : la description était fidèle à la source, et la source
+  //   ne portait pas l'information. Il faut donc compter ce que la description NE DIT PAS.
+  //
+  // ⚠️ CE PLAFOND NE PEUT QUE DESCENDRE, comme les assiettes du parseur. Il ne vise pas zéro : un
+  // `any` est parfois la description JUSTE — la forme d'un arbre de scène est ouverte, et la fermer
+  // ici ferait une seconde autorité plus pauvre que `AST.md`.
+  {
+    // 40 le 2026-09-05, APRÈS l'annotation de `describeVocabulary` et de la porte des objets.
+    // ⚠️ JE N'AI PAS MESURÉ L'AVANT, et je ne l'invente pas : ce plafond scelle un état constaté,
+    // il ne prouve aucune baisse. Ce qui est prouvé est ailleurs — les usages que kanopi nommait
+    // passent, et le cas faux est toujours refusé.
+    const PLAFOND_ANY = 40;
+    const dossier = join(dans, 'node_modules', 'bpscript', 'dist', 'types');
+    let vus = 0, fichiers = 0;
+    const marcher = (d) => {
+      for (const e of readdirSync(d)) {
+        const p = join(d, e);
+        if (statSync(p).isDirectory()) { marcher(p); continue; }
+        if (!p.endsWith('.d.ts')) continue;
+        fichiers++;
+        for (const l of readFileSync(p, 'utf8').split('\n')) {
+          if (/^\s*(\/\/|\*|\/\*)/.test(l)) continue;          // la prose n'est pas une déclaration
+          vus += (l.match(/\bany\b/g) || []).length;
+        }
+      }
+    };
+    if (existsSync(dossier)) marcher(dossier);
+    ok(fichiers > 5, `SOCLE : ${fichiers} fichier(s) de déclaration lus — sous ce seuil le compte `
+      + `d'\`any\` est bas parce que le garde ne lit plus, pas parce que la surface est décrite.`);
+    ok(vus <= PLAFOND_ANY,
+       `⛔ ${vus} \`any\` dans la description publiée, plafond ${PLAFOND_ANY}. Un champ décrit en `
+     + `\`any\` a la forme d'une description et n'oppose rien : le consommateur ne distingue pas `
+     + `« ce champ n'existe pas » de « ce champ n'a pas été inféré ». Ce compte ne peut que descendre.`);
+  }
 
   // ── ET LE CAS JUSTE PASSE — sans quoi le garde mesurerait une description qui refuse TOUT ────
   writeFileSync(join(dans, 'juste.ts'),
