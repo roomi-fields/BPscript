@@ -2,7 +2,7 @@ import {
   T,
   diagnostic,
   texteDuDiagnostic
-} from "./chunk-XDXRT6QE.js";
+} from "./chunk-S3UVLV7L.js";
 import {
   CHAMPS_DE_FICHIER,
   CHAMPS_DU_PAQUET,

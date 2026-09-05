@@ -113,7 +113,13 @@ var MESSAGES = {
   PARSE_NAME_ECRIT_PRODUCTION_DIRECTIVE: "'[{name}{ecrit}]': a production directive is written at the top of the scene, before the delimiter \u2014 '{name}{ecrit}'. A block that grouped several keys is rewritten as that many lines. The bracket carries what belongs to DERIVATION: a flag, a procedure, a rank.",
   PARSE_NAME_FOLLOWED_ADDRESS_ADDRESS: "'<!{name}.' followed by '{p1}': this is not an address. An address is an identifier ('<!{name}.next') or an integer ('<!{name}.60'), attached to the period on both sides. Without an address, write '<!{name}' alone \u2014 the wait then lifts on any event of that role, and that is a different form, not a shortcut.",
   PARSE_NAME_NAME_BETWEEN_BARS: "'|{name}|': the name between bars has left the language \u2014 write '{name}' bare. The form remains readable on BP3 input, it is no longer written in a BPScript scene. \u26A0\uFE0F Check that no terminal of the alphabet in scope is already named '{name}': the bars used to distinguish the non-terminal, the bare name no longer does.",
-  PARSE_NAME_READABLE_NEITHER_SETTING: "'{name}({p1})' is readable neither as a SETTING BAG \u2014 its content is not made of 'key:value' pairs \u2014 nor as a CALL: calling requires a declared definition, and none carries the name '{name}'. To set '{name}', write '{name}(key:value)'; to call it, declare it first with 'def {name}(x) \u2026'",
+  // ⛔ CE REFUS NE JUGE QUE LA FORME — mesuré le 2026-09-05. Son texte affirmait qu'« aucune
+  // définition ne porte ce nom », et ce n'est JAMAIS la cause : avec un sac BIEN formé et un nom
+  // inconnu, c'est l'étage de résolution qui refuse (`RESOLVE_UNKNOWN_ATTRIBUTE`). Ce site n'est
+  // atteint que lorsque le contenu de la parenthèse n'est pas fait de paires. *Un refus juste dans
+  // sa conclusion peut être faux sur ce qu'il affirme mesurer* — et celui-ci envoyait l'auteur
+  // déclarer une définition alors que sa faute est dans le contenu de sa parenthèse.
+  PARSE_NAME_READABLE_NEITHER_SETTING: "'{name}({p1})': the content of the parentheses is not made of 'key:value' pairs, so this is not a SETTING BAG. If you meant to set '{name}', write '{name}(key:value)'. If you meant to CALL it, a call takes bare terms and requires a declaration \u2014 'def {name}(x) \u2026'.",
   PARSE_NAME_REFUSED_DOES_ASSIGN: "'{name}:<X>' refused \u2014 ':' does not assign a value to a component. Write '{name}.<name>' (rule: ':' assigns, '.' calls){hint}.",
   PARSE_NAME_SEED_MAKES_SENSE: "'![{name}\u2026]': only 'seed' makes sense in the flow (re-seed _srand); '{name}' is placed at the top of the scene, '{name}'.",
   PARSE_NOMDECLARE_SPACE_BETWEEN_DECLARED: "'{nomDeclare} (\u2026)': a space between a declared word and its bag separates them into two terms \u2014 a bag is attached to the word it describes. Write '{nomDeclare}(\u2026)'.",

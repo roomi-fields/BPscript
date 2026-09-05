@@ -46,7 +46,25 @@ export function arretsImmediats(texte) {
   const codes = [];
   for (const a of arrets) for (const c of a.matchAll(/'([A-Z][A-Z0-9_]{4,})'/g)) codes.push(c[1]);
   const PARLE_DUN_NOM = /UNKNOWN|UNDECLARED|NOT_DECLARED|NO_DEFINITION|UNDEFINED|NEITHER|NOT_IN_SCOPE|MISSING/;
-  return { total: arrets.length, codes, deNom: codes.filter((c) => PARLE_DUN_NOM.test(c)) };
+  // ⛔ UN CODE QUI RESSEMBLE À UN REFUS DE NOM SANS EN ÊTRE UN — mesuré, jamais supposé.
+  //
+  // `PARSE_NAME_READABLE_NEITHER_SETTING` porte `NEITHER` et son texte affirmait qu'« aucune
+  // définition ne porte ce nom ». Ce n'est JAMAIS sa cause : avec un sac BIEN formé et un nom
+  // inconnu, c'est l'étage de résolution qui refuse (`RESOLVE_UNKNOWN_ATTRIBUTE`). Ce site n'est
+  // atteint que lorsque le contenu de la parenthèse n'est pas fait de paires — une faute de FORME,
+  // et la forme est le domaine du parseur. Son message a été corrigé le même jour pour cesser
+  // d'affirmer ce qu'il ne mesure pas.
+  //
+  // ⚠️ CETTE EXEMPTION SE PROUVE, ELLE NE SE DÉCRÈTE PAS — sinon c'est un instrument ajusté pour
+  // faire baisser son propre compte. La preuve est reproductible en trois lignes :
+  //     sac BIEN formé + nom inconnu   →  RESOLVE_UNKNOWN_ATTRIBUTE      (la résolution refuse)
+  //     sac MAL formé  + nom inconnu   →  PARSE_NAME_READABLE_NEITHER_…  (ce site)
+  //     sac MAL formé  + nom CONNU     →  PARSE_NAME_READABLE_NEITHER_…  (le nom n'y change rien)
+  // Le troisième cas est le décisif : le refus tombe pareil quand le nom est connu, donc il ne juge
+  // pas le nom.
+  const JUGE_UNE_FORME = new Set(['PARSE_NAME_READABLE_NEITHER_SETTING']);
+  return { total: arrets.length, codes,
+           deNom: codes.filter((c) => PARLE_DUN_NOM.test(c) && !JUGE_UNE_FORME.has(c)) };
 }
 
 const parseur = readFileSync(path.join(SRC, 'parser.js'), 'utf-8');
@@ -75,7 +93,9 @@ ok(imports.length <= PLAFOND_IMPORTS,
 // doublé : amputé, `[zzcle:1]` en fin de règle n'était plus refusé du tout. Il vit désormais dans
 // `refuserCleDeCrochetInconnue` (resolution.js), garde son code et son message, et COLLECTE avec
 // les autres : « un nom inconnu ET une clé inconnue » rend maintenant 2 erreurs au lieu d'1.
-const PLAFOND_REFUS_DE_NOM = 6;
+// ⇒ 5 le 2026-09-05 : `PARSE_NAME_READABLE_NEITHER_SETTING` sort du COMPTE, pas du parseur — il
+// juge une forme, et sa place est ici. Le juge porte la preuve de cette exemption ci-dessus.
+const PLAFOND_REFUS_DE_NOM = 5;
 const { total, codes, deNom } = arretsImmediats(parseur);
 ok(codes.length > 50, `SOCLE : ${codes.length} code(s) de refus lus dans parser.js — sous ce seuil, le `
   + `garde est vert parce qu'il ne voit plus les refus, pas parce qu'ils ont migré.`);
@@ -96,6 +116,20 @@ ok(importsDuChargeur("import { x } from './vocabulaire.js';").length === 0,
   ok(t.deNom.length === 1 && t.deNom[0] === 'PARSE_FLOW_WORD_UNDECLARED',
      `le juge ne distingue pas un refus de NOM d'un refus de FORME — vu : ${t.deNom.join(', ')}`);
 }
+// ⛔ ET L'EXEMPTION SE PROUVE SUR LE JUGE, parce qu'une exemption est le geste le plus dangereux de
+// ce chantier : elle fait baisser un compte sans que rien ne bouge dans le code jugé. Le juge doit
+// donc exempter CE code-là et AUCUN autre qui lui ressemble.
+{
+  const exempte = arretsImmediats("throw new ParseError('PARSE_NAME_READABLE_NEITHER_SETTING', { name }, tok);");
+  ok(exempte.codes.length === 1 && exempte.deNom.length === 0,
+     `le juge doit VOIR ce code et ne pas le compter comme refus de nom — vu ${exempte.codes.length} `
+   + `code(s), ${exempte.deNom.length} compté(s)`);
+  const voisin = arretsImmediats("throw new ParseError('PARSE_DEF_DEFNAME_CLE_NEITHER', { x }, tok);");
+  ok(voisin.deNom.length === 1,
+     `⛔ l'exemption s'est ÉLARGIE : un autre code portant \`NEITHER\` cesse d'être compté. Une `
+   + `exemption qui déborde vide l'assiette sans qu'un seul refus ait bougé.`);
+}
+
 // Et il ne se laisse pas berner par la prose : un code sans mot-clé de nom n'en est pas un.
 ok(arretsImmediats("throw new ParseError('PARSE_BAG_MALFORMED', { }, tok); // unknown attribute").deNom.length === 0,
    `le juge compte un refus de nom sur un COMMENTAIRE qui parle d'un nom inconnu`);

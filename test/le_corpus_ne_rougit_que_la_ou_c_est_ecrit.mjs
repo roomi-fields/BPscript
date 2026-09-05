@@ -57,9 +57,9 @@ const REGISTRE = [
   // construction elle-même n'est lisible d'aucune façon, ce qui est plus précis : `script(MIDI
   // program 5)` n'est ni un sac(son contenu n'est pas fait de paires) ni un appel (aucune
   // définition ne porte ce nom). Le fait n'a pas bougé : la forme reste supprimée du langage.
-  ['BPScript-tests/alan-dice.bps',      "readable neither as a SETTING BAG", 'script(...) supprimé du langage(2026-07-26), témoin volontaire', 'kanopi', 'PERSONNE — refus voulu, état stable'],
-  ['BPScript-tests/beatrix-dice.bps',   "readable neither as a SETTING BAG", 'script(...) supprimé du langage(2026-07-26), témoin volontaire', 'kanopi', 'PERSONNE — refus voulu, état stable'],
-  ['BPScript-tests/shapes-rhythm.bps',  "readable neither as a SETTING BAG", 'script(...) supprimé du langage(2026-07-26), témoin volontaire', 'kanopi', 'PERSONNE — refus voulu, état stable'],
+  ['BPScript-tests/alan-dice.bps',      'PARSE_NAME_READABLE_NEITHER_SETTING', 'script(...) supprimé du langage(2026-07-26), témoin volontaire', 'kanopi', 'PERSONNE — refus voulu, état stable'],
+  ['BPScript-tests/beatrix-dice.bps',   'PARSE_NAME_READABLE_NEITHER_SETTING', 'script(...) supprimé du langage(2026-07-26), témoin volontaire', 'kanopi', 'PERSONNE — refus voulu, état stable'],
+  ['BPScript-tests/shapes-rhythm.bps',  'PARSE_NAME_READABLE_NEITHER_SETTING', 'script(...) supprimé du langage(2026-07-26), témoin volontaire', 'kanopi', 'PERSONNE — refus voulu, état stable'],
   // ── A-bis. SANS `core` NI ALPHABET, UN TERMINAL NON DÉCLARÉ EST REFUSÉ — Romain, 2026-09-02 ─────
   // `tryConsoleMaxTime` et `tryTimePatterns` ont vécu ici une heure, le temps que kanopi leur donne
   // leur ligne `core` (son arbre, 2026-09-03 00:1x). Le registre ne garde pas une entrée qui ne
@@ -166,7 +166,8 @@ for (const [nom, src] of toutesLesScenes()) {
   let msgs;
   try {
     const r = compileToBPxAST(src);
-    msgs = (r.errors || []).map((e) => e.message ?? String(e));
+    // ⛔ LE CODE À CÔTÉ DU MESSAGE — le registre s'accroche au CODE, jamais à la prose.
+    msgs = (r.errors || []).map((e) => `${e.code ?? ''} ${e.message ?? String(e)}`);
   } catch (e) {
     msgs = [`JETTE : ${e.message}`];
   }
@@ -189,6 +190,13 @@ for (const [nom, msgs] of refus) {
 }
 
 // ── B. CHAQUE ENTRÉE DU REGISTRE REFUSE ENCORE, ET POUR LA RAISON INSCRITE ────────────────────
+// ⛔ LE REGISTRE S'ACCROCHE AU CODE, PLUS À LA PROSE — corrigé le 2026-09-05, et c'est le défaut
+// que `diagnostics.js` documente depuis la veille : *un garde bâti sur la graphie mesure une
+// rédaction, jamais un comportement.* Trois entrées portaient un fragment de phrase anglaise ; la
+// correction d'un message — même refus, même cause, même étage — les a toutes fait rougir. Deux
+// voisins avaient déjà payé ce défaut, kanopi sur onze bancs et kairos sur un.
+// ⇒ Le code est la surface, il ne se renomme pas. Le texte doit pouvoir bouger : c'est le but même
+//   du catalogue de messages, et c'est pourquoi plus personne ne doit s'y accrocher.
 // ⚠️ ET LE CHAMP EST LU, PAS DÉCORATIF : un registre qui porterait « qui attend » sans jamais
 // l'afficher aurait le défaut qu'il prétend fermer. La sortie le nomme à chaque passage.
 for (const [nom, fragment, raison, , quiAttend] of REGISTRE) {
@@ -199,7 +207,7 @@ for (const [nom, fragment, raison, , quiAttend] of REGISTRE) {
      + `n'existe plus. Un cliquet qui ne se desserre jamais est un mensonge daté.`);
   if (!msgs) continue;
   ok(msgs.some((m) => m.includes(fragment)),
-     `B. ${nom} refuse toujours, mais AUCUN de ses ${msgs.length} message(s) ne porte « ${fragment} » `
+     `B. ${nom} refuse toujours, mais AUCUN de ses ${msgs.length} refus ne porte « ${fragment} » `
      + `— le motif inscrit était : ${raison}. La scène a donc changé de CAUSE sans changer de `
      + `couleur. C'est le mode d'échec que ce garde vise en premier : un compte « toujours 6 » ne `
      + `le dirait jamais. Reçu : « ${msgs[0].replace(/\s+/g, ' ').slice(0, 120)} ».`);

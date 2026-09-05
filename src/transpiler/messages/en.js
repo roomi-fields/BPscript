@@ -377,11 +377,16 @@ export const MESSAGES = {
     + 'remains readable on BP3 input, it is no longer written in a BPScript scene. ⚠️ Check that no '
     + 'terminal of the alphabet in scope is already named \'{name}\': the bars used to distinguish '
     + 'the non-terminal, the bare name no longer does.',
+  // ⛔ CE REFUS NE JUGE QUE LA FORME — mesuré le 2026-09-05. Son texte affirmait qu'« aucune
+  // définition ne porte ce nom », et ce n'est JAMAIS la cause : avec un sac BIEN formé et un nom
+  // inconnu, c'est l'étage de résolution qui refuse (`RESOLVE_UNKNOWN_ATTRIBUTE`). Ce site n'est
+  // atteint que lorsque le contenu de la parenthèse n'est pas fait de paires. *Un refus juste dans
+  // sa conclusion peut être faux sur ce qu'il affirme mesurer* — et celui-ci envoyait l'auteur
+  // déclarer une définition alors que sa faute est dans le contenu de sa parenthèse.
   PARSE_NAME_READABLE_NEITHER_SETTING:
-    '\'{name}({p1})\' is readable neither as a SETTING BAG — its content is not made of '
-    + '\'key:value\' pairs — nor as a CALL: calling requires a declared definition, and none '
-    + 'carries the name \'{name}\'. To set \'{name}\', write \'{name}(key:value)\'; to call it, '
-    + 'declare it first with \'def {name}(x) …\'',
+    '\'{name}({p1})\': the content of the parentheses is not made of \'key:value\' pairs, so this '
+    + 'is not a SETTING BAG. If you meant to set \'{name}\', write \'{name}(key:value)\'. If you '
+    + 'meant to CALL it, a call takes bare terms and requires a declaration — \'def {name}(x) …\'.',
   PARSE_NAME_REFUSED_DOES_ASSIGN:
     '\'{name}:<X>\' refused — \':\' does not assign a value to a component. Write '
     + '\'{name}.<name>\' (rule: \':\' assigns, \'.\' calls){hint}.',
