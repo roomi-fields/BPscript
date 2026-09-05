@@ -1,5 +1,5 @@
 {
- "assertions": 19538,
+ "assertions": 19552,
  "gardes": [
   "alias_est_sorti_du_langage.mjs",
   "anti-vacuité [interne]",
@@ -37,6 +37,7 @@
   "l_arbre_joint_les_librairies_qu_il_invoque.mjs",
   "l_arbre_ne_se_lit_qu_apres_un_succes.mjs",
   "l_arobase_est_sortie_de_toutes_ses_places.mjs",
+  "l_assiette_du_parseur_ne_peut_que_descendre.mjs",
   "l_ast_ne_sort_jamais_a_vide.mjs",
   "l_axe_sonnant_compare_un_ensemble_minute.mjs",
   "l_enumeration_ne_se_prend_pas_apres_une_derivation.mjs",
