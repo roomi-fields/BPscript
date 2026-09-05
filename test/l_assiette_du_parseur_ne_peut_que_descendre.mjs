@@ -62,7 +62,16 @@ export function arretsImmediats(texte) {
   //     sac MAL formé  + nom CONNU     →  PARSE_NAME_READABLE_NEITHER_…  (le nom n'y change rien)
   // Le troisième cas est le décisif : le refus tombe pareil quand le nom est connu, donc il ne juge
   // pas le nom.
-  const JUGE_UNE_FORME = new Set(['PARSE_NAME_READABLE_NEITHER_SETTING']);
+  // ⇒ `PARSE_DEF_DEFNAME_CLE_NEITHER` rejoint l'exemption le 2026-09-05, par le MÊME test décisif —
+  // il refuse un mot nu écrit après une clé (`def zz hz:440 <mot>`), et il tombe pareil quel que
+  // soit le mot :
+  //     mot INCONNU              →  PARSE_DEF_DEFNAME_CLE_NEITHER
+  //     mot CONNU (`voice`)      →  PARSE_DEF_DEFNAME_CLE_NEITHER   ⬅ le nom n'y change rien
+  //     le même AVEC son signe   →  ACCEPTÉ                         ⬅ c'est le SIGNE qui manquait
+  // Son message le dit déjà : « ni un appel de composant ni une affectation — le point appelle, le
+  // deux-points affecte ». C'est une forme, et la forme est le domaine du parseur.
+  const JUGE_UNE_FORME = new Set(['PARSE_NAME_READABLE_NEITHER_SETTING',
+                                  'PARSE_DEF_DEFNAME_CLE_NEITHER']);
   return { total: arrets.length, codes,
            deNom: codes.filter((c) => PARLE_DUN_NOM.test(c) && !JUGE_UNE_FORME.has(c)) };
 }
@@ -93,9 +102,14 @@ ok(imports.length <= PLAFOND_IMPORTS,
 // doublé : amputé, `[zzcle:1]` en fin de règle n'était plus refusé du tout. Il vit désormais dans
 // `refuserCleDeCrochetInconnue` (resolution.js), garde son code et son message, et COLLECTE avec
 // les autres : « un nom inconnu ET une clé inconnue » rend maintenant 2 erreurs au lieu d'1.
-// ⇒ 5 le 2026-09-05 : `PARSE_NAME_READABLE_NEITHER_SETTING` sort du COMPTE, pas du parseur — il
-// juge une forme, et sa place est ici. Le juge porte la preuve de cette exemption ci-dessus.
-const PLAFOND_REFUS_DE_NOM = 5;
+// ⇒ 5 puis 4 le 2026-09-05 : `PARSE_NAME_READABLE_NEITHER_SETTING` et `PARSE_DEF_DEFNAME_CLE_NEITHER`
+// sortent du COMPTE, pas du parseur — ils jugent une forme, et leur place est ici. Le juge porte la
+// preuve de chaque exemption ci-dessus, et un témoin refuse qu'elle s'élargisse.
+//
+// ⚠️ DEUX DE CES QUATRE CRANS NE SONT PAS DU TRAVAIL, ET IL FAUT LE DIRE : un plafond qui descend
+// ressemble à une migration qui avance. Sur 8 → 4, UN SEUL refus a été déplacé, un a été retiré
+// parce qu'il était doublé, et deux sont des exemptions d'un compte trop large.
+const PLAFOND_REFUS_DE_NOM = 4;
 const { total, codes, deNom } = arretsImmediats(parseur);
 ok(codes.length > 50, `SOCLE : ${codes.length} code(s) de refus lus dans parser.js — sous ce seuil, le `
   + `garde est vert parce qu'il ne voit plus les refus, pas parce qu'ils ont migré.`);
@@ -124,10 +138,14 @@ ok(importsDuChargeur("import { x } from './vocabulaire.js';").length === 0,
   ok(exempte.codes.length === 1 && exempte.deNom.length === 0,
      `le juge doit VOIR ce code et ne pas le compter comme refus de nom — vu ${exempte.codes.length} `
    + `code(s), ${exempte.deNom.length} compté(s)`);
-  const voisin = arretsImmediats("throw new ParseError('PARSE_DEF_DEFNAME_CLE_NEITHER', { x }, tok);");
+  // ⚠️ LE VOISIN EST FABRIQUÉ, PAS EMPRUNTÉ — et c'est une leçon de ce garde lui-même. Mon premier
+  // témoin prenait un vrai code portant `NEITHER` comme contre-exemple ; le jour où CE code a
+  // rejoint l'exemption, le témoin a rougi sans qu'aucune exemption ait débordé. *Un témoin bâti
+  // sur une valeur qui peut changer de camp mesure le camp, pas le mécanisme.*
+  const voisin = arretsImmediats("throw new ParseError('PARSE_ZZ_TEMOIN_NEITHER_UNKNOWN', { x }, tok);");
   ok(voisin.deNom.length === 1,
-     `⛔ l'exemption s'est ÉLARGIE : un autre code portant \`NEITHER\` cesse d'être compté. Une `
-   + `exemption qui déborde vide l'assiette sans qu'un seul refus ait bougé.`);
+     `⛔ l'exemption s'est ÉLARGIE : un code portant \`NEITHER\` et absent de la liste cesse d'être `
+   + `compté. Une exemption qui déborde vide l'assiette sans qu'un seul refus ait bougé.`);
 }
 
 // Et il ne se laisse pas berner par la prose : un code sans mot-clé de nom n'en est pas un.
