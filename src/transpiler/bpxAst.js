@@ -403,6 +403,25 @@ function segmenterLesTerminaux(ast, known, paquets) {
  * @param {Environnement} [environnement]
  * @returns {ResultatDeCompilation}  `ast` présent dès que la source PARSE, erreurs comprises.
  */
+/**
+ * UN REFUS D'ANALYSE, MIS À LA FORME DE LA PORTE — `{ code, message, line }`.
+ *
+ * ⛔ DEUX CHEMINS PORTAIENT LE MÊME REFUS SOUS DEUX FORMES, ET C'EST LE DÉFAUT DE CE CHANTIER UN
+ * CRAN PLUS BAS. Le refus attrapé en fin de compilation était mis à cette forme ; celui livré par le
+ * canal collecté sortait BRUT — un `ParseError` qui porte son `token` et pas sa `line`. Un
+ * consommateur recevait donc deux erreurs, l'une adressée et l'autre non, selon l'étage qui l'avait
+ * vue. *La forme d'un refus ne doit pas dépendre du chemin qui le porte.*
+ *
+ * ⚠️ MESURÉ PAR KANOPI, ET IL NE POUVAIT L'ÊTRE QUE CHEZ LUI : sa barre d'onglets écrit
+ * `L<ligne>: <message>` quand la ligne existe, et le message seul sinon. Le défaut ne se lit qu'à
+ * L'AFFICHAGE — depuis mon dépôt, `errors.length` valait 2 et tout paraissait juste. *Un compte
+ * exact ne dit rien de ce que l'auteur peut faire du résultat.*
+ */
+function refusMisEnForme(e) {
+  if (!(e instanceof ParseError) && !(e instanceof LexError)) return e;
+  return { code: e.code, message: e.message, line: e.token ? e.token.line : e.line };
+}
+
 export function resoudreSource(source, environnement) {
   const result = { ast: null, errors: [], warnings: [] };
   try {
@@ -410,7 +429,7 @@ export function resoudreSource(source, environnement) {
       // ⛔ LE CANAL DES REFUS DE RÈGLE — un seul canal, décision de Romain 2026-08-24. Sans lui, le
       // parseur levait sur la première faute de forme et l'auteur perdait tout le reste, y compris
       // des fautes de NOM écrites AVANT elle dans son fichier.
-      onError: (e) => result.errors.push(e),
+      onError: (e) => result.errors.push(refusMisEnForme(e)),
       // La SOURCE accompagne les jetons : une entrée de catalogue de gabarits se transporte
       // VERBATIM (AST_SPEC §1.9), et aucun jeton ne peut rendre les espaces d'origine.
       source });
@@ -516,11 +535,15 @@ export function resoudreSource(source, environnement) {
     // ⛔ LE CODE VOYAGE AVEC LE MESSAGE — sans quoi il ne sert à personne. Une erreur qui porte son
     // code À L'INTÉRIEUR du compilateur et le perd à la porte laisse les consommateurs exactement où
     // ils étaient : accrochés à ma prose. Posé le 2026-09-04 avec le catalogue de messages.
-    if (e instanceof ParseError) result.errors.push({ message: e.message, line: e.token && e.token.line, code: e.code });
+    //
+    // ⚠️ ET C'EST `refusMisEnForme` QUI LE FAIT, ICI COMME DANS LE CANAL — une seule écriture. Deux
+    // mises en forme d'un même fait divergent, et c'est très exactement ce qui est arrivé : celle-ci
+    // portait la ligne, celle du canal livrait l'objet brut.
+    //
     // Un caractère illisible est une erreur de COMPILATION, pas un plantage. Elle arrivait ici en
     // `Error` nue et repartait par le `throw` ci-dessous : l'appelant qui attend `{ast, errors}`
     // recevait une exception. Mesuré le 2026-07-28 sur une faute de frappe d'UN caractère.
-    else if (e instanceof LexError) result.errors.push({ message: e.message, line: e.line, code: e.code });
+    if (e instanceof ParseError || e instanceof LexError) result.errors.push(refusMisEnForme(e));
     else throw e;
   }
   return result;

@@ -1911,6 +1911,10 @@ function segmenterLesTerminaux(ast, known, paquets) {
     }
   }
 }
+function refusMisEnForme(e) {
+  if (!(e instanceof ParseError) && !(e instanceof LexError)) return e;
+  return { code: e.code, message: e.message, line: e.token ? e.token.line : e.line };
+}
 function resoudreSource(source, environnement) {
   const result = { ast: null, errors: [], warnings: [] };
   try {
@@ -1919,7 +1923,7 @@ function resoudreSource(source, environnement) {
       // ⛔ LE CANAL DES REFUS DE RÈGLE — un seul canal, décision de Romain 2026-08-24. Sans lui, le
       // parseur levait sur la première faute de forme et l'auteur perdait tout le reste, y compris
       // des fautes de NOM écrites AVANT elle dans son fichier.
-      onError: (e) => result.errors.push(e),
+      onError: (e) => result.errors.push(refusMisEnForme(e)),
       // La SOURCE accompagne les jetons : une entrée de catalogue de gabarits se transporte
       // VERBATIM (AST_SPEC §1.9), et aucun jeton ne peut rendre les espaces d'origine.
       source
@@ -1966,8 +1970,7 @@ function resoudreSource(source, environnement) {
     retirerArdoiseAlphabet(ast);
     result.errors.push(...joindreLesLibrairies(ast));
   } catch (e) {
-    if (e instanceof ParseError) result.errors.push({ message: e.message, line: e.token && e.token.line, code: e.code });
-    else if (e instanceof LexError) result.errors.push({ message: e.message, line: e.line, code: e.code });
+    if (e instanceof ParseError || e instanceof LexError) result.errors.push(refusMisEnForme(e));
     else throw e;
   }
   return result;

@@ -108,6 +108,31 @@ for (const [nom, corps] of MATRICE) {
   ok(r.ast === null, `${nom} — l'arbre doit être nul dès qu'une erreur existe (résultat binaire)`);
 }
 
+// ── ⛔ CHAQUE REFUS PORTE SON ADRESSE — RECEVOIR DEUX FAUTES SANS SAVOIR OÙ NE SERT À RIEN ─────
+//
+// Mesuré par kanopi le 2026-09-05, et il ne pouvait l'être que chez lui : sa barre d'onglets écrit
+// `L<ligne>: <message>` quand la ligne existe, et le message seul sinon. Le refus livré par le
+// CANAL sortait brut — un `ParseError` qui porte son jeton et pas sa ligne — là où celui attrapé en
+// fin de compilation était mis en forme. *La forme d'un refus ne doit pas dépendre du chemin qui le
+// porte*, et c'est le défaut de ce chantier un cran plus bas.
+//
+// ⚠️ DEPUIS MON DÉPÔT, TOUT PARAISSAIT JUSTE : `errors.length` valait 2. Un compte exact ne dit rien
+// de ce que l'auteur peut FAIRE du résultat — le défaut ne se lisait qu'à l'affichage.
+for (const [nom, corps] of MATRICE) {
+  const erreurs = compileToBPxAST(`${H}-----\n${corps}`, {}).errors || [];
+  const sansAdresse = erreurs.filter((e) => typeof e.line !== 'number');
+  ok(sansAdresse.length === 0,
+     `${nom} — ${sansAdresse.length} refus sur ${erreurs.length} sortent SANS numéro de ligne `
+   + `(${sansAdresse.map((e) => e.code).join(', ')}). L'auteur reçoit toutes ses fautes et n'en `
+   + `situe qu'une partie : la moitié du gain reste au vestiaire.`);
+}
+for (const [nom, faute] of GRAPHIES) {
+  const erreurs = compileToBPxAST(`${H}-----\nS -> ${faute}\nT -> ${faute}\n`, {}).errors || [];
+  ok(erreurs.length > 0 && erreurs.every((e) => typeof e.line === 'number'),
+     `GRAPHIE « ${nom} » — chaque refus doit porter sa ligne ; vus : `
+   + `${erreurs.map((e) => `${e.code}@L${e.line ?? '?'}`).join(', ')}`);
+}
+
 // ── LA REPRISE NE FABRIQUE PAS DE FAUTES — une règle abandonnée n'en contamine pas d'autres ───
 {
   const n = compte(`${H}-----\n${FAUTE_DE_FORME_1}T -> D4\nU -> E4\n`);
