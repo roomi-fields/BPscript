@@ -417,6 +417,17 @@ function normalizeName(name) {
 
 function parse(tokens, opts = {}) {
   let pos = 0;
+  // ⛔ LE CANAL DE REFUS EST UNIQUE — décision de Romain, 2026-08-24 : quatre étages, un seul canal.
+  // Le parseur LEVAIT, l'aval COLLECTE, et la nature d'un refus dépendait donc de l'étage qui voyait
+  // la faute, jamais de la faute. Mesuré : deux fautes de forme ne rendaient qu'UNE erreur, et une
+  // faute de forme ÉCRASAIT une faute de nom pourtant écrite avant elle dans le fichier.
+  //
+  // ⇒ Les refus de RÈGLE se collectent ici et sortent ensemble. Le mécanisme suit celui des
+  //   avertissements, déjà en place : l'appelant fournit son canal. Sans canal, la première erreur
+  //   lève — le comportement d'avant, pour qui entre par le parseur seul.
+  // ⚠️ LA REPRISE EST À LA LIGNE, et elle est ce qui rend la collecte sûre : sans elle, l'analyse
+  //   repartirait au milieu d'une règle illisible et fabriquerait des fautes qui n'existent pas.
+  const refusDeRegle = [];
   // Les lignes de la source, pour ce qui se transporte VERBATIM — le catalogue de gabarits.
   const lignesSource = typeof opts.source === 'string' ? opts.source.split(/\r\n?|\n/) : null;
   // ⚠️ CET OBJET DOIT PORTER TOUS LES CHAMPS QUE LE PARSEUR LIT, MÊME VIDES. Il vaut pendant la
@@ -4265,7 +4276,18 @@ function parse(tokens, opts = {}) {
         // La flèche est le seul départage restant, comme en tête de sous-grammaire.
         if (rules.length && ligneSansFleche()) break;
         if (isRuleStart()) {
-          rules.push(parseRule());
+          const avant = pos;
+          try {
+            rules.push(parseRule());
+          } catch (e) {
+            if (!(e instanceof ParseError)) throw e;
+            refusDeRegle.push(e);
+            // Reprise : la règle fautive est abandonnée jusqu'à sa fin de ligne.
+            while (!atEnd() && !at(T.NEWLINE) && !at(T.SEPARATOR)) advance();
+            // Et la progression est GARANTIE : une faute levée sans avoir consommé un jeton
+            // relancerait la même règle indéfiniment.
+            if (pos === avant && !atEnd()) advance();
+          }
         } else {
           // Seuls EOF, `-----` et `@…` terminent légitimement un bloc de règles. Tout
           // autre jeton ici serait une TRONCATURE SILENCIEUSE de la scène (la boucle
@@ -7687,7 +7709,12 @@ function parse(tokens, opts = {}) {
   // Entry point
   // ============================================================
 
-  return parseScene();
+  const arbre = parseScene();
+  if (refusDeRegle.length) {
+    if (typeof opts.onError === 'function') for (const e of refusDeRegle) opts.onError(e);
+    else throw refusDeRegle[0];
+  }
+  return arbre;
 }
 
 export { parse, ParseError };

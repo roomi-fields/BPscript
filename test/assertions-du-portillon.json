@@ -1,5 +1,5 @@
 {
- "assertions": 19552,
+ "assertions": 19573,
  "gardes": [
   "alias_est_sorti_du_langage.mjs",
   "anti-vacuité [interne]",
@@ -147,6 +147,7 @@
   "un_alphabet_ne_declare_pas_un_enchainement.mjs",
   "un_alphabet_tient_son_prototype.mjs",
   "un_artefact_transitoire_ne_se_montre_pas.mjs",
+  "un_auteur_recoit_toutes_ses_fautes.mjs",
   "un_axe_que_personne_ne_sert_est_refuse.mjs",
   "un_axe_redeclare_se_redefinit_le_dernier_ecrit_gagne.mjs",
   "un_caractere_illisible_ne_fait_pas_planter.mjs",

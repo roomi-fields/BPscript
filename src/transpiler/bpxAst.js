@@ -367,6 +367,10 @@ export function resoudreSource(source, environnement) {
   const result = { ast: null, errors: [], warnings: [] };
   try {
     const ast = parse(tokenize(source), { onWarning: (w) => result.warnings.push(w),
+      // ⛔ LE CANAL DES REFUS DE RÈGLE — un seul canal, décision de Romain 2026-08-24. Sans lui, le
+      // parseur levait sur la première faute de forme et l'auteur perdait tout le reste, y compris
+      // des fautes de NOM écrites AVANT elle dans son fichier.
+      onError: (e) => result.errors.push(e),
       // La SOURCE accompagne les jetons : une entrée de catalogue de gabarits se transporte
       // VERBATIM (AST_SPEC §1.9), et aucun jeton ne peut rendre les espaces d'origine.
       source });

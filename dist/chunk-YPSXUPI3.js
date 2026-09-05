@@ -6679,6 +6679,7 @@ function normalizeName(name) {
 }
 function parse(tokens, opts = {}) {
   let pos = 0;
+  const refusDeRegle = [];
   const lignesSource = typeof opts.source === "string" ? opts.source.split(/\r\n?|\n/) : null;
   let libCtx = {
     controlNames: /* @__PURE__ */ new Set(),
@@ -8522,7 +8523,15 @@ function parse(tokens, opts = {}) {
         if (at(T.IDENT) && current().value === "template") break;
         if (rules.length && ligneSansFleche()) break;
         if (isRuleStart()) {
-          rules.push(parseRule());
+          const avant = pos;
+          try {
+            rules.push(parseRule());
+          } catch (e) {
+            if (!(e instanceof ParseError)) throw e;
+            refusDeRegle.push(e);
+            while (!atEnd() && !at(T.NEWLINE) && !at(T.SEPARATOR)) advance();
+            if (pos === avant && !atEnd()) advance();
+          }
         } else {
           if (!atEnd() && !at(T.SEPARATOR) && !at(T.AT)) {
             throw new ParseError("PARSE_UNRECOGNIZED_LINE_RULE_LEVEL", {}, current());
@@ -10220,7 +10229,12 @@ function parse(tokens, opts = {}) {
     }
     return { value, decrement };
   }
-  return parseScene();
+  const arbre = parseScene();
+  if (refusDeRegle.length) {
+    if (typeof opts.onError === "function") for (const e of refusDeRegle) opts.onError(e);
+    else throw refusDeRegle[0];
+  }
+  return arbre;
 }
 
 export {
