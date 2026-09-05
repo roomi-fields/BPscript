@@ -31,6 +31,22 @@
 import { MESSAGES } from './messages/en.js';
 
 /**
+ * UN REFUS, TEL QU'IL SORT DE LA PORTE.
+ *
+ * ⛔ LE `code` EST LA SURFACE, `message` NE L'EST PAS — c'est la règle que ce module entier porte,
+ * et elle est ici pour qu'un consommateur la lise dans le TYPE et pas seulement dans la prose. Deux
+ * voisins ont bâti sur la phrase et ont cassé sur une traduction.
+ *
+ * `line` est présente quand la faute se situe ; les champs restants sont ceux que le site de refus
+ * a joints — ils varient par code, et c'est pourquoi la forme reste ouverte.
+ *
+ * @typedef {object} Diagnostic
+ * @property {string} code    Identifiant stable du refus. C'est sur lui qu'on s'accroche.
+ * @property {string} message Texte composé depuis le catalogue de la langue. Il bouge.
+ * @property {number} [line]  Ligne de la source, quand le refus en porte une.
+ */
+
+/**
  * Le texte d'un diagnostic, ses trous remplis.
  *
  * ⛔ UN CODE ABSENT DU CATALOGUE LÈVE, IL NE REND PAS UN TEXTE APPROXIMATIF. Rendre le code brut

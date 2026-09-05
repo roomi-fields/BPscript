@@ -56,9 +56,19 @@ export function assietteDerivee() {
   const marcher = (rel) => {
     if (vus.has(rel)) return;
     vus.add(rel);
-    const abs = join(RACINE, rel.replace(/^\.\//, ''));
+    let chemin = rel.replace(/^\.\//, '');
+    let abs = join(RACINE, chemin);
+    // ⛔ UNE DÉCLARATION S'IMPORTE PAR SON NOM DE MODULE — c'est la convention TypeScript, et sans
+    // elle cette marche s'arrête au seuil des descriptions de portes. Le pont d'une porte écrit
+    // `export * from './types/…/x.js'` ; sur le disque il n'y a que `x.d.ts`, donc `existsSync`
+    // rendait faux et la fermeture transitive abandonnait là, EN SILENCE. Le champ `files` perdait
+    // alors toutes les déclarations, et un consommateur recevait des `types` qui ne résolvent rien.
+    if (!existsSync(abs) && chemin.endsWith('.js')) {
+      const dts = chemin.slice(0, -3) + '.d.ts';
+      if (existsSync(join(RACINE, dts))) { chemin = dts; abs = join(RACINE, dts); }
+    }
     if (!existsSync(abs)) return;
-    dedans.push(rel.replace(/^\.\//, ''));
+    dedans.push(chemin);
     const t = readFileSync(abs, 'utf8');
     for (const m of t.matchAll(/from\s*['"](\.[^'"]+)['"]|import\s*\(\s*['"](\.[^'"]+)['"]/g)) {
       marcher('./' + relative(RACINE, join(dirname(abs), m[1] || m[2])));

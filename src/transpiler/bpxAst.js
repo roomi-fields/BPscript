@@ -31,6 +31,42 @@ import { validateControls } from './controlValidation.js';
 import { joindreLesLibrairies } from './librairies-jointes.js';
 
 /**
+ * L'ARBRE D'UNE SCÈNE RÉSOLUE — les axes de premier niveau que cet étage écrit et relit.
+ *
+ * ⛔ LA FORME RESTE OUVERTE, ET C'EST UNE MESURE, PAS UNE PRUDENCE. `AST.md` porte la taxonomie
+ * complète des nœuds ; ce qui se DÉRIVE ici est ce que ce fichier touche. Fermer la forme sur ces
+ * seuls axes ferait de cette description une seconde autorité, plus pauvre que la première, et
+ * l'écart ne rougirait nulle part.
+ *
+ * @typedef {{ [axe: string]: any }} ArbreDeScene
+ */
+
+/**
+ * LES DÉFAUTS QUE L'HÔTE PORTE — ce que la scène ne dit pas, et qu'il pose à sa place.
+ *
+ * Un axe absent ici laisse la scène décider seule ; un axe présent ne s'inscrit QUE si la scène ne
+ * le déclare pas (`applyEnvironmentDefaults`). L'hôte ne recouvre jamais une déclaration.
+ *
+ * @typedef {object} Environnement
+ * @property {number} [tempo] Le métronome par défaut, en battements par minute.
+ */
+
+/**
+ * CE QUE REND UNE COMPILATION — un arbre, des refus, des avertissements.
+ *
+ * ⛔ LE VERDICT SE LIT SUR `errors`, JAMAIS SUR LA PRÉSENCE DE `ast`. C'est la règle que la porte
+ * applique, et elle est ici pour qu'un consommateur la lise dans le type : `ast` nul signifie
+ * qu'aucun arbre n'est livrable, et `errors` non vide signifie que la compilation a REFUSÉ.
+ *
+ * @typedef {object} ResultatDeCompilation
+ * @property {ArbreDeScene | null} ast   L'arbre BPx, ou `null`.
+ * @property {Diagnostic[]} errors       Les refus. Vide = la compilation a réussi.
+ * @property {Diagnostic[]} warnings     Ce qui passe et mérite d'être dit.
+ */
+
+/** @typedef {import('./diagnostics.js').Diagnostic} Diagnostic */
+
+/**
  * Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table
  * parallèle : tout vit DANS L'ARBRE (source unique, directive Romain 2026-06-17).
  * Les consommateurs lisent directement les nœuds/directives :
@@ -362,6 +398,10 @@ function segmenterLesTerminaux(ast, known, paquets) {
  * volet sur quatre : la détection de collisions a besoin d'annotations que la résolution POSE SUR
  * l'arbre — terminaux d'alphabet étendus, acteur attribué. La résolution ne s'applique pas À CÔTÉ du
  * parse, elle s'applique DESSUS. C'est ce qui fait de ceci un étage et non un chemin de service.
+ *
+ * @param {string} source            La scène `.bps`, telle quelle.
+ * @param {Environnement} [environnement]
+ * @returns {ResultatDeCompilation}  `ast` présent dès que la source PARSE, erreurs comprises.
  */
 export function resoudreSource(source, environnement) {
   const result = { ast: null, errors: [], warnings: [] };
@@ -505,6 +545,10 @@ export function resoudreSource(source, environnement) {
  *
  * QUI A BESOIN DE L'ARBRE D'UN REFUS passe par `resoudreSource` — c'est l'étage, il est juste
  * au-dessus, et il ne refait aucun calcul.
+ *
+ * @param {string} source            La scène `.bps`, telle quelle.
+ * @param {Environnement} [environnement]
+ * @returns {ResultatDeCompilation}  `ast` est nul dès qu'`errors` porte quoi que ce soit.
  */
 export function compileToBPxAST(source, environnement) {
   const result = resoudreSource(source, environnement);

@@ -37,39 +37,93 @@
     "typescript": "^6.0.3"
   },
   "exports": {
-    ".": "./dist/index.js",
-    "./orderTokens": "./dist/orderTokens.js",
-    "./libs-champs": "./dist/libs-champs.js",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./orderTokens": {
+      "types": "./dist/orderTokens.d.ts",
+      "default": "./dist/orderTokens.js"
+    },
+    "./libs-champs": {
+      "types": "./dist/libs-champs.d.ts",
+      "default": "./dist/libs-champs.js"
+    },
     "./objets": {
       "types": "./dist/objets.d.ts",
       "default": "./dist/objets.js"
     },
-    "./syntaxe-data": "./dist/syntaxe-data.js",
-    "./gabarits-data": "./dist/gabarits-data.js",
-    "./editor-lang": "./dist/editor-lang.js",
-    "./empreinte": "./dist/empreinte.js",
+    "./syntaxe-data": {
+      "types": "./dist/syntaxe-data.d.ts",
+      "default": "./dist/syntaxe-data.js"
+    },
+    "./gabarits-data": {
+      "types": "./dist/gabarits-data.d.ts",
+      "default": "./dist/gabarits-data.js"
+    },
+    "./editor-lang": {
+      "types": "./dist/editor-lang.d.ts",
+      "default": "./dist/editor-lang.js"
+    },
+    "./empreinte": {
+      "types": "./dist/empreinte.d.ts",
+      "default": "./dist/empreinte.js"
+    },
     "./package.json": "./package.json",
-    "./bpxAst": "./dist/bpxAst.js",
-    "./tokenizer": "./dist/tokenizer.js",
-    "./parser": "./dist/parser.js"
+    "./bpxAst": {
+      "types": "./dist/bpxAst.d.ts",
+      "default": "./dist/bpxAst.js"
+    },
+    "./tokenizer": {
+      "types": "./dist/tokenizer.d.ts",
+      "default": "./dist/tokenizer.js"
+    },
+    "./parser": {
+      "types": "./dist/parser.d.ts",
+      "default": "./dist/parser.js"
+    }
   },
   "files": [
+    "dist/bpxAst.d.ts",
     "dist/bpxAst.js",
     "dist/chunk-4B44NRVA.js",
     "dist/chunk-7IMIRTTZ.js",
     "dist/chunk-BTHNZAXQ.js",
     "dist/chunk-JWEI77WV.js",
     "dist/chunk-R24VW77H.js",
+    "dist/editor-lang.d.ts",
     "dist/editor-lang.js",
+    "dist/empreinte.d.ts",
     "dist/empreinte.js",
+    "dist/gabarits-data.d.ts",
     "dist/gabarits-data.js",
+    "dist/index.d.ts",
     "dist/index.js",
+    "dist/libs-champs.d.ts",
     "dist/libs-champs.js",
     "dist/objets.d.ts",
     "dist/objets.js",
+    "dist/orderTokens.d.ts",
     "dist/orderTokens.js",
+    "dist/parser.d.ts",
     "dist/parser.js",
+    "dist/syntaxe-data.d.ts",
     "dist/syntaxe-data.js",
-    "dist/tokenizer.js"
+    "dist/tokenizer.d.ts",
+    "dist/tokenizer.js",
+    "dist/types/public/editor/bpscript-lang.d.ts",
+    "dist/types/src/empreinte.d.ts",
+    "dist/types/src/transpiler/bpxAst.d.ts",
+    "dist/types/src/transpiler/diagnostics.d.ts",
+    "dist/types/src/transpiler/gabarits-data.d.ts",
+    "dist/types/src/transpiler/index-des-objets.d.ts",
+    "dist/types/src/transpiler/index.d.ts",
+    "dist/types/src/transpiler/libs-champs.d.ts",
+    "dist/types/src/transpiler/objets.d.ts",
+    "dist/types/src/transpiler/orderTokens.d.ts",
+    "dist/types/src/transpiler/parser.d.ts",
+    "dist/types/src/transpiler/syntaxe-data.d.ts",
+    "dist/types/src/transpiler/tokenizer.d.ts",
+    "dist/types/src/transpiler/vocabulaire.d.ts"
   ]
 }

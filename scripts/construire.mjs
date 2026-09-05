@@ -27,10 +27,11 @@
  * `--verifier` recompare l'enregistré au régénéré, comme la carte et l'assiette : un artefact
  * commité qui aurait dérivé de sa source publierait une chaîne que plus personne ne mesure.
  */
-import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync, existsSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, dirname } from 'node:path';
+import { join, dirname, relative } from 'node:path';
 import esbuild from 'esbuild';
+import { deriverLesTypes, ciblesDeTypes } from './deriver-types.mjs';
 
 const RACINE = new URL('..', import.meta.url).pathname;
 const TABLE = JSON.parse(readFileSync(join(RACINE, 'build.portes.json'), 'utf8'));
@@ -86,11 +87,24 @@ async function construireTout(portes, sortie) {
   return Object.values(r.metafile.outputs).reduce((t, o) => t + o.bytes, 0);
 }
 
-/** Le contenu d'un dossier de construction, fichier par fichier. */
-function contenuDe(dir) {
+/**
+ * Le contenu d'un dossier de construction, fichier par fichier, SOUS-DOSSIERS COMPRIS.
+ *
+ * ⛔ IL NE LISAIT QU'UN NIVEAU, ET LA DESCRIPTION DES PORTES VIT SOUS `types/`. Une comparaison qui
+ * n'énumère pas ce qu'elle doit juger est verte pour toujours : les déclarations auraient dérivé de
+ * leurs sources sans que rien ne le dise, et le consommateur aurait lu une surface périmée. C'est
+ * la clause posée au hub le 2026-09-05 — *une description que le garde ne peut pas LIRE est aussi
+ * peu confrontée qu'une description qu'aucun garde ne lit.*
+ */
+function contenuDe(dir, base = dir) {
   if (!existsSync(dir)) return {};
-  return Object.fromEntries(readdirSync(dir).sort()
-    .map((f) => [f, readFileSync(join(dir, f), 'utf8')]));
+  const out = {};
+  for (const f of readdirSync(dir).sort()) {
+    const p = join(dir, f);
+    if (statSync(p).isDirectory()) Object.assign(out, contenuDe(p, base));
+    else out[relative(base, p)] = readFileSync(p, 'utf8');
+  }
+  return out;
 }
 
 /**
@@ -123,7 +137,9 @@ if (process.argv[1] && process.argv[1].endsWith('construire.mjs')) {
   // ⛔ LA TABLE ET LE MANIFESTE DOIVENT DIRE LA MÊME CHOSE. Une porte construite qu'aucun `exports`
   // n'ouvre est du poids mort ; une cible publiée que la table ne construit pas est un chemin mort.
   const declarees = ciblesPubliees();
-  const construites = [...portes.map(([c]) => c), ...copies.map(([c]) => c)].sort();
+  // Les descriptions de portes sont construites au même titre que les portes : dérivées du code par
+  // `deriver-types.mjs`, elles sont des cibles publiées et se confrontent comme les autres.
+  const construites = [...portes.map(([c]) => c), ...copies.map(([c]) => c), ...ciblesDeTypes()].sort();
   const orphelines = construites.filter((c) => !declarees.includes(c));
   const fantomes = declarees.filter((c) => !construites.includes(c));
   if (orphelines.length || fantomes.length) {
@@ -161,6 +177,8 @@ if (process.argv[1] && process.argv[1].endsWith('construire.mjs')) {
     // réexporter, importé pour son effet de bord), `dist/index.js` l'importait en première ligne, le
     // publieur ne l'a pas emporté, et le paquet publié ne s'importait plus — deux commits d'affilée,
     // sans qu'aucun garde ne rougisse ici. Le constructeur refuse donc d'émettre un fichier vide.
+    // LA DESCRIPTION DES PORTES, DÉRIVÉE DU CODE — jamais écrite, donc jamais périmée.
+    const types = deriverLesTypes(cible);
     const vides = Object.entries(contenuDe(cible)).filter(([, t]) => t.length === 0).map(([f]) => f);
     if (vides.length) {
       console.error(`[construire] ⛔ ${vides.length} fichier(s) VIDE(S) émis : ${vides.join(', ')} — un morceau `
@@ -184,6 +202,31 @@ if (process.argv[1] && process.argv[1].endsWith('construire.mjs')) {
       const enregistre = contenuDe(join(RACINE, 'dist'));
       const { noms, absents, enTrop, derives } = ecartDe(attendu, enregistre);
       if (!noms.length) { console.error('[construire] ⛔ ZÉRO fichier comparé — la construction n\'a rien émis.'); process.exit(1); }
+
+      // ⛔ CE QUE LE JUGE N'A PAS ÉNUMÉRÉ, IL LE DIT — IL NE L'ÉCARTE PAS EN SILENCE.
+      //
+      // Clause posée au hub le 2026-09-05 : *une description que le garde ne peut pas LIRE est aussi
+      // peu confrontée qu'une description qu'aucun garde ne lit.* Éprouvé ici par injection le jour
+      // même : l'énumération rendue non récursive, une déclaration FAUSSE enregistrée sous `types/`,
+      // ⇒ **VERT, code 0**. Rien dans la sortie ne distinguait ce vert d'un vert honnête, sauf un
+      // compte de fichiers que personne ne lit — 26 au lieu de 51.
+      //
+      // ⚠️ ET LE REFUS SE POSE SUR LES DÉCLARATIONS, PAS SUR LES CIBLES PUBLIÉES — ma première
+      // écriture visait celles-ci et l'injection ne l'a PAS fait mordre : les cibles vivent à la
+      // RACINE de `dist/`, donc un juge non récursif les voit toutes. Ce qui échappe est exactement
+      // ce qui est en profondeur. *Un garde se pose sur l'espace où le défaut peut vivre, jamais sur
+      // celui où on l'a cherché.*
+      //
+      // Le compte vient de la dérivation elle-même, qui sait ce qu'elle a émis — deux instruments
+      // écrits séparément, et un écart entre eux est un refus.
+      const vuesEnProfondeur = noms.filter((n) => n.startsWith('types/')).length;
+      if (vuesEnProfondeur < types.declarations) {
+        console.error('[construire] ⛔ LE JUGE N\'A PAS ÉNUMÉRÉ CE QU\'IL DOIT JUGER.');
+        console.error(`        ${types.declarations} déclaration(s) dérivée(s), ${vuesEnProfondeur} `
+          + `atteinte(s) par la comparaison.`);
+        console.error('        Une description que la comparaison n\'atteint pas est verte pour toujours.');
+        process.exit(1);
+      }
       if (absents.length || enTrop.length || derives.length) {
         console.error(`[construire] ⛔ L'ARTEFACT ENREGISTRÉ N'EST PAS CELUI QUE LA SOURCE PRODUIT.`);
         if (absents.length) console.error(`        ABSENT(S) de dist/ : ${absents.join(', ')}`);
@@ -197,8 +240,9 @@ if (process.argv[1] && process.argv[1].endsWith('construire.mjs')) {
       process.exit(0);
     }
 
-    console.log(`[construire] ${construites.length} porte(s) — ${Object.keys(contenuDe(cible)).length} `
-      + `fichier(s) dans dist/, ${Math.round(total / 1024)} ko`);
+    console.log(`[construire] ${portes.length} porte(s) — ${Object.keys(contenuDe(cible)).length} `
+      + `fichier(s) dans dist/, ${Math.round(total / 1024)} ko · ${types.ponts.length} porte(s) DÉCRITE(S) `
+      + `depuis ${types.declarations} déclaration(s) dérivée(s)`);
   } finally {
     if (verifier) rmSync(cible, { recursive: true, force: true });
   }

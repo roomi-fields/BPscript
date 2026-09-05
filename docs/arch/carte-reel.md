@@ -5,7 +5,7 @@
 > vit dans le document d'architecture, chez Atlas, qui cite celui-ci.
 ## Ce qui est mesuré
 
-- **24 modules** dans `src/transpiler/`, **15817 lignes**.
+- **24 modules** dans `src/transpiler/`, **15877 lignes**.
 - Le **rôle** est lu dans l'en-tête de chaque fichier, verbatim — jamais interprété.
 - Les **arêtes** sont les imports d'un module vers un voisin du même dossier.
 
@@ -18,18 +18,18 @@
 | `libs.js` | 1196 | 5 | 6 | BPScript Library Loader |
 | `librairies.js` | 656 | 1 | 1 | LA LECTURE DES LIBRAIRIES — une source écrite dans le langage devient un objet du registre. |
 | `actorResolver.js` | 582 | 3 | 2 | BPScript Actor Resolver |
+| `bpxAst.js` | 567 | 10 | 2 | L'ARBRE D'UNE SCÈNE RÉSOLUE — les axes de premier niveau que cet étage écrit et relit. |
 | `tokenizer.js` | 535 | 1 | 2 | BPScript Tokenizer |
-| `bpxAst.js` | 523 | 9 | 2 | Produit l'AST BPx depuis le source `.bps`, SANS l'ancien format BP3 et SANS table |
 | `index-des-objets.js` | 390 | 3 | 6 | L'INDEX DES OBJETS — ce que les librairies déclarent, rendu comme des objets, pour la porte |
 | `librairies-jointes.js` | 145 | 2 | 1 | L'ARBRE JOINT LE CONTENU DES LIBRAIRIES QU'IL INVOQUE — décision de Romain, 2026-09-02. |
 | `syntaxe-data.js` *(généré)* | 126 | 0 | 4 | — |
 | `orderTokens.js` | 123 | 0 | 0 | — |
 | `controlValidation.js` | 107 | 1 | 1 | Collecte récursivement toutes les paires de SettingBag de l'AST. |
 | `libs-champs.js` | 98 | 0 | 3 | LES CHAMPS DE FICHIER D'UNE LIBRAIRIE — déclarés UNE FOIS, pour tous mes lecteurs. |
+| `diagnostics.js` | 95 | 0 | 8 | LES DIAGNOSTICS — UN CODE STABLE, UN TEXTE QUI VIT AILLEURS. |
 | `vocabulaire.js` | 89 | 3 | 4 | LE VOCABULAIRE DU LANGAGE — la porte d'éditeur, DÉRIVÉE de la porte des objets. |
 | `syntaxe-bundle.mjs` | 88 | 0 | 0 | GÉNÉRATEUR DE LA PORTE DU SCHÉMA DE SYNTAXE. |
 | `segmentation.js` | 81 | 0 | 1 | LA SEGMENTATION D'UN NOM COLLÉ — plus long préfixe, glouton, sans retour arrière. |
-| `diagnostics.js` | 79 | 0 | 7 | LES DIAGNOSTICS — UN CODE STABLE, UN TEXTE QUI VIT AILLEURS. |
 | `gabarits-bundle.mjs` | 57 | 0 | 0 | GÉNÉRATEUR DE LA PORTE DES GABARITS DE RÉGLAGES NATIFS. |
 | `libs-bundle-check.js` | 50 | 0 | 0 | — |
 | `sources.js` | 48 | 0 | 1 | LES SOURCES DE LIBRAIRIE — ce que `lib/` contient, rendu comme du texte. |
@@ -78,6 +78,7 @@ flowchart LR
   bpxAst_js --> actorResolver_js
   bpxAst_js --> controlValidation_js
   bpxAst_js --> librairies_jointes_js
+  bpxAst_js --> diagnostics_js
   controlValidation_js --> diagnostics_js
   index_des_objets_js --> libs_js
   index_des_objets_js --> libs_champs_js

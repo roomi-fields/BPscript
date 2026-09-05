@@ -1,5 +1,5 @@
 {
- "assertions": 19573,
+ "assertions": 19603,
  "gardes": [
   "alias_est_sorti_du_langage.mjs",
   "anti-vacuité [interne]",
@@ -223,6 +223,7 @@
   "une_macro_ne_porte_pas_le_nom_d_une_note.mjs",
   "une_mesure_ne_se_prend_pas_sur_un_repertoire_vivant.mjs",
   "une_parenthese_preserve_l_ordre_de_ce_qu_on_y_ecrit.mjs",
+  "une_porte_publiee_se_decrit.mjs",
   "une_portee_ne_s_invente_pas_hors_du_moteur.mjs",
   "une_primitive_porte_son_type_avec_ou_sans_parenthese.mjs",
   "une_prudence_regarde_les_deux_cotes.mjs",

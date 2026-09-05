@@ -13,7 +13,6 @@
     "dist/parser.js": "src/transpiler/parser.js"
   },
   "copies": {
-    "dist/objets.d.ts": "src/transpiler/objets.d.ts",
     "dist/empreinte.js": "src/empreinte.js"
   },
   "_empreinte": "dist/empreinte.js est COPIÉ, jamais regroupé : le publieur y grave le commit en remplaçant une ligne exacte, et un bundler la réécrit (var + export séparé). Faire passer une gravure par un regroupeur, c est faire dépendre la publication de la forme de sortie d un outil.",
