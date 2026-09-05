@@ -160,6 +160,109 @@ function heriterDesPrototypes(ast) {
 }
 
 /**
+ * LE GENRE D'UNE VALEUR, lu de la valeur elle-même. Aucun nom de contrôle, aucune liste : ce que la
+ * chose EST se lit de sa forme, comme partout ailleurs dans ce langage.
+ *
+ * ⛔ `true` NE SE JUGE JAMAIS, DES DEUX CÔTÉS — mesuré le 2026-09-05, sur `def gamme(culture,
+ * ratios)`. Un nom nu vaut un objet vide, donc `culture` et `culture:true` produisent la MÊME paire,
+ * et lire la seconde dans la première refusait `culture:grec` comme « un nom là où l'exemple demande
+ * un booléen ». Un nom nu ne dit pas « booléen » : il dit *obligatoire, genre non précisé*, et
+ * l'obligation se lit justement de l'ABSENCE de défaut.
+ *
+ * ⇒ Le booléen reste vérifiable là où il est DIT — `boolean b` porte son type sur la paire. Ce qui
+ *   se perd est la déduction depuis `b:true`, et elle n'était pas déductible.
+ */
+function genreDeLaValeur(v) {
+  if (v === true || v === false) return null;
+  if (typeof v === 'number') return Number.isInteger(v) ? 'integer' : 'float';
+  if (typeof v === 'string') return 'symbol';
+  if (v && typeof v === 'object' && v.type === 'SettingBag') return 'bag';
+  return null;
+}
+
+/**
+ * CE QU'UN EXEMPLAIRE ATTEND — un type nommé s'il en porte un, sinon le genre de sa propre valeur.
+ * C'est toute la règle : *on ne type pas, on donne un exemplaire*, et un type EST un exemplaire,
+ * simplement le plus général de sa famille.
+ */
+function attenduDe(paire) {
+  if (paire.type) return paire.type;
+  return genreDeLaValeur(paire.value);
+}
+
+/**
+ * UNE VALEUR PEUT-ELLE PRENDRE LA PLACE DE SON EXEMPLAIRE ?
+ *
+ * ⛔ LA QUESTION N'EST JAMAIS « DE QUEL GENRE EST CETTE VALEUR », qui n'a pas de réponse : `64` est
+ * un entier, une vélocité et un numéro de programme à la fois. Elle est POSITIONNELLE — la place
+ * porte l'exemplaire, et on vérifie que ce qui est écrit peut l'occuper.
+ *
+ * `float` accepte un entier : `442` est un diapason valable, et refuser l'écriture sans point
+ * demanderait à l'auteur de connaître la déclaration pour écrire un nombre.
+ */
+function valeurCompatible(genre, attendu) {
+  if (!genre || !attendu) return true;          // rien à comparer : on ne conclut pas
+  if (genre === attendu) return true;
+  if (attendu === 'float' && genre === 'integer') return true;
+  return false;
+}
+
+/**
+ * REFUSE UNE VALEUR QUI CONTREDIT SON EXEMPLAIRE — le juge qui manquait, et sans lequel les types
+ * ne servent à rien.
+ *
+ * ⛔ CE QU'IL RÉPARE, MESURÉ LE 2026-09-05. Un objet déclaré avec `def gizmo(integer n)` acceptait
+ * `gizmo g(n:zzpasunnombre)` ; `def gizmo(n:3)` acceptait la même chose. Les exemplaires étaient
+ * RANGÉS et jamais LUS — d'où le constat de Romain que les types du socle « ne servent jamais » :
+ * ils ne servaient pas parce que rien ne les interrogeait à l'usage.
+ *
+ * ⛔ IL REFUSE À L'USAGE, JAMAIS À LA DÉCLARATION — décision du 2026-08-23. Un membre ABSENT n'est
+ * pas une faute : c'est un modèle incomplet, et l'interdire interdirait toute dérivation. Ce qui se
+ * refuse est une valeur ÉCRITE qui ne peut pas occuper la place où elle est écrite.
+ *
+ * ⚠️ ET IL SE TAIT SUR CE QU'IL NE SAIT PAS. Un membre que le prototype ne déclare pas, un genre
+ * qu'il ne reconnaît pas, un prototype hors de l'arbre : aucun refus. Un juge qui conclut sur une
+ * absence d'information invente, et son bruit vaut moins que son silence.
+ */
+export function refuserValeurContraireALExemplaire(ast) {
+  const table = declarationsDe(ast);
+  const erreurs = [];
+  /** Le membre `cle` tel que la chaîne de prototypes le déclare — le plus proche gagne. */
+  const exemplaireDe = (parent, cle) => {
+    const vus = new Set();
+    while (parent && !vus.has(parent) && table.has(parent)) {
+      vus.add(parent);
+      const proto = table.get(parent);
+      const p = proto.origine.find((x) => x && x.key === cle);
+      if (p) return p;
+      parent = proto.parent;
+    }
+    return null;
+  };
+  for (const [nom, decl] of table) {
+    if (!decl.parent) continue;
+    for (const paire of decl.origine) {
+      if (!paire || paire.herite) continue;          // l'hérité vient du prototype, il ne se juge pas
+      const modele = exemplaireDe(decl.parent, paire.key);
+      if (!modele) continue;                          // membre non déclaré : ce n'est pas mon sujet
+      const attendu = attenduDe(modele);
+      const genre = genreDeLaValeur(paire.value);
+      // Un exemplaire qui est un OBJET du registre (`destination`, `alphabet`) attend un nom : le
+      // vérifier ici demanderait de résoudre la famille, ce que cet étage ne sait pas encore faire.
+      if (attendu && !GENRES.has(attendu)) continue;
+      if (valeurCompatible(genre, attendu)) continue;
+      erreurs.push(diagnostic('RESOLVE_VALUE_CONTRADICTS_ITS_EXAMPLE',
+        { nom, cle: paire.key, ecrit: String(paire.value), genre: genre || 'unknown', attendu },
+        { line: paire.line || decl.noeud.line || 0 }));
+    }
+  }
+  return erreurs;
+}
+
+/** Les genres que ce juge sait comparer. Hors d'eux, il se tait — voir ci-dessus. */
+const GENRES = new Set(['integer', 'float', 'boolean', 'symbol', 'bag']);
+
+/**
  * RÉSOUT un arbre contre son environnement, et rend ce que l'étage suivant attend.
  *
  * Rend `{ ast, diagnostics, examines, greffes }` :
@@ -180,6 +283,7 @@ export function resoudre(ast, environnement) {
   let examines = 0;
   for (const _ of noeuds(ast)) examines++;
   const greffes = heriterDesPrototypes(ast);
+  diagnostics.push(...refuserValeurContraireALExemplaire(ast));
   void environnement;
   return { ast, diagnostics, examines, greffes };
 }

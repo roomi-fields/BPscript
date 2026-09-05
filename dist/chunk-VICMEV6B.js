@@ -22,12 +22,12 @@ import {
   resolveActorAlphabetSource,
   universeControlNames,
   versionDuRegistre
-} from "./chunk-4DYSJXLL.js";
+} from "./chunk-P4AS54XA.js";
 import {
   LexError,
   diagnostic,
   tokenize
-} from "./chunk-S3UVLV7L.js";
+} from "./chunk-DEERXBZI.js";
 
 // src/transpiler/actorResolver.js
 function expandAlphabetTerminals(alphabetLib, octavesOverride) {
@@ -319,11 +319,63 @@ function heriterDesPrototypes(ast) {
   }
   return greffes;
 }
+function genreDeLaValeur(v) {
+  if (v === true || v === false) return null;
+  if (typeof v === "number") return Number.isInteger(v) ? "integer" : "float";
+  if (typeof v === "string") return "symbol";
+  if (v && typeof v === "object" && v.type === "SettingBag") return "bag";
+  return null;
+}
+function attenduDe(paire) {
+  if (paire.type) return paire.type;
+  return genreDeLaValeur(paire.value);
+}
+function valeurCompatible(genre, attendu) {
+  if (!genre || !attendu) return true;
+  if (genre === attendu) return true;
+  if (attendu === "float" && genre === "integer") return true;
+  return false;
+}
+function refuserValeurContraireALExemplaire(ast) {
+  const table = declarationsDe(ast);
+  const erreurs = [];
+  const exemplaireDe = (parent, cle) => {
+    const vus = /* @__PURE__ */ new Set();
+    while (parent && !vus.has(parent) && table.has(parent)) {
+      vus.add(parent);
+      const proto = table.get(parent);
+      const p = proto.origine.find((x) => x && x.key === cle);
+      if (p) return p;
+      parent = proto.parent;
+    }
+    return null;
+  };
+  for (const [nom, decl] of table) {
+    if (!decl.parent) continue;
+    for (const paire of decl.origine) {
+      if (!paire || paire.herite) continue;
+      const modele = exemplaireDe(decl.parent, paire.key);
+      if (!modele) continue;
+      const attendu = attenduDe(modele);
+      const genre = genreDeLaValeur(paire.value);
+      if (attendu && !GENRES.has(attendu)) continue;
+      if (valeurCompatible(genre, attendu)) continue;
+      erreurs.push(diagnostic(
+        "RESOLVE_VALUE_CONTRADICTS_ITS_EXAMPLE",
+        { nom, cle: paire.key, ecrit: String(paire.value), genre: genre || "unknown", attendu },
+        { line: paire.line || decl.noeud.line || 0 }
+      ));
+    }
+  }
+  return erreurs;
+}
+var GENRES = /* @__PURE__ */ new Set(["integer", "float", "boolean", "symbol", "bag"]);
 function resoudre(ast, environnement) {
   const diagnostics = [];
   let examines = 0;
   for (const _ of noeuds(ast)) examines++;
   const greffes = heriterDesPrototypes(ast);
+  diagnostics.push(...refuserValeurContraireALExemplaire(ast));
   void environnement;
   return { ast, diagnostics, examines, greffes };
 }

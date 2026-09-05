@@ -1,4 +1,25 @@
 /**
+ * REFUSE UNE VALEUR QUI CONTREDIT SON EXEMPLAIRE — le juge qui manquait, et sans lequel les types
+ * ne servent à rien.
+ *
+ * ⛔ CE QU'IL RÉPARE, MESURÉ LE 2026-09-05. Un objet déclaré avec `def gizmo(integer n)` acceptait
+ * `gizmo g(n:zzpasunnombre)` ; `def gizmo(n:3)` acceptait la même chose. Les exemplaires étaient
+ * RANGÉS et jamais LUS — d'où le constat de Romain que les types du socle « ne servent jamais » :
+ * ils ne servaient pas parce que rien ne les interrogeait à l'usage.
+ *
+ * ⛔ IL REFUSE À L'USAGE, JAMAIS À LA DÉCLARATION — décision du 2026-08-23. Un membre ABSENT n'est
+ * pas une faute : c'est un modèle incomplet, et l'interdire interdirait toute dérivation. Ce qui se
+ * refuse est une valeur ÉCRITE qui ne peut pas occuper la place où elle est écrite.
+ *
+ * ⚠️ ET IL SE TAIT SUR CE QU'IL NE SAIT PAS. Un membre que le prototype ne déclare pas, un genre
+ * qu'il ne reconnaît pas, un prototype hors de l'arbre : aucun refus. Un juge qui conclut sur une
+ * absence d'information invente, et son bruit vaut moins que son silence.
+ */
+export function refuserValeurContraireALExemplaire(ast: any): {
+    code: any;
+    message: string;
+}[];
+/**
  * RÉSOUT un arbre contre son environnement, et rend ce que l'étage suivant attend.
  *
  * Rend `{ ast, diagnostics, examines, greffes }` :
@@ -16,7 +37,10 @@
  */
 export function resoudre(ast: any, environnement: any): {
     ast: any;
-    diagnostics: any[];
+    diagnostics: {
+        code: any;
+        message: string;
+    }[];
     examines: number;
     greffes: number;
 };

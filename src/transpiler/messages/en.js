@@ -704,6 +704,11 @@ export const MESSAGES = {
   // [À TRADUIRE]
   PARSE_TEMPLATE_ANCHORS_ASYMMETRIC:
     'ancres de gabarit asymétriques : LHS a {gauche}, RHS a {droite}',
+  RESOLVE_VALUE_CONTRADICTS_ITS_EXAMPLE:
+    '\'{nom}\' writes \'{cle}:{ecrit}\', which is a {genre} where the example asks for a {attendu}. '
+    + 'A member says what it expects by the example it carries: nothing declares a type here, the '
+    + 'prototype simply shows one value of the kind it takes. Write a {attendu}, or change what the '
+    + 'prototype shows.',
   RESOLVE_REPLAY_WITHOUT_MASTER:
     '\'&{name}\' replays a template that nothing captures — no \'${name}\' in this scene. The '
     + 'name is what pairs the master with the slave: with no master, the replay has no choice to '

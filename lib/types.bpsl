@@ -18,6 +18,13 @@ def voice(scope(scene))
 def eval(scope(scene))
 def midi_default
 
+// Ce qu'une valeur EST. Un membre qui n'a pas de valeur par defaut a poser prend l'une d'elles
+// pour exemplaire : `def seed(integer value)` dit le genre sans prescrire un nombre.
+def integer
+def float
+def boolean
+
+// Comment un membre se LIT.
 def control
 def addresskey
 def enum
