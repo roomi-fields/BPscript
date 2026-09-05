@@ -802,7 +802,6 @@ function loadLibsFromDirectives(directives) {
     }
 
     // Merge controls — engine (BP3 native) and runtime (dispatcher)
-    // Runtime section may contain sub-groups (musical, midi, audio, dispatcher, generic)
     const controlSources = [];
     if (lib.controls) controlSources.push({ source: lib.controls, isEngine: false, section: 'controls' });
     if (lib.engine) controlSources.push({ source: lib.engine, isEngine: true, section: 'engine' });
@@ -1105,11 +1104,6 @@ function loadLibsFromDirectives(directives) {
     for (const section of Object.values(lib)) {
       if (!section || typeof section !== 'object' || Array.isArray(section)) continue;
       if (section[nom] && typeof section[nom] === 'object') return true;
-      // Les contrôles GROUPÉS (`groups.<groupe>.<nom>`) — une descente de plus, pas deux.
-      for (const sous of Object.values(section)) {
-        if (sous && typeof sous === 'object' && !Array.isArray(sous) && sous[nom]
-            && typeof sous[nom] === 'object' && ('args' in sous[nom] || 'description' in sous[nom])) return true;
-      }
     }
     return false;
   };

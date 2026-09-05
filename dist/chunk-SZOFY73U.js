@@ -22,7 +22,7 @@ import {
   resolveActorAlphabetSource,
   universeControlNames,
   versionDuRegistre
-} from "./chunk-NV4EEWK3.js";
+} from "./chunk-XFY3P7GQ.js";
 import {
   LexError,
   diagnostic,

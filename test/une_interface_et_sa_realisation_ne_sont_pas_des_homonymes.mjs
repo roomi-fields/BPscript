@@ -47,7 +47,7 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 const CONTROLE = { args: ['value'], range: [0, 127], description: 'témoin du garde' };
 const interfaceLib = (extra = {}) => ({
   name: 'zzface', resolvedBy: 'toutes les sorties',
-  controls: { zzvolume: { ...CONTROLE, transportGroup: 'zzface', ...extra } },
+  controls: { zzvolume: { ...CONTROLE, ...extra } },
 });
 // ⚠️ `implements` est un MOT RÉSERVÉ de JavaScript : il nomme la clé de la donnée, jamais une
 // variable de ce fichier. Le paramètre porte donc le nom de ce qu'il désigne — la cible visée.
@@ -55,7 +55,7 @@ const implementationLib = (cible) => ({
   name: 'zzmidi', resolvedBy: 'runtime-ZZ',
   controls: {
     zzvolume: {
-      ...CONTROLE, bp3: '_zzvolume', value: 100, transportGroup: 'zzmidi',
+      ...CONTROLE, bp3: '_zzvolume', value: 100,
       ...(cible === null ? {} : { implements: cible }),
     },
   },
@@ -153,9 +153,18 @@ restaurer();
   // la librairie des défauts reverse sa valeur en RECONSTRUISANT la déclaration (`{...def, default}`),
   // donc l'égalité de référence est fausse alors que la résolution est juste. Un garde qui compare
   // des adresses mémoire mesure le chemin, pas le résultat.
+  // ⛔ CE VOLET A COMPARÉ `transportGroup` JUSQU'AU 2026-09-05, ET IL EST DEVENU MUET SANS ROUGIR.
+  // Le champ est sorti du format le 2026-09-04 : les deux côtés valaient `undefined`, l'égalité
+  // restait vraie, et l'assertion passait en ne mesurant plus rien. *Un filtre qui ne filtre plus
+  // rien a la même forme qu'un filtre qui n'a rien à filtrer.* La comparaison porte désormais sur
+  // des champs que la déclaration écrit VRAIMENT — et le socle ci-dessous refuse qu'ils s'absentent.
+  const interfaceReelle = ctx.controlsQualified['expression.volume'];
+  ok(interfaceReelle && interfaceReelle.description && Array.isArray(interfaceReelle.range),
+     `5b-SOCLE : 'expression.volume' doit porter les champs comparés — sinon ce volet compare deux `
+     + `absences et verdit. Vu : ${JSON.stringify(interfaceReelle)}`);
   ok(ctx.controls.volume
-     && ctx.controls.volume.transportGroup === ctx.controlsQualified['expression.volume'].transportGroup
-     && ctx.controls.volume.description === ctx.controlsQualified['expression.volume'].description,
+     && JSON.stringify(ctx.controls.volume.range) === JSON.stringify(interfaceReelle.range)
+     && ctx.controls.volume.description === interfaceReelle.description,
      "5b. `volume` nu doit résoudre vers la déclaration de l'INTERFACE, dans les librairies RÉELLES "
      + "et pas seulement sur les fixtures — sinon un réglage générique part au runtime MIDI même "
      + `quand ce n'est pas lui qui sonne. Vu : ${JSON.stringify(ctx.controls.volume)}`);
@@ -254,7 +263,10 @@ restaurer();
 
 // Le compte des vérifications EXÉCUTÉES, hors ce bilan lui-même : un garde qui refuse d'avoir
 // examiné zéro doit aussi refuser d'en avoir examiné douze parce qu'un bloc s'est tu.
-const TOTAL_ATTENDU = 29;
+// 29 → 30 le 2026-09-05 : le SOCLE du volet 5b. Le compte monte parce qu'une assertion a été
+// ÉCRITE, jamais parce qu'un chiffre observé a été recopié ici — la distinction est ce qui sépare
+// un compte de construction d'une assertion ajustée à ce qui sort.
+const TOTAL_ATTENDU = 30;
 ok(passe + echecs.length === TOTAL_ATTENDU,
    `bilan : ${TOTAL_ATTENDU} vérifications attendues, ${passe + echecs.length} exécutées`);
 
