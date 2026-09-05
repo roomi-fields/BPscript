@@ -4282,8 +4282,22 @@ function parse(tokens, opts = {}) {
           } catch (e) {
             if (!(e instanceof ParseError)) throw e;
             refusDeRegle.push(e);
-            // Reprise : la règle fautive est abandonnée jusqu'à sa fin de ligne.
-            while (!atEnd() && !at(T.NEWLINE) && !at(T.SEPARATOR)) advance();
+            // ⛔ LA REPRISE SE REPÈRE SUR LA LIGNE DE LA FAUTE, JAMAIS SUR LA POSITION COURANTE.
+            // Mesuré par kanopi le 2026-09-05, sur une graphie que mon témoin n'avait pas : un
+            // crochet orphelin (`A -> ]C4 E4`) lève APRÈS que le parseur a lu au-delà de sa fin de
+            // ligne. Repartir de `pos` avalait alors la règle SUIVANTE tout entière, et la seconde
+            // faute disparaissait — le défaut même que ce canal existe pour fermer, revenu par la
+            // reprise. Deux fautes de `C4(((` rendaient bien 2, deux crochets orphelins rendaient 1.
+            //
+            // ⚠️ *Un garde se prouve sur toutes les formes de son étage, pas sur celle qu'on a vue.*
+            // Mon témoin n'exerçait qu'une graphie de faute de forme, et une graphie ne fait pas une
+            // matrice : c'est un CONSOMMATEUR qui a rendu la mesure qui me manquait.
+            const ligneFautive = e.token && e.token.line;
+            if (ligneFautive != null) {
+              while (!atEnd() && !at(T.SEPARATOR) && current().line <= ligneFautive) advance();
+            } else {
+              while (!atEnd() && !at(T.NEWLINE) && !at(T.SEPARATOR)) advance();
+            }
             // Et la progression est GARANTIE : une faute levée sans avoir consommé un jeton
             // relancerait la même règle indéfiniment.
             if (pos === avant && !atEnd()) advance();
@@ -7709,9 +7723,31 @@ function parse(tokens, opts = {}) {
   // Entry point
   // ============================================================
 
-  const arbre = parseScene();
-  if (refusDeRegle.length) {
+  /**
+   * ⛔ CE QUI EST COLLECTÉ SE LIVRE, MÊME QUAND UNE FAUTE FINIT PAR LEVER.
+   *
+   * Mesuré par kanopi le 2026-09-05 : deux crochets orphelins ne rendaient qu'UNE erreur alors que
+   * deux parenthèses en trop en rendaient bien deux. La cause n'était pas la reprise — c'était ceci.
+   * Le canal collectait le premier refus, puis la ligne suivante levait depuis la boucle des
+   * DIRECTIVES, hors du canal ; l'exception traversait cette fonction et **emportait tout ce qui
+   * était déjà collecté**. L'auteur recevait la seconde faute et perdait la première.
+   *
+   * ⚠️ C'est le défaut que ce canal existe pour fermer, revenu un cran plus haut : il ne suffit pas
+   * de collecter, il faut livrer sur TOUS les chemins de sortie. Le parseur porte encore des refus
+   * hors canal — chacun sera déplacé à son tour ; en attendant, aucun d'eux n'efface plus le reste.
+   */
+  const livrerLesRefus = () => {
     if (typeof opts.onError === 'function') for (const e of refusDeRegle) opts.onError(e);
+  };
+  let arbre;
+  try {
+    arbre = parseScene();
+  } catch (e) {
+    livrerLesRefus();   // AVANT de relayer : l'appelant ne repassera jamais ici
+    throw e;
+  }
+  if (refusDeRegle.length) {
+    if (typeof opts.onError === 'function') livrerLesRefus();
     else throw refusDeRegle[0];
   }
   return arbre;

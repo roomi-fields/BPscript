@@ -8529,7 +8529,12 @@ function parse(tokens, opts = {}) {
           } catch (e) {
             if (!(e instanceof ParseError)) throw e;
             refusDeRegle.push(e);
-            while (!atEnd() && !at(T.NEWLINE) && !at(T.SEPARATOR)) advance();
+            const ligneFautive = e.token && e.token.line;
+            if (ligneFautive != null) {
+              while (!atEnd() && !at(T.SEPARATOR) && current().line <= ligneFautive) advance();
+            } else {
+              while (!atEnd() && !at(T.NEWLINE) && !at(T.SEPARATOR)) advance();
+            }
             if (pos === avant && !atEnd()) advance();
           }
         } else {
@@ -10229,9 +10234,18 @@ function parse(tokens, opts = {}) {
     }
     return { value, decrement };
   }
-  const arbre = parseScene();
-  if (refusDeRegle.length) {
+  const livrerLesRefus = () => {
     if (typeof opts.onError === "function") for (const e of refusDeRegle) opts.onError(e);
+  };
+  let arbre;
+  try {
+    arbre = parseScene();
+  } catch (e) {
+    livrerLesRefus();
+    throw e;
+  }
+  if (refusDeRegle.length) {
+    if (typeof opts.onError === "function") livrerLesRefus();
     else throw refusDeRegle[0];
   }
   return arbre;
