@@ -22,6 +22,7 @@
 - [Les tables d'homomorphisme](#les-tables-dhomomorphisme)
 - [Contextes `()` et `#`](#contextes-et----conditions-dapplication)
 - [Les gabarits `$` et `&`](#les-gabarits-et----la-structure-dune-production)
+- [Les places](#les-places----ce-quune-position-attend)
 - [Comment une valeur se resout](#comment-une-valeur-se-resout)
 - [Conventions de notation](#conventions-de-notation-lespace-le-point-le-deux-points)
 - [Flags](#flags-variables-détat-et-composition-conditionnelle)
@@ -1812,6 +1813,54 @@ S -> sa re ga
 template
 [1] /1 ???
 ```
+
+---
+
+## Les places -- ce qu'une position attend
+
+Une **place** est une position du langage qui reçoit un nom : la clé d'un sac, sa valeur, le terme
+d'un flux, le nom d'un gabarit, le membre d'un objet. Une place dit ce qu'elle attend en **donnant
+un exemplaire**, de la même façon qu'un membre dit ce qu'il attend par sa valeur par défaut.
+
+### Deux régimes, et le régime se lit du silence
+
+| écriture | ce que la place dit |
+| --- | --- |
+| `place nom` | elle **NOMME** — rien n'est donné, tout nom neuf y est une création |
+| `place nom(exemplaire)` | elle **RÉFÈRE** — le nom doit exister dans l'espace de l'exemplaire |
+| `place nom(un, deux, trois)` | elle réfère, dans **l'un** des espaces donnés |
+
+Une place qui nomme accueille un nom que rien ne déclare : le nom y prend naissance. Une place qui
+réfère exige que le nom existe déjà, et l'exemplaire dit où le chercher. Le couple des gabarits
+porte les deux régimes : `$m` nomme le motif, `&m` le réfère.
+
+Aucun mot ne porte le régime. Il se lit de l'absence d'exemplaire, comme l'obligation d'un membre se
+lit de l'absence de défaut.
+
+### L'exemplaire porte l'espace
+
+Un exemplaire est une chose du langage, et la chose sait d'où elle vient. Une place qui donne pour
+exemplaire un contrôle attend un contrôle ; une place qui donne un terminal attend un terminal ; une
+place qui donne un nombre attend un nombre.
+
+Un exemplaire se **qualifie** quand son nom seul ne suffit pas à le situer. Un nom porté par un seul
+espace se donne nu ; un nom que plusieurs espaces portent se donne par son chemin.
+
+### Les places se déclarent
+
+`place` est un type du langage, déclaré au même rang que `destination` ou `actor`, et une place est
+un exemplaire de ce type. Les places de structure vivent dans la librairie qui porte les types ;
+**une librairie élargit une place en la déclarant**, et ce qu'elle ajoute entre en portée avec elle.
+
+La forme est celle des membres d'un objet, où chaque membre est déclaré par un exemplaire de ce
+qu'il attend :
+
+```
+def actor(alphabet alphabet, tuning tuning, octaves octaves, destination out, eval eval)
+```
+
+Le membre `out` attend une destination : `out.midi` est reçu, `out.western` est refusé, et le refus
+nomme ce que la place attendait.
 
 ---
 
