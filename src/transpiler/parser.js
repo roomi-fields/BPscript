@@ -4279,6 +4279,26 @@ function parse(tokens, opts = {}) {
           const avant = pos;
           try {
             rules.push(parseRule());
+            // ⛔ UNE RÈGLE QUI LAISSE UN RÉSIDU SUR SA LIGNE EST REFUSÉE ICI, DANS LE CANAL.
+            //
+            // C'est la cause que kanopi et BPx ont fait apparaître le 2026-09-05, chacun de son
+            // côté, en falsifiant ma prédiction. `S -> A ((` ne levait PAS dans `parseRule` : la
+            // règle se terminait devant `((`, et le résidu de ligne était relu au tour suivant par
+            // la boucle des DIRECTIVES, qui levait sur lui — hors canal, donc en écrasant tout ce
+            // qui avait été collecté avant. La faute était signalée à la bonne ligne, par le
+            // mauvais étage, et elle emportait ses voisines.
+            //
+            // ⚠️ CE REFUS DIT CE QUI SE PASSE, LÀ OÙ ÇA SE PASSE. Le refus de directive parlait
+            // d'un nom d'entrée attendu, sur une ligne qui n'a jamais été une déclaration : *un
+            // refus juste dans sa conclusion peut être faux sur ce qu'il affirme mesurer.*
+            //
+            // MESURÉ AVANT D'ÊTRE POSÉ — 328 scènes de la bibliothèque kanopi, ZÉRO résidu, et la
+            // sonde discrimine (elle voit `S -> A ((` et se tait sur `S -> C4 D4`). Aucune forme
+            // vivante ne passe par ici.
+            if (!atEnd() && !at(T.NEWLINE) && !at(T.SEPARATOR) && !at(T.COMMENT)) {
+              throw new ParseError('PARSE_RULE_LEAVES_A_REMAINDER',
+                { reste: String(current().value ?? current().type) }, current());
+            }
           } catch (e) {
             if (!(e instanceof ParseError)) throw e;
             refusDeRegle.push(e);

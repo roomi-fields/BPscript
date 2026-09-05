@@ -2,7 +2,7 @@ import {
   T,
   diagnostic,
   texteDuDiagnostic
-} from "./chunk-R24VW77H.js";
+} from "./chunk-GCZ6XCBJ.js";
 import {
   CHAMPS_DE_FICHIER,
   CHAMPS_DU_PAQUET,
@@ -8526,6 +8526,13 @@ function parse(tokens, opts = {}) {
           const avant = pos;
           try {
             rules.push(parseRule());
+            if (!atEnd() && !at(T.NEWLINE) && !at(T.SEPARATOR) && !at(T.COMMENT)) {
+              throw new ParseError(
+                "PARSE_RULE_LEAVES_A_REMAINDER",
+                { reste: String(current().value ?? current().type) },
+                current()
+              );
+            }
           } catch (e) {
             if (!(e instanceof ParseError)) throw e;
             refusDeRegle.push(e);

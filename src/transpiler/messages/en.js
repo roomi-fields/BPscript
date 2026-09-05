@@ -514,6 +514,10 @@ export const MESSAGES = {
     + 'template rank; check the spelling, or the library that declares it. \'[{key}:…]\' and '
     + '\'![{key}:…]\' (engine control) are NOT interchangeable with \'({key}:…)\' (runtime '
     + 'parameter)',
+  PARSE_RULE_LEAVES_A_REMAINDER:
+    'the rule ends here, and \'{reste}\' remains on the same line without belonging to it. A rule '
+    + 'spans one line: what follows it is either part of the rule — and then it is misspelled — or '
+    + 'it belongs on a line of its own.',
   PARSE_UNRECOGNIZED_LINE_RULE_LEVEL:
     'unrecognized line at rule level: expected a rule, \'directive\', \'-----\' or the end of the '
     + 'scene',

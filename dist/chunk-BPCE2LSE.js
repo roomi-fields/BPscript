@@ -22,12 +22,12 @@ import {
   resolveActorAlphabetSource,
   universeControlNames,
   versionDuRegistre
-} from "./chunk-BTHNZAXQ.js";
+} from "./chunk-MRRHZVDT.js";
 import {
   LexError,
   diagnostic,
   tokenize
-} from "./chunk-R24VW77H.js";
+} from "./chunk-GCZ6XCBJ.js";
 
 // src/transpiler/actorResolver.js
 function expandAlphabetTerminals(alphabetLib, octavesOverride) {

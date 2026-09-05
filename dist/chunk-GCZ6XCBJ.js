@@ -156,6 +156,7 @@ var MESSAGES = {
   PARSE_TRANSFORMATION_CALLED_ARGUMENTS_WRITE: "'{p1}' is a transformation on {p2}: it is called with its arguments. Write '{p1}({p3})'. Placed bare, the name would come out of the tree as a terminal and sound.",
   PARSE_UNEXPECTED_TOKEN_CONTROL_ARGS: "Unexpected token {p1} ({p2}) in control args",
   PARSE_UNKNOWN_KEY_KEY_NEITHER: "unknown key '[{key}:\u2026]' \u2014 neither a library control, a guard, an assignment, nor a template rank; check the spelling, or the library that declares it. '[{key}:\u2026]' and '![{key}:\u2026]' (engine control) are NOT interchangeable with '({key}:\u2026)' (runtime parameter)",
+  PARSE_RULE_LEAVES_A_REMAINDER: "the rule ends here, and '{reste}' remains on the same line without belonging to it. A rule spans one line: what follows it is either part of the rule \u2014 and then it is misspelled \u2014 or it belongs on a line of its own.",
   PARSE_UNRECOGNIZED_LINE_RULE_LEVEL: "unrecognized line at rule level: expected a rule, 'directive', '-----' or the end of the scene",
   PARSE_VALUE_DIRNAME_READS_ECRIT: "the value of '{dirName}' reads '{ecrit}', and '{reste}' remains stuck to it without being read as part of it. A directive value is BARE: a number, a ratio ('3/4'), or a name. Remove '{reste}' if it is a unit \u2014 no directive carries one \u2014 or space it out if what follows is something else.",
   PARSE_VALUE_EXPECTED_AFTER: 'value expected after ":"',

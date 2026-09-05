@@ -932,6 +932,7 @@ pas de parsing de chaînes.
 
 | `encoder.js`     | compile | alphabets, octaves                        | noms BP3-safe (bol prefix), grammaire |
 | `prototypes.js`  | compile | alphabets, octaves                        | fichier -so. (durées de référence)    |
+<!-- GARDE-CHEMINS-SORTANTS: absence — la section entière décrit une intention de design abandonnée, comme son chapeau le dit ; ce fichier n'a jamais existé chez kairos sous ce chemin. -->
 | `kairos/pitch/resolver.ts` | projection | octaves, alphabets, tunings, temperaments | fréquence (float) — depuis KAI-10 |
 | Kronos           | runtime | —                                         | route la hauteur déjà résolue → sortie |
 |  les runtimes de sortie | runtime | —                                         | consomme la fréquence, produit du son |

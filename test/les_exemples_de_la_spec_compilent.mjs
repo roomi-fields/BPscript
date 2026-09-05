@@ -121,6 +121,24 @@ const blocsBpscript = (texte) => {
 // minimale qu'on lui fabrique. On ne garde que ce qui est refusé pour sa FORME.
 const REFUS_DE_RESOLUTION = /does not exist|not found|undeclared|is not declared|is declared by no loaded library|is not in scope|declared nowhere|unknown attribute|never set/;
 
+// ⛔ LE VERDICT SE PREND PAR REFUS, JAMAIS SUR LEUR CONCATÉNATION — réparé le 2026-09-05.
+//
+// Ces trois volets joignaient tous les refus d'un exemple en UNE chaîne, puis demandaient à cette
+// chaîne si elle parlait de résolution. Un exemple qui rend DEUX refus — une faute de forme ET un
+// nom inconnu — était donc classé « hors sujet de forme » en entier, et sa faute de forme sortait
+// de la vue du garde sans que rien ne le dise.
+//
+// ⚠️ IL EST DEVENU VISIBLE LE JOUR OÙ LE COMPILATEUR A CESSÉ DE S'ARRÊTER À LA PREMIÈRE FAUTE :
+// tant qu'un seul refus sortait, l'agrégat et l'entrée disaient la même chose. *Un test sur
+// l'agrégat a la même forme qu'un test sur les entrées, et il ne rougit qu'une fois que les
+// entrées sont plusieurs.*
+/** Les refus d'un exemple qui parlent de sa FORME — ceux de résolution sont hors sujet ici. */
+function refusDeForme(r) {
+  return (r.errors || []).map((e) => e.message || String(e))
+    .filter((m) => m && !REFUS_DE_RESOLUTION.test(m));
+}
+
+
 // RÉFÉRENCE — resserrée le 2026-08-05 (dev, palier « `var` porte son type jusqu'à l'arbre »).
 // `Scene.vars` porte désormais la directive ENTIÈRE (`VarDirective`, `AST.md:119-150`) et le
 // parser sait lire les six familles de `var_type` (`EBNF.md:47-57`) : flag, les quatre conventions
@@ -154,9 +172,8 @@ for (const p of SPECS) {
     let r;
     try { r = compileToBPxAST(`core\nalphabet.western:midi\n${ligne}\nmode:ord\n-----\nS -> C4\n`); }
     catch (e) { r = { errors: [{ message: e.message }] }; }
-    const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
-    const echoue = msg !== '' && !REFUS_DE_RESOLUTION.test(msg);
-    if (!echoue) continue; // compile, ou refus de résolution (hors sujet de forme) : rien à dire
+    const msg = refusDeForme(r).join(' | ');
+    if (msg === '') continue; // compile, ou refus de résolution (hors sujet de forme) : rien à dire
     const causeAttendue = BASELINE_RATTRAPAGE.get(ligne);
     if (causeAttendue && causeAttendue.test(msg)) {
       vusEnEchecConnu.add(ligne); // rattrapage attendu, retrouvé identique : le cliquet le sait déjà
@@ -367,8 +384,8 @@ for (const p of SPECS) {
     // declaration ne declare plus rien depuis que c est la POSITION qui qualifie la ligne.
     try { r = compileToBPxAST(`core\n${contexte.join('\n')}\n-----\n${ligne}\n`); }
     catch (e) { r = { errors: [{ message: e.message }] }; }
-    const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
-    if (msg === '' || REFUS_DE_RESOLUTION.test(msg)) continue;
+    const msg = refusDeForme(r).join(' | ');
+    if (msg === '') continue;
     const cause = RETARD_REGLES.get(ligne);
     if (cause && cause.test(msg)) { retardRetrouve.add(ligne); continue; }
     ok(false,
@@ -835,7 +852,15 @@ const CAUSE_SPEED_SUPPRIME = /has been removed/; // [speed:N] retiré, pas migr�
 const CAUSE_WEIGHT_PARENTHESES = /'weight' is a setting, it is written in PARENTHESES/; // même famille que le geste 1 de ce lot
 const CAUSE_AROBASE_OBLIGATOIRE = /sans arobase n'existe plus/; // le cas SIGNALÉ : gate/trigger/cv nus
 const CAUSE_DOLLAR_MACRO_MORTE = /Expected IDENT, got DOLLAR/; // `$lfo(...) = ...` : ancienne forme de CV/macro, `$` n'est plus qu'un gabarit de template
-const CAUSE_MUTATION_MID_RHS_BUG = /is written AFTER rules/; // ⚠️ PAS un défaut de doc : `S -> C4 [count+1] S` seul échoue déjà (mesuré hors enveloppe) — bug parser à signaler, pas à corriger ici
+// ⚠️ PAS un défaut de doc : `S -> C4 [count+1] S` seul échoue déjà (mesuré hors enveloppe) — une
+// mutation en MILIEU de partie droite termine la règle, et ce qui suit reste sur la ligne. Le
+// défaut de fond est inchangé ; SEUL SON MESSAGE a bougé le 2026-09-05.
+//
+// ⛔ IL DISAIT `is written AFTER rules` — un refus de DIRECTIVE, sur une ligne qui n'a jamais été
+// une déclaration. Le résidu de règle était relu par la boucle des directives, qui levait sur lui :
+// la conclusion était juste, ce que le refus AFFIRMAIT MESURER était faux. Le refus se pose
+// désormais là où la faute est, dans le canal collecté.
+const CAUSE_MUTATION_MID_RHS_BUG = /remains on the same line/;
 const CAUSE_ENVELOPPE_PROSE_LBRACKET = /Expected arrow \(-> <- <>\), got LBRACKET/; // limite d'enveloppe : prose+code sur une ligne
 const CAUSE_ENVELOPPE_PROSE_LPAREN = /Expected IDENT, got INT/; // limite d'enveloppe : plusieurs illustrations indépendantes bout à bout
 // ⛔ TROIS ENTREES SORTENT LE 2026-08-19 : `gate`, `trigger` et `cv` ne sont plus des mots de
@@ -862,9 +887,8 @@ for (const f of AIDE_FICHIERS) {
     let r;
     try { r = compileToBPxAST(envelopperAide(valeur)); }
     catch (e) { r = { errors: [{ message: e.message }] }; }
-    const msg = (r.errors || []).map((e) => e.message || e).join(' | ');
-    const echoue = msg !== '' && !REFUS_DE_RESOLUTION.test(msg);
-    if (!echoue) continue;
+    const msg = refusDeForme(r).join(' | ');
+    if (msg === '') continue;
     const causeAttendue = BASELINE_RATTRAPAGE_AIDE.get(chemin);
     if (causeAttendue && causeAttendue.test(msg)) {
       vusEnEchecConnuAide.set(chemin, (vusEnEchecConnuAide.get(chemin) || 0) + 1);

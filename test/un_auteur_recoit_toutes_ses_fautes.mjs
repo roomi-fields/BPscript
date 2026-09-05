@@ -47,6 +47,37 @@ for (const [nom, ligne] of [['forme 1', FAUTE_DE_FORME_1], ['forme 2', FAUTE_DE_
   ok(compte(`${H}-----\n${ligne}`) === 1, `SOCLE : la faute « ${nom} » seule doit rendre EXACTEMENT 1 erreur`);
 }
 
+// ── ⛔ L'AXE QUI MANQUAIT — LA GRAPHIE, CROISÉE AVEC LA POSITION DANS LE BLOC ─────────────────
+//
+// Ce volet est né d'une réfutation. Ma matrice ci-dessous variait l'ÉTAGE et l'ORDRE, et rendait
+// dix-sept verts ; kanopi et BPx ont mesuré 1 là où j'annonçais 2, chacun de son côté, sur des
+// graphies que je n'exerçais pas. *Une matrice sur un axe RESSEMBLE à une matrice*, et c'est ce
+// qui l'a rendue verte : les deux graphies ne levaient pas au même endroit.
+//
+//     C4(((    dans parseRule            → le canal le prenait déjà
+//     A ((     la règle laissait un RÉSIDU relu par la boucle des DIRECTIVES, hors canal
+//     ]C4      idem
+//
+// ⚠️ ET LA POSITION COMPTE AUTANT QUE LA GRAPHIE : en tête de bloc, la même graphie ne suivait pas
+// le même chemin qu'en seconde position. Les deux axes se croisent donc ici, et chaque case est
+// exercée AUX DEUX POSITIONS.
+const GRAPHIES = [
+  ['parenthèses collées', 'C4((( '],
+  ['parenthèse espacée',  'A (('],
+  ['crochet orphelin',    ']C4 E4'],
+];
+for (const [nom, faute] of GRAPHIES) {
+  const enTete = compte(`${H}-----\nS -> ${faute}\nT -> ${faute}\n`);
+  ok(enTete === 2, `GRAPHIE « ${nom} » — deux fautes de cette graphie doivent rendre 2, elles rendent `
+    + `${enTete}. Une graphie qui lève ailleurs qu'au canal écrase ce que le canal a collecté.`);
+  const apresUneJuste = compte(`${H}-----\nS -> C4\nT -> ${faute}\nU -> ${faute}\n`);
+  ok(apresUneJuste === 2, `GRAPHIE « ${nom} » en SECONDE position — 2 attendues, ${apresUneJuste} `
+    + `reçues. La tête de bloc et le corps du bloc ne suivent pas le même chemin : les deux se prouvent.`);
+  const seule = compte(`${H}-----\nS -> ${faute}\n`);
+  ok(seule === 1, `SOCLE de la graphie « ${nom} » — seule, elle doit rendre EXACTEMENT 1 erreur, `
+    + `elle en rend ${seule}. Sans ce socle, « 2 » ne dit pas si la graphie est même vue.`);
+}
+
 // ── LA MATRICE — deux fautes rendent deux erreurs, quels que soient les étages et l'ordre ─────
 const MATRICE = [
   ['deux fautes de FORME',            FAUTE_DE_FORME_1 + FAUTE_DE_FORME_2],
@@ -90,4 +121,5 @@ if (echecs.length) {
   process.exit(1);
 }
 console.log(`[canal unique] ${passe} PASS / 0 FAIL — ${passe} assertion(s) · `
-  + `${MATRICE.length} combinaison(s) d'étage et d'ordre, chacune vérifiée sur le compte ET sur le résultat binaire`);
+  + `${MATRICE.length} combinaison(s) d'étage et d'ordre · ${GRAPHIES.length} graphie(s) de faute de forme, `
+  + `chacune AUX DEUX POSITIONS du bloc — deux axes, pas un`);
