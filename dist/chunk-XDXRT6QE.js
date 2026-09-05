@@ -134,7 +134,6 @@ var MESSAGES = {
   PARSE_RULE_PARSE_LOOP_SAFETY: "Rule parse loop safety limit",
   PARSE_RULE_WRITTEN_BEFORE_DELIMITER: "a rule is written BEFORE the delimiter: the line '-----' is missing between the declarative part and the production. Since the at-sign left the language, it is POSITION that qualifies a line \u2014 before the '-----' it declares, after it produces.",
   PARSE_SCALE_BEEN_REMOVED_TEMPORAL: "'[scale:N]' has been REMOVED \u2014 the temporal scaling of a group is written with the ATTACHED DURATION: '{A B}:N'. (Not to be confused with the microtonal scale, which is a runtime control: '(scale:name key)'.)",
-  PARSE_SCAN_UNKNOWN_VALUE_EXPECTED: "(scan:{p1}): unknown value (expected: {p2})",
   PARSE_SEED_SEEDING_FLOW_WRITTEN: "'![seed:N]': re-seeding in the flow is written WITHOUT the at-sign \u2014 '![seed:N]'. The bracket carries what governs the derivation, and re-seeding is such a procedure; the at-sign remains at the top of the scene, where 'seed:N' sets the production.",
   PARSE_SHUFFLE_REMOVED_SEED_WRITTEN: "'[shuffle:N]' removed \u2014 the seed is written 'seed:N' (at the top of the scene) or '![seed:N]' (in the flow); '[shuffle]' shuffles alone",
   PARSE_SIGIL_NOM_PLACE_ARGUMENTS: "'{sigil}{nom}(\u2026{p1}\u2026)': '{p1}' has no place in the arguments of a template \u2014 they are written 'name:value', separated by commas. To place a SETTING on the rule, a SPACE detaches it from the template ('{sigil}{nom} ({p2}:\u2026)'); for a SPEED, which is not a pair, the exclamation mark places it in the flow ('{sigil}{nom} ! (*2/3)')",

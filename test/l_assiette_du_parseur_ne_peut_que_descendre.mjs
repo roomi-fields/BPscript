@@ -66,8 +66,12 @@ ok(imports.length <= PLAFOND_IMPORTS,
  + `Vues : ${imports.join(', ')}`);
 
 // ── ASSIETTE 2 — les refus qui parlent d'un NOM vivent à l'étage de résolution ─────────────────
-// 46 le 2026-08-24 · 8 le 2026-09-05. Chaque déplacement en retire un.
-const PLAFOND_REFUS_DE_NOM = 8;
+// 46 le 2026-08-24 · 8 le 2026-09-05 · 7 le même jour, quand `PARSE_SCAN_UNKNOWN_VALUE_EXPECTED`
+// est SORTI. ⛔ Il n'a pas été déplacé : il était DOUBLÉ. Mesuré par amputation — le refus du
+// parseur retiré, `(scan:zzinconnu)` reste refusé par `validateControls`, qui nomme la valeur, le
+// contrôle et les valeurs permises. Son message est parti du catalogue dans le même geste : un
+// message sans producteur enseigne un refus qui n'existe plus.
+const PLAFOND_REFUS_DE_NOM = 7;
 const { total, codes, deNom } = arretsImmediats(parseur);
 ok(codes.length > 50, `SOCLE : ${codes.length} code(s) de refus lus dans parser.js — sous ce seuil, le `
   + `garde est vert parce qu'il ne voit plus les refus, pas parce qu'ils ont migré.`);

@@ -2,7 +2,7 @@ import {
   T,
   diagnostic,
   texteDuDiagnostic
-} from "./chunk-GCZ6XCBJ.js";
+} from "./chunk-XDXRT6QE.js";
 import {
   CHAMPS_DE_FICHIER,
   CHAMPS_DU_PAQUET,
@@ -8692,13 +8692,8 @@ function parse(tokens, opts = {}) {
     const scanValues = libCtx.controls.scan && libCtx.controls.scan.values || [];
     let ruleMode = null;
     for (const pair of settings ? settings.pairs : []) {
-      if (pair.key === "scan") {
-        if (!libCtx.controls.scan) continue;
-        if (scanValues.includes(pair.value)) {
-          ruleMode = pair.value;
-        } else {
-          throw new ParseError("PARSE_SCAN_UNKNOWN_VALUE_EXPECTED", { p1: pair.value, p2: scanValues.join(", ") }, { line: tok.line, col: 0 });
-        }
+      if (pair.key === "scan" && libCtx.controls.scan && scanValues.includes(pair.value)) {
+        ruleMode = pair.value;
       }
     }
     const countAnchorsLhs = lhs.filter((e) => e.type === "TemplateAnchor").length;

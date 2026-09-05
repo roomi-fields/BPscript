@@ -4608,16 +4608,24 @@ function parse(tokens, opts = {}) {
     // LES VALEURS VALIDES VIENNENT DE LA DONNÉE (`engine.scan.values`, lib/engine.bpsl) — le
     // parseur nommait `left`/`right`/`rnd` lui-même (un doublon EXACT de cet enum) ; il lit
     // désormais celui que la librairie déclare, comme tout contrôle à `values` (étape 3, règle 5).
+    // ⛔ LE REFUS D'UNE VALEUR INCONNUE EST SORTI D'ICI — il était DOUBLÉ, pas déplaçable.
+    //
+    // Décision de Romain, 2026-08-24 : le compilateur a quatre étages et un seul canal de refus, et
+    // les refus qui parlent d'un NOM vivent à l'étage de résolution. Mesuré avant de frapper, par
+    // amputation : le refus du parseur retiré, `(scan:zzinconnu)` est TOUJOURS refusé, par
+    // `validateControls` — `CONTROL_VALUE_ALLOWED_CONTROL_ALLOWED`, qui nomme la valeur, le contrôle
+    // et les valeurs permises. Rien à déplacer : *deux mécanismes pour un seul fait, et l'étage
+    // choisissait lequel.*
+    //
+    // ⚠️ CE QUI RESTE ICI EST LA LECTURE, PAS LE VERDICT. Le parseur a besoin de la valeur pour poser
+    // `rule.mode` ; il prend celle que la donnée déclare et laisse passer le reste. Une valeur
+    // inconnue ne pose donc aucun mode, et la scène est refusée en aval — le résultat est binaire,
+    // l'arbre ne sort pas.
     const scanValues = (libCtx.controls.scan && libCtx.controls.scan.values) || [];
     let ruleMode = null;
     for (const pair of (settings ? settings.pairs : [])) {
-      if (pair.key === 'scan') {
-        if (!libCtx.controls.scan) continue;   // hors portée : refusé en aval, en nommant sa librairie
-        if (scanValues.includes(pair.value)) {
-          ruleMode = pair.value;
-        } else {
-          throw new ParseError('PARSE_SCAN_UNKNOWN_VALUE_EXPECTED', { p1: pair.value, p2: scanValues.join(', ') }, { line: tok.line, col: 0 });
-        }
+      if (pair.key === 'scan' && libCtx.controls.scan && scanValues.includes(pair.value)) {
+        ruleMode = pair.value;
       }
     }
 

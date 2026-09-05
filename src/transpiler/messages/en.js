@@ -445,8 +445,6 @@ export const MESSAGES = {
     '\'[scale:N]\' has been REMOVED — the temporal scaling of a group is written with the '
     + 'ATTACHED DURATION: \'{A B}:N\'. (Not to be confused with the microtonal scale, which is a '
     + 'runtime control: \'(scale:name key)\'.)',
-  PARSE_SCAN_UNKNOWN_VALUE_EXPECTED:
-    '(scan:{p1}): unknown value (expected: {p2})',
   PARSE_SEED_SEEDING_FLOW_WRITTEN:
     '\'![seed:N]\': re-seeding in the flow is written WITHOUT the at-sign — \'![seed:N]\'. The '
     + 'bracket carries what governs the derivation, and re-seeding is such a procedure; the at-sign '
