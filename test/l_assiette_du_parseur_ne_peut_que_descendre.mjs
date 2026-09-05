@@ -70,8 +70,26 @@ export function arretsImmediats(texte) {
   //     le même AVEC son signe   →  ACCEPTÉ                         ⬅ c'est le SIGNE qui manquait
   // Son message le dit déjà : « ni un appel de composant ni une affectation — le point appelle, le
   // deux-points affecte ». C'est une forme, et la forme est le domaine du parseur.
+  // ⇒ `PARSE_CANAL_ROLENAME_UNKNOWN_PROPERTY` rejoint l'exemption le 2026-09-05, même test décisif —
+  // il refuse une clé qui n'appartient pas à la liste FERMÉE des propriétés d'une entrée :
+  //     clé inconnue partout        →  PARSE_CANAL_ROLENAME_UNKNOWN_PROPERTY
+  //     clé connue ailleurs         →  PARSE_CANAL_ROLENAME_UNKNOWN_PROPERTY   ⬅ le nom n'y change rien
+  //     `mapping.<table inconnue>`  →  RESOLVE_MAPPING_TABLE_UNDECLARED        ⬅ la résolution tient les noms
+  // La dernière ligne montre que le partage est DÉJÀ juste : le parseur tient la liste fermée du
+  // langage, l'étage de résolution tient les noms que les librairies déclarent.
+  //
+  // ⛔⛔ ET TROIS EXEMPTIONS SUR HUIT DISENT QUELQUE CHOSE DE CE JUGE, PAS DES REFUS. Il classe par
+  // la GRAPHIE d'un code — `UNKNOWN`, `NEITHER` — et un refus de FORME emploie les mêmes mots qu'un
+  // refus de nom : « clé inconnue », « ni l'un ni l'autre ». Il s'est donc trompé trois fois sur
+  // huit, toujours dans le même sens : il gonfle le compte.
+  //
+  // ⇒ Ce qui tranche n'est PAS lisible dans le code : c'est le comportement — *le refus tombe-t-il
+  //   pareil quand le nom est CONNU ?* Un instrument qui lit du texte ne peut pas poser cette
+  //   question ; il faudrait l'EXÉCUTER. La liste ci-dessous est donc une béquille honnête, chaque
+  //   entrée portant sa preuve reproductible, et non le bon instrument. Le fait est remonté.
   const JUGE_UNE_FORME = new Set(['PARSE_NAME_READABLE_NEITHER_SETTING',
-                                  'PARSE_DEF_DEFNAME_CLE_NEITHER']);
+                                  'PARSE_DEF_DEFNAME_CLE_NEITHER',
+                                  'PARSE_CANAL_ROLENAME_UNKNOWN_PROPERTY']);
   return { total: arrets.length, codes,
            deNom: codes.filter((c) => PARLE_DUN_NOM.test(c) && !JUGE_UNE_FORME.has(c)) };
 }
@@ -102,14 +120,14 @@ ok(imports.length <= PLAFOND_IMPORTS,
 // doublé : amputé, `[zzcle:1]` en fin de règle n'était plus refusé du tout. Il vit désormais dans
 // `refuserCleDeCrochetInconnue` (resolution.js), garde son code et son message, et COLLECTE avec
 // les autres : « un nom inconnu ET une clé inconnue » rend maintenant 2 erreurs au lieu d'1.
-// ⇒ 5 puis 4 le 2026-09-05 : `PARSE_NAME_READABLE_NEITHER_SETTING` et `PARSE_DEF_DEFNAME_CLE_NEITHER`
+// ⇒ 5, 4 puis 3 le 2026-09-05 : `PARSE_NAME_READABLE_NEITHER_SETTING` et `PARSE_DEF_DEFNAME_CLE_NEITHER`
 // sortent du COMPTE, pas du parseur — ils jugent une forme, et leur place est ici. Le juge porte la
 // preuve de chaque exemption ci-dessus, et un témoin refuse qu'elle s'élargisse.
 //
 // ⚠️ DEUX DE CES QUATRE CRANS NE SONT PAS DU TRAVAIL, ET IL FAUT LE DIRE : un plafond qui descend
 // ressemble à une migration qui avance. Sur 8 → 4, UN SEUL refus a été déplacé, un a été retiré
-// parce qu'il était doublé, et deux sont des exemptions d'un compte trop large.
-const PLAFOND_REFUS_DE_NOM = 4;
+// parce qu'il était doublé, et TROIS sont des exemptions d'un compte trop large.
+const PLAFOND_REFUS_DE_NOM = 3;
 const { total, codes, deNom } = arretsImmediats(parseur);
 ok(codes.length > 50, `SOCLE : ${codes.length} code(s) de refus lus dans parser.js — sous ce seuil, le `
   + `garde est vert parce qu'il ne voit plus les refus, pas parce qu'ils ont migré.`);
