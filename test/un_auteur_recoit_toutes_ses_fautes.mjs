@@ -133,6 +133,25 @@ for (const [nom, faute] of GRAPHIES) {
    + `${erreurs.map((e) => `${e.code}@L${e.line ?? '?'}`).join(', ')}`);
 }
 
+// ── ⛔ UN REFUS DÉPLACÉ À LA RÉSOLUTION COLLECTE AVEC LES AUTRES — c'est le but du déplacement ──
+//
+// `PARSE_UNKNOWN_KEY_KEY_NEITHER` a quitté le parseur le 2026-09-05 (décision de Romain du
+// 2026-08-24 : les refus qui parlent d'un NOM vivent à l'étage de résolution). Le témoin de ce
+// déplacement n'est pas qu'il refuse encore — c'est qu'il refuse SANS ARRÊTER LE RESTE.
+//
+// ⚠️ ET LE SOCLE EST L'AUTRE MOITIÉ : la clé seule doit rendre EXACTEMENT une erreur. Sans lui,
+// « 2 » ne distinguerait pas un refus qui collecte d'un refus qui s'est mis à crier deux fois.
+{
+  const seule = compte(`${H}flag st:0\n-----\nS -> C4 [zzcle:1]\n`);
+  ok(seule === 1, `SOCLE : une clé de crochet inconnue SEULE doit rendre 1 erreur, elle en rend ${seule}`);
+  const codes2 = codes(`${H}flag st:0\n-----\nS -> ZZZ [zzcle:1]\n`);
+  ok(codes2.length === 2, `un nom inconnu ET une clé inconnue doivent rendre 2 erreurs, ils en rendent `
+    + `${codes2.length} (${codes2.join(', ')}). Au parseur, le refus de clé ARRÊTAIT tout : l'auteur `
+    + `ne voyait jamais son terminal inconnu.`);
+  ok(codes2.includes('PARSE_UNKNOWN_KEY_KEY_NEITHER') && codes2.some((c) => c.startsWith('RESOLVE_')),
+     `les DEUX refus doivent être là — vus : ${codes2.join(', ')}`);
+}
+
 // ── LA REPRISE NE FABRIQUE PAS DE FAUTES — une règle abandonnée n'en contamine pas d'autres ───
 {
   const n = compte(`${H}-----\n${FAUTE_DE_FORME_1}T -> D4\nU -> E4\n`);

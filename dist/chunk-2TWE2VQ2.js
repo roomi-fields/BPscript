@@ -22,7 +22,7 @@ import {
   resolveActorAlphabetSource,
   universeControlNames,
   versionDuRegistre
-} from "./chunk-KLA7UBOA.js";
+} from "./chunk-Y4CZ7B3L.js";
 import {
   LexError,
   diagnostic,
@@ -963,6 +963,30 @@ function poserLeDestinataireDesReglages(ast, libCtx) {
     for (const v of Object.values(n)) walk(v);
   };
   walk(ast);
+}
+function refuserCleDeCrochetInconnue(ast, libCtx) {
+  const erreurs = [];
+  if (!libCtx || !libCtx.controlNames) return erreurs;
+  const vus = /* @__PURE__ */ new Set();
+  (function marcher(n, ligne) {
+    if (!n || typeof n !== "object") return;
+    if (Array.isArray(n)) {
+      for (const e of n) marcher(e, ligne);
+      return;
+    }
+    const ici = typeof n.line === "number" ? n.line : ligne;
+    if (n.type === "Qualifier") {
+      for (const paire of n.pairs || []) {
+        const cle = paire && paire.key;
+        if (!cle || paire.value === true || vus.has(cle)) continue;
+        if (libCtx.controlNames.has(cle) || libCtx.runtimeBagControls?.has(cle)) continue;
+        vus.add(cle);
+        erreurs.push(diagnostic("PARSE_UNKNOWN_KEY_KEY_NEITHER", { key: cle }, { line: ici }));
+      }
+    }
+    for (const k in n) marcher(n[k], ici);
+  })(ast, void 0);
+  return erreurs;
 }
 function refuserAttenteNonDeclaree(ast) {
   const connus = /* @__PURE__ */ new Set();
@@ -1965,6 +1989,7 @@ function resoudreSource(source, environnement) {
     poserLaVoixDesTerminaux(ast);
     result.errors.push(...validateControls(ast, libCtx.controls, libCtx.controlsQualified || {}));
     result.errors.push(...refuserAttenteNonDeclaree(ast));
+    result.errors.push(...refuserCleDeCrochetInconnue(ast, libCtx));
     result.errors.push(...refuserEsclaveSansMaitre(ast));
     splitCompoundTerminals(ast, libCtx);
     retirerArdoiseAlphabet(ast);

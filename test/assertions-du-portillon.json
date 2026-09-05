@@ -1,5 +1,5 @@
 {
- "assertions": 19621,
+ "assertions": 19624,
  "gardes": [
   "alias_est_sorti_du_langage.mjs",
   "anti-vacuité [interne]",

@@ -432,6 +432,23 @@ export function poserLeDestinataireDesReglages(ast: any, libCtx: any): void;
  * de direction du socle) : aucun nom n'est écrit ici, et le jour où une direction s'ajoute, ce
  * refus la suit sans une ligne.
  */
+/**
+ * ⛔ UNE CLÉ DE CROCHET QUI N'EST RIEN DE CE QUE LE CROCHET PORTE — REFUSÉE ICI, PAS AU PARSEUR.
+ *
+ * Décision de Romain, 2026-08-24 : quatre étages, un seul canal, et les refus qui parlent d'un NOM
+ * vivent à cet étage. Ce refus vivait dans le parseur ; il y demandait à la librairie ce qu'un mot
+ * est, c'est-à-dire exactement le geste de la résolution.
+ *
+ * ⚠️ IL N'ÉTAIT PAS DOUBLÉ — mesuré par amputation avant le déplacement, contrairement au refus de
+ * `scan` sorti le même jour. Sans lui, `![zzcle:1]` tombait sur « un crochet ne se place pas dans le
+ * flux » : un refus VRAI dans sa conclusion et faux sur la cause, puisque la faute est la clé, pas
+ * la place. *Un refus juste qui nomme la mauvaise cause envoie l'auteur réparer ce qui va bien.*
+ *
+ * ⛔ ET IL NE VOIT PAS LES DRAPEAUX, comme au parseur : une clé NUE (`[monDrapeau]`) est un nom
+ * d'état, et un auteur nomme ses drapeaux comme il veut. Seule une clé qui porte une VALEUR est
+ * jugée — c'est ce que le parseur faisait, et le déplacement ne change pas ce que le langage dit.
+ */
+export function refuserCleDeCrochetInconnue(ast: any, libCtx: any): any[];
 export function refuserAttenteNonDeclaree(ast: any): {
     code: any;
     message: string;

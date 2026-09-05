@@ -20,7 +20,7 @@
 
 import { tokenize, LexError } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
-import { resoudre, noterLePassage, emitSceneMeter, refuserEsclaveSansMaitre, poserLaVoixDesTerminaux, retirerArdoiseAlphabet, applyDefaultActor, hasTempoDirective, applyEnvironmentDefaults, canonicalizeLhsContext, canonicalizeLhsElement, canonicalizeRhsElement, canonicalizeContexts, ctxSymbolToElement, enrichRemoteHeadContext, canalFautif, nomsDeclares, validateCallVocabulary, terminauxEnPortee, validateTerminals, restesDeSegmentation, emitSceneLibRefs, deriveAlphabetFromTuning, emitActorLibRefs, emitNoteTerminals, resolveHomomorphismMarkers, annotateBackticks, poserLeDestinataireDesReglages, refuserAttenteNonDeclaree, refuserNomsEnDouble, applySceneValues, validateReferences, splitCompoundTerminals, chargerPorteesPermises, singleCharAlphabetSet, splitLhsElement, splitRhsElement, tokenizeCompoundName, makeSplitAtom } from './resolution.js';
+import { resoudre, noterLePassage, emitSceneMeter, refuserEsclaveSansMaitre, poserLaVoixDesTerminaux, retirerArdoiseAlphabet, applyDefaultActor, hasTempoDirective, applyEnvironmentDefaults, canonicalizeLhsContext, canonicalizeLhsElement, canonicalizeRhsElement, canonicalizeContexts, ctxSymbolToElement, enrichRemoteHeadContext, canalFautif, nomsDeclares, validateCallVocabulary, terminauxEnPortee, validateTerminals, restesDeSegmentation, emitSceneLibRefs, deriveAlphabetFromTuning, emitActorLibRefs, emitNoteTerminals, resolveHomomorphismMarkers, annotateBackticks, poserLeDestinataireDesReglages, refuserAttenteNonDeclaree, refuserCleDeCrochetInconnue, refuserNomsEnDouble, applySceneValues, validateReferences, splitCompoundTerminals, chargerPorteesPermises, singleCharAlphabetSet, splitLhsElement, splitRhsElement, tokenizeCompoundName, makeSplitAtom } from './resolution.js';
 import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, universeControlNames, nomsDeTerminaux, groupeDUnicite, brancherLeCompilateur } from './libs.js';
 import { describeVocabulary } from './vocabulaire.js';
 import { segmenter } from './segmentation.js';
@@ -504,6 +504,9 @@ export function resoudreSource(source, environnement) {
     poserLaVoixDesTerminaux(ast);
     result.errors.push(...validateControls(ast, libCtx.controls, libCtx.controlsQualified || {}));
     result.errors.push(...refuserAttenteNonDeclaree(ast));  // un point d'attente nomme ce qu'il attend
+    // Une clé de crochet qui n'est ni un contrôle ni un drapeau — refus DÉPLACÉ du parseur le
+    // 2026-09-05 : il demandait à la librairie ce qu'un mot est, c'est le geste de cet étage.
+    result.errors.push(...refuserCleDeCrochetInconnue(ast, libCtx));
     result.errors.push(...refuserEsclaveSansMaitre(ast));   // un rejeu de gabarit a un maître à rejouer
 
     // ⛔ LE DÉDOUBLONNAGE DES DIAGNOSTICS EST ÉLAGUÉ — il n'avait plus de producteur vivant.

@@ -7546,11 +7546,15 @@ function parse(tokens, opts = {}) {
       if (!libCtx.ruleAllowedControls.has(key)) return;
       throw new ParseError('PARSE_KEY_BRACKET_CARRIES_WHAT', { key }, tok);
     }
-    // Ne JAMAIS suggérer « utiliser (clé:…) » : les deux formes ne sont pas des synonymes
-    // (constat bpx 2026-07-10). `![rotate:N]` réordonne la séquence (contrôle moteur sériel) ;
-    // `(rotate:N)` transpose (paramètre de runtime, opaque). Suivre la suggestion ferait perdre
-    // le réordre EN SILENCE. On nomme les deux familles, on n'en recommande aucune.
-    throw new ParseError('PARSE_UNKNOWN_KEY_KEY_NEITHER', { key }, tok);
+    // ⛔ LE REFUS D'UNE CLÉ INCONNUE A QUITTÉ CE PARSEUR — décision de Romain, 2026-08-24 : les refus
+    // qui parlent d'un NOM vivent à l'étage de résolution. Il demandait à la librairie ce qu'un mot
+    // EST, et c'est exactement le geste de cet étage-là. Il vit dans `refuserCleDeCrochetInconnue`
+    // (resolution.js), qui garde son code et son message — un code ne se renomme pas.
+    //
+    // ⚠️ CE QUI NE CHANGE PAS : le message ne suggère JAMAIS « utiliser (clé:…) ». Les deux formes
+    // ne sont pas des synonymes (constat bpx 2026-07-10) — `![rotate:N]` réordonne la séquence,
+    // `(rotate:N)` transpose. Suivre la suggestion ferait perdre le réordre EN SILENCE.
+    return;
   }
 
   // tempoScope : 'absolute' (défaut — A[/N] suffixe d'élément, [/N] niveau-règle)

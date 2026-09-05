@@ -71,7 +71,11 @@ ok(imports.length <= PLAFOND_IMPORTS,
 // parseur retiré, `(scan:zzinconnu)` reste refusé par `validateControls`, qui nomme la valeur, le
 // contrôle et les valeurs permises. Son message est parti du catalogue dans le même geste : un
 // message sans producteur enseigne un refus qui n'existe plus.
-const PLAFOND_REFUS_DE_NOM = 7;
+// ⇒ 6 le 2026-09-05, quand `PARSE_UNKNOWN_KEY_KEY_NEITHER` a été DÉPLACÉ — celui-là n'était pas
+// doublé : amputé, `[zzcle:1]` en fin de règle n'était plus refusé du tout. Il vit désormais dans
+// `refuserCleDeCrochetInconnue` (resolution.js), garde son code et son message, et COLLECTE avec
+// les autres : « un nom inconnu ET une clé inconnue » rend maintenant 2 erreurs au lieu d'1.
+const PLAFOND_REFUS_DE_NOM = 6;
 const { total, codes, deNom } = arretsImmediats(parseur);
 ok(codes.length > 50, `SOCLE : ${codes.length} code(s) de refus lus dans parser.js — sous ce seuil, le `
   + `garde est vert parce qu'il ne voit plus les refus, pas parce qu'ils ont migré.`);

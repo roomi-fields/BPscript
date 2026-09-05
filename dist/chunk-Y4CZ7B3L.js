@@ -10103,7 +10103,7 @@ function parse(tokens, opts = {}) {
       if (!libCtx.ruleAllowedControls.has(key)) return;
       throw new ParseError("PARSE_KEY_BRACKET_CARRIES_WHAT", { key }, tok);
     }
-    throw new ParseError("PARSE_UNKNOWN_KEY_KEY_NEITHER", { key }, tok);
+    return;
   }
   function parseVitesseParenthese() {
     expect(T.LPAREN);

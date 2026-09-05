@@ -1527,6 +1527,50 @@ export function poserLeDestinataireDesReglages(ast, libCtx) {
  * de direction du socle) : aucun nom n'est écrit ici, et le jour où une direction s'ajoute, ce
  * refus la suit sans une ligne.
  */
+/**
+ * ⛔ UNE CLÉ DE CROCHET QUI N'EST RIEN DE CE QUE LE CROCHET PORTE — REFUSÉE ICI, PAS AU PARSEUR.
+ *
+ * Décision de Romain, 2026-08-24 : quatre étages, un seul canal, et les refus qui parlent d'un NOM
+ * vivent à cet étage. Ce refus vivait dans le parseur ; il y demandait à la librairie ce qu'un mot
+ * est, c'est-à-dire exactement le geste de la résolution.
+ *
+ * ⚠️ IL N'ÉTAIT PAS DOUBLÉ — mesuré par amputation avant le déplacement, contrairement au refus de
+ * `scan` sorti le même jour. Sans lui, `![zzcle:1]` tombait sur « un crochet ne se place pas dans le
+ * flux » : un refus VRAI dans sa conclusion et faux sur la cause, puisque la faute est la clé, pas
+ * la place. *Un refus juste qui nomme la mauvaise cause envoie l'auteur réparer ce qui va bien.*
+ *
+ * ⛔ ET IL NE VOIT PAS LES DRAPEAUX, comme au parseur : une clé NUE (`[monDrapeau]`) est un nom
+ * d'état, et un auteur nomme ses drapeaux comme il veut. Seule une clé qui porte une VALEUR est
+ * jugée — c'est ce que le parseur faisait, et le déplacement ne change pas ce que le langage dit.
+ */
+export function refuserCleDeCrochetInconnue(ast, libCtx) {
+  const erreurs = [];
+  if (!libCtx || !libCtx.controlNames) return erreurs;
+  const vus = new Set();
+  // ⛔ LE PARCOURS EST GÉNÉRIQUE, ET C'EST UNE MESURE QUI L'A EXIGÉ. Ma première écriture ne lisait
+  // que `rule.qualifiers` — la place où j'avais VU le défaut. Le sac écrit EN FLUX (`![clé:…]`)
+  // n'y atterrit pas : il tombait alors sur « un crochet ne se place pas dans le flux », le refus
+  // moins juste que ce déplacement existe pour remplacer. *Un refus se pose sur l'espace où sa
+  // faute peut vivre, jamais sur l'endroit où on l'a rencontrée.*
+  (function marcher(n, ligne) {
+    if (!n || typeof n !== 'object') return;
+    if (Array.isArray(n)) { for (const e of n) marcher(e, ligne); return; }
+    const ici = typeof n.line === 'number' ? n.line : ligne;
+    if (n.type === 'Qualifier') {
+      for (const paire of n.pairs || []) {
+        const cle = paire && paire.key;
+        // `value: true` marque une clé NUE — un drapeau, jamais un contrôle.
+        if (!cle || paire.value === true || vus.has(cle)) continue;
+        if (libCtx.controlNames.has(cle) || libCtx.runtimeBagControls?.has(cle)) continue;
+        vus.add(cle);
+        erreurs.push(diagnostic('PARSE_UNKNOWN_KEY_KEY_NEITHER', { key: cle }, { line: ici }));
+      }
+    }
+    for (const k in n) marcher(n[k], ici);
+  })(ast, undefined);
+  return erreurs;
+}
+
 export function refuserAttenteNonDeclaree(ast) {
   const connus = new Set();
   for (const i of (ast.inputs || [])) for (const n of (i.names || (i.name ? [i.name] : []))) connus.add(n);
