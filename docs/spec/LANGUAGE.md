@@ -1765,9 +1765,9 @@ il ancre la regle.
 $ S -> C4 D4
 ```
 
-L'arbre porte `lhs = [TemplateAnchor{kind:"master"}, Symbol{S}]`. L'espace tranche entre les deux
-emplois du signe : colle a un identifiant, `$X` nomme un gabarit ; suivi d'une espace, `$` ancre --
-cf. l'espace, delimiteur de termes. L'ancre reste ouverte jusqu'a sa fermeture.
+L'espace tranche entre les deux emplois du signe : colle a un identifiant, `$X` nomme un gabarit ;
+suivi d'une espace, `$` ancre -- cf. l'espace, delimiteur de termes. L'ancre reste ouverte jusqu'a
+sa fermeture.
 
 ### `template` -- le catalogue des formes
 
