@@ -46,7 +46,19 @@ destination text(out:true, writable:false)
 
 def actor(alphabet alphabet, tuning tuning, octaves octaves, destination out, eval eval)
 
-def signal
+// Ce qu'une UNITE mesure, et de combien elle s'ecarte de l'unite de reference de sa quantite.
+// La quantite dit ce qui est mesure : une duree et une frequence ne se comparent pas.
+def unit(quantity(duration, interval, frequency, tempo), ratio:1)
+unit s(quantity:duration)
+unit ms(quantity:duration, ratio:0.001)
+unit c(quantity:interval)
+unit Hz(quantity:frequency)
+unit bpm(quantity:tempo)
+
+// Comment un flux se LIT. `signal` est le cas ordinaire : il n'ecrit aucune des trois conventions
+// et n'en subit donc aucune. Ce que la spec dit de `phase` et `logic` s'ecrit ici, et nulle part
+// ailleurs : les bornes, ce qui arrive au-dela, et ce qui fait evenement.
+def signal(range, overflow(clamp, wrap), event(level, transition))
 signal pitch
-signal phase
-signal logic
+signal phase(range(0, 1), overflow:wrap)
+signal logic(range(0, 1), event:transition)

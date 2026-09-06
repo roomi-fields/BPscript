@@ -2292,6 +2292,23 @@ function parse(tokens, opts = {}) {
     // la forme que l'arbre porte (`kind: 'convention'`, contrat lu par BPx et bp3-frontend).
     if (racineDe(mot) === 'signal') {
       const varType = { kind: 'convention', convention: mot };
+      // ⛔ ET UNE CONVENTION PORTE UN CORPS DEPUIS LE 2026-09-05 — arbitrage de Romain. Ce que la
+      // spec dit de `phase` et `logic` — les bornes, ce qui arrive au-delà, ce qui fait événement —
+      // n'était écrit NULLE PART : les quatre conventions étaient des objets vides, et Romain l'a
+      // nommé : *« on a défini des types qui ne servent jamais »*. Elles ne servaient pas parce
+      // qu'elles ne pouvaient rien porter.
+      //
+      // ⚠️ LA FORME D'ARBRE NE CHANGE PAS POUR AUTANT : `kind: 'convention'` est un contrat lu par
+      // BPx et bp3-frontend. Le sac s'AJOUTE quand il est écrit ; une convention nue sort exactement
+      // comme avant, au champ près qui n'existe pas.
+      if (at(T.LPAREN)) {
+        refuserEspaceAvantLeSac(`${mot} ${premier}`, tok);
+        const sac = parseRuntimeQualifier();
+        const corps = lireCorpsApresLeSac();
+        return { type: 'VarDirective', names: [premier], varType, settings: sac,
+                 ...(corps ? { corps } : {}), ...(departs.length ? { initial: departs } : {}),
+                 line: tok.line };
+      }
       const d = { type: 'VarDirective', names: [premier], varType, line: tok.line };
       return departs.length ? { ...d, initial: departs } : d;
     }
@@ -5600,7 +5617,13 @@ function parse(tokens, opts = {}) {
         advance();                       // .
         key = advance().value;           // le contrôle
       }
-      refuserTempx(key, keyTok, '(');
+      // ⛔ LA PIERRE TOMBALE VISE LE FLUX, PAS LE DÉCLARATIF — mesuré le 2026-09-05. Le refus dit
+      // « `tempo` n'est pas écrit dans une règle », et il mordait AUSSI dans une source de
+      // librairie, où aucune règle n'existe : `def unit(quantity(duration, tempo))` était refusé
+      // parce qu'un nom nu de vocabulaire a la même forme qu'une clé de réglage. Le refus reste
+      // entier là où il a un sens — un `(tempo:2)` de règle est un réglage muet — et le déclaratif
+      // n'est pas son espace. *Un refus se pose à l'usage, et il est positionnel.*
+      if (!enDeclaratif) refuserTempx(key, keyTok, '(');
       const pos = { line: keyTok.line, col: keyTok.col };
       const sub = { ...(subject !== null ? { subject } : {}), ...(libDuReglage ? { lib: libDuReglage } : {}) };
       // ── UNE CLÉ OUVRE UNE PARENTHÈSE — LA VALEUR EST UN OBJET ────────────────────────────────

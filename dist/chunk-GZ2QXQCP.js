@@ -223,6 +223,7 @@ var MESSAGES = {
   LIBS_VALUE_NAME_RESERVED: "Valeur de librairie '{vname}' : nom r\xE9serv\xE9 (directive moteur ou contr\xF4le existant) \u2014 renommer dans la librairie",
   // [À TRADUIRE]
   PARSE_TEMPLATE_ANCHORS_ASYMMETRIC: "ancres de gabarit asym\xE9triques : LHS a {gauche}, RHS a {droite}",
+  RESOLVE_VALUE_OUTSIDE_ITS_VOCABULARY: "'{nom}' writes '{cle}:{ecrit}', which the prototype does not list. The example shows the words this member accepts: {mots}. Nothing declares a closed list here \u2014 showing the values IS the declaration, and the first one is the default.",
   RESOLVE_VALUE_CONTRADICTS_ITS_EXAMPLE: "'{nom}' writes '{cle}:{ecrit}', which is a {genre} where the example asks for a {attendu}. A member says what it expects by the example it carries: nothing declares a type here, the prototype simply shows one value of the kind it takes. Write a {attendu}, or change what the prototype shows.",
   RESOLVE_REPLAY_WITHOUT_MASTER: "'&{name}' replays a template that nothing captures \u2014 no '${name}' in this scene. The name is what pairs the master with the slave: with no master, the replay has no choice to repeat. Write '${name}' where the pattern is captured.",
   // [À TRADUIRE]

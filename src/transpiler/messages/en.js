@@ -704,6 +704,10 @@ export const MESSAGES = {
   // [À TRADUIRE]
   PARSE_TEMPLATE_ANCHORS_ASYMMETRIC:
     'ancres de gabarit asymétriques : LHS a {gauche}, RHS a {droite}',
+  RESOLVE_VALUE_OUTSIDE_ITS_VOCABULARY:
+    '\'{nom}\' writes \'{cle}:{ecrit}\', which the prototype does not list. The example shows the '
+    + 'words this member accepts: {mots}. Nothing declares a closed list here — showing the values '
+    + 'IS the declaration, and the first one is the default.',
   RESOLVE_VALUE_CONTRADICTS_ITS_EXAMPLE:
     '\'{nom}\' writes \'{cle}:{ecrit}\', which is a {genre} where the example asks for a {attendu}. '
     + 'A member says what it expects by the example it carries: nothing declares a type here, the '

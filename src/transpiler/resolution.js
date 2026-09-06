@@ -174,7 +174,12 @@ function heriterDesPrototypes(ast) {
  */
 function genreDeLaValeur(v) {
   if (v === true || v === false) return null;
-  if (typeof v === 'number') return Number.isInteger(v) ? 'integer' : 'float';
+  // ⛔ UN LITTÉRAL ROND NE DIT PAS « ENTIER » — mesuré le 2026-09-05 sur `def unit(ratio:1)`, dont
+  // l'exemplaire `ms` écrit `ratio:0.001`. L'auteur a écrit `1` parce que c'est la valeur neutre,
+  // pas pour interdire les décimales : un nombre écrit ne distingue pas ce que le nombre ne
+  // distingue pas. C'est la même limite que `true`, et elle a la même issue — la distinction
+  // s'obtient en NOMMANT le type (`integer n`), jamais en devinant depuis la graphie d'un exemple.
+  if (typeof v === 'number') return 'number';
   if (typeof v === 'string') return 'symbol';
   if (v && typeof v === 'object' && v.type === 'SettingBag') return 'bag';
   return null;
@@ -191,6 +196,32 @@ function attenduDe(paire) {
 }
 
 /**
+ * UN EXEMPLAIRE EN COLLECTION DE NOMS NUS EST UN VOCABULAIRE FERMÉ — et il rend le mot `enum`
+ * inutile, ce que Romain a tranché le 2026-09-05 : *« c'est un enum non ? »*, puis l'inverse par
+ * construction — la collection d'exemplaires EST l'enum, et elle dit en plus lequel est le défaut.
+ *
+ *     def unit(quantity(duration, interval, frequency))   le prototype montre les valeurs admises
+ *     unit ms(quantity:duration)                          l'exemplaire en choisit une
+ *
+ * ⚠️ ÉCRIRE UNE SEULE VALEUR EST LÉGITIME, et c'est ce qui distingue ce cas du sac ordinaire : la
+ * collection dit le GENRE — « un des membres montrés » — et permet la multiplicité, elle ne
+ * l'impose pas. Le tableau de la charte le dit déjà : `scope(flow, rule)` est *optionnel,
+ * collection*, jamais *obligatoirement plusieurs*.
+ *
+ * Rend la liste des mots admis, ou `null` si l'exemplaire n'est pas un vocabulaire.
+ */
+function vocabulaireDe(paire) {
+  const v = paire && paire.value;
+  if (!v || typeof v !== 'object' || v.type !== 'SettingBag') return null;
+  const membres = v.pairs || [];
+  if (!membres.length) return null;
+  // Un seul nom nu qui n'est PAS une valeur ne fait pas un vocabulaire : `terminals()` est un sac
+  // vide, `params(gain:1)` un sac de réglages. Seule une suite de noms NUS énumère.
+  if (!membres.every((p) => p && p.value === true)) return null;
+  return membres.map((p) => p.key);
+}
+
+/**
  * UNE VALEUR PEUT-ELLE PRENDRE LA PLACE DE SON EXEMPLAIRE ?
  *
  * ⛔ LA QUESTION N'EST JAMAIS « DE QUEL GENRE EST CETTE VALEUR », qui n'a pas de réponse : `64` est
@@ -200,10 +231,13 @@ function attenduDe(paire) {
  * `float` accepte un entier : `442` est un diapason valable, et refuser l'écriture sans point
  * demanderait à l'auteur de connaître la déclaration pour écrire un nombre.
  */
-function valeurCompatible(genre, attendu) {
+function valeurCompatible(genre, attendu, valeur) {
   if (!genre || !attendu) return true;          // rien à comparer : on ne conclut pas
   if (genre === attendu) return true;
-  if (attendu === 'float' && genre === 'integer') return true;
+  // `integer` est le SEUL qui regarde la valeur : c'est la seule exigence qu'un littéral ne peut
+  // pas porter, donc la seule qui doive être nommée pour exister.
+  if (attendu === 'integer') return Number.isInteger(valeur);
+  if ((attendu === 'float' || attendu === 'number') && genre === 'number') return true;
   return false;
 }
 
@@ -245,12 +279,28 @@ export function refuserValeurContraireALExemplaire(ast) {
       if (!paire || paire.herite) continue;          // l'hérité vient du prototype, il ne se juge pas
       const modele = exemplaireDe(decl.parent, paire.key);
       if (!modele) continue;                          // membre non déclaré : ce n'est pas mon sujet
+      // LE VOCABULAIRE FERMÉ D'ABORD — il est plus précis que le genre, et le genre seul y dirait
+      // « un sac est demandé » là où c'est UN MOT du sac qui l'est.
+      const mots = vocabulaireDe(modele);
+      if (mots) {
+        const ecrits = typeof paire.value === 'string' ? [paire.value]
+          : (paire.value && paire.value.type === 'SettingBag'
+             ? (paire.value.pairs || []).map((p) => p.key) : null);
+        if (!ecrits) continue;                        // ni un mot ni une suite de mots : je me tais
+        const hors = ecrits.filter((m) => !mots.includes(m));
+        if (hors.length) {
+          erreurs.push(diagnostic('RESOLVE_VALUE_OUTSIDE_ITS_VOCABULARY',
+            { nom, cle: paire.key, ecrit: hors.join(', '), mots: mots.join(', ') },
+            { line: paire.line || decl.noeud.line || 0 }));
+        }
+        continue;
+      }
       const attendu = attenduDe(modele);
       const genre = genreDeLaValeur(paire.value);
       // Un exemplaire qui est un OBJET du registre (`destination`, `alphabet`) attend un nom : le
       // vérifier ici demanderait de résoudre la famille, ce que cet étage ne sait pas encore faire.
       if (attendu && !GENRES.has(attendu)) continue;
-      if (valeurCompatible(genre, attendu)) continue;
+      if (valeurCompatible(genre, attendu, paire.value)) continue;
       erreurs.push(diagnostic('RESOLVE_VALUE_CONTRADICTS_ITS_EXAMPLE',
         { nom, cle: paire.key, ecrit: String(paire.value), genre: genre || 'unknown', attendu },
         { line: paire.line || decl.noeud.line || 0 }));
@@ -260,7 +310,7 @@ export function refuserValeurContraireALExemplaire(ast) {
 }
 
 /** Les genres que ce juge sait comparer. Hors d'eux, il se tait — voir ci-dessus. */
-const GENRES = new Set(['integer', 'float', 'boolean', 'symbol', 'bag']);
+const GENRES = new Set(['integer', 'float', 'number', 'boolean', 'symbol', 'bag']);
 
 /**
  * RÉSOUT un arbre contre son environnement, et rend ce que l'étage suivant attend.

@@ -22,12 +22,12 @@ import {
   resolveActorAlphabetSource,
   universeControlNames,
   versionDuRegistre
-} from "./chunk-P4AS54XA.js";
+} from "./chunk-CPVYXMUO.js";
 import {
   LexError,
   diagnostic,
   tokenize
-} from "./chunk-DEERXBZI.js";
+} from "./chunk-GZ2QXQCP.js";
 
 // src/transpiler/actorResolver.js
 function expandAlphabetTerminals(alphabetLib, octavesOverride) {
@@ -321,7 +321,7 @@ function heriterDesPrototypes(ast) {
 }
 function genreDeLaValeur(v) {
   if (v === true || v === false) return null;
-  if (typeof v === "number") return Number.isInteger(v) ? "integer" : "float";
+  if (typeof v === "number") return "number";
   if (typeof v === "string") return "symbol";
   if (v && typeof v === "object" && v.type === "SettingBag") return "bag";
   return null;
@@ -330,10 +330,19 @@ function attenduDe(paire) {
   if (paire.type) return paire.type;
   return genreDeLaValeur(paire.value);
 }
-function valeurCompatible(genre, attendu) {
+function vocabulaireDe(paire) {
+  const v = paire && paire.value;
+  if (!v || typeof v !== "object" || v.type !== "SettingBag") return null;
+  const membres = v.pairs || [];
+  if (!membres.length) return null;
+  if (!membres.every((p) => p && p.value === true)) return null;
+  return membres.map((p) => p.key);
+}
+function valeurCompatible(genre, attendu, valeur) {
   if (!genre || !attendu) return true;
   if (genre === attendu) return true;
-  if (attendu === "float" && genre === "integer") return true;
+  if (attendu === "integer") return Number.isInteger(valeur);
+  if ((attendu === "float" || attendu === "number") && genre === "number") return true;
   return false;
 }
 function refuserValeurContraireALExemplaire(ast) {
@@ -356,10 +365,24 @@ function refuserValeurContraireALExemplaire(ast) {
       if (!paire || paire.herite) continue;
       const modele = exemplaireDe(decl.parent, paire.key);
       if (!modele) continue;
+      const mots = vocabulaireDe(modele);
+      if (mots) {
+        const ecrits = typeof paire.value === "string" ? [paire.value] : paire.value && paire.value.type === "SettingBag" ? (paire.value.pairs || []).map((p) => p.key) : null;
+        if (!ecrits) continue;
+        const hors = ecrits.filter((m) => !mots.includes(m));
+        if (hors.length) {
+          erreurs.push(diagnostic(
+            "RESOLVE_VALUE_OUTSIDE_ITS_VOCABULARY",
+            { nom, cle: paire.key, ecrit: hors.join(", "), mots: mots.join(", ") },
+            { line: paire.line || decl.noeud.line || 0 }
+          ));
+        }
+        continue;
+      }
       const attendu = attenduDe(modele);
       const genre = genreDeLaValeur(paire.value);
       if (attendu && !GENRES.has(attendu)) continue;
-      if (valeurCompatible(genre, attendu)) continue;
+      if (valeurCompatible(genre, attendu, paire.value)) continue;
       erreurs.push(diagnostic(
         "RESOLVE_VALUE_CONTRADICTS_ITS_EXAMPLE",
         { nom, cle: paire.key, ecrit: String(paire.value), genre: genre || "unknown", attendu },
@@ -369,7 +392,7 @@ function refuserValeurContraireALExemplaire(ast) {
   }
   return erreurs;
 }
-var GENRES = /* @__PURE__ */ new Set(["integer", "float", "boolean", "symbol", "bag"]);
+var GENRES = /* @__PURE__ */ new Set(["integer", "float", "number", "boolean", "symbol", "bag"]);
 function resoudre(ast, environnement) {
   const diagnostics = [];
   let examines = 0;

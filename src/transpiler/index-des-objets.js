@@ -215,7 +215,17 @@ const copie = (o) => ({ ...o, membres: { ...o.membres }, chaine: [...o.chaine] }
  * @property {string} famille                    Le mot d'invocation de sa famille.
  * @property {string | null} derive              Le prototype dont il dérive, s'il en a un.
  * @property {{ [membre: string]: any }} membres Ce que sa librairie lui donne.
- * @property {string[]} [chaine]                 Sa chaîne de dérivation, de lui vers sa racine.
+ * @property {string | null} place               La place où son mot s'écrit ; `null` s'il n'en a pas.
+ * @property {string[]} chaine                   Sa chaîne de dérivation, de lui vers sa racine.
+ * @property {string} librairie                  La librairie qui le déclare.
+ * @property {boolean} documented                Si sa librairie porte la marque de documentation.
+ *
+ * ⛔ LES QUATRE DERNIERS ONT ÉTÉ AJOUTÉS LE 2026-09-05, sur une mesure de kanopi qui n'en nommait
+ * QU'UN. Il a relevé `place`, absent du type et rendu par 665 objets sur 665 ; en rouvrant la
+ * fonction, `librairie` et `documented` manquaient aussi, et `chaine` était marqué optionnel alors
+ * qu'elle est toujours là — 674 sur 674 pour les quatre. *Un garde répare l'espace où le défaut peut
+ * vivre, jamais l'endroit où il s'est montré.* Une description plus pauvre que ce que la fonction
+ * rend force le consommateur à décrire mon code chez lui.
  */
 
 /**
