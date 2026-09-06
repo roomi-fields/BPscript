@@ -22,6 +22,61 @@ import { diagnostic } from './diagnostics.js';
 import { chargerLesLibrairies, placesDesLibrairies } from './librairies.js';
 import { sourcesDeLibrairie } from './sources.js';
 import { CHAMPS_DE_FICHIER } from './libs-champs.js';
+/**
+ * LA RÈGLE : le mot est le prototype le plus profond présent dans la chaîne de dérivation de
+ * TOUTES les entrées du catalogue ; à défaut d'entrée typée, le nom du fichier.
+ *
+ *     audio.wave     dérive de `audio`, qui dérive de `destination`   ⇒ le mot est `audio`
+ *     scale.bilaval  dérive de `degree`, qui dérive de `scale`        ⇒ le mot est `scale`
+ *
+ * ⚠️ NI LE PREMIER MAILLON NI LA RACINE — les deux se trompent sur la moitié des catalogues, et je
+ * les ai essayés l'un après l'autre. Pour les contrôles le mot est le premier maillon (la racine
+ * serait `destination`) ; pour les gammes c'est la racine (le premier maillon serait `interval`).
+ * Ce qui est vrai des deux est que le mot apparaît dans TOUTES les chaînes, et qu'il est le plus
+ * profond à le faire.
+ *
+ * ⚠️ ET LA CHAÎNE SE REMONTE DANS `types`, PAS AILLEURS — le prototype d'un catalogue y vit
+ * (décision du 2026-08-31). Une table de dérivation bâtie sur tous les catalogues écrase les
+ * homonymes : `scale` est un prototype de `types` ET un contrôle de `transpo`, et elle faisait
+ * alors dériver les 185 gammes de `transpo`. *Un instrument indexé par NOM ne distingue pas deux
+ * objets homonymes* — mesuré le 2026-09-06, sur trois instruments faux d'affilée.
+ *
+ * Éprouvée sur les 21 catalogues avant le retrait : elle rendait le mot que `resolves` déclarait,
+ * 21 fois sur 21.
+ *
+ * @param {string} cle      la clé du catalogue dans le registre — le nom du fichier
+ * @param {object} lib      le catalogue
+ * @param {object} LIBS     le registre entier — seul `types` y est lu
+ * @param {object} PLACES   les places par catalogue, pour descendre d'un niveau
+ * @returns {string}
+ */
+function motDUneFamille(cle, lib, LIBS, PLACES) {
+  const derive = new Map();
+  for (const [k, v] of Object.entries((LIBS && LIBS.types) || {})) {
+    if (k.startsWith('_') || !v || typeof v !== 'object' || Array.isArray(v)) continue;
+    if (typeof v._derive === 'string' && v._derive) derive.set(k, v._derive);
+  }
+  const chaineDe = (n) => {
+    const out = []; let c = n; const vus = new Set();
+    while (c && !vus.has(c)) { vus.add(c); out.push(c); c = derive.get(c); }
+    return out;
+  };
+  const places = new Set(((PLACES && PLACES[cle]) || []).filter((p) => p !== '_deduites'));
+  const types = new Set();
+  const compter = (o) => {
+    for (const [k, v] of Object.entries(o || {})) {
+      if (k.startsWith('_') || !v || typeof v !== 'object' || Array.isArray(v)) continue;
+      if (typeof v._derive === 'string' && v._derive) types.add(v._derive);
+    }
+  };
+  compter(lib);
+  for (const p of places) compter(lib[p]);
+  if (!types.size) return cle;
+  const chaines = [...types].map(chaineDe);
+  for (const candidat of chaines[0]) if (chaines.every((c) => c.includes(candidat))) return candidat;
+  return cle;
+}
+
 // Le schéma de SYNTAXE — les mots de la grammaire, en portée sans invocation (Romain, 2026-09-03).
 import { SYNTAXE } from './syntaxe-data.js';
 
@@ -173,11 +228,45 @@ function universeControlNames() {
  * ⇒ Le tri se pose donc ICI, là où l'autorité se DÉCIDE, et non dans un artefact qui la précède.
  *   Un ordre de chargement reste libre de changer : il ne décide plus de rien.
  */
+/**
+ * LE MOT QUE SERT UN FICHIER DU REGISTRE — `motDuFichier('alphabets')` rend `'alphabet'`.
+ *
+ * ⛔ EXPOSEE PARCE QUE `resolves` EST SORTI. Le mot se derive de la structure des objets, et ce
+ * calcul demande le registre ENTIER et ses places : le reproduire chez chaque appelant serait
+ * autant de copies d'un seul fait, et chacune se tromperait a sa facon. Une seule ecriture, et
+ * quiconque veut le mot d'un fichier passe par ici.
+ */
+let _mots = null;
+let _motsVersion = -1;
+function motDuFichier(cle) {
+  const LIBS = leRegistre();
+  // ⛔ LA TABLE SE MEMORISE SOUS LA VERSION DU REGISTRE. Le calcul demande `placesDesLibrairies`,
+  // qui lit le registre ENTIER : le refaire a chaque appel a fait passer le corpus de moins de
+  // 120 s a plus — mesure du garde de bouclage, 2026-09-07. Une derivation juste et lente devient
+  // un defaut a son tour.
+  const version = versionDuRegistre();
+  if (!_mots || _motsVersion !== version) {
+    const PLACES = placesDesLibrairies(LIBS);
+    _mots = new Map();
+    for (const [k, lib] of Object.entries(LIBS)) {
+      if (!lib || typeof lib !== 'object' || Array.isArray(lib)) continue;
+      _mots.set(k, motDUneFamille(k, lib, LIBS, PLACES));
+    }
+    _motsVersion = version;
+  }
+  return _mots.get(cle) ?? null;
+}
+
 function motsDInvocation() {
   const table = new Map();
-  for (const fichier of Object.keys(leRegistre()).sort()) {
-    const lib = leRegistre()[fichier];
-    const mot = lib && typeof lib === 'object' ? lib.resolves : null;
+  // ⛔ LE REGISTRE ET SES PLACES SE PRENNENT UNE FOIS, HORS DE LA BOUCLE. Les rappeler à chaque
+  // tour les recalculait pour chaque fichier — et `placesDesLibrairies` lit le registre entier.
+  const LIBS = leRegistre();
+  const PLACES = placesDesLibrairies(LIBS);
+  for (const fichier of Object.keys(LIBS).sort()) {
+    const lib = LIBS[fichier];
+    if (!lib || typeof lib !== 'object') continue;
+    const mot = motDuFichier(fichier);
     if (!mot) continue;
     if (!table.has(mot)) table.set(mot, []);
     table.get(mot).push(fichier);
@@ -304,9 +393,11 @@ function loadLib(name, subkey) {
 function librairiesQuiDeclarent(nom) {
   if (!nom) return [];
   const mots = [];
-  for (const [cle, lib] of Object.entries(leRegistre())) {
+  const REG = leRegistre();
+  const PL = placesDesLibrairies(REG);
+  for (const [cle, lib] of Object.entries(REG)) {
     if (!lib || typeof lib !== 'object' || cle.includes('/')) continue;
-    const mot = (typeof lib.resolves === 'string' && lib.resolves) || cle;
+    const mot = motDuFichier(cle);
     let declare = false;
     const marcher = (o) => {
       for (const [k, v] of Object.entries(o || {})) {
@@ -435,7 +526,9 @@ function resolveActorAlphabetSource(nom, directives) {
     const e = loadJsonFile(fichiers[i]);
     const entry = e && (e.alphabets?.[nom] || e[nom]);
     if (entry && nomsDeTerminaux(entry)) {
-      return { entry, lib: i === 0 ? null : (leRegistre()[fichiers[i]] || {}).resolves || fichiers[i] };
+      // Le MOT que sert ce fichier, jamais son nom : c'est la moitie de l'arbitrage du 2026-08-22
+      // rappelee ci-dessus. Il se derive maintenant, au lieu de se lire dans `resolves`.
+      return { entry, lib: i === 0 ? null : motDuFichier(fichiers[i]) || fichiers[i] };
     }
   }
   const standard = loadLib('alphabet', nom);
@@ -1189,7 +1282,7 @@ function loadLibsFromDirectives(directives) {
   return ctx;
 }
 
-export { placesDesLibrairies };
+export { placesDesLibrairies, motDuFichier};
 export { leRegistre, versionDuRegistre, brancherLeCompilateur, loadLib, directiveDeclareeParLaLibrairie, librairiesQuiDeclarent, groupeDUnicite, fichierDeLAxe, resolveActorAlphabet, resolveActorAlphabetSource, loadLibsFromDirectives, universeControlNames, registerLib, registerAll, clearRegistry,
   nomsDeTerminaux,
 };

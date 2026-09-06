@@ -4,7 +4,6 @@ types
 // @description THE DEFAULT MIDI ENVIRONMENT — the value each word of `midi` carries until a scene writes another.
 def midi_default(
   resolvedBy:runtime-MIDI,
-  resolves:midi_default,
   name:midi_default,
   version:"0.2.0"
 )

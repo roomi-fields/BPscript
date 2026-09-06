@@ -13,8 +13,10 @@
  * ⚠️ CE GARDE PORTE SUR LE CRITÈRE, PAS SUR LES NOMS QUI ONT ÉCHOUÉ. Ma première réparation posait
  * `homomorphism` seul — celui que le refus m'avait montré — et la campagne suivante est tombée sur
  * deux autres fichiers par le même mécanisme. Ce qui fait qu'un fichier appartient à la fabrique de
- * Kairos, c'est qu'il DÉCLARE l'axe qu'il alimente. Le garde tient donc la portée ET son
- * complément : tout ce qui déclare passe, rien de ce qui ne déclare pas ne passe.
+ * Kairos, c'est qu'il porte un MOT D'INVOCATION : le prototype dérivé de la famille, rendu par la
+ * porte des objets. Un fichier rangé SOUS une famille (`settings/test1`) n'en porte pas — son mot
+ * serait barré d'une oblique, qui ne s'écrit dans aucune invocation. Le garde tient donc la portée
+ * ET son complément : tout ce qui porte un mot passe, rien de ce qui n'en porte pas ne passe.
  */
 import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
@@ -23,6 +25,9 @@ import path from 'node:path';
 const require = createRequire(import.meta.url);
 require('../src/transpiler/index.js');
 const LIBS = require('../src/transpiler/libs.js').leRegistre();
+const { motDuFichier } = require('../src/transpiler/index-des-objets.js');
+/** Le mot sous lequel une scène invoque ce fichier — nul s'il n'en porte pas. */
+const motInvocable = (n) => { const m = motDuFichier(n); return m && !m.includes('/') ? m : null; };
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 
 let ok = 0; let ko = 0;
@@ -38,7 +43,7 @@ async function catalogueDuPont() {
   const cat = unirCatalogues(Object.fromEntries(AXES.map((n) => [n, LIBS[n]])), {});
   const axes = new Set(AXES);
   for (const [nom, f] of Object.entries(LIBS)) {
-    if (!axes.has(nom) && f && typeof f === 'object' && f.resolves) cat[nom] = f;
+    if (!axes.has(nom) && f && typeof f === 'object' && motInvocable(nom)) cat[nom] = f;
   }
   return { cat, axes };
 }
@@ -46,19 +51,19 @@ async function catalogueDuPont() {
 const { cat, axes } = await catalogueDuPont();
 
 // LA PORTÉE — toute librairie qui déclare un axe est offerte au résolveur.
-const declarantes = Object.entries(LIBS).filter(([n, f]) => !axes.has(n) && f && typeof f === 'object' && f.resolves);
-verifier(declarantes.length > 0, 'au moins une librairie hors-axe déclare l\'axe qu\'elle alimente(sinon ce garde ne mesure rien)');
+const declarantes = Object.entries(LIBS).filter(([n, f]) => !axes.has(n) && f && typeof f === 'object' && motInvocable(n));
+verifier(declarantes.length > 0, 'au moins une librairie hors-axe porte un mot d\'invocation(sinon ce garde ne mesure rien)');
 for (const [nom] of declarantes) {
-  verifier(cat[nom] !== undefined, `la librairie « ${nom} », qui déclare résoudre « ${LIBS[nom].resolves} », arrive au catalogue`);
+  verifier(cat[nom] !== undefined, `la librairie « ${nom} », qu'on invoque par « ${motInvocable(nom)} », arrive au catalogue`);
 }
 
-// SON COMPLÉMENT — celles qui ne déclarent RIEN restent dehors. Les offrir est pire que de ne rien
-// offrir : le refus « fichier introuvable » devient « champ resolves ABSENT », donc un défaut de
-// FORME imputé à une librairie qui n'a jamais prétendu appartenir à cette fabrique.
-const muettes = Object.entries(LIBS).filter(([n, f]) => !axes.has(n) && f && typeof f === 'object' && !f.resolves);
-verifier(muettes.length > 0, 'au moins une librairie ne déclare aucun axe(sinon le complément ne mesure rien)');
+// SON COMPLÉMENT — celles qui ne portent AUCUN mot restent dehors. Les offrir est pire que de ne
+// rien offrir : le refus « fichier introuvable » devient un défaut de FORME imputé à un fichier qui
+// n'a jamais prétendu appartenir à cette fabrique.
+const muettes = Object.entries(LIBS).filter(([n, f]) => !axes.has(n) && f && typeof f === 'object' && !motInvocable(n));
+verifier(muettes.length > 0, 'au moins un fichier ne porte aucun mot d\'invocation(sinon le complément ne mesure rien)');
 for (const [nom] of muettes) {
-  verifier(cat[nom] === undefined, `la librairie « ${nom} », qui ne déclare aucun axe, reste hors du catalogue de hauteur`);
+  verifier(cat[nom] === undefined, `le fichier « ${nom} », qui ne porte aucun mot, reste hors du catalogue de hauteur`);
 }
 
 // LES AXES gardent leur contenu de CATALOGUE, jamais le fichier brut posé par-dessus.

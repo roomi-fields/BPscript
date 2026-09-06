@@ -2,8 +2,9 @@
 /**
  * UNE LIBRAIRIE DÉCLARE, EN DONNÉE, LE MOT SOUS LEQUEL ON L'INVOQUE.
  *
- * Le champ est `resolves` — « l'axe que cette librairie résout, le QUOI là où `resolvedBy` dit le
- * QUI ». La table qui relie un mot à ses fichiers en est DÉRIVÉE, reconstruite à chaque appel.
+ * Le mot se DÉRIVE : c'est le prototype le plus profond que TOUTES les entrées de la famille ont
+ * dans leur chaîne de dérivation ; à défaut, le nom du fichier. La porte des objets le rend par
+ * `motDuFichier`, et la table qui relie un mot à ses fichiers en est dérivée.
  *
  * ⛔ ELLE ÉTAIT ÉCRITE EN DUR, ET QUATRE LIGNES DÉCIDAIENT DE TOUT : `alphabet`, `tuning`, `scale`,
  * `sound`. `temperament`, `voice` et `octaves` n'existaient pas comme mots d'invocation pour une
@@ -17,7 +18,11 @@
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import '../src/transpiler/index.js';
 import { leRegistre } from '../src/transpiler/libs.js';
+import { motDuFichier } from '../src/transpiler/index-des-objets.js';
 const LIBS = leRegistre();
+// ⚠️ UNE FAMILLE EST UNE CLÉ DE PREMIER NIVEAU. `settings/notreich` est un fichier de SCÈNE rangé
+// sous une famille : son mot porterait une barre, qui ne s'écrit dans aucune invocation.
+const familles = () => Object.entries(LIBS).filter(([f]) => !f.includes('/'));
 import { CHAMPS_DE_FICHIER } from '../src/transpiler/libs-champs.js';
 
 let passe = 0;
@@ -36,14 +41,15 @@ const entreesDe = (lib) => Object.keys(lib).filter((k) => !k.startsWith('_') && 
 // même, et une qui le retire ne laisse pas un cas fantôme.
 {
   let verifies = 0;
-  for (const [fichier, lib] of Object.entries(LIBS)) {
-    if (!lib || typeof lib !== 'object' || !lib.resolves) continue;
+  for (const [fichier, lib] of familles()) {
+    const mot = motDuFichier(fichier);
+    if (!lib || typeof lib !== 'object' || !mot) continue;
     const entrees = entreesDe(lib);
     if (!entrees.length) continue;
     verifies++;
-    const r = compileToBPxAST(`core\nalphabet.western\n${lib.resolves}.${entrees[0]}\n-----\nS -> C4\n`);
+    const r = compileToBPxAST(`core\nalphabet.western\n${mot}.${entrees[0]}\n-----\nS -> C4\n`);
     ok(!/aucune librairie ne sert/.test(messages(r)),
-       `A. '${fichier}' déclare 'resolves: ${lib.resolves}' : '${lib.resolves}.${entrees[0]}' doit `
+       `A. '${fichier}' dérive le mot '${mot}' : '${mot}.${entrees[0]}' doit `
        + `être servi. Reçu : ${messages(r).slice(0, 90)}`);
   }
   ok(verifies >= 9,
@@ -65,8 +71,8 @@ const entreesDe = (lib) => Object.keys(lib).filter((k) => !k.startsWith('_') && 
 // ── C. UN MOT PEUT DÉSIGNER PLUSIEURS FICHIERS ──────────────────────────────────────────────
 // `alphabets.json` et `test_alphabets.json` déclarent tous deux `alphabet`.
 {
-  const porteurs = Object.entries(LIBS)
-    .filter(([, l]) => l && typeof l === 'object' && l.resolves === 'alphabet')
+  const porteurs = familles()
+    .filter(([f, l]) => l && typeof l === 'object' && motDuFichier(f) === 'alphabet')
     .map(([f]) => f);
   ok(porteurs.length >= 2,
      `C. au moins deux fichiers doivent déclarer 'alphabet' — reçu ${JSON.stringify(porteurs)}. `
@@ -97,8 +103,8 @@ const entreesDe = (lib) => Object.keys(lib).filter((k) => !k.startsWith('_') && 
 // ⚠️ SANS CE VOLET, une table en dur qui couvrirait les quatre anciens alias passerait A et B —
 // c'est exactement l'état d'avant, et il se donnait pour un catalogue.
 {
-  const declares = Object.values(LIBS)
-    .filter((l) => l && typeof l === 'object' && l.resolves).map((l) => l.resolves);
+  const declares = familles()
+    .filter(([, l]) => l && typeof l === 'object').map(([f]) => motDuFichier(f)).filter(Boolean);
   const uniques = new Set(declares);
   ok(uniques.size >= 10,
      `D. ${uniques.size} mots distincts déclarés par la donnée — l'ancienne table en dur n'en `
@@ -118,6 +124,6 @@ if (echecs.length) {
   for (const e of echecs) console.error(`   - ${e}`);
   process.exit(1);
 }
-console.log(`✅ Le mot d'invocation vient de la DONNÉE — chaque librairie qui déclare 'resolves' est `
+console.log(`✅ Le mot d'invocation vient de la DONNÉE — chaque librairie qui dérive un mot est `
           + `servie par lui, singulier comme pluriel, et un mot peut désigner deux fichiers sans `
           + `qu'aucune entrée ne soit ambiguë. ${passe} vérification(s) passée(s).`);

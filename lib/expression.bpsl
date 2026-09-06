@@ -4,7 +4,6 @@ types
 // @description Controls describing HOW a note is played, valid for EVERY output — not one specific transport (LIBRAIRIES.md:171,217-219: «
 // expression is no exception… it is A destination, a class named by what it describes »).
 def expression(
-  resolves:expression,
   resolvedBy:"toutes les sorties",
   name:expression,
   section:controls

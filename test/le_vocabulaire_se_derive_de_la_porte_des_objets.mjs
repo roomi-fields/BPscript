@@ -50,7 +50,9 @@ const nonDocumentes = (mot) => { const f = famille(mot); return f ? f.entrees.fi
 // ── 2. la dérivation est vivante ───────────────────────────────────────────────────────────────
 {
   const registre = leRegistre();
-  registerLib('zzvoix', { resolves: 'voice', documented: true, resolvedBy: 'témoin', objects: { zztemoin: { description: 'voix témoin du garde' } } });
+  // ⚠️ LE MOT NE SE DÉCLARE PLUS, IL SE DÉRIVE : le témoin rejoint la famille `voice` parce que son
+  // entrée dérive du prototype `voice`, exactement comme une source du dépôt.
+  registerLib('zzvoix', { documented: true, resolvedBy: 'témoin', objects: { zztemoin: { _derive: 'voice', description: 'voix témoin du garde' } } });
   try {
     ok(describeVocabulary().voices.includes('zztemoin'), '2. une voix enregistrée dans le registre apparaît dans le vocabulaire sans un geste');
   } finally {

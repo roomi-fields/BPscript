@@ -137,7 +137,7 @@ const CLASSES = {
   // ⚠️ CETTE CLASSE REFUSE, ET C'EST SA RÉUSSITE. Un scalaire à la racine n'a AUCUNE graphie
   // d'entrée : le convertir le perdrait. Ce qu'on exige ici est un refus qui NOMME l'entrée.
   'valeur scalaire à la racine': {
-    __refuse: 'quoi', documented: true, name: 'z', resolves: 'z', quoi: 42, t: { a: { b: 1 } },
+    __refuse: 'quoi', documented: true, name: 'z', version: '1', quoi: 42, t: { a: { b: 1 } },
   },
   // ⛔ CETTE CLASSE A CHANGÉ D'ISSUE, ET LE MOTIF VAUT D'ÊTRE RETENU. Elle attendait un SUCCÈS :
   // l'outil écrivait `def apporte(un, deux)`, la source compilait, le nom apparaissait dans le
@@ -160,23 +160,23 @@ const CLASSES = {
     // AVEC LE COMPILATEUR, qui refuse un mot de tête qu'aucune librairie ne déclare. Des noms
     // fabriqués rendraient un refus qui ne dit rien de la graphie qu'on éprouve ici.
     __invoque: ['midi', 'audio'],
-    documented: true, name: 'z', resolves: 'z', apporte: ['midi', 'audio'], t: { a: { b: 1 } },
+    documented: true, name: 'z', version: '1', apporte: ['midi', 'audio'], t: { a: { b: 1 } },
   },
   'tableau à la racine — TOUT AUTRE NOM': {
     __refuse: 'entrée-LISTE',
-    documented: true, name: 'z', resolves: 'z', quelconque: ['un', 'deux'], t: { a: { b: 1 } },
+    documented: true, name: 'z', version: '1', quelconque: ['un', 'deux'], t: { a: { b: 1 } },
   },
-  'membre imbriqué': { documented: true, name: 'z', resolves: 'z', t: { a: { b: { c: 1 } } } },
+  'membre imbriqué': { documented: true, name: 'z', version: '1', t: { a: { b: { c: 1 } } } },
   // ⚠️ CETTE CLASSE EXISTE POUR SURVIVRE À UN RETRAIT. `lib/mapping.json` est aujourd'hui le SEUL
   // catalogue réel qui n'a aucune entrée, donc le seul qui exerce le refus anti-vacuité du
   // convertisseur — « ZÉRO entrée recensée ». Le jour où il sera retiré, ce chemin cesserait d'être
   // traversé par quoi que ce soit, **et rien ne le dirait** : un contrôle ne signale pas qu'il a
   // perdu son objet. La forme est fabriquée ici ; le retrait ne la lui reprend pas.
   'catalogue sans aucune entrée': {
-    __refuse: 'ZÉRO entrée', documented: true, name: 'z', resolves: 'z', _note: 'que de la glose',
+    __refuse: 'ZÉRO entrée', documented: true, name: 'z', version: '1', _note: 'que de la glose',
   },
   'membre homonyme à plusieurs branches': {
-    documented: true, name: 'z', resolves: 'z',
+    documented: true, name: 'z', version: '1',
     t: { une: { default: { x: 1 } }, deux: { default: { y: 2 } }, trois: { default: { z: 3 } } },
   },
 };

@@ -127,6 +127,19 @@ export function motsInvoques(ast: any): Set<any>;
  */
 export function objetEnPortee(nom: string, ast: object): ObjetDeclare | null;
 /**
+ * LE MOT QUE SERT UN FICHIER DU REGISTRE — `motDuFichier('alphabets')` rend `'alphabet'`. Le calcul
+ * vit dans le chargeur, qui seul tient le registre et ses places ; il ne se recopie pas.
+ *
+ * ⛔ ET LA FORME S'ÉCRIT ICI, PAS DERRIÈRE UNE RÉEXPORTATION. Réexporter le symbole du chargeur
+ * faisait entrer TOUTE la description du chargeur — et celle de son lecteur de sources — dans le
+ * paquet publié : cinquante champs de plus en `any`, sur une porte dont la doctrine est justement
+ * d'écrire ses formes. Une porte décrit ce qu'elle rend.
+ *
+ * @param {string} cle   la clé du fichier dans le registre
+ * @returns {string | null}
+ */
+export function motDuFichier(cle: string): string | null;
+/**
  * UN OBJET DÉCLARÉ PAR UNE LIBRAIRIE — ce que la porte `bpscript/objets` rend.
  *
  * ⛔ CES FORMES SONT ÉCRITES ICI PARCE QUE LA DÉRIVATION NE LES DEVINE PAS. Sans elles, mes quatre

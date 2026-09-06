@@ -49,6 +49,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import '../src/transpiler/index.js';
 import { placesDesLibrairies } from '../src/transpiler/librairies.js';
 import { leRegistre } from '../src/transpiler/libs.js';
+import { motDuFichier } from '../src/transpiler/index-des-objets.js';
 const LIBS = leRegistre();
 const PLACES = placesDesLibrairies(leRegistre());
 
@@ -103,7 +104,7 @@ const courant = empreinteDuPaquet();
 {
   const premier = {};
   for (const [cle, lib] of Object.entries(LIBS)) {
-    const mot = lib && typeof lib === 'object' ? lib.resolves : null;
+    const mot = lib && typeof lib === 'object' && !cle.includes('/') ? motDuFichier(cle) : null;
     if (typeof mot === 'string' && !(mot in premier)) premier[mot] = cle;
   }
   ok(Object.keys(premier).length >= 15,

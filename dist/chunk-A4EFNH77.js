@@ -1,5 +1,5 @@
 // src/transpiler/libs-champs.js
-var CHAMPS_DU_PAQUET = /* @__PURE__ */ new Set(["resolves", "name", "section", "type", "version"]);
+var CHAMPS_DU_PAQUET = /* @__PURE__ */ new Set(["name", "section", "type", "version"]);
 var MEMBRES_DE_RACINE = /* @__PURE__ */ new Set(["resolvedBy", "description", "documented"]);
 var CHAMPS_DE_FICHIER = /* @__PURE__ */ new Set([...CHAMPS_DU_PAQUET, ...MEMBRES_DE_RACINE]);
 function entreesDe(objet) {

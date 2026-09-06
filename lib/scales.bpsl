@@ -1,7 +1,7 @@
 types
 
 // @documented
-def scales(resolvedBy:"Kairos", resolves:scale)
+def scales(resolvedBy:"Kairos")
 
 // @description Maqam Sikah — starts on sikah (E half-flat) — Ratios = zalzalian just intonation (5-limit; neutral third 27/22). Source of
 // truth; 24-TET is a rendering projection, not the ontology. [jins decomposition TO BE ESTABLISHED (musicological verification); exact

@@ -3,7 +3,6 @@ types
 // @documented
 // @description Controls specific to the Web Audio transport — EXACT match with LIBRAIRIES.md:173.
 def audio(
-  resolves:audio,
   name:audio,
   resolvedBy:"runtime-audio",
   section:controls

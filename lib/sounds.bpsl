@@ -1,7 +1,7 @@
 types
 
 // @documented
-def sounds(resolvedBy:"BPx", resolves:sound, name:sounds)
+def sounds(resolvedBy:"BPx", name:sounds)
 
 // @description Tabla percussion — bols of bayan (low) and dayan (high). Prototype AT ENGINE DEFAULTS: it overrides no metric property.
 // Invoked by dhati, dhin and their twins (6 scenes of the corpus). The name comes from the corpus, not from an external catalogue.

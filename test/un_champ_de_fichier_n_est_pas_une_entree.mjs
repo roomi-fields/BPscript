@@ -2,8 +2,8 @@
 /**
  * GARDE — UN CHAMP DE FICHIER N'EST JAMAIS UNE ENTRÉE INVOCABLE, SUR AUCUN AXE.
  *
- * Un catalogue mêle à la même profondeur ce qui parle DU FICHIER (`resolves`, `resolvedBy`,
- * `documented`…) et ce qui EST une entrée (`western`, `12TET`). Un chargeur qui lit `file[nom]` sans
+ * Un catalogue mêle à la même profondeur ce qui parle DU FICHIER (`resolvedBy`, `documented`,
+ * `name`…) et ce qui EST une entrée (`western`, `12TET`). Un chargeur qui lit `file[nom]` sans
  * rien écarter sert donc les deux, et `temperament.resolvedBy` devient une ENTRÉE FANTÔME.
  *
  * ⛔ CE QUI A COÛTÉ CE GARDE, LE 2026-08-24. En posant `documented` — décision Romain,
@@ -30,7 +30,10 @@
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import '../src/transpiler/index.js';
 import { leRegistre } from '../src/transpiler/libs.js';
+import { motDuFichier } from '../src/transpiler/index-des-objets.js';
 const LIBS = leRegistre();
+/** Le mot d'invocation d'un fichier de la donnée publiée — nul pour ce qui n'en porte pas. */
+const motDe = (n) => (n.includes('/') ? null : motDuFichier(n));
 import { CHAMPS_DE_FICHIER } from '../src/transpiler/libs-champs.js';
 
 let p = 0;
@@ -43,8 +46,8 @@ const scene = (tete) => `core\nalphabet.western\n${tete}\n-----\nS -> C4\n`;
 // Les deux dimensions viennent de la donnée : les mots déclarés par les catalogues, et les champs
 // de fichier réellement écrits. Un cas fabriqué sur un champ que personne ne porte ne prouverait
 // rien — le chargeur rendrait `undefined` pour une autre raison.
-const axes = [...new Set(Object.values(LIBS)
-  .map((l) => (l && typeof l === 'object' ? l.resolves : null)).filter(Boolean))].sort();
+const axes = [...new Set(Object.entries(LIBS)
+  .map(([n, l]) => (l && typeof l === 'object' ? motDe(n) : null)).filter(Boolean))].sort();
 ok(axes.length >= 20, `A. SOCLE : au moins 20 axes servis attendus — ${axes.length}`);
 
 let cas = 0;
@@ -52,7 +55,7 @@ const acceptes = [];
 const plantages = [];
 for (const axe of axes) {
   for (const champ of CHAMPS_DE_FICHIER) {
-    if (!Object.values(LIBS).some((l) => l && typeof l === 'object' && l.resolves === axe && champ in l)) continue;
+    if (!Object.entries(LIBS).some(([n, l]) => l && typeof l === 'object' && motDe(n) === axe && champ in l)) continue;
     cas++;
     try {
       const r = compileToBPxAST(scene(`${axe}.${champ}`));
@@ -83,8 +86,8 @@ console.log(`[champ ≠ entrée] ${axes.length} axes · ${cas} cas mesurés · $
   for (const axe of axes) {
     // Une entrée réelle de cet axe : un membre qui porte un OBJET, jamais un champ de fichier.
     let entree = null;
-    for (const lib of Object.values(LIBS)) {
-      if (!lib || typeof lib !== 'object' || lib.resolves !== axe) continue;
+    for (const [nom, lib] of Object.entries(LIBS)) {
+      if (!lib || typeof lib !== 'object' || motDe(nom) !== axe) continue;
       const source = lib.objects && typeof lib.objects === 'object' ? lib.objects : lib;
       entree = Object.keys(source).find((k) => !k.startsWith('_') && !CHAMPS_DE_FICHIER.has(k)
         && source[k] && typeof source[k] === 'object' && !Array.isArray(source[k]));

@@ -25,14 +25,19 @@
  * **Quatre places conformes ne protègent rien tant que la cinquième est ouverte** : une scène qui
  * commence par un nom de fichier casse au renommage, exactement ce que le principe interdit.
  *
- * ⚠️ AUCUN NOM N'EST ÉCRIT ICI. Les couples (fichier, mot) se dérivent du champ `resolves` de la
- * donnée publiée. Une librairie ajoutée demain entre dans ce garde le jour même, et une librairie
- * dont le nom ÉGALE son mot n'y entre jamais — c'est la donnée qui le dit, pas une liste.
+ * ⚠️ AUCUN NOM N'EST ÉCRIT ICI. Les couples (fichier, mot) se dérivent de la donnée publiée : le
+ * mot d'une famille est le prototype le plus profond que TOUTES ses entrées ont dans leur chaîne,
+ * rendu par la porte des objets. Une librairie ajoutée demain entre dans ce garde le jour même, et
+ * une librairie dont le nom ÉGALE son mot n'y entre jamais — c'est la donnée qui le dit.
  */
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import '../src/transpiler/index.js';
 import { leRegistre } from '../src/transpiler/libs.js';
+import { motDuFichier } from '../src/transpiler/index-des-objets.js';
 const LIBS = leRegistre();
+// Une clé barrée d'une oblique est un fichier rangé SOUS une famille, pas une famille : il ne
+// s'invoque par aucun mot, et n'a donc ni divergence ni identité à mesurer.
+const familles = () => Object.entries(LIBS).filter(([f, l]) => !f.includes('/') && l && typeof l === 'object');
 
 let p = 0;
 const e = [];
@@ -51,16 +56,15 @@ const refus = (src) => {
 
 // ── LES COUPLES, DÉRIVÉS DE LA DONNÉE ───────────────────────────────────────────────────────
 const DIVERGENTS = [];
-for (const [fichier, lib] of Object.entries(LIBS)) {
-  if (lib && typeof lib === 'object' && typeof lib.resolves === 'string' && lib.resolves
-      && lib.resolves !== fichier) DIVERGENTS.push([fichier, lib.resolves]);
+for (const [fichier] of familles()) {
+  const mot = motDuFichier(fichier);
+  if (typeof mot === 'string' && mot && mot !== fichier) DIVERGENTS.push([fichier, mot]);
 }
-const IDENTIQUES = Object.entries(LIBS)
-  .filter(([f, l]) => l && typeof l === 'object' && l.resolves === f).map(([f]) => f);
+const IDENTIQUES = familles().filter(([f]) => motDuFichier(f) === f).map(([f]) => f);
 
 ok(DIVERGENTS.length > 0,
-  '⛔ ZÉRO couple divergent dans la donnée — ce garde n\'aurait plus d\'objet, ou le champ `resolves` '
-  + 'a changé de forme. Dans les deux cas il ne veille plus.');
+  '⛔ ZÉRO couple divergent dans la donnée — ce garde n\'aurait plus d\'objet, ou la dérivation du '
+  + 'mot a changé de forme. Dans les deux cas il ne veille plus.');
 ok(IDENTIQUES.length > 0,
   '⛔ ZÉRO librairie dont le nom ÉGALE son mot — le volet du complément ci-dessous n\'éprouverait rien.');
 

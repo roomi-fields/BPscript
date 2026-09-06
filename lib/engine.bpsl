@@ -4,7 +4,6 @@ types
 // @description The keys the DERIVATION ENGINE consumes — what governs how production unfolds, as opposed to what it produces. HEADER
 // library, resolved by BPx.
 def engine(
-  resolves:engine,
   resolvedBy:"BPx",
   name:engine,
   version:1.0.0

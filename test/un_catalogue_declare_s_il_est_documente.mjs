@@ -46,6 +46,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import '../src/transpiler/index.js';
 import { leRegistre } from '../src/transpiler/libs.js';
+import { motDuFichier } from '../src/transpiler/index-des-objets.js';
 const LIBS = leRegistre();
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import { CHAMPS_DE_FICHIER, entreesDe } from '../src/transpiler/libs-champs.js';
@@ -64,7 +65,7 @@ const VALEURS = [true, false];
  */
 function juger(nom, lib) {
   if (!Object.prototype.hasOwnProperty.call(lib, 'documented')) {
-    return `${nom} : AUCUN champ 'documented' — le catalogue déclare le mot '${lib.resolves}' et `
+    return `${nom} : AUCUN champ 'documented' — ce catalogue porte un mot d'invocation et `
       + `n'a jamais dit s'il entre dans l'aide. Le silence a voulu dire 'publie-le' pendant que huit `
       + `montages de test se documentaient sous le mot 'alphabet'.`;
   }
@@ -78,10 +79,12 @@ function juger(nom, lib) {
 }
 
 // ── A. TOUT CATALOGUE QUI DÉCLARE UN MOT PORTE LE CHAMP ──────────────────────────────────────
-// Le périmètre vient de la DONNÉE, jamais d'une liste de noms : ce sont les catalogues qui
-// déclarent `resolves`, exactement ceux que le générateur de fiches lit (il écarte les autres en
-// comptant `sansMot`). Une liste tenue à la main ici périmerait au premier catalogue ajouté.
-const catalogues = Object.entries(LIBS).filter(([, l]) => l && typeof l === 'object' && l.resolves);
+// Le périmètre vient de la DONNÉE, jamais d'une liste de noms : ce sont les catalogues qui PORTENT
+// un mot d'invocation — le prototype dérivé de leur chaîne, rendu par la porte des objets —,
+// exactement ceux que le générateur de fiches lit (il écarte les autres en comptant `sansMot`). Une
+// liste tenue à la main ici périmerait au premier catalogue ajouté.
+const catalogues = Object.entries(LIBS)
+  .filter(([n, l]) => l && typeof l === 'object' && !n.includes('/') && motDuFichier(n));
 ok(catalogues.length >= 20,
   `A. SOCLE : le bundle doit porter au moins 20 catalogues déclarant un mot — ${catalogues.length}. `
   + `Un garde qui n'a rien examiné serait vert sans rien voir.`);
@@ -128,7 +131,7 @@ ok(catalogues.length >= 20,
     `C. SOCLE : au moins un catalogue doit se déclarer non documenté, sinon ce volet compile une `
     + `invocation ordinaire et ne prouve rien.`);
   for (const [nom, lib] of nonDocumentes) {
-    const mot = lib.resolves;
+    const mot = motDuFichier(nom);
     // Les entrées d'un catalogue d'alphabets vivent à sa racine, à côté de ses champs de fichier.
     // ⛔ ET LA LISTE NE SE RECOPIE PAS ICI. J'en avais écrit une SIXIÈME copie dans ce fichier, le
     // jour même où le champ neuf a fait rougir deux gardes qui portaient la leur.
@@ -168,7 +171,7 @@ ok(catalogues.length >= 20,
   try {
     mkdirSync(join(bac, 'lib'), { recursive: true });
     writeFileSync(join(bac, 'lib', 'zz_temoin.json'), JSON.stringify({
-      resolves: 'zz_temoin', resolvedBy: 'Kairos', documented: 'no',
+      resolvedBy: 'Kairos', documented: 'no',
       quelquechose: { description: 'une entrée pour que le compte examine quelque chose' },
     }));
     const r = execFileSync(process.execPath,
@@ -187,13 +190,13 @@ ok(catalogues.length >= 20,
 
 // ── F. INJECTION DANS LE JUGE — les quatre formes qu'il doit refuser ─────────────────────────
 {
-  ok(juger('zz', { resolves: 'zz' }) !== null, "F. (mord) un catalogue SANS le champ doit être refusé");
-  ok(juger('zz', { resolves: 'zz', documented: 'yes' }) !== null, "F. (mord) l'ANCIENNE graphie doit être refusée");
-  ok(juger('zz', { resolves: 'zz', documented: 'no' }) !== null, "F. (mord) et l'autre — sinon les deux graphies coexistent");
-  ok(juger('zz', { resolves: 'zz', documented: 'true' }) !== null, 'F. (mord) la CHAÎNE "true" est le piège exact, pas le booléen');
-  ok(juger('zz', { resolves: 'zz', documented: 1 }) !== null, 'F. (mord) un nombre non plus');
-  ok(juger('zz', { resolves: 'zz', documented: true }) === null, 'F. (se tait) le booléen VRAI passe');
-  ok(juger('zz', { resolves: 'zz', documented: false }) === null, 'F. (se tait) le booléen FAUX passe');
+  ok(juger('zz', { resolvedBy: 'zz' }) !== null, "F. (mord) un catalogue SANS le champ doit être refusé");
+  ok(juger('zz', { resolvedBy: 'zz', documented: 'yes' }) !== null, "F. (mord) l'ANCIENNE graphie doit être refusée");
+  ok(juger('zz', { resolvedBy: 'zz', documented: 'no' }) !== null, "F. (mord) et l'autre — sinon les deux graphies coexistent");
+  ok(juger('zz', { resolvedBy: 'zz', documented: 'true' }) !== null, 'F. (mord) la CHAÎNE "true" est le piège exact, pas le booléen');
+  ok(juger('zz', { resolvedBy: 'zz', documented: 1 }) !== null, 'F. (mord) un nombre non plus');
+  ok(juger('zz', { resolvedBy: 'zz', documented: true }) === null, 'F. (se tait) le booléen VRAI passe');
+  ok(juger('zz', { resolvedBy: 'zz', documented: false }) === null, 'F. (se tait) le booléen FAUX passe');
   ok(VALEURS.length === 2, 'F. socle : le champ a exactement deux valeurs');
 }
 

@@ -1,7 +1,7 @@
 types
 
 // @documented
-def temperaments(resolvedBy:Kairos, resolves:temperament)
+def temperaments(resolvedBy:Kairos)
 
 // @description Equal temperament, 12 divisions of the octave
 temperament 12TET(

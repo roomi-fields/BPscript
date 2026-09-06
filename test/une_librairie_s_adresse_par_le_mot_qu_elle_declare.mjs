@@ -28,6 +28,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { motDuFichier } from '../src/transpiler/libs.js';
 
 const RACINE = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const SRC = path.join(RACINE, 'src', 'transpiler');
@@ -40,7 +41,7 @@ const echecs = [];
 const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 /** fichier → mot qu'il déclare(null s'il n'en déclare aucun). */
-const motDuFichier = (f) => (LIBS[f] && typeof LIBS[f] === 'object' ? LIBS[f].resolves : null) || null;
+
 
 /** mot → tous les fichiers qui le déclarent. */
 const fichiersDuMot = new Map();

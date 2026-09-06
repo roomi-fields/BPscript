@@ -4,7 +4,6 @@ def homomorphism(
   resolvedBy:Kairos,
   name:homomorphism,
   type:homomorphism,
-  resolves:homomorphism,
   section:tables
 )
 

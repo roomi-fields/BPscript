@@ -6,7 +6,6 @@ types
 // before any sound is emitted: they belong to Kairos. The third mode — continuous — glides DURING notes, through intermediate messages: it
 // can only be rendered by whoever emits, and it therefore lives in the library of its parameter.
 def variation(
-  resolves:variation,
   resolvedBy:"Kairos",
   name:variation,
   version:0.1.0,

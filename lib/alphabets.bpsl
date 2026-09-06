@@ -1,7 +1,7 @@
 types
 
 // @documented
-def alphabets(resolvedBy:Kairos, resolves:alphabet)
+def alphabets(resolvedBy:Kairos)
 
 // @description Western chromatic — 7 natural notes, 5 alteration levels
 alphabet western(

@@ -3,38 +3,37 @@ types
 // @documented
 // @description Controls specific to the MIDI transport — EXACT match with LIBRAIRIES.md:172.
 def midi(
-  resolves:midi,
   resolvedBy:"runtime-MIDI",
   name:midi,
   section:controls
 )
 
 // @description Address channel, short form of channel.
-def ch(
+midi ch(
   section:schema.addressKeys,
   scope(symbol, group, rule, flow)
 )
 
 // @description Address channel, long form of ch.
-def channel(
+midi channel(
   section:schema.addressKeys,
   scope(symbol, group, rule, flow)
 )
 
 // @description Device targeted by the address.
-def device(
+midi device(
   section:schema.addressKeys,
   scope(symbol, group, rule, flow)
 )
 
 // @description Note number of an address — the source a wait point listens to, the event an occurrence targets.
-def note(
+midi note(
   section:schema.addressKeys,
   scope(symbol, group, rule, flow)
 )
 
 // @description Port targeted by the address.
-def port(
+midi port(
   section:schema.addressKeys,
   scope(symbol, group, rule, flow)
 )

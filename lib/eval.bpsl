@@ -1,8 +1,8 @@
 // @documented
-def eval(resolvedBy:runtime-codevoices, resolves:eval, name:eval, type:code, section:objects)
+def eval(resolvedBy:runtime-codevoices, name:eval, type:code, section:objects)
 
 // @description Patterns and samples, in the browser.
-def strudel(
+eval strudel(
   parameters(
     // @description The sample bank the voice loads. Without it, a scene using sample names plays SILENT.
     bank()
@@ -10,29 +10,29 @@ def strudel(
 )
 
 // @description Visual synthesis.
-def hydra()
+eval hydra()
 
 // @description SuperCollider — audio synthesis, native backend.
-def sc()
+eval sc()
 
 // @description JavaScript evaluated by the runtime.
-def js()
+eval js()
 
 // @description TypeScript — the language of library bodies, transpiled then executed by the resolver the library names.
-def ts()
+eval ts()
 
 // @description Croquis graphiques p5.js.
-def p5()
+eval p5()
 
 // @description Live coding minimal.
-def mercury()
+eval mercury()
 
 // @description Csound — synthesis, native backend.
-def csound()
+eval csound()
 
 // @description TidalCycles — motifs, backend natif (SuperDirt).
-def tidal()
+eval tidal()
 
 // @description Literal text, evaluated by no one. Carries a SENTENCE where the language has no escape character: a library description, a
 // label.
-def txt()
+eval txt()

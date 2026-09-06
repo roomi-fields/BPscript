@@ -23,6 +23,7 @@
  */
 import '../src/transpiler/index.js';
 import { leRegistre, fichierDeLAxe } from '../src/transpiler/libs.js';
+import { motDuFichier } from '../src/transpiler/index-des-objets.js';
 const LIBS = leRegistre();
 
 let passe = 0;
@@ -42,12 +43,15 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
  *   axe est le premier PAR SON NOM. C'est lui qui mord si le tri disparaît, à n'importe quel étage.
  */
 
+/** Le mot d'invocation d'un fichier — DÉRIVÉ de la chaîne de prototypes, rendu par la porte. */
+const motDe = (n) => (n.includes('/') ? null : motDuFichier(n));
+
 /** La table des axes, lue EXACTEMENT comme `libs.js` la construit — le TRI décide, plus l'insertion. */
 const motsDInvocation = (noms) => {
   const table = new Map();
   for (const f of noms) {
     const lib = LIBS[f];
-    const mot = lib && typeof lib === 'object' ? lib.resolves : null;
+    const mot = lib && typeof lib === 'object' ? motDe(f) : null;
     if (!mot) continue;
     if (!table.has(mot)) table.set(mot, []);
     table.get(mot).push(f);
@@ -127,7 +131,7 @@ const enBpsl = new Set(noms.filter((n) => {
   const lib = LIBS[n];
   // Une librairie écrite en BPScript est lue à la seconde passe ; le paquet ne dit pas son format,
   // donc on rejoue la bascule sur les axes SERVIS PAR PLUSIEURS FICHIERS, seuls concernés.
-  return lib && typeof lib === 'object' && lib.resolves;
+  return lib && typeof lib === 'object' && motDe(n);
 }));
 const axesMultiples = [...axes].filter(([, f]) => f.length > 1);
 ok(axesMultiples.length > 0,

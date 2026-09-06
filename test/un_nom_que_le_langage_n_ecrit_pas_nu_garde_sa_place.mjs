@@ -13,7 +13,7 @@
  * la MÊME donnée dans un ORDRE différent :
  *
  *     [wobble, fatbass, fatbass for:sub37, …]   →   [fatbass for:sub37, wobble, fatbass, …]
- *     [documented, resolvedBy, name, objects…]  →   [resolvedBy, resolves, name, documented…]
+ *     [documented, resolvedBy, name, objects…]  →   [resolvedBy, version, name, documented…]
  *
  * Le premier parce qu'une place ne se pose que sur la déclaration DU FICHIER, donc en tête ; le
  * second parce que l'en-tête suivait l'ordre de MA liste de champs au lieu de celui de la source.
@@ -60,7 +60,8 @@ function convertir(source) {
   // ⛔ LA PLACE N'EST PAS LE DERNIER CHAMP DE LA SOURCE, ET C'EST LE POINT. Mon premier témoin la
   // mettait en dernier : l'injection qui reposait la place À LA FIN de l'en-tête ne mordait pas,
   // parce que la fin ÉTAIT son rang. Un témoin qui ne peut pas distinguer les deux comportements
-  // rend « vert » sans rien mesurer — et `voices.json` porte justement `objects` AVANT `resolves`.
+  // rend « vert » sans rien mesurer — un catalogue porte couramment `objects` AVANT un champ de
+  // fichier, et c'est ce rang-là qui doit tenir.
   const texte = convertir({
     documented: 'yes', resolvedBy: 'Kairos', name: 'zz_temoin',
     objects: {
@@ -68,7 +69,7 @@ function convertir(source) {
       'nom avec espace:et_deux_points': { device: { preset: 'p' } },
       dernier: { audio: 'deux' },
     },
-    resolves: 'zz_temoin',
+    version: '1',
   });
   ok(!texte.startsWith('⛔ REFUS'),
     `A. ⛔ le convertisseur REFUSE un nom que le langage n'écrit pas nu : ${texte.slice(0, 200)}. `
@@ -87,10 +88,10 @@ function convertir(source) {
     + `nonNu@${rang('"nom avec espace')} · dernier@${rang('dernier(')}. Une place posée en tête `
     + `remonte l'entrée au premier rang, et le rang désigne une autorité.`);
 
-  // ⛔ LA PLACE SE POSE À SON RANG PARMI LES CHAMPS DE FICHIER — `objects` AVANT `resolves`.
-  ok(rang('objects(') >= 0 && rang('objects(') < rang('resolves:'),
+  // ⛔ LA PLACE SE POSE À SON RANG PARMI LES CHAMPS DE FICHIER — `objects` AVANT `version`.
+  ok(rang('objects(') >= 0 && rang('objects(') < rang('version:'),
     `A. ⛔ la PLACE doit garder son rang dans la source — reçu objects@${rang('objects(')} · `
-    + `resolves@${rang('resolves:')}. Ajoutée en fin d'en-tête, elle déplace la clé publiée.`);
+    + `version@${rang('version:')}. Ajoutée en fin d'en-tête, elle déplace la clé publiée.`);
 
   // ⛔ ET L'ORDRE DES CHAMPS DE FICHIER AUSSI — `documented` en tête, comme dans la source.
   ok(/def zz_temoin\(documented:yes, resolvedBy:/.test(texte),   // collé (Romain, 2026-09-03)

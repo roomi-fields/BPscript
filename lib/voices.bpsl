@@ -1,7 +1,7 @@
 types
 
 // @documented
-def voices(resolvedBy:Kairos, name:voices, resolves:voice)
+def voices(resolvedBy:Kairos, name:voices)
 
 voice wobble(
   audio:"`js: (t, dur, env) => (2*((t*env.pitch)%1)-1) * (0.55+0.45*Math.sin(2*Math.PI*5.5*t)) * Math.max(0,1-t/dur)`",

@@ -8,9 +8,11 @@
  */
 
 import { T } from './tokenizer.js';
-import { famille, motReserve, axesDeCatalogue, clesDActeur, canaux, formeDuMot } from './index-des-objets.js';
+import { famille, motReserve, axesDeCatalogue, clesDActeur, canaux, formeDuMot, motDuFichier } from './index-des-objets.js';
 import { loadLib, directiveDeclareeParLaLibrairie, loadLibsFromDirectives, librairiesQuiDeclarent, versionDuRegistre, placesDesLibrairies, leRegistre } from './libs.js';
 import { describeVocabulary } from './vocabulaire.js';
+// Le mot d'une famille se DERIVE — `resolves` est sorti (2026-09-02).
+
 import { BP3_OPERATORS } from './constants.js';
 // ⛔ LE SCHÉMA DE SYNTAXE N'EST PAS UNE LIBRAIRIE — il se lit par SA PROPRE PORTE, jamais par le
 // registre des librairies. Décision Romain, 2026-08-20.
@@ -5839,7 +5841,8 @@ function parse(tokens, opts = {}) {
         const motsInvoques = new Set();
         for (const [fichier, lib] of Object.entries(libCtx._libs || {})) {
           motsInvoques.add(fichier);
-          if (lib && typeof lib.resolves === 'string' && lib.resolves) motsInvoques.add(lib.resolves);
+          // Le mot qu'un fichier sert se DERIVE de la structure de ses objets — `resolves` est sorti.
+          if (lib && typeof lib === 'object') motsInvoques.add(motDuFichier(fichier));
         }
         if (motsInvoques.has(key)) {
           throw new ParseError('PARSE_KEY_COMPOSANT_LIBRARY_KEY_2', { key, composant }, keyTok);

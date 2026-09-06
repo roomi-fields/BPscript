@@ -56,7 +56,9 @@ import { sortieHeritee, alphabetHerite, octavesHerite, tuningHerite, evalHerite 
   from './actorResolver.js';
 import { parse, ParseError } from './parser.js';
 import { lesDefauts, motsInvoques, familles, canaux, clesDActeur, motReserve, formeDuMot } from './index-des-objets.js';
-import { universeControlNames, resolveActorAlphabet, nomsDeTerminaux, loadLib, leRegistre, versionDuRegistre, librairiesQuiDeclarent } from './libs.js';
+import { universeControlNames, resolveActorAlphabet, nomsDeTerminaux, loadLib, leRegistre, versionDuRegistre, librairiesQuiDeclarent, placesDesLibrairies, motDuFichier } from './libs.js';
+// Le mot d'une famille se DERIVE de la structure de ses objets — `resolves` est sorti.
+
 import { expandAlphabetTerminals } from './actorResolver.js';
 import { resolveActorAlphabetSource } from './libs.js';
 import { groupeDUnicite } from './libs.js';
@@ -2736,8 +2738,10 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
   //
   // ⛔ CE JUGE LIT DONC LES MOTS DÉCLARÉS, jamais le registre des fichiers. Un mot qu'aucune
   // librairie ne DÉCLARE n'est pas un axe, même si un fichier porte ce nom.
-  const motsDeclares = () => new Set(
-    Object.values(leRegistre()).map((l) => l && typeof l === 'object' ? l.resolves : null).filter(Boolean));
+  // ⛔ LES MOTS DECLARES SE LISENT A LA PORTE — `resolves` est sorti (2026-09-02), et le mot d'une
+  // famille se DERIVE de la structure de ses objets (`libs-mot.js`). `familles()` rend exactement
+  // ces mots : c'est la meme table, prise chez qui la construit au lieu d'etre relue dans un champ.
+  const motsDeclares = () => new Set(familles());
   const libExiste = (nom) => motsDeclares().has(nom);
   // Un mot réservé : la grammaire, ou le mot d'une famille du registre (le schéma est dissous).
   const motsDuLangage = { has: (nom) => motReserve(nom) };
@@ -2767,7 +2771,8 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
     if (!d || !d.name) continue;
     if (!d.subkey) {
       const fichierNu = leRegistre()[d.name];
-      const motNu = fichierNu && typeof fichierNu === 'object' ? fichierNu.resolves : null;
+      const motNu = fichierNu && typeof fichierNu === 'object'
+    ? motDuFichier(d.name) : null;
       if (motNu && motNu !== d.name) {
         errors.push(diagnostic('RESOLVE_FILE_NAME_WORD_INVOKES', { p1: d.name, motNu }, { line: d.line }));
       }
@@ -2818,8 +2823,10 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
       // ⛔ ET LE REFUS NOMME LE MOT A ECRIRE quand l axe est un NOM DE FICHIER. Sans ça, l auteur
       // de `voices.bayan_open` lit « aucune librairie ne sert cet axe » devant un fichier qui
       // existe, et il cherche une donnee manquante au lieu de changer un mot.
+      // Le mot a ecrire quand l axe donne est un NOM DE FICHIER : celui que ce fichier sert.
       const fichier = leRegistre()[d.name];
-      const motAEcrire = fichier && typeof fichier === 'object' ? fichier.resolves : null;
+      const motAEcrire = fichier && typeof fichier === 'object'
+        ? motDuFichier(d.name) : null;
       errors.push(diagnostic(
         motAEcrire ? 'RESOLVE_AXIS_IS_FILE_NAME' : 'RESOLVE_AXIS_SERVED_BY_NONE',
         { name: d.name, subkey: d.subkey, motAEcrire }, { line: d.line }));
@@ -3072,7 +3079,7 @@ export function chargerPorteesPermises(ast) {
   };
   for (const [cle, lib] of Object.entries(registre)) {
     if (!lib || typeof lib !== 'object' || cle.includes('/')) continue;
-    const mot = (typeof lib.resolves === 'string' && lib.resolves) || cle;
+    const mot = motDuFichier(cle);
     if (!mots.has(mot)) continue;
     marcher(mot, lib);
     const adresses = lib.schema && lib.schema.addressKeys;

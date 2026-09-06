@@ -25,6 +25,7 @@
  */
 import '../src/transpiler/index.js';
 import { leRegistre } from '../src/transpiler/libs.js';
+import { motDuFichier } from '../src/transpiler/index-des-objets.js';
 const LIBS = leRegistre();
 
 let p = 0;
@@ -36,11 +37,16 @@ const entrees = (lib) => Object.entries(lib || {})
   .filter(([k, v]) => !k.startsWith('_') && v && typeof v === 'object' && !Array.isArray(v))
   .map(([k]) => k);
 
-/** Les espaces de noms d'un jeu de librairies : mot d'invocation → fichiers qui y contribuent. */
-const espaces = (libs) => {
+/**
+ * Les espaces de noms d'un jeu de librairies : mot d'invocation → fichiers qui y contribuent.
+ * ⚠️ LE MOT EST FOURNI, JAMAIS LU DANS UN CHAMP. Sur la donnée publiée il vient de la porte des
+ * objets, qui le DÉRIVE de la chaîne de prototypes ; les jeux fabriqués des volets B et C portent
+ * leur propre table, parce que ce qu'ils éprouvent est le DÉTECTEUR, pas la dérivation.
+ */
+const espaces = (libs, motDe) => {
   const table = new Map();
   for (const [fichier, lib] of Object.entries(libs)) {
-    const mot = lib && typeof lib === 'object' ? lib.resolves : null;
+    const mot = lib && typeof lib === 'object' ? motDe(fichier) : null;
     if (!mot) continue;
     if (!table.has(mot)) table.set(mot, []);
     table.get(mot).push(fichier);
@@ -49,9 +55,9 @@ const espaces = (libs) => {
 };
 
 /** Les noms portés par PLUSIEURS contributeurs d'un même espace. */
-const collisions = (libs) => {
+const collisions = (libs, motDe) => {
   const out = [];
-  for (const [mot, fichiers] of espaces(libs)) {
+  for (const [mot, fichiers] of espaces(libs, motDe)) {
     if (fichiers.length < 2) continue;
     const vus = new Map();
     for (const f of fichiers) for (const n of entrees(libs[f])) {
@@ -65,14 +71,14 @@ const collisions = (libs) => {
 
 // ── A. LA DONNÉE PUBLIÉE — aucun espace ne porte deux fois le même nom ───────────────────────────
 {
-  const table = espaces(LIBS);
+  const table = espaces(LIBS, motDuFichier);
   ok(table.size > 0, "A. la donnée doit déclarer des mots d'invocation — sans eux le garde examine zéro");
   const partages = [...table].filter(([, f]) => f.length > 1);
   ok(partages.length > 0,
     "A. au moins un espace doit avoir PLUSIEURS contributeurs — sinon ce garde ne peut rien examiner "
     + "et son vert ne dit rien. Si le jour vient où chaque mot n'a qu'un fichier, ce volet doit le DIRE, "
     + `pas passer en silence. Espaces : ${[...table].map(([m, f]) => `${m}×${f.length}`).join(' ')}`);
-  const c = collisions(LIBS);
+  const c = collisions(LIBS, motDuFichier);
   ok(c.length === 0,
     `A. ⛔ ${c.length} entrée(s) portée(s) par deux contributeurs d'un même espace : ${c.join(' · ')} — `
     + `le chargeur rendrait LE PREMIER TROUVÉ sans un mot, et rien ne le dirait au consommateur`);
@@ -82,11 +88,12 @@ const collisions = (libs) => {
 // Sans ce volet, un détecteur cassé rendrait « zéro collision » exactement comme un dépôt propre.
 {
   const jeu = {
-    vrai: { resolves: 'axe_temoin', western: { description: 'authentique' }, autre: { description: 'x' } },
-    faux: { resolves: 'axe_temoin', western: { description: 'IMPOSTEUR' } },
-    seul: { resolves: 'axe_solitaire', western: { description: 'sans rival' } },
+    vrai: { western: { description: 'authentique' }, autre: { description: 'x' } },
+    faux: { western: { description: 'IMPOSTEUR' } },
+    seul: { western: { description: 'sans rival' } },
   };
-  const c = collisions(jeu);
+  const mots = { vrai: 'axe_temoin', faux: 'axe_temoin', seul: 'axe_solitaire' };
+  const c = collisions(jeu, (f) => mots[f]);
   ok(c.length === 1, `B. le détecteur doit voir LA collision fabriquée — reçu ${JSON.stringify(c)}`);
   ok(c[0]?.includes('axe_temoin.western'), `B. et la NOMMER — reçu ${JSON.stringify(c[0])}`);
   ok(!c.some((x) => x.includes('axe_solitaire')),
@@ -97,10 +104,10 @@ const collisions = (libs) => {
 // ── C. LE FILTRE — une méta ou un commentaire n'est pas une entrée ───────────────────────────────
 {
   const jeu = {
-    a: { resolves: 'axe_c', resolvedBy: 'Kairos', _comment: { x: 1 }, vrai: { d: 1 } },
-    b: { resolves: 'axe_c', resolvedBy: 'Kairos', _comment: { x: 2 } },
+    a: { resolvedBy: 'Kairos', _comment: { x: 1 }, vrai: { d: 1 } },
+    b: { resolvedBy: 'Kairos', _comment: { x: 2 } },
   };
-  const c = collisions(jeu);
+  const c = collisions(jeu, () => 'axe_c');
   ok(c.length === 0,
     `C. une méta ni un commentaire souligné ne comptent comme entrée — reçu ${JSON.stringify(c)}`);
 }
@@ -109,4 +116,4 @@ const ATTENDU = 3 + 4 + 1;
 ok(p + e.length === ATTENDU, `le garde doit éprouver ${ATTENDU} cas — ${p + e.length} seulement`);
 
 if (e.length) { console.error(`[espaces] ${e.length} ÉCHEC(S) :`); for (const x of e) console.error('  ✗ ' + x); process.exit(1); }
-console.log(`[espaces] ${p} PASS / 0 FAIL — ${p} assertion(s), ${espaces(LIBS).size} espace(s) examiné(s)`);
+console.log(`[espaces] ${p} PASS / 0 FAIL — ${p} assertion(s), ${espaces(LIBS, motDuFichier).size} espace(s) examiné(s)`);

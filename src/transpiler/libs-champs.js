@@ -62,7 +62,10 @@
  * SORTENT avec elle ; la porte des objets (`objets.js`) ne les expose pas. Les MEMBRES DE RACINE sont
  * ce que l'objet racine d'un catalogue porte en propre, et ils restent.
  */
-export const CHAMPS_DU_PAQUET = new Set(['resolves', 'name', 'section', 'type', 'version']);
+// ⛔ `resolves` A QUITTE CETTE LISTE avec le champ lui-meme, le 2026-09-06 : une librairie ne
+// declare plus le mot sous lequel on l'invoque, il se DERIVE (`libs.js:motDuFichier`). Le laisser ici
+// aurait ete une liste qui protege d'un champ que plus rien n'ecrit — du code mort qui rassure.
+export const CHAMPS_DU_PAQUET = new Set(['name', 'section', 'type', 'version']);
 export const MEMBRES_DE_RACINE = new Set(['resolvedBy', 'description', 'documented']);
 export const CHAMPS_DE_FICHIER = new Set([...CHAMPS_DU_PAQUET, ...MEMBRES_DE_RACINE]);
 

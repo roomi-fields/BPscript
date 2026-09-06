@@ -29,15 +29,10 @@
  * prototypes quitteront `types`, et la chaîne `scale.degree.bilaval` se lira alors ici sans qu'un
  * consommateur change.
  */
-import { leRegistre, versionDuRegistre, placesDesLibrairies } from './libs.js';
+import { leRegistre, versionDuRegistre, placesDesLibrairies, motDuFichier as motDuChargeur } from './libs.js';
 import { entreesDe, CHAMPS_DU_PAQUET, CHAMPS_DE_FICHIER } from './libs-champs.js';
 // Le schéma de SYNTAXE — ce que le langage EST, par sa propre porte (décision Romain, 2026-08-20).
 import { SYNTAXE } from './syntaxe-data.js';
-
-/** Le mot d'une famille — ce qu'on invoque. Lu dans la donnée tant que le paquet la porte. */
-function motDe(cle, lib) {
-  return (lib && typeof lib.resolves === 'string' && lib.resolves) || cle;
-}
 
 /** Les membres propres d'un objet du paquet : tout sauf la trace de dérivation et les notes privées. */
 function membresDe(objet, exclure = new Set()) {
@@ -92,7 +87,7 @@ function index() {
     const barre = cle.indexOf('/');
     if (barre > 0) {
       const dossier = cle.slice(0, barre);
-      const mot = motDe(dossier, LIBS[dossier]);
+      const mot = motDuChargeur(dossier);
       const fam = familleDe(mot);
       fam.contributeurs.push(cle);
       const o = {
@@ -104,7 +99,7 @@ function index() {
       poser(o);
       continue;
     }
-    const mot = motDe(cle, lib);
+    const mot = motDuChargeur(cle);
     const places = new Set((PLACES[cle] || []).filter((p) => p !== '_deduites'));
     const fam = familleDe(mot);
     fam.contributeurs.push(cle);
@@ -413,7 +408,7 @@ export function motsInvoques(ast) {
   const apportePar = new Map();
   for (const [cle, lib] of Object.entries(LIBS)) {
     if (!lib || typeof lib !== 'object') continue;
-    const mot = motDe(cle.split('/')[0], LIBS[cle.split('/')[0]]);
+    const mot = motDuChargeur(cle.split('/')[0]);
     if (!apportePar.has(mot)) apportePar.set(mot, new Set());
     for (const a of (Array.isArray(lib.apporte) ? lib.apporte : [])) apportePar.get(mot).add(a);
   }
@@ -442,3 +437,19 @@ export function objetEnPortee(nom, ast) {
   if (o.ambigu) throw new Error(`'${nom}' est déclaré par plusieurs librairies — ${o.ambigu.join(', ')} — et le compilateur ne peut pas choisir`);
   return motsInvoques(ast).has(o.famille) ? o : null;
 }
+
+// Le mot que sert un fichier — reexporte pour que le parseur passe par LA PORTE, jamais par le
+// chargeur : son assiette d imports vers `libs.js` ne peut que DESCENDRE (assiette assertee du plan).
+/**
+ * LE MOT QUE SERT UN FICHIER DU REGISTRE — `motDuFichier('alphabets')` rend `'alphabet'`. Le calcul
+ * vit dans le chargeur, qui seul tient le registre et ses places ; il ne se recopie pas.
+ *
+ * ⛔ ET LA FORME S'ÉCRIT ICI, PAS DERRIÈRE UNE RÉEXPORTATION. Réexporter le symbole du chargeur
+ * faisait entrer TOUTE la description du chargeur — et celle de son lecteur de sources — dans le
+ * paquet publié : cinquante champs de plus en `any`, sur une porte dont la doctrine est justement
+ * d'écrire ses formes. Une porte décrit ce qu'elle rend.
+ *
+ * @param {string} cle   la clé du fichier dans le registre
+ * @returns {string | null}
+ */
+export function motDuFichier(cle) { return motDuChargeur(cle); }

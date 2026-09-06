@@ -13,6 +13,7 @@ import {
   librairiesQuiDeclarent,
   loadLib,
   loadLibsFromDirectives,
+  motDuFichier,
   motReserve,
   motsInvoques,
   nomsDeTerminaux,
@@ -22,7 +23,7 @@ import {
   resolveActorAlphabetSource,
   universeControlNames,
   versionDuRegistre
-} from "./chunk-DIV55DJH.js";
+} from "./chunk-IKJYPNIC.js";
 import {
   LexError,
   diagnostic,
@@ -1529,16 +1530,14 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
     if (axis === "alphabet" && resolveActorAlphabet(name, ast.directives)) return;
     errors.push(diagnostic("RESOLVE_FOUND_CATALOG_REFERENCE_DOES", { axis, name }, { line }));
   };
-  const motsDeclares = () => new Set(
-    Object.values(leRegistre()).map((l) => l && typeof l === "object" ? l.resolves : null).filter(Boolean)
-  );
+  const motsDeclares = () => new Set(familles());
   const libExiste = (nom) => motsDeclares().has(nom);
   const motsDuLangage = { has: (nom) => motReserve(nom) };
   for (const d of ast.directives || []) {
     if (!d || !d.name) continue;
     if (!d.subkey) {
       const fichierNu = leRegistre()[d.name];
-      const motNu = fichierNu && typeof fichierNu === "object" ? fichierNu.resolves : null;
+      const motNu = fichierNu && typeof fichierNu === "object" ? motDuFichier(d.name) : null;
       if (motNu && motNu !== d.name) {
         errors.push(diagnostic("RESOLVE_FILE_NAME_WORD_INVOKES", { p1: d.name, motNu }, { line: d.line }));
       }
@@ -1557,7 +1556,7 @@ function validateReferences(ast, libCtx = {}, environnement = {}) {
         continue;
       }
       const fichier = leRegistre()[d.name];
-      const motAEcrire = fichier && typeof fichier === "object" ? fichier.resolves : null;
+      const motAEcrire = fichier && typeof fichier === "object" ? motDuFichier(d.name) : null;
       errors.push(diagnostic(
         motAEcrire ? "RESOLVE_AXIS_IS_FILE_NAME" : "RESOLVE_AXIS_SERVED_BY_NONE",
         { name: d.name, subkey: d.subkey, motAEcrire },
@@ -1706,7 +1705,7 @@ function chargerPorteesPermises(ast) {
   };
   for (const [cle, lib] of Object.entries(registre)) {
     if (!lib || typeof lib !== "object" || cle.includes("/")) continue;
-    const mot = typeof lib.resolves === "string" && lib.resolves || cle;
+    const mot = motDuFichier(cle);
     if (!mots.has(mot)) continue;
     marcher(mot, lib);
     const adresses = lib.schema && lib.schema.addressKeys;

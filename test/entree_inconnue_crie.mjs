@@ -30,6 +30,7 @@ import '../src/transpiler/index.js';
 import { leRegistre } from '../src/transpiler/libs.js';
 const LIBS = leRegistre();
 import { CHAMPS_DE_FICHIER } from '../src/transpiler/libs-champs.js';
+import { motDuFichier } from '../src/transpiler/libs.js';
 
 let passe = 0;
 const echecs = [];
@@ -61,7 +62,7 @@ const CATALOGUES = new Set(axesDeCatalogue());
 // la decision qui la retire, et son rouge accuse la frappe au lieu de lui-meme.
 const SANS_CATALOGUE = Object.entries(LIBS)
   .filter(([nom, lib]) => !CATALOGUES.has(nom) && lib && typeof lib === 'object' && lib.resolvedBy)
-  .map(([nom, lib]) => [lib.resolves || nom,
+  .map(([nom, lib]) => [motDuFichier(nom) || nom,
     Object.keys(lib).filter((k) => !k.startsWith('_')
       && !CHAMPS_DE_FICHIER.has(k))])
   // ⚠️ ET LE FILTRE DES CATALOGUES SE REJOUE APRES LA TRADUCTION : `test_alphabets` n'etait pas

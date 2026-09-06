@@ -11,16 +11,15 @@ midi_default
 // @documented
 // @description BPscript core — rests, prolongation, engine controls, BASE for scene defaults
 def core(
-  resolves:core,
   name:core,
   version:"0.2.0",
   symbols(),
   section:defaults
 )
 
-def components(alphabet:western, tuning:western_12TET, transport:audio, eval:js)
+core components(alphabet:western, tuning:western_12TET, transport:audio, eval:js)
 
-def values(
+core values(
   // @description Reference pitch (Hz). The default comes from the `diapason` field of the EFFECTIVE ALPHABET (actor ?? scene `alphabet.X`
   // ?? default alphabet `core`, `components.alphabet`) — the anchor is a property of the note system, not of the tuning (see
   // SCENE_DEFAULTS_CASCADE.md). Overridable with `diapason:N` at the head of a scene, or `(diapason:N)` on one occurrence. When the
@@ -33,7 +32,7 @@ def values(
 )
 
 // @description Derivation failure handling
-def on_fail(
+core on_fail(
   section:settings,
   type:directive,
   values("skip", "retry", "fallback"),

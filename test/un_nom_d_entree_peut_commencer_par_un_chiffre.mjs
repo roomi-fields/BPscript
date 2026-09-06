@@ -28,6 +28,7 @@
 import { compileToBPxAST } from '../src/transpiler/index.js';
 import '../src/transpiler/index.js';
 import { leRegistre } from '../src/transpiler/libs.js';
+import { motDuFichier } from '../src/transpiler/libs.js';
 const LIBS = leRegistre();
 
 let passe = 0;
@@ -56,7 +57,7 @@ const compiler = (tete) => {
   // d etre fermee. Le nom du fichier ne se lit plus dans une scene ; ce qui s y ecrit est ce que la
   // librairie DECLARE.
   for (const [lib, entree] of aChiffre) {
-    const mot = (LIBS[lib] && LIBS[lib].resolves) || lib;
+    const mot = motDuFichier(lib);
     const r = compiler(`${mot}.${entree}`);
     ok(messages(r) === '',
        `A. '${mot}.${entree}' doit être ACCEPTÉ — reçu : ${messages(r).slice(0, 90)}`);

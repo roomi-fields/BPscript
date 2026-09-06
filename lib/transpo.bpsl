@@ -7,7 +7,6 @@ types
 // @documented
 // @description Pitch transformations resolved by Kairos.
 def transpo(
-  resolves:transpo,
   resolvedBy:"Kairos",
   name:transpo,
   section:controls

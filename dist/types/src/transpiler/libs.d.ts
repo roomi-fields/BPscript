@@ -1,4 +1,5 @@
 import { placesDesLibrairies } from './librairies.js';
+export function motDuFichier(cle: any): any;
 /** Le registre, chargé s'il ne l'est pas encore. La seule porte de lecture. */
 export function leRegistre(): {};
 export function versionDuRegistre(): number;

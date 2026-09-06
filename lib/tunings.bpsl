@@ -1,7 +1,7 @@
 types
 
 // @documented
-def tunings(resolvedBy:Kairos, resolves:tuning)
+def tunings(resolvedBy:Kairos)
 
 // @description Standard Western equal temperament
 tuning western_12TET(

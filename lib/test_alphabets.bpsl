@@ -1,6 +1,6 @@
 types
 
-def test_alphabets(resolvedBy:Kairos, resolves:alphabet)
+def test_alphabets(resolvedBy:Kairos)
 
 // @description Single-character alphabet a-z (Bernard's -al.abc / -ho.abc)
 alphabet abc(

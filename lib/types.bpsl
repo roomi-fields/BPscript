@@ -1,5 +1,5 @@
 // @documented
-def types(resolves:types)
+def types
 
 def scale(scope(scene))
 scale interval

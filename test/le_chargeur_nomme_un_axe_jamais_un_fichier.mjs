@@ -23,6 +23,7 @@
 import { readFileSync } from 'node:fs';
 import '../src/transpiler/index.js';
 import { leRegistre } from '../src/transpiler/libs.js';
+import { familles } from '../src/transpiler/index-des-objets.js';
 const LIBS = leRegistre();
 
 let p = 0;
@@ -30,7 +31,9 @@ const e = [];
 const ok = (cond, quoi) => { if (cond) p++; else e.push(quoi); };
 
 /** Les mots d'invocation que la DONNÉE déclare — jamais une liste écrite ici. */
-const AXES = new Set(Object.values(LIBS).map((l) => l && typeof l === 'object' ? l.resolves : null).filter(Boolean));
+// ⛔ LES MOTS SE LISENT A LA PORTE — `resolves` est sorti (2026-09-02) et le mot d'une famille
+// se DERIVE de la structure de ses objets. `familles()` rend exactement ces mots.
+const AXES = new Set(familles());
 ok(AXES.size > 0, 'la donnée doit déclarer des mots d\'invocation — sans eux le garde examine zéro');
 
 /**

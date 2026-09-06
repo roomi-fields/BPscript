@@ -16,6 +16,7 @@ const LIBS = leRegistre();
 const PLACES = placesDesLibrairies(leRegistre());
 import { entreesDe } from '../src/transpiler/libs-champs.js';
 import { familles, famille, objet, objets } from '../src/transpiler/objets.js';
+import { motDuFichier } from '../src/transpiler/libs.js';
 
 let passe = 0;
 const echecs = [];
@@ -28,7 +29,7 @@ const sousDossiers = [];   // [clé de paquet] — un catalogue de sous-dossier 
 const motDe = (cle) => {
   const barre = cle.indexOf('/');
   const tete = barre > 0 ? cle.slice(0, barre) : cle;
-  return (LIBS[tete] && LIBS[tete].resolves) || tete;
+  return motDuFichier(tete);
 };
 for (const [cle, lib] of Object.entries(LIBS)) {
   if (!lib || typeof lib !== 'object' || Array.isArray(lib)) continue;
@@ -115,7 +116,7 @@ for (const [cle, place, nom] of attendues) {
 {
   // Le témoin qui DISCRIMINE : une famille à deux contributeurs de statuts opposés. Une porte qui
   // recopierait la racine rendrait la même valeur sur les 24 ; celle-ci en rend deux.
-  const contributeurs = Object.keys(LIBS).filter((cle) => LIBS[cle] && (LIBS[cle].resolves || cle) === 'alphabet');
+  const contributeurs = Object.keys(LIBS).filter((cle) => LIBS[cle] && motDuFichier(cle) === 'alphabet');
   const statuts = new Set(contributeurs.map((cle) => Boolean(LIBS[cle].documented)));
   ok(contributeurs.length >= 2 && statuts.size === 2,
      `4. SOCLE : la famille 'alphabet' doit être servie par deux catalogues de statuts opposés — reçu ${JSON.stringify(contributeurs.map((c) => [c, Boolean(LIBS[c].documented)]))}`);
@@ -138,7 +139,7 @@ for (const [cle, place, nom] of attendues) {
     const proto = objet(o.derive);
     if (!proto || proto.ambigu) continue;
     for (const [k, v] of Object.entries(proto.membres)) {
-      const brut = (LIBS[o.famille === 'core' ? 'core' : Object.keys(LIBS).find((c) => ((LIBS[c] && LIBS[c].resolves) || c) === o.famille && (o.place ? LIBS[c][o.place] && LIBS[c][o.place][o.nom] : LIBS[c][o.nom]))] || {});
+      const brut = (LIBS[o.famille === 'core' ? 'core' : Object.keys(LIBS).find((c) => (motDuFichier(c)) === o.famille && (o.place ? LIBS[c][o.place] && LIBS[c][o.place][o.nom] : LIBS[c][o.nom]))] || {});
       const propre = o.place ? brut[o.place] && brut[o.place][o.nom] : brut[o.nom];
       if (propre && k in propre) continue;   // écrit par l'exemplaire : il gagne
       herites++;

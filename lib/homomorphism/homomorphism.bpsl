@@ -2,7 +2,6 @@ def homomorphism(
   resolvedBy:Kairos,
   name:homomorphism,
   type:homomorphism,
-  resolves:homomorphism,
   section:tables
 ) ``ts:
 // Corps du PROTOTYPE `homomorphism` — l'applicateur, AUTHORING F1 (vrai .ts TYPÉ contre le SDK Kairos).
