@@ -78,6 +78,41 @@ for (const [nom, faute] of GRAPHIES) {
     + `elle en rend ${seule}. Sans ce socle, « 2 » ne dit pas si la graphie est même vue.`);
 }
 
+// ── ⛔ ET LE TROISIÈME AXE : AVEC OU SANS FLÈCHE — la cause 3, élucidée le 2026-09-06 ──────────
+//
+// Les graphies ci-dessus varient la forme de la faute et sa position, mais TOUTES portent une
+// flèche : elles s'écrivent `S -> A ((`. Or c'est la FLÈCHE qui décide du chemin de lecture — une
+// ligne sans flèche dans un bloc est lue comme une TÊTE DE SOUS-GRAMMAIRE (`mode:lin` en est une),
+// donc elle passe par `parseDirective` et jamais par `parseRule`. Sa levée sortait hors canal et
+// emportait tout ce qui avait été collecté avant elle.
+//
+// ⚠️ CE GARDE ÉTAIT VERT SUR CE DÉFAUT, et c'est la leçon : il exerçait déjà trois graphies et deux
+// positions, mais un seul régime de ligne. *Un troisième axe qu'on n'a pas nommé ressemble à un axe
+// qu'on couvre.* Mesuré avant réparation : `A ((` puis `B ]]` rendait 1, les deux mêmes fautes
+// écrites avec une flèche en rendaient 2.
+const LIGNES_NUES = [
+  ['parenthèse ouverte',  'A (('],
+  ['crochets fermants',   'B ]]'],
+  ['deux-points orphelin', 'C :'],
+];
+for (const [nom, faute] of LIGNES_NUES) {
+  const seule = compte(`${H}-----\n${faute}\nS -> C4\n`);
+  ok(seule === 1, `LIGNE NUE « ${nom} » — seule, elle doit rendre EXACTEMENT 1 erreur, elle en rend `
+    + `${seule}. Sans ce socle, « 2 » ne dit pas si la graphie est même vue.`);
+  const deux = compte(`${H}-----\n${faute}\n${faute}\n`);
+  ok(deux === 2, `LIGNE NUE « ${nom} » — deux fois cette faute doivent rendre 2, elles rendent ${deux}. `
+    + `Une ligne SANS FLÈCHE est lue comme une tête de sous-grammaire : sa levée doit collecter dans `
+    + `le même canal que celle d'une règle, sinon la flèche décide de ce que l'auteur reçoit.`);
+}
+// Et le croisement des deux régimes, dans les deux ordres — c'est la case exacte qui rendait 1.
+{
+  const nuePuisRegle = compte(`${H}-----\nA ((\nS -> C4(((\n`);
+  ok(nuePuisRegle === 2, `LIGNE NUE puis RÈGLE — 2 attendues, ${nuePuisRegle} reçue(s). C'est la case `
+    + `qui a rendu 1 jusqu'au 2026-09-06 : la ligne nue levait hors canal et emportait la suivante.`);
+  const reglePuisNue = compte(`${H}-----\nS -> C4(((\nA ((\n`);
+  ok(reglePuisNue === 2, `RÈGLE puis LIGNE NUE — 2 attendues, ${reglePuisNue} reçue(s).`);
+}
+
 // ── LA MATRICE — deux fautes rendent deux erreurs, quels que soient les étages et l'ordre ─────
 const MATRICE = [
   ['deux fautes de FORME',            FAUTE_DE_FORME_1 + FAUTE_DE_FORME_2],

@@ -4205,75 +4205,98 @@ function parse(tokens, opts = {}) {
       // `mode:lin` pose le mode de la passe ; `S -> C4` la produit. Depuis que l arobase est
       // sortie, les deux commencent par un IDENT et seule la fleche les departage.
       while (!atEnd() && !at(T.SEPARATOR) && !at(T.NEWLINE) && ligneSansFleche()) {
-        // La section template est en SINGULIER, sans alias (cf. parseScene).
-        if (at(T.IDENT) && current().value === 'template') break;
-        // Refus NOMMÉ de l'ex-graphie plurielle : c'est ICI qu'on la voit passer. Sans ce
-        // branchement, elle tomberait dans le rejet générique des directives inconnues et
-        // rendrait « ligne non reconnue » — un message qui ressemble à une coquille et n'aide
-        // personne à migrer.
-        if (at(T.IDENT) && current().value === 'templates') {
-          throw new ParseError('PARSE_TEMPLATES_PLURAL_LONGER_EXISTS', {}, current());
-        }
-        const dirTok = current();
-        // Le NOM se lit sur le jeton, pas sur le nœud produit : certaines directives (`var`…)
-        // rendent un nœud sans champ `name`, et le message annonçait alors « @undefined » — un
-        // refus qui ne nomme pas la faute vaut à peine mieux qu'un silence.
-        const dirNom = current() && current().value ? String(current().value) : '?';
-        const dir = parseDirective();
-        if (dir.name === 'mode' && dir.runtime) {
-          blockMode = dir.runtime;  // mode:rnd → runtime='rnd'
-          currentMode = blockMode;  // portée du bloc courant seulement (pas d'héritage)
-          blockModifiers = dir.modifiers || null;
-          currentModifiers = blockModifiers;
-        } else if (dir.name !== 'mode') {
-          // ⚠️ ELLES ÉTAIENT PARSÉES PUIS JETÉES — SANS UN MOT (Romain, 2026-07-29).
-          //
-          // Ce `while` lisait toute directive posée entre deux blocs de règles et ne gardait que
-          // `mode`. Les autres étaient construites, puis abandonnées ici même : l'auteur écrivait
-          // `var v` ou `alphabet.sargam`, la scène compilait sans une erreur, et RIEN n'avait été
-          // déclaré. C'est le mode d'échec de la flèche du moteur historique, en pire — là au moins
-          // ça ne compilait pas.
-          //
-          // MESURÉ, ET C'EST L'ESPACE QUI COMPTE, PAS LA FORME DU TICKET : le signalement portait
-          // sur `var`. Le balayage des directives réservées en trouve VINGT-QUATRE dans le même
-          // cas — alphabet, tuning, octaves, transport, eval, actor, controls, var, in, alias, mm,
-          // tempo, duration, meter, quantization, qclock, transpose, diapason, transcription,
-          // settings, filter, modulation, ins, test_alphabets. Garder la seule forme signalée aurait
-          // laissé vivre les vingt-trois autres.
-          //
-          // ⚠️ ET `mode` RESTE LÉGITIME ICI, ce n'est pas une exception de complaisance : il porte
-          // le mode de la sous-grammaire QUI SUIT, et 67 scènes du corpus sur 263 en vivent. Un
-          // refus en bloc les aurait toutes cassées — la même faute que le témoin qui aurait refusé
-          // 120 scènes sur 333 le 2026-07-28. Le corpus a été mesuré AVANT d'écrire ce refus : une
-          // seule scène y perd quelque chose (`bells.bps`, trois directives aujourd'hui muettes).
-          // ⛔ ET CE REFUS NE VAUT PAS POUR UN CONTRÔLE DE PORTÉE. Atlas a mesuré le 2026-08-19 que
-          // `destru` recevait ici « remonter cette ligne avant la première règle de la scène » —
-          // c'est-à-dire EN TÊTE DE SCÈNE, où un AUTRE refus le renvoie en tête de sous-grammaire.
-          // Les deux messages s'envoyaient l'un vers l'autre, et un lecteur qui les suit tourne en
-          // rond. La cause : ce refus traite toute ligne comme une DÉCLARATION mal placée, alors
-          // qu'un contrôle de portée n'est pas une déclaration — sa donnée dit où il vit, et
-          // `scene` n'en fait pas partie.
-          //
-          // ⚠️ LA BORNE VIENT DE LA DONNÉE, pas d'une liste : un mot dont les portées déclarées
-          // EXCLUENT `scene` ne peut pas être « remonté avant la première règle ». On lui rend sa
-          // propre cause, avec la forme qui l'écrit.
-          // ⚠️ ET LA BORNE A UNE SECONDE MOITIÉ, PAYÉE DANS LA MINUTE : `scale` a des portées qui
-          // excluent `scene` — c'est un contrôle de flux — ET c'est un AXE DE CATALOGUE, donc
-          // `scale.raga_bhairav` se déclare bien en tête. Ma première écriture lui donnait le
-          // message du réglage et lui retirait le sien. Un mot peut être les deux ; ce qui décide
-          // est qu'il soit DÉCLARABLE, et la donnée le dit par `catalogAxes`.
-          const axes = catalogAxisKeys();
-          const porteesDuMot = libCtx.portees.get(dirNom) || null;
-          if (porteesDuMot && !porteesDuMot.includes('scene') && !axes.has(dirNom)) {
-            const PLACE = { subgrammar: 'at the top of a sub-grammar, in the parenthesis of the mode '
-                            + '(`mode:<mode>(<setting>)`)', rule: 'on a rule', group: 'on a group',
-                            symbol: 'on an element', flow: 'in the flow' };
-            const ou = porteesDuMot.map((x) => PLACE[x] ?? x);
-            throw new ParseError('PARSE_DIRNOM_DECLARATION_SETTING_WRITTEN', { dirNom, p1: ou.length === 1 ? ou[0] : ou.slice(0, -1).join(', ') + ' or ' + ou[ou.length - 1] }, dirTok);
+        // ⛔ ET CETTE BOUCLE COLLECTE, COMME CELLE DES RÈGLES — c'était la cause 3 du canal unique.
+        // Une ligne SANS FLÈCHE dans un bloc est lue ici comme une tête de sous-grammaire : `A ((`
+        // n'a pas de flèche, donc `parseRule` n'est jamais atteint et tout ce que la boucle des
+        // règles avait collecté était emporté par cette levée. Mesuré : deux fautes en tête de bloc
+        // rendaient UNE erreur, les mêmes en seconde position en rendaient deux.
+        // ⚠️ *Deux mécanismes pour un seul fait, et la GRAPHIE choisissait lequel* — la flèche.
+        const avantLigne = pos;
+        try {
+          // La section template est en SINGULIER, sans alias (cf. parseScene).
+          if (at(T.IDENT) && current().value === 'template') break;
+          // Refus NOMMÉ de l'ex-graphie plurielle : c'est ICI qu'on la voit passer. Sans ce
+          // branchement, elle tomberait dans le rejet générique des directives inconnues et
+          // rendrait « ligne non reconnue » — un message qui ressemble à une coquille et n'aide
+          // personne à migrer.
+          if (at(T.IDENT) && current().value === 'templates') {
+            throw new ParseError('PARSE_TEMPLATES_PLURAL_LONGER_EXISTS', {}, current());
           }
-          throw new ParseError('PARSE_DIRNOM_WRITTEN_AFTER_RULES', { dirNom }, dirTok);
+          const dirTok = current();
+          // Le NOM se lit sur le jeton, pas sur le nœud produit : certaines directives (`var`…)
+          // rendent un nœud sans champ `name`, et le message annonçait alors « @undefined » — un
+          // refus qui ne nomme pas la faute vaut à peine mieux qu'un silence.
+          const dirNom = current() && current().value ? String(current().value) : '?';
+          const dir = parseDirective();
+          if (dir.name === 'mode' && dir.runtime) {
+            blockMode = dir.runtime;  // mode:rnd → runtime='rnd'
+            currentMode = blockMode;  // portée du bloc courant seulement (pas d'héritage)
+            blockModifiers = dir.modifiers || null;
+            currentModifiers = blockModifiers;
+          } else if (dir.name !== 'mode') {
+            // ⚠️ ELLES ÉTAIENT PARSÉES PUIS JETÉES — SANS UN MOT (Romain, 2026-07-29).
+            //
+            // Ce `while` lisait toute directive posée entre deux blocs de règles et ne gardait que
+            // `mode`. Les autres étaient construites, puis abandonnées ici même : l'auteur écrivait
+            // `var v` ou `alphabet.sargam`, la scène compilait sans une erreur, et RIEN n'avait été
+            // déclaré. C'est le mode d'échec de la flèche du moteur historique, en pire — là au moins
+            // ça ne compilait pas.
+            //
+            // MESURÉ, ET C'EST L'ESPACE QUI COMPTE, PAS LA FORME DU TICKET : le signalement portait
+            // sur `var`. Le balayage des directives réservées en trouve VINGT-QUATRE dans le même
+            // cas — alphabet, tuning, octaves, transport, eval, actor, controls, var, in, alias, mm,
+            // tempo, duration, meter, quantization, qclock, transpose, diapason, transcription,
+            // settings, filter, modulation, ins, test_alphabets. Garder la seule forme signalée aurait
+            // laissé vivre les vingt-trois autres.
+            //
+            // ⚠️ ET `mode` RESTE LÉGITIME ICI, ce n'est pas une exception de complaisance : il porte
+            // le mode de la sous-grammaire QUI SUIT, et 67 scènes du corpus sur 263 en vivent. Un
+            // refus en bloc les aurait toutes cassées — la même faute que le témoin qui aurait refusé
+            // 120 scènes sur 333 le 2026-07-28. Le corpus a été mesuré AVANT d'écrire ce refus : une
+            // seule scène y perd quelque chose (`bells.bps`, trois directives aujourd'hui muettes).
+            // ⛔ ET CE REFUS NE VAUT PAS POUR UN CONTRÔLE DE PORTÉE. Atlas a mesuré le 2026-08-19 que
+            // `destru` recevait ici « remonter cette ligne avant la première règle de la scène » —
+            // c'est-à-dire EN TÊTE DE SCÈNE, où un AUTRE refus le renvoie en tête de sous-grammaire.
+            // Les deux messages s'envoyaient l'un vers l'autre, et un lecteur qui les suit tourne en
+            // rond. La cause : ce refus traite toute ligne comme une DÉCLARATION mal placée, alors
+            // qu'un contrôle de portée n'est pas une déclaration — sa donnée dit où il vit, et
+            // `scene` n'en fait pas partie.
+            //
+            // ⚠️ LA BORNE VIENT DE LA DONNÉE, pas d'une liste : un mot dont les portées déclarées
+            // EXCLUENT `scene` ne peut pas être « remonté avant la première règle ». On lui rend sa
+            // propre cause, avec la forme qui l'écrit.
+            // ⚠️ ET LA BORNE A UNE SECONDE MOITIÉ, PAYÉE DANS LA MINUTE : `scale` a des portées qui
+            // excluent `scene` — c'est un contrôle de flux — ET c'est un AXE DE CATALOGUE, donc
+            // `scale.raga_bhairav` se déclare bien en tête. Ma première écriture lui donnait le
+            // message du réglage et lui retirait le sien. Un mot peut être les deux ; ce qui décide
+            // est qu'il soit DÉCLARABLE, et la donnée le dit par `catalogAxes`.
+            const axes = catalogAxisKeys();
+            const porteesDuMot = libCtx.portees.get(dirNom) || null;
+            if (porteesDuMot && !porteesDuMot.includes('scene') && !axes.has(dirNom)) {
+              const PLACE = { subgrammar: 'at the top of a sub-grammar, in the parenthesis of the mode '
+                              + '(`mode:<mode>(<setting>)`)', rule: 'on a rule', group: 'on a group',
+                              symbol: 'on an element', flow: 'in the flow' };
+              const ou = porteesDuMot.map((x) => PLACE[x] ?? x);
+              throw new ParseError('PARSE_DIRNOM_DECLARATION_SETTING_WRITTEN', { dirNom, p1: ou.length === 1 ? ou[0] : ou.slice(0, -1).join(', ') + ' or ' + ou[ou.length - 1] }, dirTok);
+            }
+            throw new ParseError('PARSE_DIRNOM_WRITTEN_AFTER_RULES', { dirNom }, dirTok);
+          }
+          skipNewlines();
+        } catch (e) {
+          if (!(e instanceof ParseError)) throw e;
+          refusDeRegle.push(e);
+          // La reprise est celle du canal des règles, et pour la même raison : se repérer sur la
+          // LIGNE de la faute, jamais sur la position courante, qui peut avoir dépassé sa fin.
+          const ligneFautive = e.token && e.token.line;
+          if (ligneFautive != null) {
+            while (!atEnd() && !at(T.SEPARATOR) && current().line <= ligneFautive) advance();
+          } else {
+            while (!atEnd() && !at(T.NEWLINE) && !at(T.SEPARATOR)) advance();
+          }
+          skipNewlines();
+          // Une faute levée sans avoir consommé un jeton relancerait la même ligne indéfiniment.
+          if (pos === avantLigne && !atEnd()) advance();
         }
-        skipNewlines();
       }
 
       const rules = [];

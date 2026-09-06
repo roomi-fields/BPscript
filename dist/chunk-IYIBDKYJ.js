@@ -8498,35 +8498,49 @@ function parse(tokens, opts = {}) {
       let blockMode = currentMode;
       let blockModifiers = currentModifiers;
       while (!atEnd() && !at(T.SEPARATOR) && !at(T.NEWLINE) && ligneSansFleche()) {
-        if (at(T.IDENT) && current().value === "template") break;
-        if (at(T.IDENT) && current().value === "templates") {
-          throw new ParseError("PARSE_TEMPLATES_PLURAL_LONGER_EXISTS", {}, current());
-        }
-        const dirTok = current();
-        const dirNom = current() && current().value ? String(current().value) : "?";
-        const dir = parseDirective();
-        if (dir.name === "mode" && dir.runtime) {
-          blockMode = dir.runtime;
-          currentMode = blockMode;
-          blockModifiers = dir.modifiers || null;
-          currentModifiers = blockModifiers;
-        } else if (dir.name !== "mode") {
-          const axes = catalogAxisKeys();
-          const porteesDuMot = libCtx.portees.get(dirNom) || null;
-          if (porteesDuMot && !porteesDuMot.includes("scene") && !axes.has(dirNom)) {
-            const PLACE = {
-              subgrammar: "at the top of a sub-grammar, in the parenthesis of the mode (`mode:<mode>(<setting>)`)",
-              rule: "on a rule",
-              group: "on a group",
-              symbol: "on an element",
-              flow: "in the flow"
-            };
-            const ou = porteesDuMot.map((x) => PLACE[x] ?? x);
-            throw new ParseError("PARSE_DIRNOM_DECLARATION_SETTING_WRITTEN", { dirNom, p1: ou.length === 1 ? ou[0] : ou.slice(0, -1).join(", ") + " or " + ou[ou.length - 1] }, dirTok);
+        const avantLigne = pos;
+        try {
+          if (at(T.IDENT) && current().value === "template") break;
+          if (at(T.IDENT) && current().value === "templates") {
+            throw new ParseError("PARSE_TEMPLATES_PLURAL_LONGER_EXISTS", {}, current());
           }
-          throw new ParseError("PARSE_DIRNOM_WRITTEN_AFTER_RULES", { dirNom }, dirTok);
+          const dirTok = current();
+          const dirNom = current() && current().value ? String(current().value) : "?";
+          const dir = parseDirective();
+          if (dir.name === "mode" && dir.runtime) {
+            blockMode = dir.runtime;
+            currentMode = blockMode;
+            blockModifiers = dir.modifiers || null;
+            currentModifiers = blockModifiers;
+          } else if (dir.name !== "mode") {
+            const axes = catalogAxisKeys();
+            const porteesDuMot = libCtx.portees.get(dirNom) || null;
+            if (porteesDuMot && !porteesDuMot.includes("scene") && !axes.has(dirNom)) {
+              const PLACE = {
+                subgrammar: "at the top of a sub-grammar, in the parenthesis of the mode (`mode:<mode>(<setting>)`)",
+                rule: "on a rule",
+                group: "on a group",
+                symbol: "on an element",
+                flow: "in the flow"
+              };
+              const ou = porteesDuMot.map((x) => PLACE[x] ?? x);
+              throw new ParseError("PARSE_DIRNOM_DECLARATION_SETTING_WRITTEN", { dirNom, p1: ou.length === 1 ? ou[0] : ou.slice(0, -1).join(", ") + " or " + ou[ou.length - 1] }, dirTok);
+            }
+            throw new ParseError("PARSE_DIRNOM_WRITTEN_AFTER_RULES", { dirNom }, dirTok);
+          }
+          skipNewlines();
+        } catch (e) {
+          if (!(e instanceof ParseError)) throw e;
+          refusDeRegle.push(e);
+          const ligneFautive = e.token && e.token.line;
+          if (ligneFautive != null) {
+            while (!atEnd() && !at(T.SEPARATOR) && current().line <= ligneFautive) advance();
+          } else {
+            while (!atEnd() && !at(T.NEWLINE) && !at(T.SEPARATOR)) advance();
+          }
+          skipNewlines();
+          if (pos === avantLigne && !atEnd()) advance();
         }
-        skipNewlines();
       }
       const rules = [];
       let ruleSafety = 0;

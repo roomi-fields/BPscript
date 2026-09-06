@@ -1,9 +1,8 @@
 # Les étages du langage — ce dont BPScript est fait
 
-> **Brouillon destiné à Atlas.** Il décrit ce dont le langage est fait, entre `LANGUAGE.md` — qui
-> dit ce qu'on écrit dans une scène — et `LIBRAIRIES.md` — qui dit ce qui est déclarable et comment
-> on l'invoque. Ce qui est **décidé mais pas encore câblé** est marqué comme tel, jamais présenté
-> comme un état.
+> Ce document décrit **ce dont le langage est fait**, entre `LANGUAGE.md` — qui dit ce qu'on écrit
+> dans une scène — et `LIBRAIRIES.md` — qui dit ce qui est déclarable et comment on l'invoque. Ce
+> qui est **décidé et pas encore câblé** y est marqué comme tel, jamais présenté comme un état.
 
 BPScript a un cœur minimal et déclare le reste en librairie. Un mot que le compilateur connaît est
 un mot qu'on ne peut ni lire ni surcharger : le nombre de ces mots est la mesure du cœur.

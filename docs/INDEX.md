@@ -7,6 +7,7 @@
 | [LANGUAGE.md](spec/LANGUAGE.md) | Spécification complète : vision, 3 mots / 24 symboles / 9 opérateurs de flags, types temporels (gate/trigger/cv), double déclaration, `[]` moteur vs `()` runtime, backticks, flags, templates, captures, homomorphismes, compilation vers BP3 | Comprendre la syntaxe BPScript, vérifier une construction du langage, coder le tokenizer/parser/encoder |
 | [EBNF.md](spec/EBNF.md) | Grammaire formelle ISO 14977. Toutes les productions EBNF du langage | Valider la syntaxe, coder le parser, vérifier un edge case grammatical |
 | [AST.md](spec/AST.md) | Nœuds AST : Scene, Directive, Rule, CVInstance, Macro, Polymetry, etc. | Coder des transformations AST, comprendre la sortie du parser |
+| [ETAGES.md](spec/ETAGES.md) | Les deux étages du langage — le plancher et les descripteurs — où vit l'effet d'un objet, et la limite du codé-en-dur | Concevoir une librairie, décider si une notion se déclare ou se code |
 
 ## Chantiers — les plans en cours
 
@@ -69,7 +70,6 @@
 | [SCENE_VALUES_OVERRIDE.md](design/SCENE_VALUES_OVERRIDE.md) | Cascade des valeurs de scène |
 | [GRAMMAIRES_DE_TEST_BP3.md](design/GRAMMAIRES_DE_TEST_BP3.md) | Les grammaires BP3 qui servent de banc |
 | [code-voices-user-doc.md](drafts/code-voices-user-doc.md) | Brouillon d'aide sur les voix de code |
-| [ETAGES-DU-LANGAGE.md](drafts/ETAGES-DU-LANGAGE.md) | Les étages du langage et la limite du codé-en-dur — brouillon destiné à Atlas |
 
 ## Le banc
 
