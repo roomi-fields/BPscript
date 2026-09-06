@@ -27,7 +27,22 @@
  * Usage :  node test/run_guards.mjs [--verbose]
  */
 import { readdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
+import { spawnSync, execFile } from 'node:child_process';
+import os from 'node:os';
+
+/**
+ * UN GARDE LANCÉ, RENDU SOUS LA MÊME FORME QUE `spawnSync`.
+ *
+ * `status` vaut le code de sortie, ou 1 quand le processus a été tué (dépassement de délai) —
+ * jamais `null` : un verdict absent se lirait comme un vert par `r.status === 0`.
+ */
+const lancer = (chemin, delai) => new Promise((resoudre) => {
+  execFile('node', [chemin], { encoding: 'utf-8', timeout: delai, maxBuffer: 64 * 1024 * 1024 },
+    (err, stdout, stderr) => resoudre({
+      status: err ? (typeof err.code === 'number' ? err.code : 1) : 0,
+      stdout: stdout || '', stderr: stderr || '',
+    }));
+});
 import path from 'node:path';
 
 const ICI = path.dirname(new URL(import.meta.url).pathname);
@@ -85,11 +100,45 @@ let mentionsDeRegime = 0;
 // La liste, elle, nomme le disparu. Voir la comparaison en fin de fichier.
 const verts = [];
 
-for (const f of fichiers) {
-  const r = spawnSync('node', [path.join(ICI, f)], { encoding: 'utf-8', timeout: 300000 });
-  const n = compterAssertions((r.stdout || '') + (r.stderr || ''));
+// ⛔ LES GARDES SE LANCENT EN PARALLÈLE, ET LEUR RAPPORT RESTE DANS L'ORDRE DES FICHIERS.
+//
+// Mesuré le 2026-09-06 : 240 `spawnSync` EN SÉRIE, chacun démarrant un node qui recharge le
+// registre des librairies depuis ses sources. Le portillon coûtait ~7 min 30, et ce n'est pas
+// le travail des gardes qui le coûte — c'est le démarrage, payé 240 fois, un à la fois, sur une
+// machine qui a des cœurs inoccupés.
+//
+// ⚠️ L'ORDRE DU RAPPORT NE BOUGE PAS. Les résultats sont collectés dans un tableau INDEXÉ par la
+// position du fichier, puis affichés dans cet ordre une fois tous rentrés. Un rapport qui suivrait
+// l'ordre d'ARRIVÉE serait non déterministe d'un passage à l'autre : `verts` sert à nommer les
+// gardes DISPARUS par comparaison avec la référence, et une liste qui se réordonne toute seule
+// rendrait cette comparaison illisible.
+//
+// ⚠️ ET LA CONCURRENCE EST BORNÉE AUX CŒURS : au-delà, les processus se disputent le CPU et
+// chacun ralentit — le temps total cesse de descendre et la mémoire monte.
+const N_PARALLELE = Math.max(1, Math.min(os.cpus().length, 16));
+const resultats = new Array(fichiers.length);
+const durees = new Array(fichiers.length);
+{
+  let prochain = 0;
+  const ouvrier = async () => {
+    for (;;) {
+      const i = prochain++;
+      if (i >= fichiers.length) return;
+      const t0 = Date.now();
+      resultats[i] = await lancer(path.join(ICI, fichiers[i]), 300000);
+      durees[i] = Date.now() - t0;
+    }
+  };
+  await Promise.all(Array.from({ length: N_PARALLELE }, ouvrier));
+}
+
+for (let i = 0; i < fichiers.length; i++) {
+  const f = fichiers[i];
+  const r = resultats[i];
+  const sortie = (r.stdout || '') + (r.stderr || '');
+  const n = compterAssertions(sortie);
   if (n === null) sansCompte++; else assertions += n;
-  for (const ligne of ((r.stdout || '') + (r.stderr || '')).split('\n')) {
+  for (const ligne of sortie.split('\n')) {
     if (!ligne.startsWith(PREFIXE_REGIME)) continue;
     mentionsDeRegime++;
     console.log(`  ${ligne.trim()}`);
@@ -101,7 +150,7 @@ for (const f of fichiers) {
   } else {
     echecs++;
     console.error(`  ÉCHEC ${f}  (code ${r.status})`);
-    const detail = ((r.stdout || '') + (r.stderr || '')).split('\n').filter((l) => /FAIL|Error|✗/.test(l)).slice(0, 3);
+    const detail = sortie.split('\n').filter((l) => /FAIL|Error|✗/.test(l)).slice(0, 3);
     for (const d of detail) console.error(`         ${d.trim().slice(0, 140)}`);
   }
 }
@@ -160,6 +209,16 @@ for (const s of SEUILS) {
 }
 
 console.log(`\n[gardes] ${passes} garde(s) vert(s), ${echecs} en échec.`);
+// ⚠️ CE QUI COÛTE LE TEMPS SE NOMME, sinon on optimise à l'aveugle. Le total en série est la SOMME
+// des durées ; le mur est le plus long des ouvriers. Les trois plus lents sont nommés parce que
+// c'est sur eux, et seulement eux, qu'un gain supplémentaire est possible.
+{
+  const rangs = durees.map((ms, i) => ({ f: fichiers[i], ms: ms || 0 }))
+    .sort((a, b) => b.ms - a.ms).slice(0, 3);
+  const somme = durees.reduce((a, b) => a + (b || 0), 0);
+  console.log(`[gardes] ${N_PARALLELE} en parallèle — ${(somme / 1000).toFixed(0)} s de travail cumulé ; `
+    + `les plus lents : ${rangs.map((r) => `${r.f} ${(r.ms / 1000).toFixed(1)}s`).join(' · ')}`);
+}
 console.log(`[gardes] ${assertions} assertion(s) RÉELLEMENT exécutée(s)`
   + (sansCompte ? ` — ${sansCompte} fichier(s) n'annoncent pas leur compte, non totalisés.` : '.'));
 

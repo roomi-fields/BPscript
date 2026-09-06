@@ -293,11 +293,23 @@ function comptePour(racine, motif) {
     // citaient ses chemins dans des commentaires, ce qui est la bonne pratique adoptée le 29.
     // « Une mention n'est pas un lien » (Kairos, 2026-07-30). Mon premier chiffre a été relayé à
     // Romain avant que je le dégonfle.
+    // ⛔ LE BALAYAGE EST EN LOT, PAS UN `grep` PAR FICHIER. La forme d'origine ouvrait un
+    // processus par fichier trouvé, sur tous les dépôts voisins : ce garde coûtait 131 s à lui
+    // seul et FIXAIT le mur du portillon entier — les 239 autres tenaient ensemble en moins.
+    // Mesuré le 2026-09-06, à la demande de Romain.
+    //
+    // ⚠️ LA SÉMANTIQUE EST INCHANGÉE, et c'est ce qui rend le remplacement légitime : un fichier
+    // compte s'il porte AU MOINS UNE ligne appariée qui n'est pas un commentaire. La boucle le
+    // décidait fichier par fichier ; le pipeline apparie tout, jette les lignes de commentaire,
+    // puis dédoublonne PAR FICHIER — même prédicat, même compte.
+    // ⚠️ `-r` SUR `xargs` N'EST PAS UNE COMMODITÉ : sans lui, une liste vide lance `grep` SANS
+    // fichier, qui lit alors son entrée standard et ne rend jamais la main. La boucle d'origine
+    // n'avait pas ce piège ; le lot l'introduit, donc il se ferme ici.
     const trouves = execFileSync('bash', ['-c',
       `find ${JSON.stringify(racine)} \\( -name '*.ts' -o -name '*.js' -o -name '*.mjs' \\) `
-      + "-not -path '*/node_modules/*' -not -path '*/.claude/worktrees/*' -not -path '*/dist/*' 2>/dev/null "
-      + `| while read f; do grep -H ${JSON.stringify(motif)} "$f" 2>/dev/null `
-      + "| grep -qv \"^[^:]*: *\\(//\\|\\*\\)\" && echo \"$f\"; done | wc -l",
+      + "-not -path '*/node_modules/*' -not -path '*/.claude/worktrees/*' -not -path '*/dist/*' -print0 2>/dev/null "
+      + `| xargs -0 -r ${GREP} -H ${JSON.stringify(motif)} 2>/dev/null `
+      + `| ${GREP} -v "^[^:]*: *\\(//\\|\\*\\)" | cut -d: -f1 | sort -u | wc -l`,
     ], { encoding: 'utf-8' });
     return parseInt(trouves.trim(), 10) || 0;
   } catch { return 0; }
