@@ -69,6 +69,7 @@
 | [SCENE_VALUES_OVERRIDE.md](design/SCENE_VALUES_OVERRIDE.md) | Cascade des valeurs de scène |
 | [GRAMMAIRES_DE_TEST_BP3.md](design/GRAMMAIRES_DE_TEST_BP3.md) | Les grammaires BP3 qui servent de banc |
 | [code-voices-user-doc.md](drafts/code-voices-user-doc.md) | Brouillon d'aide sur les voix de code |
+| [ETAGES-DU-LANGAGE.md](drafts/ETAGES-DU-LANGAGE.md) | Les étages du langage et la limite du codé-en-dur — brouillon destiné à Atlas |
 
 ## Le banc
 
