@@ -4458,7 +4458,21 @@ function parse(tokens, opts = {}) {
     while (!atEnd()) {
       skipNewlines();
       if (atEnd()) break;
-      if (!at(T.LBRACKET)) break;
+      // ⛔ CE QUI N'OUVRE PAS UNE ENTRÉE ÉTAIT ABANDONNÉ EN SILENCE — et pas seulement la ligne :
+      // la boucle sortait, la section rendait ce qu'elle avait, et `parseScene` finissait là.
+      // TOUT le reste du fichier partait avec, sans une erreur. Mesuré le 2026-09-06 : `/1 ??`
+      // (le rang oublié) et une ligne de texte quelconque rendaient toutes deux un catalogue VIDE
+      // et zéro refus. C'est la famille exacte que le transport verbatim ferme par ailleurs — un
+      // catalogue qui disparaît sans un mot — et elle vivait encore par cette porte.
+      //
+      // ⚠️ LE REFUS PORTE SUR L'OUVERTURE, PAS SUR LE CONTENU. Le corps d'une entrée reste
+      // transporté tel quel (forme ratifiée le 2026-08-10) : le moteur le lit lui-même. Ce qui se
+      // vérifie ici est la seule chose que la section connaisse d'elle-même — qu'une ligne SOIT
+      // une entrée.
+      if (!at(T.LBRACKET)) {
+        const tok = current();
+        throw new ParseError('PARSE_TEMPLATE_LINE_NOT_A_CATALOG_ENTRY', { p1: String(tok.value) }, tok);
+      }
 
       // ── UNE ENTRÉE DE CATALOGUE SE TRANSPORTE VERBATIM ─────────────────────────────────────
       // FORME RATIFIÉE PAR ROMAIN (2026-08-10), gravée dans BPx `docs/AST_SPEC.md` §1.9 :

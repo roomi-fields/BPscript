@@ -247,8 +247,20 @@ ok(err(`${S}S -> C4\n-----\nmode:lin\nT -> D4\n`).length === 0,
 
 // ── 3. LE REFUS NE DÉBORDE PAS SUR LES AUTRES FORMES DE FIN DE SCÈNE ─────────────────────────
 // La section `template` vient APRÈS toutes les sous-grammaires : c'est sa place, pas une faute.
-ok(err(`${S}S -> C4\ntemplate\n  t1 = C4 D4\n`).length === 0,
-  '3. SE TAIT — la section `template` se place après les règles, c\'est sa définition');
+// ⛔ CE TÉMOIN ÉCRIVAIT UNE GRAPHIE QUI N'EXISTE PAS — `t1 = C4 D4`. Il « passait » parce que la
+// section abandonnait en silence tout ce qui n'ouvre pas par un crochet : la ligne inventée était
+// avalée, l'entrée jamais construite, et zéro erreur remontait. Le témoin prouvait donc la perte
+// qu'on vient de fermer, pas la place de la section.
+// La bible prescrit `[<rang>] <échelle> <forme>` (LANGUAGE.md § `template`), et c'est cette
+// graphie qui doit passer. Le compte d'entrées est joint : sans lui, « ne lève rien » ne
+// distinguerait toujours pas une section lue d'une section perdue.
+{
+  const src = `${S}S -> C4\ntemplate\n[1] /1 ??\n`;
+  ok(err(src).length === 0,
+    '3. SE TAIT — la section `template` se place après les règles, c\'est sa définition');
+  ok((compileToBPxAST(src).ast?.template?.entrees || []).length === 1,
+    '3. et elle est LUE — une entrée écrite, une entrée portée ; se taire ne suffit pas');
+}
 ok(err(`${S}S -> C4\n-----\nT -> D4\n`).length === 0,
   '3. SE TAIT — un séparateur de bloc n\'est pas une directive');
 

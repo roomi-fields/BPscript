@@ -104,7 +104,11 @@ export function toutesLesScenes() {
       // compilent plus (elles portent `:browser`, un raccord retiré du langage). Exiger qu'une
       // archive suive le langage vivant n'a pas de sens — c'est la seule dérogation que
       // `aucune_scene_ne_vit_hors_de_portee.mjs` accepte, et elle y est datée et motivée.
-      if (e.name === '.git' || e.name === 'node_modules' || e.name === '_archive') continue;
+      // ⛔ `.last/` PORTE LES COPIES FIGÉES DES VOISINS, PAS MON CODE — et un balayage qui y entre
+    // juge quinze dépôts sous mon nom. Le 2026-09-06, `tour last` y a reposé des liens et cinq
+    // gardes sont tombés d'un coup sur des fichiers de BPx. Le contenu y est celui d'un autre,
+    // à une version que je ne choisis pas ligne à ligne : rien de ce qui s'y trouve ne se répare ici.
+    if (e.name === '.git' || e.name === 'node_modules' || e.name === '_archive' || e.name === '.last') continue;
       const p = path.join(dir, e.name);
       if (e.isDirectory()) marcher(p, `${prefixe}${e.name}/`);
       else if (e.name.endsWith('.bps')) out.push([`${prefixe}${e.name}`, readFileSync(p, 'utf-8')]);

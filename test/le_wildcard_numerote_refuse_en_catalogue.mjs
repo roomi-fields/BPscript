@@ -64,6 +64,60 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
   ok(e[1]?.line === '[2] a b', `2. la seconde est intacte(reçu ${JSON.stringify(e[1]?.line)})`);
 }
 
+// ── 3. L'AUTRE PORTE DE LA MÊME PERTE — une ligne qui n'OUVRE PAS une entrée ─────────────
+// ⛔ LE TRANSPORT VERBATIM FERMAIT LA TRONCATURE D'UNE LIGNE, PAS LA DISPARITION DE LA SECTION.
+// La boucle sortait sur tout ce qui n'ouvre pas par un crochet, la section rendait ce qu'elle
+// avait, et l'analyse de la scène finissait là : le RESTE DU FICHIER partait avec, sans un mot.
+// Mesuré le 2026-09-06 — un rang oublié (`/1 ??`) et une ligne de texte quelconque rendaient
+// toutes deux un catalogue vide et zéro refus.
+//
+// ⚠️ CE QUE CE VOLET NE JUGE PAS, ET C'EST DÉLIBÉRÉ : le CONTENU d'une entrée. Un rang sans
+// forme et un rang non numérique sont ACCEPTÉS, et ils ont leur témoin ci-dessous pour que ce
+// fait reste visible — le corps est lu par le moteur (forme ratifiée le 2026-08-10), le juger
+// ici serait décider à sa place. Ce qui se vérifie est la seule chose que la section connaisse
+// d'elle-même : qu'une ligne SOIT une entrée.
+{
+  const S = 'core\nalphabet.western\n-----\nS -> C4\ntemplate\n';
+  const codes = (corps) => (compileToBPxAST(S + corps).errors || []).map((x) => String(x.code || ''));
+  const entrees = (corps) => {
+    const r = compileToBPxAST(S + corps);
+    return r.ast?.template?.entrees?.length ?? -1;
+  };
+
+  // Ce qui n'ouvre pas une entrée est REFUSÉ — la matrice croise la place (seule, après une
+  // entrée) et la graphie (rang absent, texte quelconque).
+  const REFUSES = [
+    ['le rang oublié, seul',          '/1 ??\n'],
+    ['du texte quelconque, seul',     'zzz nimporte quoi\n'],
+    ['le rang oublié, APRÈS une entrée',      '[1] /1 ??\n/1 ??\n'],
+    ['du texte quelconque, APRÈS une entrée', '[1] /1 ??\nzzz perdu\n'],
+  ];
+  for (const [nom, corps] of REFUSES) {
+    const c = codes(corps);
+    ok(c.includes('PARSE_TEMPLATE_LINE_NOT_A_CATALOG_ENTRY'),
+      `3. « ${nom} » doit être REFUSÉ — reçu ${c.length ? c.join(', ') : 'AUCUNE erreur'}. `
+      + `Sans ce refus, cette ligne ET tout ce qui la suit disparaissent sans un signe.`);
+  }
+
+  // Les témoins : ce qui EST une entrée passe, et le compte est juste. Sans eux, un refus posé
+  // trop large rendrait la section inutilisable en restant vert ci-dessus.
+  const PASSENT = [
+    ['la forme de la bible',   '[1] /1 ??\n',                     1],
+    ['trois entrées',          '[1] /1 ??\n[2] /1 ??\n[3] a b\n', 3],
+    ['une section vide',       '',                                0],
+    ['un rang sans forme',     '[1]\n',                           1],
+    ['un rang non numérique',  '[zzz] /1 ??\n',                   1],
+  ];
+  for (const [nom, corps, attendu] of PASSENT) {
+    const c = codes(corps);
+    ok(c.length === 0, `3. TÉMOIN « ${nom} » ne doit rien lever — reçu ${c.join(', ')}`);
+    ok(entrees(corps) === attendu,
+      `3. TÉMOIN « ${nom} » — ${attendu} entrée(s) attendue(s), ${entrees(corps)} reçue(s)`);
+  }
+  ok(REFUSES.length + PASSENT.length >= 9,
+    `3. SOCLE — la matrice s'est vidée : ${REFUSES.length + PASSENT.length} cas exercés.`);
+}
+
 if (echecs.length) {
   console.error(`[wildcard numéroté en catalogue] ${echecs.length} ÉCHEC(S) :`);
   for (const e of echecs) console.error('  ✗ ' + e);

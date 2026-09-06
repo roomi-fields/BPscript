@@ -25,7 +25,8 @@ import path from 'node:path';
 
 const RACINE = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 /** On inspecte le code qu'on possède. `_archive/` est une archive assumée. */
-const EXCLUS = ['node_modules', '.git', '.claude', '_archive', 'dist', 'bp3-engine'];
+// `.last` porte les copies figées des voisins, jamais mon code — cf. `corpus.mjs`.
+const EXCLUS = ['node_modules', '.git', '.claude', '_archive', 'dist', 'bp3-engine', '.last'];
 
 /**
  * `public/src/` NE DOIT PAS REPOUSSER (directive Romain 2026-07-26 : « à supprimer »).

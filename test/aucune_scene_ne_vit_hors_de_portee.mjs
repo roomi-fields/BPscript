@@ -54,7 +54,8 @@ function scenesSous(racine) {
   const out = [];
   const marcher = (dir, prefixe) => {
     for (const e of readdirSync(dir, { withFileTypes: true })) {
-      if (e.name === '.git') continue;
+      // `.last/` porte les copies figées des voisins, jamais mon code — cf. `corpus.mjs`.
+      if (e.name === '.git' || e.name === '.last') continue;
       const p = path.join(dir, e.name);
       if (e.isDirectory()) marcher(p, `${prefixe}${e.name}/`);
       else if (e.name.endsWith('.bps')) out.push(`${prefixe}${e.name}`);

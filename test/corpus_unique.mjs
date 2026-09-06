@@ -96,7 +96,8 @@ if (copies.length) {
 const CODE = /\.(m?js|cjs|ts)$/;
 const fichiersDeCode = (dir, acc = []) => {
   for (const e of readdirSync(dir)) {
-    if (e === 'node_modules' || e === '.git') continue;
+    // `.last/` porte les copies figées des voisins, jamais mon code — cf. `corpus.mjs`.
+    if (e === 'node_modules' || e === '.git' || e === '.last') continue;
     const p = path.join(dir, e);
     let st; try { st = statSync(p); } catch { continue; }   // un lien mort ne fait pas tomber le balayage
     if (st.isDirectory()) fichiersDeCode(p, acc);

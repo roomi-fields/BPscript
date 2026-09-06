@@ -52,7 +52,8 @@ const CONVERTISSEURS = ['scripts/convert_tunings.js', 'scripts/json-vers-bpsl.mj
 /** Les fichiers de code du dépôt, hors données et hors dépendances. */
 function fichiersDeCode(dir, out = []) {
   for (const e of readdirSync(dir)) {
-    if (e === 'node_modules' || e === '.git' || e === 'dist' || e === 'lib') continue;
+    // `.last` porte les copies figées des voisins, jamais mon code — cf. `corpus.mjs`.
+    if (e === 'node_modules' || e === '.git' || e === 'dist' || e === 'lib' || e === '.last') continue;
     const p = path.join(dir, e);
     // ⛔ UN LIEN MORT NE FAIT PAS TOMBER LE BALAYAGE. `statSync` SUIT le lien et lève quand la cible
     // manque : le garde s'arrêtait en EXCEPTION, donc il DISPARAISSAIT du portillon au lieu d'y

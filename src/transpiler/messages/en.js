@@ -491,6 +491,10 @@ export const MESSAGES = {
     + 'terminal without occupying a step. To DECLARE A LABEL: the declarative part, with \'def\'.',
   PARSE_TEMPLATES_PLURAL_LONGER_EXISTS:
     '\'templates\' (plural, v0.7) no longer exists — write \'template\' (singular)',
+  PARSE_TEMPLATE_LINE_NOT_A_CATALOG_ENTRY:
+    'in the \'template\' section, every line is a catalog entry and opens with its rank in '
+    + 'brackets — \'[1] /1 ??\'. This line ({p1}) opens with something else, so it belongs to no '
+    + 'entry. It used to be DROPPED without a word, along with everything after it.',
   PARSE_TEMPLATE_CATALOG_TRANSPORTED_VERBATIM:
     'the template catalog is transported VERBATIM: the parser needs the SOURCE to render the line '
     + 'as it is written. The caller must pass \'source\' to parse().',

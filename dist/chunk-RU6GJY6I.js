@@ -2,7 +2,7 @@ import {
   T,
   diagnostic,
   texteDuDiagnostic
-} from "./chunk-7HX3Y3KX.js";
+} from "./chunk-ZYNVTLB2.js";
 import {
   CHAMPS_DE_FICHIER,
   CHAMPS_DU_PAQUET,
@@ -8611,7 +8611,10 @@ function parse(tokens, opts = {}) {
     while (!atEnd()) {
       skipNewlines();
       if (atEnd()) break;
-      if (!at(T.LBRACKET)) break;
+      if (!at(T.LBRACKET)) {
+        const tok = current();
+        throw new ParseError("PARSE_TEMPLATE_LINE_NOT_A_CATALOG_ENTRY", { p1: String(tok.value) }, tok);
+      }
       const ouvre = current();
       const brute = lignesSource ? lignesSource[ouvre.line - 1] : null;
       while (!atEnd() && current().line === ouvre.line) advance();
