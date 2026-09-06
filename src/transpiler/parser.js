@@ -4279,7 +4279,26 @@ function parse(tokens, opts = {}) {
               const ou = porteesDuMot.map((x) => PLACE[x] ?? x);
               throw new ParseError('PARSE_DIRNOM_DECLARATION_SETTING_WRITTEN', { dirNom, p1: ou.length === 1 ? ou[0] : ou.slice(0, -1).join(', ') + ' or ' + ou[ou.length - 1] }, dirTok);
             }
-            throw new ParseError('PARSE_DIRNOM_WRITTEN_AFTER_RULES', { dirNom }, dirTok);
+            // ⛔ ET ICI, TOUS LES REFUS NOMMÉS ONT EU LEUR CHANCE — l'arobase, le pluriel de
+          // `template`, le réglage hors de sa portée. Ce qui reste est un mot que RIEN ne déclare,
+          // écrit sans flèche après des règles. Romain, 2026-09-06 : *« la tête de sous-grammaire
+          // doit être repérée par le séparateur unique […] et les règles ont toujours une flèche »*
+          // ⇒ après des règles, il n'y a plus de tête : c'est une règle dont la FLÈCHE MANQUE.
+          // ⚠️ SANS CE DÉPARTAGE, `A C4 D4` s'entendait répondre que « 'A' est écrit après des
+          // règles et ne déclare rien » — un refus juste dans sa conclusion, faux sur ce qu'il
+          // affirme mesurer : l'auteur n'a pas écrit une déclaration, il a oublié sa flèche.
+          // ⚠️ ET LE DÉPARTAGE SE FAIT SUR LA DONNÉE, jamais sur une liste : un mot est déclarable
+          // s'il porte des portées, s'il est un axe de catalogue, s'il est réservé, s'il nomme un
+          // contrôle, ou s'il est un mot de la grammaire.
+          const declarable = (libCtx.portees && libCtx.portees.has(dirNom))
+            || axes.has(dirNom)
+            || (libCtx.reservedDirectiveNames || new Set()).has(dirNom)
+            || (libCtx.controlNames || new Set()).has(dirNom)
+            || ((SYNTAXE.grammarWords && SYNTAXE.grammarWords.mots) || []).includes(dirNom);
+          if (!declarable) {
+            throw new ParseError('PARSE_EXPECTED_ARROW_GOT', { p1: dirNom }, dirTok);
+          }
+          throw new ParseError('PARSE_DIRNOM_WRITTEN_AFTER_RULES', { dirNom }, dirTok);
           }
           skipNewlines();
         } catch (e) {

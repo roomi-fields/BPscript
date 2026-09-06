@@ -516,12 +516,11 @@ function tokenize(source, opts = {}) {
         emit(T.TRIGGER_IN, "<!");
         continue;
       }
-      if (peek(1) === "-" && peek(2) === ">") {
-        advance();
-        advance();
-        advance();
-        emit(T.ARROW_BI, "<->");
-        continue;
+      if (peek(1) === "-" && (peek(2) === ">" || peek(2) === "-")) {
+        let j = 2;
+        while (peek(j) === "-") j++;
+        const fleche = "<" + "-".repeat(j - 1) + (peek(j) === ">" ? ">" : "");
+        throw new LexError("LEX_NATIVE_ARROW", { fleche }, line, col);
       }
       if (peek(1) === "-") {
         advance();

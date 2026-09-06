@@ -63,7 +63,14 @@ const REFUS = [
   ['`tempx` dans une règle',           `${SOCLE}-----\nS -> C4 (tempx:2)\n`],
   ['un drapeau testé avec `=`',        `${SOCLE}flag s(a:1, b:2)\n-----\n[s=a] S -> C4\n`],
   ['un contexte au milieu du membre',  `${SOCLE}-----\nA (X) B -> C4\n`],
+  // ⛔ LES TROIS GRAPHIES DE LA FLÈCHE DU MOTEUR HISTORIQUE, pas la seule qui avait été signalée.
+  // `-->` était fermée depuis le 2026-07-28 ; ses deux sœurs de gauche ne l'étaient pas, et l'une
+  // d'elles était même ÉMISE DÉLIBÉRÉMENT comme `<>` — la graphie de l'autre langage TRADUITE, donc
+  // acceptée sans un mot. Romain, 2026-09-06 : *« la bonne graphie en BPScript est `<>` et pas
+  // `<->`, qui est du BP3 »*. Une seule des trois avait été mesurée ; les trois vivent ici.
   ['la flèche BP3 collée',             `${SOCLE}-----\nS --> C4\n`],
+  ['la flèche BP3 bidirectionnelle',   `${SOCLE}-----\nS <-> C4\n`],
+  ['la flèche BP3 d analyse',          `${SOCLE}-----\nS <-- C4\n`],
   ['sortie de scène contre raccord',   `core\nalphabet.western:audio\nout.midi\n-----\nS -> C4\n`],
   ['un suffixe d arobase',             `${SOCLE}-----\nS -> C4@lent\n`],
   ['la graphie des barres `|x|`',      `${SOCLE}-----\nS -> |x| C4\n`],

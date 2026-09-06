@@ -308,7 +308,22 @@ function tokenize(source, opts = {}) {
     // Multi-char operators
     if (ch === '<') {
       if (peek(1) === '!' ) { advance(); advance(); emit(T.TRIGGER_IN, '<!'); continue; }
-      if (peek(1) === '-' && peek(2) === '>') { advance(); advance(); advance(); emit(T.ARROW_BI, '<->'); continue; }
+      // ⛔ ET LA PIERRE TOMBALE VAUT AUSSI À GAUCHE — Romain, 2026-09-06 : *« la bonne graphie en
+      // BPScript est `<>` et pas `<->`, qui est du BP3 »*. Le refus posé plus bas ne visait que le
+      // tiret suivi de `>` ; à partir d'un `<`, les deux sœurs de `-->` passaient EN SILENCE :
+      //     `<->`  une branche l'ÉMETTAIT DÉLIBÉRÉMENT comme `ARROW_BI` — l'arbre portait
+      //            `direction:"<>"`, donc la graphie de l'autre langage était TRADUITE, pas subie.
+      //            Cette branche sort ici : deux graphies pour un sens, et l'une n'est pas la nôtre.
+      //     `<--`  lu `<-` puis `-` → une règle d'ANALYSE suivie d'un SILENCE, ce que personne
+      //            n'écrit et que rien ne signalait.
+      // ⚠️ *Un refus écrit pour la forme signalée laisse vivre ses sœurs* : `-->` avait été mesuré
+      // et fermé le 2026-07-28, ses deux sœurs de gauche ne l'ont jamais été.
+      if (peek(1) === '-' && (peek(2) === '>' || peek(2) === '-')) {
+        let j = 2;
+        while (peek(j) === '-') j++;
+        const fleche = '<' + '-'.repeat(j - 1) + (peek(j) === '>' ? '>' : '');
+        throw new LexError('LEX_NATIVE_ARROW', { fleche }, line, col);
+      }
       if (peek(1) === '-') { advance(); advance(); emit(T.ARROW_L, '<-'); continue; }
       if (peek(1) === '>') { advance(); advance(); emit(T.ARROW_BI, '<>'); continue; }
       if (peek(1) === '=') { advance(); advance(); emit(T.LTE, '<='); continue; }

@@ -2,7 +2,7 @@ import {
   T,
   diagnostic,
   texteDuDiagnostic
-} from "./chunk-A3K54WVN.js";
+} from "./chunk-7HX3Y3KX.js";
 import {
   CHAMPS_DE_FICHIER,
   CHAMPS_DU_PAQUET,
@@ -8525,6 +8525,10 @@ function parse(tokens, opts = {}) {
               };
               const ou = porteesDuMot.map((x) => PLACE[x] ?? x);
               throw new ParseError("PARSE_DIRNOM_DECLARATION_SETTING_WRITTEN", { dirNom, p1: ou.length === 1 ? ou[0] : ou.slice(0, -1).join(", ") + " or " + ou[ou.length - 1] }, dirTok);
+            }
+            const declarable = libCtx.portees && libCtx.portees.has(dirNom) || axes.has(dirNom) || (libCtx.reservedDirectiveNames || /* @__PURE__ */ new Set()).has(dirNom) || (libCtx.controlNames || /* @__PURE__ */ new Set()).has(dirNom) || (SYNTAXE.grammarWords && SYNTAXE.grammarWords.mots || []).includes(dirNom);
+            if (!declarable) {
+              throw new ParseError("PARSE_EXPECTED_ARROW_GOT", { p1: dirNom }, dirTok);
             }
             throw new ParseError("PARSE_DIRNOM_WRITTEN_AFTER_RULES", { dirNom }, dirTok);
           }
