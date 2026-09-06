@@ -98,12 +98,16 @@ for (const [niveau, motif] of [
     return n;
   };
   const scenes = compterBps(GRAMMAIRES);
-  const affirme = /0 fichier `\.bps` sous `test\/grammars\/`/.test(texte.fiche);
-  ok(affirme, "3. la fiche doit AFFIRMER l'absence de scènes — sinon il n'y a rien à garder ici");
+  // ⛔ L'ASSERTION « LA FICHE L'AFFIRME » EST RETIRÉE, ET SON SUJET AVEC — le journal des travaux
+  // livrés est supprimé des fiches d'agent (Romain, 2026-09-06, relayé par le hub) : une fiche ne
+  // porte plus que le RÔLE. L'affirmation qu'on lisait ici vivait dans ce journal.
+  // ⚠️ CE QUI EST GARDÉ EST LE FAIT, PAS SA MENTION : le compte se mesure sur le disque, donc
+  // l'incident `vina` — deux fichiers divergents sous le même nom, 2026-07-19 — reste fermé sans
+  // dépendre d'un document. *Un garde qui exige qu'un texte affirme un fait meurt avec le texte ;
+  // celui qui mesure le fait lui survit.*
   ok(scenes === 0,
-     `3. la fiche affirme 0 scène sous l'arborescence d'oracles, il y en a ${scenes}. `
-     + `Soit une copie est revenue(incident 'vina'), soit le document est à corriger — les deux `
-     + `demandent une action, aucune ne se résout en attendant.`);
+     `3. aucune scène ne doit vivre sous l'arborescence d'oracles, il y en a ${scenes}. `
+     + `Une copie est revenue (incident 'vina') — elle divergera de son original sans un signe.`);
 }
 
 // ─── 4. LA VOIE SUPPRIMÉE EST-ELLE ENCORE SUPPRIMÉE ? ────────────────────────────────────────
