@@ -20,7 +20,8 @@
 
 import { tokenize, LexError } from './tokenizer.js';
 import { parse, ParseError } from './parser.js';
-import { resoudre, noterLePassage, emitSceneMeter, refuserEsclaveSansMaitre, poserLaVoixDesTerminaux, retirerArdoiseAlphabet, applyDefaultActor, hasTempoDirective, applyEnvironmentDefaults, canonicalizeLhsContext, canonicalizeLhsElement, canonicalizeRhsElement, canonicalizeContexts, ctxSymbolToElement, enrichRemoteHeadContext, canalFautif, nomsDeclares, validateCallVocabulary, terminauxEnPortee, validateTerminals, restesDeSegmentation, emitSceneLibRefs, deriveAlphabetFromTuning, emitActorLibRefs, emitNoteTerminals, resolveHomomorphismMarkers, annotateBackticks, poserLeDestinataireDesReglages, refuserAttenteNonDeclaree, refuserCleDeCrochetInconnue, refuserNomsEnDouble, applySceneValues, validateReferences, splitCompoundTerminals, chargerPorteesPermises, singleCharAlphabetSet, splitLhsElement, splitRhsElement, tokenizeCompoundName, makeSplitAtom } from './resolution.js';
+import { resoudre, noterLePassage, emitSceneMeter, refuserEsclaveSansMaitre, poserLaVoixDesTerminaux, retirerArdoiseAlphabet, applyDefaultActor, hasTempoDirective, applyEnvironmentDefaults, canonicalizeLhsContext, canonicalizeLhsElement, canonicalizeRhsElement, canonicalizeContexts, ctxSymbolToElement, enrichRemoteHeadContext, canalFautif, nomsDeclares, validateCallVocabulary, terminauxEnPortee, validateTerminals, restesDeSegmentation, emitSceneLibRefs, deriveAlphabetFromTuning, emitActorLibRefs, emitNoteTerminals, resolveHomomorphismMarkers, annotateBackticks, poserLeDestinataireDesReglages, refuserAttenteNonDeclaree, refuserCleDeCrochetInconnue, refuserNomsEnDouble, applySceneValues, validateReferences, splitCompoundTerminals, chargerPorteesPermises, singleCharAlphabetSet, splitLhsElement, splitRhsElement, tokenizeCompoundName, makeSplitAtom, avertirNonTerminalJamaisInvoque
+} from './resolution.js';
 import { loadLibsFromDirectives, loadLib, resolveActorAlphabet, resolveActorAlphabetSource, universeControlNames, nomsDeTerminaux, groupeDUnicite, brancherLeCompilateur } from './libs.js';
 import { describeVocabulary } from './vocabulaire.js';
 import { segmenter } from './segmentation.js';
@@ -508,6 +509,11 @@ export function resoudreSource(source, environnement) {
     // 2026-09-05 : il demandait à la librairie ce qu'un mot est, c'est le geste de cet étage.
     result.errors.push(...refuserCleDeCrochetInconnue(ast, libCtx));
     result.errors.push(...refuserEsclaveSansMaitre(ast));   // un rejeu de gabarit a un maître à rejouer
+    // ⛔ UN AVERTISSEMENT, PAS UN REFUS — une règle que rien n'invoque ne rend pas la scène fausse.
+    // Il part donc dans `warnings`, le canal que le parseur alimente déjà pour ce qui se signale
+    // sans arrêter. Mêler les deux ferait d'une règle morte une faute, et d'un `errors` non vide un
+    // verdict qu'on n'ose plus lire.
+    result.warnings.push(...avertirNonTerminalJamaisInvoque(ast));
 
     // ⛔ LE DÉDOUBLONNAGE DES DIAGNOSTICS EST ÉLAGUÉ — il n'avait plus de producteur vivant.
     //

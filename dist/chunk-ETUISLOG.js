@@ -97,6 +97,10 @@ var SYNTAXE = {
       "terminal": "terminal <nom> <corps>"
     }
   },
+  "axiome": {
+    "description": "Le non-terminal par lequel la d\xE9rivation COMMENCE. Mesur\xE9 au natif par bp3-engine le 2026-09-06 : c'est le symbole `S`, \xE0 la lettre \u2014 pas la premi\xE8re r\xE8gle \xE9crite, pas un calcul. Il doit vivre dans la premi\xE8re sous-grammaire ; d\xE9fini ailleurs, la production sort vide. \xCAtre invoqu\xE9 par une autre r\xE8gle ne le disqualifie pas. L'ORDRE D'\xC9CRITURE DES R\xC8GLES N'A AUCUN EFFET sur le point de d\xE9part, et c'est le point contre-intuitif : une grammaire qui \xE9crit `MOTIF -> C4` AVANT `S -> MOTIF MOTIF` part quand m\xEAme de `S`, et le natif la produit sans un mot. Un juge qui prend la PREMI\xC8RE R\xC8GLE \xC9CRITE pour l'axiome se trompe donc sur cette forme, qui est CONFORME. Il est D\xC9CLAR\xC9 ici et non cod\xE9 en dur : rien ne se code en dur de ce qui se d\xE9clare, et un consommateur qui doit distinguer un point d'entr\xE9e d'une r\xE8gle morte a besoin de le lire.",
+    "mot": "S"
+  },
   "bracketRewrites": {
     "description": "Les r\xE9glages que le CROCHET a port\xE9s et qui s'\xE9crivent en PARENTH\xC8SES depuis la d\xE9cision du 2026-08-02. Le compilateur les comprend lui-m\xEAme : \xE9crits entre crochets, ils sont refus\xE9s AVEC leur r\xE9\xE9criture, au lieu de tomber sur \xAB cl\xE9 inconnue \xBB. Une pierre tombale de graphie, donc du LANGAGE \u2014 elle a quitt\xE9 le sch\xE9ma de `core` avec lui le 2026-09-03.",
     "mots": [

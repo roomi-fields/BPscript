@@ -1,6 +1,6 @@
 import {
   SYNTAXE
-} from "./chunk-7IMIRTTZ.js";
+} from "./chunk-ETUISLOG.js";
 export {
   SYNTAXE
 };

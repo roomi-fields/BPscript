@@ -56,15 +56,20 @@ export namespace SYNTAXE {
             export let terminal: string;
         }
     }
-    namespace bracketRewrites {
+    namespace axiome {
         let description_4: string;
         export { description_4 as description };
+        export let mot: string;
+    }
+    namespace bracketRewrites {
+        let description_5: string;
+        export { description_5 as description };
         let mots_1: string[];
         export { mots_1 as mots };
     }
     namespace actorKeyRewrites {
-        let description_5: string;
-        export { description_5 as description };
+        let description_6: string;
+        export { description_6 as description };
         let mots_2: string[];
         export { mots_2 as mots };
     }

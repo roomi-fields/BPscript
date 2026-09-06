@@ -1,5 +1,5 @@
 {
- "assertions": 19735,
+ "assertions": 19750,
  "gardes": [
   "alias_est_sorti_du_langage.mjs",
   "anti-vacuité [interne]",
@@ -227,6 +227,7 @@
   "une_portee_ne_s_invente_pas_hors_du_moteur.mjs",
   "une_primitive_porte_son_type_avec_ou_sans_parenthese.mjs",
   "une_prudence_regarde_les_deux_cotes.mjs",
+  "une_regle_que_rien_n_invoque_s_annonce.mjs",
   "une_scene_porte_ce_qu_elle_ecrit.mjs",
   "une_scene_qui_enseigne_ecrit_la_forme_du_jour.mjs",
   "une_section_d_homomorphisme_se_designe_par_le_point.mjs",

@@ -22,12 +22,16 @@ import {
   resolveActorAlphabetSource,
   universeControlNames,
   versionDuRegistre
-} from "./chunk-BCRVJ2HK.js";
+} from "./chunk-43C43RRN.js";
 import {
   LexError,
   diagnostic,
+  texteDuDiagnostic,
   tokenize
-} from "./chunk-GZ2QXQCP.js";
+} from "./chunk-A3K54WVN.js";
+import {
+  SYNTAXE
+} from "./chunk-ETUISLOG.js";
 
 // src/transpiler/actorResolver.js
 function expandAlphabetTerminals(alphabetLib, octavesOverride) {
@@ -401,6 +405,37 @@ function resoudre(ast, environnement) {
   diagnostics.push(...refuserValeurContraireALExemplaire(ast));
   void environnement;
   return { ast, diagnostics, examines, greffes };
+}
+function avertirNonTerminalJamaisInvoque(ast) {
+  const axiome = SYNTAXE.axiome && SYNTAXE.axiome.mot;
+  if (!axiome) return [];
+  const definis = /* @__PURE__ */ new Map();
+  const invoques = /* @__PURE__ */ new Set();
+  const w = (n, vus = /* @__PURE__ */ new Set()) => {
+    if (!n || typeof n !== "object" || vus.has(n)) return;
+    vus.add(n);
+    if (Array.isArray(n)) {
+      for (const e of n) w(e, vus);
+      return;
+    }
+    if (n.type === "Symbol" && typeof n.name === "string") invoques.add(n.name);
+    for (const k of Object.keys(n)) w(n[k], vus);
+  };
+  for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) {
+    for (const s of r.lhs || []) if (s && s.name && !definis.has(s.name)) definis.set(s.name, r.line ?? 0);
+    w(r.rhs);
+    w(r.contexts);
+  }
+  const sorties = [];
+  for (const [nom, line] of definis) {
+    if (nom === axiome || invoques.has(nom)) continue;
+    sorties.push({
+      code: "RESOLVE_RULE_NEVER_REACHED",
+      message: texteDuDiagnostic("RESOLVE_RULE_NEVER_REACHED", { name: nom, axiome }),
+      line
+    });
+  }
+  return sorties;
 }
 function emitSceneMeter(ast) {
   const dir = (ast.directives || []).find((d) => d && d.name === "meter" && d.value != null);
@@ -2066,6 +2101,7 @@ function resoudreSource(source, environnement) {
     result.errors.push(...refuserAttenteNonDeclaree(ast));
     result.errors.push(...refuserCleDeCrochetInconnue(ast, libCtx));
     result.errors.push(...refuserEsclaveSansMaitre(ast));
+    result.warnings.push(...avertirNonTerminalJamaisInvoque(ast));
     splitCompoundTerminals(ast, libCtx);
     retirerArdoiseAlphabet(ast);
     result.errors.push(...joindreLesLibrairies(ast));

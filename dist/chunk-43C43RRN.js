@@ -2,7 +2,7 @@ import {
   T,
   diagnostic,
   texteDuDiagnostic
-} from "./chunk-GZ2QXQCP.js";
+} from "./chunk-A3K54WVN.js";
 import {
   CHAMPS_DE_FICHIER,
   CHAMPS_DU_PAQUET,
@@ -10,7 +10,7 @@ import {
 } from "./chunk-JWEI77WV.js";
 import {
   SYNTAXE
-} from "./chunk-7IMIRTTZ.js";
+} from "./chunk-ETUISLOG.js";
 
 // src/transpiler/librairies.js
 var places = {};

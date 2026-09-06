@@ -2229,6 +2229,38 @@ Les têtes de règle se rencontrent librement **entre elles**. Une tête répét
 grammaire stochastique. Deux sous-grammaires sont des **passes successives** — un même nom y
 est le même symbole, réécrit plus tard.
 
+### Le point de départ — `S`
+
+La dérivation commence par le non-terminal nommé **`S`**, et par lui seul. Il se déclare comme
+n'importe quelle tête de règle : c'est son **nom** qui le désigne.
+
+Il vit dans la **première sous-grammaire**. Une tête `S` définie dans une passe ultérieure ne
+lance rien, et la production sort vide.
+
+**L'ordre d'écriture des règles n'a aucun effet sur le point de départ.** Les deux grammaires
+ci-dessous produisent la même chose : le point de départ n'est pas la première règle écrite.
+
+```bpscript
+S -> MOTIF MOTIF                      // `S` en tête
+MOTIF -> C4 D4
+```
+
+```bpscript
+MOTIF -> C4 D4                        // `S` en second : même production
+S -> MOTIF MOTIF
+```
+
+`S` reste le point de départ même **invoqué** par une autre règle : le rappeler ne le disqualifie
+pas, et c'est ainsi qu'une grammaire se répète.
+
+```bpscript
+S -> Phrase
+Phrase -> C4 D4 S                     // la dérivation revient sur son point de départ
+```
+
+Une tête de règle **définie et jamais invoquée**, autre que `S`, est une règle que la dérivation
+n'atteint jamais. Le compilateur l'**annonce** ; elle ne rend pas la scène fausse.
+
 ---
 
 ## Les librairies

@@ -704,6 +704,10 @@ export const MESSAGES = {
   // [À TRADUIRE]
   PARSE_TEMPLATE_ANCHORS_ASYMMETRIC:
     'ancres de gabarit asymétriques : LHS a {gauche}, RHS a {droite}',
+  RESOLVE_RULE_NEVER_REACHED:
+    'the rule \'{name}\' is defined but nothing invokes it — no other rule names it, and it is not '
+    + 'the starting symbol \'{axiome}\'. Either it is dead, or the name meant to call it is '
+    + 'misspelled. The scene still compiles: this rule simply never runs.',
   RESOLVE_VALUE_OUTSIDE_ITS_VOCABULARY:
     '\'{nom}\' writes \'{cle}:{ecrit}\', which the prototype does not list. The example shows the '
     + 'words this member accepts: {mots}. Nothing declares a closed list here — showing the values '

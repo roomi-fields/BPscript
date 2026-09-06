@@ -59,6 +59,12 @@ const porte = {
   // ⛔ CETTE MÉTHODE VIT EN COMMENTAIRE, PLUS DANS LA DONNÉE — décision de Romain, 2026-09-01 : elle
   // pesait 925 octets dans le paquet que tout consommateur reçoit, et n'a de lecteur qu'ici.
   grammarWords: schema.grammarWords,
+  // ⛔ L'AXIOME — le non-terminal par lequel la dérivation commence, déclaré depuis le 2026-09-06.
+  // Il est PUBLIÉ parce qu'un consommateur en a besoin pour la même raison que moi : un point
+  // d'entrée et une règle morte sont structurellement identiques — définis, jamais invoqués — et
+  // seule cette déclaration les sépare. Le laisser dans ma source en ferait un champ écrit et non
+  // publié, c'est-à-dire invisible.
+  axiome: schema.axiome,
   // Les pierres tombales de graphie — dissoutes du schéma de `core` le 2026-09-03. Elles disent ce
   // qui REMPLACE un mot retiré, là où le refus générique n'apprendrait rien.
   bracketRewrites: schema.bracketRewrites,

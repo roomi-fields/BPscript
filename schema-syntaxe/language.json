@@ -95,5 +95,9 @@
       "description": "Règle bidirectionnelle : production ET analyse",
       "syntax": "LHS <> RHS"
     }
+  },
+  "axiome": {
+    "description": "Le non-terminal par lequel la dérivation COMMENCE. Mesuré au natif par bp3-engine le 2026-09-06 : c'est le symbole `S`, à la lettre — pas la première règle écrite, pas un calcul. Il doit vivre dans la première sous-grammaire ; défini ailleurs, la production sort vide. Être invoqué par une autre règle ne le disqualifie pas. L'ORDRE D'ÉCRITURE DES RÈGLES N'A AUCUN EFFET sur le point de départ, et c'est le point contre-intuitif : une grammaire qui écrit `MOTIF -> C4` AVANT `S -> MOTIF MOTIF` part quand même de `S`, et le natif la produit sans un mot. Un juge qui prend la PREMIÈRE RÈGLE ÉCRITE pour l'axiome se trompe donc sur cette forme, qui est CONFORME. Il est DÉCLARÉ ici et non codé en dur : rien ne se code en dur de ce qui se déclare, et un consommateur qui doit distinguer un point d'entrée d'une règle morte a besoin de le lire.",
+    "mot": "S"
   }
 }
