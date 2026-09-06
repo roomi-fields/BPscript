@@ -365,6 +365,24 @@ export function resoudre(ast, environnement) {
  * ⚠️ LES INVOCATIONS SE CHERCHENT SUR TOUTE LA SCÈNE, jamais dans la seule sous-grammaire : c'est
  * exactement ce qui a rendu 966 au lieu de 110.
  */
+/**
+ * Les nœuds dont le NOM désigne une règle. Relevé sur les 107 scènes du corpus, en comptant pour
+ * chaque type combien de ses noms sont aussi des têtes de règle — la matrice, pas la graphie qui
+ * s'est montrée :
+ *
+ *     Symbol           11523 occurrences   4634 sont des têtes   ⇐ invoque
+ *     TemplateMaster      29                 29                  ⇐ invoque  (`$V8`)
+ *     TemplateSlave       18                 18                  ⇐ invoque  (`&V8`)
+ *     Control             18                  0
+ *     OutTimeObject        2                  0
+ *
+ * ⚠️ NE LIRE QUE `Symbol` REND UN AVERTISSEMENT FAUX : `dhati2` invoque ses sept motifs par GABARIT
+ * (`S <> $A16 $V8 …`), et le juge les déclarait tous morts. Un gabarit nomme sa règle autant qu'un
+ * symbole. `test/une_regle_que_rien_n_invoque_s_annonce.mjs` tient la matrice à jour et ÉCHOUE si un
+ * type porteur de nom apparaît hors de ce relevé : une graphie neuve doit rougir, pas passer.
+ */
+export const TYPES_QUI_INVOQUENT = new Set(['Symbol', 'TemplateMaster', 'TemplateSlave']);
+
 export function avertirNonTerminalJamaisInvoque(ast) {
   const axiome = SYNTAXE.axiome && SYNTAXE.axiome.mot;
   // Sans l'axiome déclaré, ce juge dirait que le point d'entrée de CHAQUE scène est une règle morte.
@@ -377,11 +395,24 @@ export function avertirNonTerminalJamaisInvoque(ast) {
     if (!n || typeof n !== 'object' || vus.has(n)) return;
     vus.add(n);
     if (Array.isArray(n)) { for (const e of n) w(e, vus); return; }
-    if (n.type === 'Symbol' && typeof n.name === 'string') invoques.add(n.name);
+    if (TYPES_QUI_INVOQUENT.has(n.type) && typeof n.name === 'string') invoques.add(n.name);
     for (const k of Object.keys(n)) w(n[k], vus);
   };
+  // ⛔ UNE RÈGLE N'A DE NOM QUE SI SON MEMBRE GAUCHE EST UN SEUL SYMBOLE. Un membre gauche à
+  // plusieurs symboles est un MOTIF — mesuré au natif : `ga3 G --> ga3 ga3` réécrit `G` EN PRÉSENCE
+  // DE `ga3`, et environ 500 des 3903 règles du corpus publié ont cette forme. Ses éléments ne
+  // définissent donc rien, et un symbole négé (`#X`) ou un joker occupe une POSITION au lieu de
+  // nommer une tête (`LANGUAGE.md` § Contextes : « la parenthèse regarde sans prendre ; le dièse
+  // colle à un symbole, lui, occupe la place »).
+  //
+  // ⚠️ SANS CE CRITÈRE, LE JUGE AFFIRME UNE CHOSE FAUSSE, et c'est mesuré sur le corpus : 11 des 58
+  // avertissements portaient sur ce qui n'est pas une règle — le SILENCE `-` de `dhati2:28`, les
+  // accolades brutes `{` et `}` de `koto3:43`, le motif `Step3Up ?1 ?2 ?3` de `mohanam:173`. Dire
+  // « la règle '-' est morte » apprend à ignorer le canal entier.
+  const estUneTete = (r) => (r.lhs || []).length === 1
+    && r.lhs[0] && r.lhs[0].type === 'Symbol' && typeof r.lhs[0].name === 'string' && !r.lhs[0].negated;
   for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) {
-    for (const s of r.lhs || []) if (s && s.name && !definis.has(s.name)) definis.set(s.name, r.line ?? 0);
+    if (estUneTete(r) && !definis.has(r.lhs[0].name)) definis.set(r.lhs[0].name, r.line ?? 0);
     w(r.rhs); w(r.contexts);
   }
   const sorties = [];

@@ -44,32 +44,6 @@ export function resoudre(ast: any, environnement: any): {
     examines: number;
     greffes: number;
 };
-/**
- * AVERTIT SUR UN NON-TERMINAL DÉFINI ET JAMAIS INVOQUÉ — une règle morte, ou une faute de frappe
- * dans le nom qui devait l'invoquer.
- *
- * ⛔ C'EST UN AVERTISSEMENT, PAS UN REFUS, et le choix est de Romain (2026-09-06) : *« à ce moment-là
- * il peut émettre un warning ? »*. Ni l'un ni l'autre des deux cas ne justifie d'arrêter la
- * compilation — la grammaire est valide, elle porte simplement une règle que rien n'atteint.
- *
- * ⚠️ ET IL NE SE JUSTIFIE PAS PAR LE NATIF, mesuré par bp3-engine le 2026-09-06 : sur deux règles
- * mortes, le moteur rend sa production sans un mot — `Errors: 0`, aucune trace. *« BPScript fait ce
- * que BP3 sait faire »* est donc satisfait par le SILENCE, et cet avertissement est un AJOUT
- * délibéré, pas une mise en conformité. Le dire est nécessaire : un jour quelqu'un le lira comme une
- * contrainte du moteur et le supprimera au nom de la conformité.
- *
- * ⛔ L'AXIOME SE LIT, IL NE SE CONNAÎT PAS. Un point d'entrée et un orphelin sont STRUCTURELLEMENT
- * IDENTIQUES — tous deux définis, tous deux jamais invoqués — et rien dans l'arbre ne les sépare.
- * Seule une déclaration le fait, et elle vit dans le schéma de syntaxe depuis le 2026-09-06.
- * ⚠️ MES DEUX TENTATIVES DE LE CALCULER ONT ÉCHOUÉ, mesurées : « la première règle écrite » rend
- * 436 signalements dont 3 faux (`kairos-octave-transpose-*`, où `MOTIF` précède `S` — et bp3-engine
- * a confirmé que cette forme est PARFAITEMENT conforme, l'ordre d'écriture n'ayant aucun effet) ;
- * « plusieurs points d'entrée par sous-grammaire » en rend 966, parce qu'une sous-grammaire est
- * invoquée depuis une AUTRE. Le compte juste est 110, sur 28 scènes des 377 du corpus publié.
- *
- * ⚠️ LES INVOCATIONS SE CHERCHENT SUR TOUTE LA SCÈNE, jamais dans la seule sous-grammaire : c'est
- * exactement ce qui a rendu 966 au lieu de 110.
- */
 export function avertirNonTerminalJamaisInvoque(ast: any): {
     code: string;
     message: string;
@@ -619,4 +593,47 @@ export function makeSplitAtom(original: any, ch: any, isFirst: any): {
 };
 export function noterLePassage(compte: any): void;
 export function dernierPassage(): any;
+/**
+ * AVERTIT SUR UN NON-TERMINAL DÉFINI ET JAMAIS INVOQUÉ — une règle morte, ou une faute de frappe
+ * dans le nom qui devait l'invoquer.
+ *
+ * ⛔ C'EST UN AVERTISSEMENT, PAS UN REFUS, et le choix est de Romain (2026-09-06) : *« à ce moment-là
+ * il peut émettre un warning ? »*. Ni l'un ni l'autre des deux cas ne justifie d'arrêter la
+ * compilation — la grammaire est valide, elle porte simplement une règle que rien n'atteint.
+ *
+ * ⚠️ ET IL NE SE JUSTIFIE PAS PAR LE NATIF, mesuré par bp3-engine le 2026-09-06 : sur deux règles
+ * mortes, le moteur rend sa production sans un mot — `Errors: 0`, aucune trace. *« BPScript fait ce
+ * que BP3 sait faire »* est donc satisfait par le SILENCE, et cet avertissement est un AJOUT
+ * délibéré, pas une mise en conformité. Le dire est nécessaire : un jour quelqu'un le lira comme une
+ * contrainte du moteur et le supprimera au nom de la conformité.
+ *
+ * ⛔ L'AXIOME SE LIT, IL NE SE CONNAÎT PAS. Un point d'entrée et un orphelin sont STRUCTURELLEMENT
+ * IDENTIQUES — tous deux définis, tous deux jamais invoqués — et rien dans l'arbre ne les sépare.
+ * Seule une déclaration le fait, et elle vit dans le schéma de syntaxe depuis le 2026-09-06.
+ * ⚠️ MES DEUX TENTATIVES DE LE CALCULER ONT ÉCHOUÉ, mesurées : « la première règle écrite » rend
+ * 436 signalements dont 3 faux (`kairos-octave-transpose-*`, où `MOTIF` précède `S` — et bp3-engine
+ * a confirmé que cette forme est PARFAITEMENT conforme, l'ordre d'écriture n'ayant aucun effet) ;
+ * « plusieurs points d'entrée par sous-grammaire » en rend 966, parce qu'une sous-grammaire est
+ * invoquée depuis une AUTRE. Le compte juste est 110, sur 28 scènes des 377 du corpus publié.
+ *
+ * ⚠️ LES INVOCATIONS SE CHERCHENT SUR TOUTE LA SCÈNE, jamais dans la seule sous-grammaire : c'est
+ * exactement ce qui a rendu 966 au lieu de 110.
+ */
+/**
+ * Les nœuds dont le NOM désigne une règle. Relevé sur les 107 scènes du corpus, en comptant pour
+ * chaque type combien de ses noms sont aussi des têtes de règle — la matrice, pas la graphie qui
+ * s'est montrée :
+ *
+ *     Symbol           11523 occurrences   4634 sont des têtes   ⇐ invoque
+ *     TemplateMaster      29                 29                  ⇐ invoque  (`$V8`)
+ *     TemplateSlave       18                 18                  ⇐ invoque  (`&V8`)
+ *     Control             18                  0
+ *     OutTimeObject        2                  0
+ *
+ * ⚠️ NE LIRE QUE `Symbol` REND UN AVERTISSEMENT FAUX : `dhati2` invoque ses sept motifs par GABARIT
+ * (`S <> $A16 $V8 …`), et le juge les déclarait tous morts. Un gabarit nomme sa règle autant qu'un
+ * symbole. `test/une_regle_que_rien_n_invoque_s_annonce.mjs` tient la matrice à jour et ÉCHOUE si un
+ * type porteur de nom apparaît hors de ce relevé : une graphie neuve doit rougir, pas passer.
+ */
+export const TYPES_QUI_INVOQUENT: Set<string>;
 export const restesDeSegmentation: WeakMap<object, any>;

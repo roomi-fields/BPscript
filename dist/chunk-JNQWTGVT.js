@@ -406,6 +406,7 @@ function resoudre(ast, environnement) {
   void environnement;
   return { ast, diagnostics, examines, greffes };
 }
+var TYPES_QUI_INVOQUENT = /* @__PURE__ */ new Set(["Symbol", "TemplateMaster", "TemplateSlave"]);
 function avertirNonTerminalJamaisInvoque(ast) {
   const axiome = SYNTAXE.axiome && SYNTAXE.axiome.mot;
   if (!axiome) return [];
@@ -418,11 +419,12 @@ function avertirNonTerminalJamaisInvoque(ast) {
       for (const e of n) w(e, vus);
       return;
     }
-    if (n.type === "Symbol" && typeof n.name === "string") invoques.add(n.name);
+    if (TYPES_QUI_INVOQUENT.has(n.type) && typeof n.name === "string") invoques.add(n.name);
     for (const k of Object.keys(n)) w(n[k], vus);
   };
+  const estUneTete = (r) => (r.lhs || []).length === 1 && r.lhs[0] && r.lhs[0].type === "Symbol" && typeof r.lhs[0].name === "string" && !r.lhs[0].negated;
   for (const sg of ast.subgrammars || []) for (const r of sg.rules || []) {
-    for (const s of r.lhs || []) if (s && s.name && !definis.has(s.name)) definis.set(s.name, r.line ?? 0);
+    if (estUneTete(r) && !definis.has(r.lhs[0].name)) definis.set(r.lhs[0].name, r.line ?? 0);
     w(r.rhs);
     w(r.contexts);
   }
