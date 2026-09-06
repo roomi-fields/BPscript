@@ -5585,14 +5585,22 @@ function parse(tokens, opts = {}) {
       //     d'une clé) : `args(pivot factor)` reste « il manque la virgule », avec sa réécriture ;
       //   · le déclaratif seulement — dans le flux, l'espace sépare les parties d'une valeur.
       // Deux mots séparés par une espace ne disaient rien d'autre : ils étaient refusés.
+      // ⛔ LE TYPE SE CONSOMME, ET LA SUITE SE LIT COMME D'HABITUDE — 2026-09-06, arbitrage de Romain :
+      // *« <type> <nom> c'est une déclaration d'objet, et quand on déclare en affectant c'est
+      // <type> <nom>:<valeur> »*. La forme existait déjà pour `flag f:1` et `signal grain:1` ; dans
+      // un sac, elle était REFUSÉE — on pouvait écrire un type OU un défaut, jamais les deux, donc
+      // `control vel(integer value:64)` ne se disait pas.
+      //
+      // ⚠️ ET LA RÉPARATION N'AJOUTE PAS DE LECTEUR, elle en RETIRE un. Cette branche lisait sa
+      // valeur elle-même — une parenthèse, sinon `true` — et ignorait donc tout le reste : le
+      // deux-points, les valeurs à unité, le texte, le backtick. C'est le défaut nommé vingt lignes
+      // plus bas pour le préfixe de librairie, *« une SECONDE GRAMMAIRE qui ne connaît que les
+      // valeurs simples »*. On consomme le type comme on y consomme le préfixe, et le lecteur
+      // unique fait le reste — donc la forme typée accepte exactement ce que la forme nue accepte.
+      let typeDuMembre = null;
       if (enDeclaratif && !imbrique && at(T.IDENT) && current().spaceBefore && prototypesDeclares.has(key)) {
-        const type = key;
+        typeDuMembre = key;
         key = advance().value;
-        const pos = { line: keyTok.line, col: keyTok.col };
-        const valeur = (at(T.LPAREN) && !current().spaceBefore) ? parseRuntimeQualifier({ imbrique: true }) : true;
-        pairs.push({ key, type, value: valeur, ...(subject !== null ? { subject } : {}), ...pos });
-        finirTerme();
-        continue;
       }
       // ── `<librairie>.<contrôle>` — LE PRÉFIXE SE CONSOMME ICI, AVANT TOUTE LECTURE ───────────
       // RÈGLE DE ROMAIN (2026-08-13), déjà écrite dans `EBNF.md:153` : « Le préfixe est optionnel :
@@ -5651,7 +5659,7 @@ function parse(tokens, opts = {}) {
       //
       // Le collage est exigé : `range (16, 8000)` séparé par une espace n'appartient pas à `range`.
       if (at(T.LPAREN) && !current().spaceBefore) {
-        pairs.push({ key, value: parseRuntimeQualifier({ imbrique: true }), ...sub, ...pos });
+        pairs.push({ key, ...(typeDuMembre ? { type: typeDuMembre } : {}), value: parseRuntimeQualifier({ imbrique: true }), ...sub, ...pos });
         finirTerme();
         continue;
       }
@@ -6006,10 +6014,10 @@ function parse(tokens, opts = {}) {
         if (isNoArgControl(key)) {
           throw new ParseError('PARSE_KEY_BRUT_KEY_TAKES', { key, brut }, keyTok);
         }
-        pairs.push({ key, value: val, ...(valeurEstUnTexte ? { texte: true } : {}), ...sub, ...pos });
+        pairs.push({ key, ...(typeDuMembre ? { type: typeDuMembre } : {}), value: val, ...(valeurEstUnTexte ? { texte: true } : {}), ...sub, ...pos });
       } else {
         // Bare key (no-arg control like velcont, pitchcont)
-        pairs.push({ key, value: true, ...sub, ...pos });
+        pairs.push({ key, ...(typeDuMembre ? { type: typeDuMembre } : {}), value: true, ...sub, ...pos });
       }
       finirTerme();
     }

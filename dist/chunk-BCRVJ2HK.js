@@ -9203,14 +9203,10 @@ function parse(tokens, opts = {}) {
         continue;
       }
       let key = at(T.STRING) && (peek(1).type === T.COLON || peek(1).type === T.LPAREN) ? advance().value : expect(T.IDENT).value;
+      let typeDuMembre = null;
       if (enDeclaratif && !imbrique && at(T.IDENT) && current().spaceBefore && prototypesDeclares.has(key)) {
-        const type = key;
+        typeDuMembre = key;
         key = advance().value;
-        const pos3 = { line: keyTok.line, col: keyTok.col };
-        const valeur = at(T.LPAREN) && !current().spaceBefore ? parseRuntimeQualifier({ imbrique: true }) : true;
-        pairs.push({ key, type, value: valeur, ...subject !== null ? { subject } : {}, ...pos3 });
-        finirTerme();
-        continue;
       }
       let libDuReglage = null;
       if (at(T.PERIOD) && peek(1).type === T.IDENT && !nomsVariables.has(key) && Object.prototype.hasOwnProperty.call(
@@ -9225,7 +9221,7 @@ function parse(tokens, opts = {}) {
       const pos2 = { line: keyTok.line, col: keyTok.col };
       const sub = { ...subject !== null ? { subject } : {}, ...libDuReglage ? { lib: libDuReglage } : {} };
       if (at(T.LPAREN) && !current().spaceBefore) {
-        pairs.push({ key, value: parseRuntimeQualifier({ imbrique: true }), ...sub, ...pos2 });
+        pairs.push({ key, ...typeDuMembre ? { type: typeDuMembre } : {}, value: parseRuntimeQualifier({ imbrique: true }), ...sub, ...pos2 });
         finirTerme();
         continue;
       }
@@ -9378,9 +9374,9 @@ function parse(tokens, opts = {}) {
         if (isNoArgControl(key)) {
           throw new ParseError("PARSE_KEY_BRUT_KEY_TAKES", { key, brut }, keyTok);
         }
-        pairs.push({ key, value: val, ...valeurEstUnTexte ? { texte: true } : {}, ...sub, ...pos2 });
+        pairs.push({ key, ...typeDuMembre ? { type: typeDuMembre } : {}, value: val, ...valeurEstUnTexte ? { texte: true } : {}, ...sub, ...pos2 });
       } else {
-        pairs.push({ key, value: true, ...sub, ...pos2 });
+        pairs.push({ key, ...typeDuMembre ? { type: typeDuMembre } : {}, value: true, ...sub, ...pos2 });
       }
       finirTerme();
     }
