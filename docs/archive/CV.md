@@ -13,7 +13,7 @@ Les CV (Control Voltage) sont des **objets temporels** dans BPScript qui produis
 > **déclarative** réalisée par le **runtime audio**. Sa moitié **DIGITALE** = les **fonctions de
 > manipulation** (transpose…) — même idée (comportement nommé en librairie) mais **vrai code TS**
 > réalisé par **Kairos** à la résolution. Cf. `docs/design/DIGITAL_FUNCTIONS.md` et la décision
-> `hub/decisions/2026-06-30-frontiere-digital-analog-invariant-copie.md`.
+> `hub/decisions/TABLE-DE-LA-LOI.md § librairies`.
 
 ### Les 3 types d'objets temporels BPScript
 

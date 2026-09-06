@@ -40,7 +40,7 @@ def port(
 )
 
 // @description MIDI channel
-control chan(
+midi chan(
   bp3:_chan,
   args(channel),
   range(1, 16),
@@ -49,7 +49,7 @@ control chan(
 
 // @description MIDI Program Change. The author writes the program number starting at 1, like the original engine; the byte transmitted is
 // that number minus one.
-control ins(
+midi ins(
   bp3:_ins,
   args(program),
   range(1, 128),
@@ -57,7 +57,7 @@ control ins(
 )
 
 // @description MIDI Modulation (CC1)
-control mod(
+midi mod(
   bp3:_mod,
   args(value),
   range(0, 127),
@@ -65,13 +65,13 @@ control mod(
 )
 
 // @description Enable continuous modulation interpolation (CC1)
-control modcont(
+midi modcont(
   bp3:_modcont,
   scope(symbol, group, rule, flow)
 )
 
 // @description MIDI Pitch Bend
-control pitchbend(
+midi pitchbend(
   bp3:_pitchbend,
   args(value),
   range(-8192, 8191),
@@ -79,7 +79,7 @@ control pitchbend(
 )
 
 // @description Pitch bend range in cents
-control pitchrange(
+midi pitchrange(
   bp3:_pitchrange,
   args(cents),
   unit:"cents",
@@ -87,14 +87,14 @@ control pitchrange(
 )
 
 // @description Enable continuous pitch bend interpolation
-control pitchcont(
+midi pitchcont(
   bp3:_pitchcont,
   scope(symbol, group, rule, flow)
 )
 
 // @description Key mapping — remap MIDI key range (p1,p2) to (q1,q2). Args are key numbers (0..127) or note names; p2 must be greater than
 // p1. BP3 _keymap — register of the native engine, bp3-engine `origin/wasm`: capture-run/console_strings.json carries « 62 4 _keymap ».
-control keymap(
+midi keymap(
   bp3:_keymap,
   args(p1, q1, p2, q2),
   range(0, 127),
@@ -104,13 +104,13 @@ control keymap(
 // @description Key map in CONTINUOUS mode — the map glides DURING notes, through intermediate messages. BP3 _mapcont — register of the
 // native engine, bp3-engine `origin/wasm`: capture-run/console_strings.json carries « 44 0 _mapcont ». Its two discrete siblings live in
 // the variation library; their recipient is read on that file's resolvedBy field, never here.
-control mapcont(
+midi mapcont(
   bp3:_mapcont,
   scope(symbol, group, rule, flow)
 )
 
 // @description MIDI Channel Pressure (aftertouch)
-control pressure(
+midi pressure(
   bp3:_press,
   args(value),
   range(0, 127),
@@ -118,13 +118,13 @@ control pressure(
 )
 
 // @description Enable continuous channel pressure interpolation
-control presscont(
+midi presscont(
   bp3:_presscont,
   scope(symbol, group, rule, flow)
 )
 
 // @description MIDI Volume (CC7)
-control volume(
+midi volume(
   implements:expression.volume,
   bp3:_volume,
   args(value),
@@ -133,46 +133,46 @@ control volume(
 )
 
 // @description Enable continuous volume interpolation
-control volumecont(
+midi volumecont(
   bp3:_volumecont,
   scope(symbol, group, rule, flow)
 )
 
 // @description Enable MIDI switch channel
-control switchon(
+midi switchon(
   bp3:_switchon,
   args(channel),
   scope(symbol, group, rule, flow)
 )
 
 // @description Disable MIDI switch channel
-control switchoff(
+midi switchoff(
   bp3:_switchoff,
   args(channel),
   scope(symbol, group, rule, flow)
 )
 
 // @description Mutes the sound. Bare, (mute), mutes everything sounding; per component, (mute.all) or (mute.lead), mutes the named target.
-control mute(
+midi mute(
   scope(flow),
   bagOnly:true
 )
 
 // @description Restores the sound muted by mute. Same graphy: (unmute) or (unmute.lead).
-control unmute(
+midi unmute(
   scope(flow),
   bagOnly:true
 )
 
 // @description Emergency stop: every note released, every controller reset flat. Image of MIDI all notes off. Takes no argument.
-control panic(
+midi panic(
   scope(flow),
   bagOnly:true
 )
 
 // @description Real-time system synchronization message: (sync:start), (sync:continue), (sync:stop). Image of the MIDI Start/Continue/Stop
 // messages.
-control sync(
+midi sync(
   args(message),
   values(start, continue, stop),
   scope(flow)
@@ -181,7 +181,7 @@ control sync(
 // @description NUMBERED MIDI controller. Designated by its component number: (cc.98:45) in a container, !(cc.98:45) in flow. For
 // controllers with no named alias -- those that have one are written by their name (mod = CC1, volume = CC7). The dot CALLS the component,
 // the colon ASSIGNS the value.
-control cc(
+midi cc(
   component:number,
   args(value),
   range(0, 127),
@@ -189,7 +189,7 @@ control cc(
 )
 
 // @description Rate of intermediate values for continuous volume, in values per second. Default 50, like the native engine.
-control volumerate(
+midi volumerate(
   bp3:_volumerate,
   args(hz),
   range(0, 1000),
@@ -198,7 +198,7 @@ control volumerate(
 )
 
 // @description Rate of intermediate values for continuous modulation, in values per second. Default 50, like the native engine.
-control modrate(
+midi modrate(
   bp3:_modrate,
   args(hz),
   range(0, 1000),
@@ -207,7 +207,7 @@ control modrate(
 )
 
 // @description Rate of intermediate values for continuous pitch, in values per second. Default 50, like the native engine.
-control pitchrate(
+midi pitchrate(
   bp3:_pitchrate,
   args(hz),
   range(0, 1000),
@@ -216,7 +216,7 @@ control pitchrate(
 )
 
 // @description Rate of intermediate values for continuous pressure, in values per second. Default 50, like the native engine.
-control pressrate(
+midi pressrate(
   bp3:_pressrate,
   args(hz),
   range(0, 1000),
@@ -226,7 +226,7 @@ control pressrate(
 
 // @description Rate of intermediate values for ALL continuous streams, in emissions per second. Sets in one word what volumerate, modrate,
 // pitchrate and pressrate set separately. Image of SamplingRate in the native engine.
-control rate(
+midi rate(
   bp3:SamplingRate,
   args(hz),
   range(0, 1000),
@@ -236,7 +236,7 @@ control rate(
 
 // @description Number of the MIDI controller carrying volume. Image of VolumeController in the native engine. The channel is stated in the
 // same bag: !(chan:3, volumecontrol:11).
-control volumecontrol(
+midi volumecontrol(
   bp3:_volumecontrol,
   args(controller),
   range(0, 127),
@@ -245,7 +245,7 @@ control volumecontrol(
 
 // @description Number of the MIDI controller carrying panning. Image of PanoramicController in the native engine. The channel is stated in
 // the same bag: !(chan:3, pancontrol:11).
-control pancontrol(
+midi pancontrol(
   bp3:_pancontrol,
   args(controller),
   range(0, 127),
@@ -254,7 +254,7 @@ control pancontrol(
 
 // @description Sound fade-out at the end of the performance, in SECONDS. A value of zero or less removes the fade. Image of EndFadeOut in
 // the native engine.
-control fadeout(
+midi fadeout(
   bp3:EndFadeOut,
   args(duration),
   unit:"s",
@@ -262,7 +262,7 @@ control fadeout(
 )
 
 // @description At the end of the scene, silence whatever is still sounding.
-control resetnotes(
+midi resetnotes(
   bp3:ResetNotes,
   bp3value:1,
   scope(flow, scene),
@@ -271,7 +271,7 @@ control resetnotes(
 )
 
 // @description At the end of the scene, let whatever is still sounding ring on.
-control letring(
+midi letring(
   bp3:ResetNotes,
   bp3value:0,
   scope(flow, scene),
@@ -280,7 +280,7 @@ control letring(
 )
 
 // @description A note already held that is replayed is RETRIGGERED — a new NoteOn.
-control strikeagain(
+midi strikeagain(
   bp3:StrikeAgainDefault,
   bp3value:1,
   scope(flow, scene),
@@ -289,7 +289,7 @@ control strikeagain(
 )
 
 // @description A note already held that is replayed stays HELD — no new NoteOn.
-control sustain(
+midi sustain(
   bp3:StrikeAgainDefault,
   bp3value:0,
   scope(flow, scene),
@@ -298,21 +298,21 @@ control sustain(
 )
 
 // @description A switch already pressed that is re-actuated is released then pressed again.
-control pedalrelease(
+midi pedalrelease(
   scope(flow, scene),
   bagOnly:true,
   unicite:interrupteur-rejoue
 )
 
 // @description A switch already pressed that is re-actuated keeps its state.
-control pedalhold(
+midi pedalhold(
   scope(flow, scene),
   bagOnly:true,
   unicite:interrupteur-rejoue
 )
 
 // @description At the end of the scene, reset the controllers flat.
-control resetcontrols(
+midi resetcontrols(
   bp3:ResetControllers,
   bp3value:1,
   scope(flow, scene),
@@ -321,7 +321,7 @@ control resetcontrols(
 )
 
 // @description At the end of the scene, leave the controllers in the state the scene put them in.
-control keepcontrols(
+midi keepcontrols(
   bp3:ResetControllers,
   bp3value:0,
   scope(flow, scene),

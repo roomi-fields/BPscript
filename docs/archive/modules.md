@@ -2,7 +2,7 @@
 
 **Sortie du langage le 2026-08-23**, avec `lib/mod.json` et la graphie `module.X`.
 Decision de Romain : *« on sort `mod` et la section correspondante est sortie/archivee.
-Idem pour `module.X` »* — `hub/decisions/2026-08-23-mod-sort-avec-les-modules-et-la-graphie-module-point.md`.
+Idem pour `module.X` »* — `hub/decisions/TABLE-DE-LA-LOI.md § langage`.
 
 **Ce document ne fait autorite sur rien.** La reference du langage est `../spec/LANGUAGE.md`,
 et elle seule. Il est garde parce que celui qui rouvrira le sujet voudra lire comment il etait

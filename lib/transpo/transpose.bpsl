@@ -1,7 +1,7 @@
 // @description Real (chromatic) transposition — shift the alphabet anchor by a fixed interval (fraction 3/2, cents 700c, decimal 1.5).
 // Preserves intervals AND note names; works in any tuning. A bare integer is a ratio N:1 (N-th harmonic): 2/4/8 = octaves; for semitones
 // use cents (12 semitones = 1200c). The old grid-step regime is removed.
-control transpose(
+transpo transpose(
   args(interval),
   argType:interval,
   scope(symbol, group, rule, flow, scene),

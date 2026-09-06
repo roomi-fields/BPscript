@@ -329,7 +329,7 @@ dans un fichier de configuration.
 - Dispatcher : ❌ retiré du dépôt le 2026-04-13 (extraction Kanopi, commit `4fb6b46`) — BPScript
   ne porte plus de dispatcher. Les responsabilités se répartissent : l'ordonnancement (structure,
   timing) reste chez **BPx**, l'**ordonnanceur** au sens de
-  `hub/decisions/2026-07-17-bpx-ordonnanceur-opaque-homomorphisme-en-resolution-kairos-librairie.md` ;
+  `hub/decisions/TABLE-DE-LA-LOI.md § moteur` ;
   la résolution de hauteur et les ratios chez **Kairos** ; le routage vers le transport chez
   **Kronos**, qui route la hauteur déjà résolue (cf. `PITCH.md` Layer 5) ; le rendu audio/CV chez
   **runtime-audio** — confirmé le 2026-07-19 (cf. `SOUNDS.md:705-707`)

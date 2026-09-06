@@ -1,6 +1,6 @@
 // @description Chromatic transposition on the 12-key grid — shift N chromatic keys (semitones), rename to target key + its tuning. Image of
 // BP3 _transpose. Shifts CHROMATIC keys; scaleshift shifts diatonic degrees, transpose preserves note names.
-control chromashift(
+transpo chromashift(
   bp3:_transpose,
   args(keys),
   value:0,

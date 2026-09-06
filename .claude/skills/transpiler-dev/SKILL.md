@@ -165,24 +165,26 @@ fiche `hub/projets/agents/bpscript.md` — pas ici (ils évoluent). Suites lourd
   (compte de tokens vs HEAD). Protection en place dans s5_bpscript.cjs (refus d'écraser
   une référence valide par un 0-token ; `--force-empty` pour volontaire). Grammaires à
   `_randomize` : sorties non-déterministes, jamais committées. Doctrine complète :
+  <!-- GARDE-CHEMINS-SORTANTS: absence — supprime a la refonte du hub, sans successeur nomme -->
   `hub/methodes-tests-oracles.md`.
 - **Comparateur du round-trip** : toute nouvelle normalisation (espaces, lignes de
   préambule, décimales…) = une équivalence BP3 à DÉMONTRER sur le moteur d'abord,
   jamais un ajustement pour faire passer.
 - **Builds courants piégés** : v3.4.5 ne sait plus jouer 765432/look-and-say/watch
+  <!-- GARDE-CHEMINS-SORTANTS: absence — le registre des bugs moteur vit chez bp3-engine, pas au hub -->
   (bugs #48/#49/#50/#52, `hub/constats/bugs-moteur-bp3.md`) — un 0 token n'est pas
   forcément ta régression ; vérifie le constat avant de débugger.
 - **Tempo** : `![/N]`/`![*N]`/`![tempo:N]` = RELATIFS (`_tempo`) ; `A[/N]` = ABSOLU
   (`/N` nu, durée de référence du champ). Contrat utilisateur, ne pas dévier :
-  `hub/decisions/2026-06-10-tempo-absolu-vs-relatif.md`.
+  `hub/decisions/TABLE-DE-LA-LOI.md § Ce qui a été RETIRÉ, et par quoi`.
 - **Ancre de gabarit** : `$` nu (LHS/RHS) = nœud `TemplateAnchor` ↔ BP3 `(=` non
-  fermé. `$X`/`${…}` restent fermés. `hub/decisions/2026-06-10-ancre-gabarit-dollar-nu.md`.
+  fermé. `$X`/`${…}` restent fermés. `hub/decisions/TABLE-DE-LA-LOI.md § langage`.
 
 ## Tour de contrôle
 
 Coordination inter-projets : `/home/romi/dev/bp/hub` (lire TABLEAU + courrier en début
 de session — cf. CLAUDE.md). Un finding transverse va dans `hub/constats/`, une remontée
-moteur dans `hub/courrier/bernard.md`. Le scratchpad local reste pour le dialogue
+moteur dans `hub/courrier/bp3-engine.md`. Le scratchpad local reste pour le dialogue
 intra-dépôt avec l'architecte/le reviewer.
 
 ## Changelogs

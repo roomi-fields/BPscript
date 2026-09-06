@@ -520,7 +520,7 @@ temporel — une seule voix.
 **La durée collée n'est pas un champ : elle se DÉSUCRE en cadre.** `A4:1/2` produit `{1/2, A4}` et
 `{A B}:1/2` produit `{1/2, {A B}}` — la durée devient la **première voix** du bloc, celle que le
 cadre polymétrique lit déjà. C'est du sucre pur : le moteur ne change pas
-(`hub/decisions/2026-06-26-trois-concepts-temps-duree.md`, validé Romain).
+(`hub/decisions/TABLE-DE-LA-LOI.md § temps`, validé Romain).
 
 **Une durée décimale est la même chose qu'une fraction**, écrite autrement : `A:0.5` et `A:1/2`
 produisent le même arbre. L'entier donne un `NumericTerminal`, tout le reste un `NumericDuration`.

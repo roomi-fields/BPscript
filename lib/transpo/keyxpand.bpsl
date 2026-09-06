@@ -1,5 +1,5 @@
 // @description Interval expansion/contraction around a pivot. factor=2 doubles, factor=-1 inverts, factor=0.5 contracts.
-control keyxpand(
+transpo keyxpand(
   bp3:_keyxpand,
   args(pivot, factor),
   value(pivot:0, factor:1),

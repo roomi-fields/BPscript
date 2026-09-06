@@ -3,7 +3,7 @@
 **Pour arbitrage : Romain.** Rédigé 2026-07-19 par bpscript, à la demande de l'architecte ([751]).
 **Statut : GAP PROUVÉ.** C'est le seul rôle de marqueur encore ouvert ; les quatre autres
 (`=`/`:` maître-esclave, `+` mesure additive, `\`, le `;` saut-de-ligne) sont couverts ou exclus par
-`hub/decisions/2026-07-19-marqueurs-structurels-aucun-travail-langage.md`.
+`hub/decisions/TABLE-DE-LA-LOI.md § langage`.
 
 > **On m'a demandé de ne pas reclore en « rien à porter » sans preuve.** Je ne le fais pas :
 > l'existant **ne couvre pas** ce rôle, et voici la démonstration.

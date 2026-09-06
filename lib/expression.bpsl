@@ -11,14 +11,14 @@ def expression(
 )
 
 // @description Volume of a voice. MIDI realizes it as CC7; every output declares its own realization.
-control volume(
+expression volume(
   args(value),
   range(0, 127),
   scope(symbol, group, rule, flow, scene)
 )
 
 // @description Velocity (0-127). WebAudio: gain, MIDI: NoteOn velocity
-control vel(
+expression vel(
   bp3:_vel,
   args(value),
   range(0, 127),
@@ -27,7 +27,7 @@ control vel(
 )
 
 // @description Pan (0=left, 64=center, 127=right). WebAudio: StereoPanner, MIDI: CC10
-control pan(
+expression pan(
   bp3:_pan,
   args(value),
   range(0, 127),
@@ -37,13 +37,13 @@ control pan(
 
 // @description Panning in CONTINUOUS mode — the value glides DURING notes, through intermediate messages. Its two discrete siblings live in
 // the variation library; their recipient is read on that file's resolvedBy field, never here.
-control pancont(
+expression pancont(
   bp3:_pancont,
   scope(symbol, group, rule, flow)
 )
 
 // @description Random velocity +/-range
-control rndvel(
+expression rndvel(
   bp3:_rndvel,
   args(range),
   value:0,
@@ -53,13 +53,13 @@ control rndvel(
 // @description Velocity in CONTINUOUS mode — the value glides DURING notes, through intermediate messages. Its two discrete siblings live
 // in the variation library; their recipient is read on that file's resolvedBy field. On the native engine, continuous velocity yields bytes
 // identical to steps.
-control velcont(
+expression velcont(
   bp3:_velcont,
   scope(symbol, group, rule, flow)
 )
 
 // @description NoteOff velocity (0-127). Relevant for expressive controllers (Osmose, MPE)
-control offvel(
+expression offvel(
   args(value),
   range(0, 127),
   value:64,
@@ -69,28 +69,28 @@ control offvel(
 // @description Articulation in CONTINUOUS mode — the value glides DURING notes. Its two discrete siblings, articulfixed and articulstep,
 // live in the variation library. The native behaviour of this word is unsettled: on engine v3.5.1-iso.2 no mode moves articulation, fixed
 // included.
-control articulcont(
+expression articulcont(
   bp3:_articulcont,
   scope(symbol, group, rule, flow)
 )
 
 // @description NATIVE gesture: gives a value to a named performance parameter. In BPScript the form is !(<param>:<value>), the parameter
 // being declared by its TYPE at the head -- signal <param> -- and it is the KEY.
-control value(
+expression value(
   bp3:_value,
   bpscript:false,
   args(param)
 )
 
 // @description NATIVE gesture: the named parameter DOES NOT VARY. In BPScript: !(<param>fixed), the mode glued to the parameter.
-control fixed(
+expression fixed(
   bp3:_fixed,
   bpscript:false,
   args(param)
 )
 
 // @description NATIVE gesture: the named parameter varies CONTINUOUSLY. In BPScript: !(<param>cont).
-control cont(
+expression cont(
   bp3:_cont,
   bpscript:false,
   args(param)
@@ -98,14 +98,14 @@ control cont(
 
 // @description NATIVE gesture: the named parameter varies BY STEPS. In BPScript: !(<param>step). Never declared as a word of the language
 // -- it enters here through the routing door, not the vocabulary one.
-control step(
+expression step(
   bp3:_step,
   bpscript:false,
   args(param)
 )
 
 // @description Rate of intermediate values for continuous panning, in values per second. Default 50, like the native engine.
-control panrate(
+expression panrate(
   bp3:_panrate,
   args(hz),
   range(0, 1000),

@@ -82,7 +82,7 @@ seule timeline. BP3 sait **quand**, les runtimes savent **quoi**.
 
 > ⚠️ **Étape 2 du diagramme (« Resolver du token → fréquence ») : PÉRIMÉE**, même statut que la
 > section Dispatcher plus bas — Kairos est seul à résoudre les hauteurs, ce runtime n'en calcule
-> plus (`hub/decisions/2026-07-30-kairos-seul-gere-les-hauteurs-l-ast-en-est-la-seule-source.md`).
+> plus (`hub/decisions/TABLE-DE-LA-LOI.md § hauteur`).
 
 **Deux sorties fondamentalement différentes :**
 
@@ -124,7 +124,7 @@ Résolution implicite quand non ambigu (un seul acteur contient le symbole).
 - **Pas de resolver global** — un resolver par acteur
 - **Pas d'alphabet global** — chaque acteur a le sien
 - Le dispatcher identifie l'acteur d'un token et délègue à son resolver — **périmé** : depuis
-  `hub/decisions/2026-07-30-kairos-seul-gere-les-hauteurs-l-ast-en-est-la-seule-source.md`, Kairos
+  `hub/decisions/TABLE-DE-LA-LOI.md § hauteur`, Kairos
   est seul à résoudre les hauteurs ; le dispatcher aval ne calcule plus rien (cf. bandeau ci-dessous,
   section Dispatcher)
 - Le compilateur vérifie les conflits inter-acteurs à la compilation
@@ -161,7 +161,7 @@ actor sitar  alphabet.sargam  tuning.sargam_22shruti  octaves.saptak  transport.
 
 > ⚠️ **« Crée un Resolver » : PÉRIMÉ.** Même statut que la section Dispatcher plus bas — Kairos est
 > seul à résoudre les hauteurs depuis ces 4 sources, aucun Resolver n'est instancié au runtime
-> (`hub/decisions/2026-07-30-kairos-seul-gere-les-hauteurs-l-ast-en-est-la-seule-source.md`).
+> (`hub/decisions/TABLE-DE-LA-LOI.md § hauteur`).
 
 ---
 
@@ -292,8 +292,8 @@ Timed tokens (noms résolus) → Dispatcher
 > (classe `Resolver`) décrivent un design antérieur à Kairos, où le dispatcher calculait le pitch au
 > runtime. Ce n'est plus le cas : **Kairos est seul à résoudre les hauteurs** et transmet des
 > hauteurs déjà calculées aux runtimes ; le dispatcher (Kanopi) ne calcule rien, il assemble
-> (`hub/decisions/2026-07-30-kairos-seul-gere-les-hauteurs-l-ast-en-est-la-seule-source.md` ;
-> `hub/decisions/2026-07-29-notre-mecanique-n-utilise-que-des-alphabets.md`). Section conservée pour
+> (`hub/decisions/TABLE-DE-LA-LOI.md § hauteur` ;
+> `hub/decisions/TABLE-DE-LA-LOI.md § sons`). Section conservée pour
 > l'intention de design historique.
 
 Le dispatcher est la boucle centrale du runtime. Il reçoit la séquence
@@ -341,7 +341,7 @@ Pour chaque token à l'instant T :
 > ⚠️ **« Dispatcher étape 5 (pitch) » ci-dessous et la « Formule de résolution » qui suit : PÉRIMÉES**,
 > même statut que « l'étape 4 » et la classe `Resolver` déjà signalées section Dispatcher — Kairos
 > est seul à résoudre les hauteurs, ce runtime ne calcule plus de fréquence
-> (`hub/decisions/2026-07-30-kairos-seul-gere-les-hauteurs-l-ast-en-est-la-seule-source.md`).
+> (`hub/decisions/TABLE-DE-LA-LOI.md § hauteur`).
 
 La transposition est un contrôle runtime (`_script(CT n)`), pas une opération
 moteur. C'est une **opération symbolique sur l'alphabet**, pas un calcul de
@@ -502,7 +502,7 @@ Trois moments d'exécution :
 
 Le modèle de **profils d'environnement** (`lib/routing.json` : studio/live/browser) et la feature
 `@routing`/`routingTable` sont **SUPPRIMÉS** (décision
-`hub/decisions/2026-07-16-sortie-acteur-implicite-browser-audio-routing-obsolete.md`, Romain).
+`hub/decisions/TABLE-DE-LA-LOI.md § runtimes`, Romain).
 Le canal de sortie s'écrit **directement au canon** sur l'acteur — `transport.audio` /
 `transport.midi(ch:N)` / `transport.osc(…)` — ou via le binding de l'acteur implicite
 `alphabet.X:<sortie>`. Les noms `browser`/`webaudio` sont rejetés fail-loud au parse.
@@ -548,7 +548,7 @@ REPL avant le dispatcher. Les `_script(CT n)` sont des contrôles opaques.
 
 > ⚠️ **`// Hz (résolu par actor.resolver)` : PÉRIMÉ**, même statut que la section Dispatcher —
 > la fréquence arrive déjà résolue par Kairos, aucun `actor.resolver` ne tourne à ce point
-> (`hub/decisions/2026-07-30-kairos-seul-gere-les-hauteurs-l-ast-en-est-la-seule-source.md`).
+> (`hub/decisions/TABLE-DE-LA-LOI.md § hauteur`).
 
 ```js
 actor.transport.send({

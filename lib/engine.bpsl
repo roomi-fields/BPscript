@@ -12,7 +12,7 @@ def engine(
 
 // @description NATIVE gesture: reseeds the random generator DURING derivation. In-flow reseeding is written ![seed:42] and reaches the tree
 // as an InstantControl carrying flux:true, distinct from the scene setting seed:42.
-control srand(
+engine srand(
   bp3:_srand,
   bpscript:false,
   args(seed),
@@ -20,14 +20,14 @@ control srand(
 )
 // @description NATIVE gesture: prints the work string in the trace window of the original engine. BPScript has no such window and no reason
 // to expose the word; it is declared so that the BP3 frontend can route the grammars that write it.
-control print(
+engine print(
   bp3:_print,
   bpscript:false,
   section:controls
 )
 
 // @description Derivation mode of the block/subgrammar (rnd, ord, sub, sub1, lin, tem, poslong) -- default: ord.
-control mode(
+engine mode(
   args(mode),
   values(rnd, ord, sub, sub1, lin, tem, poslong),
   value:ord,
@@ -35,7 +35,7 @@ control mode(
   section:engine
 )
 // @description Traversal direction per rule (left, right, rnd) -- default: rnd.
-control scan(
+engine scan(
   args(direction),
   values(left, right, rnd),
   value:rnd,
@@ -43,20 +43,20 @@ control scan(
   section:engine
 )
 // @description Rule weight -- an integer, 'inf' for absolute priority, or a K-param.
-control weight(
+engine weight(
   args(value),
   scope(rule),
   section:engine
 )
 // @description Rule weights go back to the value written in the grammar. Image of ResetWeights in the native engine.
-control resetweights(
+engine resetweights(
   bp3:ResetWeights,
   bp3value:1,
   scope(scene),
   section:engine
 )
 // @description Rule weights keep the value where derivation left them. Image of ResetWeights in the native engine.
-control keepweights(
+engine keepweights(
   bp3:ResetWeights,
   bp3value:0,
   scope(scene),
@@ -64,36 +64,36 @@ control keepweights(
 )
 // @description Derivation failure handling (skip, retry(N), fallback(X)) -- default: skip. No 'values' enum: retry and fallback take an
 // ARGUMENT ('retry(2)', 'fallback(Autre)').
-control on_fail(
+engine on_fail(
   args(strategy),
   value:skip,
   scope(scene, rule),
   section:engine
 )
 // @description Signature rythmique -- (meter:7/8), (meter:4+4/4).
-control meter(
+engine meter(
   args(signature),
   scope(scene, rule),
   section:engine
 )
 // @description Controlled repetition. expr = K-param or K-param=value.
-control repeat(
+engine repeat(
   bp3:_repeat,
   scope(rule),
   args(expr),
   section:engine
 )
 // @description Jump on derivation failure.
-control failed(
+engine failed(
   bp3:_failed,
   scope(rule),
   args(subgrammar, rule),
   section:engine
 )
 // @description Stop derivation.
-control stop(bp3:_stop, scope(rule), section:engine)
+engine stop(bp3:_stop, scope(rule), section:engine)
 // @description Jump to specific subgrammar and rule.
-control goto(
+engine goto(
   bp3:_goto,
   scope(rule),
   args(subgrammar, rule),
@@ -101,35 +101,35 @@ control goto(
 )
 // @description Retrograde — reverse element order. flow SCOPE ONLY: the marker acts on what FOLLOWS, and its reach stops on a closing
 // bracket.
-control retro(
+engine retro(
   bp3:_retro,
   scope(flow),
   section:engine
 )
 // @description Shuffle — random reordering of sequence elements. seed arg → _srand(N) prefix. flow SCOPE ONLY: the marker acts on what
 // FOLLOWS, like retro.
-control shuffle(
+engine shuffle(
   bp3:_rndseq,
   args(seed),
   scope(flow),
   section:engine
 )
 // @description Order — restore canonical order of sequence elements. PORTEE flow UNIQUEMENT : voir retro.
-control order(
+engine order(
   bp3:_ordseq,
   scope(flow),
   section:engine
 )
 // @description Rotate — cyclic rotation of sequence by N positions (engine, temporal). PORTEE flow UNIQUEMENT : voir retro. Distinct from
 // runtime (rotate) which is a pitch transformation.
-control rotate(
+engine rotate(
   bp3:_rotate,
   args(degrees),
   scope(flow),
   section:engine
 )
 // @description Staccato — shorten note durations (affects temporal structure)
-control staccato(
+engine staccato(
   bp3:_staccato,
   args(value),
   range(0, 127),
@@ -137,7 +137,7 @@ control staccato(
   section:engine
 )
 // @description Legato — extend note durations (affects temporal structure)
-control legato(
+engine legato(
   bp3:_legato,
   args(value),
   range(0, 1000),
@@ -146,7 +146,7 @@ control legato(
 )
 // @description Random timing jitter — displaces note attacks by ±N ms (temporal). Like staccato/legato, a current-parameter control, not a
 // reorder.
-control rndtime(
+engine rndtime(
   bp3:_rndtime,
   args(amount),
   range(0, 32767),
@@ -155,7 +155,7 @@ control rndtime(
   section:engine
 )
 // @description Destructure composed terminals based on alphabet
-control destru(
+engine destru(
   bp3:_destru,
   scope(subgrammar, rule),
   section:engine
@@ -163,32 +163,32 @@ control destru(
 
 // @description Random draw seed -- seed:N freezes the derivation; without it, the draw is random. BP3 Seed. Also written in the flow,
 // ![seed:N], where it translates the native _srand(N).
-control seed(
+engine seed(
   args(value),
   scope(scene, flow),
   section:engine
 )
 // @description Maximum number of items produced by the derivation (BP3 MaxItemsProduce).
-control maxitems(
+engine maxitems(
   args(count),
   scope(scene),
   section:engine
 )
 // @description Alias of maxitems (BP3 MaxItemsProduce).
-control items(
+engine items(
   args(count),
   scope(scene),
   section:engine
 )
 // @description Produces every possible item, disables improvize (BP3 AllItems).
-control allitems(
+engine allitems(
   scope(scene),
   section:engine
 )
 // @description Alias of allitems (BP3 AllItems).
-control all_items(scope(scene), section:engine)
+engine all_items(scope(scene), section:engine)
 // @description Endless continuous derivation (BP3 Improvize).
-control improvize(
+engine improvize(
   scope(scene),
   section:engine
 )
@@ -196,42 +196,42 @@ control improvize(
 // compared to the piece's internal step u and yields a grouping factor k = floor(value/u)+1, which the engine reports as its compression
 // rate. k=1 leaves the output unchanged to the byte. k>1 recasts instants onto a coarser table: distinct events share boundaries, the piece
 // lengthens, the start leaves zero.
-control quantization(
+engine quantization(
   args(value),
   unit:"ms",
   scope(scene),
   section:engine
 )
 // @description Period of the Q metronome (BP3 Qclock).
-control qclock(
+engine qclock(
   args(period),
   scope(scene),
   section:engine
 )
 // @description A time pattern is a duration ratio carrying a name -- timepatterns: t1=1/1, t2=3/2, ... It is declared at the head, its name
 // is then written in a polymetric expression, and it occupies time without sounding. LANGUAGE.md, section Les motifs temporels.
-control timepatterns(
+engine timepatterns(
   args(patterns),
   scope(scene),
   section:engine
 )
 
 // @description Re-seed RNG from clock at production start (BP3 _randomize preamble, Encode.c case 50)
-control randomize(
+engine randomize(
   bp3:_randomize,
   scope(subgrammar, flow, scene),
   bagOnly:true,
   section:subgrammar
 )
 // @description Striated time (pulsed)
-control striated(
+engine striated(
   bp3:_striated,
   scope(subgrammar, scene),
   unicite:nature-du-temps,
   section:subgrammar
 )
 // @description Smooth time (non-pulsed)
-control smooth(
+engine smooth(
   bp3:_smooth,
   scope(subgrammar, scene),
   unicite:nature-du-temps,

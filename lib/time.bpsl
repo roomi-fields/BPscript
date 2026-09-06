@@ -20,7 +20,7 @@ def tempo(
 )
 
 // @description Clock catch-up delay when resuming after a wait point, in MILLISECONDS. Image of MIDIsyncDelay in the native engine.
-control syncdelay(
+time syncdelay(
   section:controls,
   bp3:MIDIsyncDelay,
   args("duration"),

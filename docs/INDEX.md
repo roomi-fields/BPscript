@@ -54,7 +54,7 @@
 > RNG non portable MSVC vs glibc (6 grammaires S0≠S1) : **résolu le 2026-04-02** (LCG portable
 > implémenté, `bp3_random.c`/`.h`, score S0=S1 passé à 26/30 EXACT). Retiré de la table ci-dessus ;
 > le document `issues/RNG_PORTABLE.md` qui portait ce détail a été supprimé le 2026-07-31
-> (assainissement doc, chantier clos — `hub/decisions/2026-07-31-refonte-de-la-documentation-sept-formes-un-proprietaire-trois-gardes.md`).
+> (assainissement doc, chantier clos — `hub/decisions/TABLE-DE-LA-LOI.md § documentation`).
 
 | [GOTO_FAILED_ONFAIL.md](issues/GOTO_FAILED_ONFAIL.md) | Procédures de dérivation `goto`, `failed`, `onfail` : comportement attendu et écarts relevés | Coder ou vérifier une procédure de fin de règle |
 | [S8_ADVANCED_MECHANISMS.md](issues/S8_ADVANCED_MECHANISMS.md) | Mécanismes avancés du palier S8 | Reprendre le palier S8 |

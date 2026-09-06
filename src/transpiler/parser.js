@@ -4473,6 +4473,24 @@ function parse(tokens, opts = {}) {
         const tok = current();
         throw new ParseError('PARSE_TEMPLATE_LINE_NOT_A_CATALOG_ENTRY', { p1: String(tok.value) }, tok);
       }
+      // ⛔ LE RANG EST UN ENTIER, ET C'EST UN TYPE, PAS UNE POLITESSE — décision de Romain,
+      // 2026-09-06 : *« l'idée c'est que ça soit uniquement des entiers, donc les rangs doivent
+      // être typés integer »*.
+      //
+      // ⚠️ ET LE MOTEUR NATIF NE PROTÈGE DE RIEN ICI — mesuré par bp3-engine sur deux binaires
+      // figés, `ProduceItems.c:1370-1377` : il lit le rang caractère par caractère, remplace tout
+      // caractère non numérique par ZÉRO, **l'accumule quand même**, écrit un message qu'il
+      // n'inscrit pas au compteur d'erreurs, et rend 0. ⇒ `[1z]` ne devient pas invalide, il
+      // devient le rang **10** ; `[zzz]` devient le rang **0**. Deux entrées peuvent ainsi porter
+      // le même rang sans que rien ne le dise, et l'auteur n'apprend rien.
+      //
+      // ⇒ Ce refus est donc un AJOUT au comportement natif, assumé comme tel : accepter revient à
+      // laisser fabriquer un rang que personne n'a écrit. C'est la place du catalogue qui exige,
+      // et elle rejoint les douze places du langage qui vérifient déjà ce qu'elles reçoivent.
+      if (!(peek(1).type === T.INT && peek(2).type === T.RBRACKET)) {
+        const tok = peek(1).type === T.RBRACKET ? current() : peek(1);
+        throw new ParseError('PARSE_TEMPLATE_RANK_IS_AN_INTEGER', { p1: String(tok.value ?? '') }, tok);
+      }
 
       // ── UNE ENTRÉE DE CATALOGUE SE TRANSPORTE VERBATIM ─────────────────────────────────────
       // FORME RATIFIÉE PAR ROMAIN (2026-08-10), gravée dans BPx `docs/AST_SPEC.md` §1.9 :

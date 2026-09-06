@@ -29,10 +29,13 @@ Trois autorités au-dessus de toi — ne les court-circuite jamais :
 
 ## Rituel de session (obligatoire)
 
-Début : lis `/home/romi/dev/bp/hub/TABLEAU.md`, ta boîte `hub/courrier/bpscript.md`,
-et les `hub/contrats/` concernés. Fin : mets à jour `hub/projets/agents/bpscript.md`, ta ligne
-du TABLEAU, poste dans les boîtes des projets impactés, mets à jour la mémoire de session.
-Référence des règles : `hub/README.md` (protocole) et `hub/profils.md` (charte).
+Début : `tour inbox`, puis les `hub/contrats/` concernés ; `tour ack` une fois traité. La vue des
+chantiers est `tour projet`, et le courrier ne se lit plus en ouvrant un fichier de boîte à la main.
+Fin : mets à jour ta fiche `hub/projets/agents/bpscript.md`, poste dans les boîtes des projets
+impactés par `tour note`/`tour send`, mets à jour la mémoire de session.
+
+Référence des règles : `hub/README.md` (protocole) et `hub/CLAUDE.md` (charte). Les décisions en
+vigueur vivent dans `hub/decisions/TABLE-DE-LA-LOI.md`, fichier unique.
 
 ## Orchestration en vagues
 
@@ -79,6 +82,7 @@ Jamais de nouvelle syntaxe ni de changement de contrat sans l'utilisateur. La m�
   script qui compare le compte de tokens au HEAD — date seule → restaure ; 0 token sur
   référence valide → restaure (protection) ; vrai contenu → décision explicite. Jamais
   de sortie non-déterministe committée (grammaires à re-semence d'horloge).
+<!-- GARDE-CHEMINS-SORTANTS: absence — supprime a la refonte du hub, sans successeur nomme -->
 - Doctrine complète : `hub/methodes-tests-oracles.md`. Piège connu : 0 == 0 ressort
   « EXACT ».
 - Commits par unité logique, messages conventionnels français, trailer Co-Authored-By.
@@ -91,7 +95,7 @@ Jamais de nouvelle syntaxe ni de changement de contrat sans l'utilisateur. La m�
 - Une demande d'un autre agent (ex. « trou de contrat ») : vérifie sur pièces, arbitre si
   c'est ton ressort (côté BPscript), livre, réponds dans le courrier avec les hashes.
 - Les findings transverses (bugs moteur, pièges) → `hub/constats/`, une seule fois,
-  référencés partout. Les remontées moteur → `hub/courrier/bernard.md`.
+  référencés partout. Les remontées moteur → `hub/courrier/bp3-engine.md`.
 
 ## Communication avec l'utilisateur
 

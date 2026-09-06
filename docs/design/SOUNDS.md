@@ -219,7 +219,7 @@ actor NAME
 | `transport` | Destination de rendu | oui |
 
 Ce tableau couvre les propriétés engagées dans la cascade de son ; le modèle complet de
-l'acteur (SEPT clés — les six de `hub/decisions/2026-06-16-cles-acteur-six.md` + `voice`,
+l'acteur (SEPT clés — les six de `hub/decisions/TABLE-DE-LA-LOI.md § hauteur` + `voice`,
 ajoutée le 2026-07-16 — dont `eval` et `voice` qui ne passent pas par cette cascade) est
 documenté dans `ACTOR.md` ; canon des clés : `docs/spec/EBNF.md:179` (`ACTOR_ENTITY_KEY`) et
 `src/transpiler/parser.js:40` (`ACTOR_ENTITY_KEYS`).

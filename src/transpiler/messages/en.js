@@ -491,6 +491,11 @@ export const MESSAGES = {
     + 'terminal without occupying a step. To DECLARE A LABEL: the declarative part, with \'def\'.',
   PARSE_TEMPLATES_PLURAL_LONGER_EXISTS:
     '\'templates\' (plural, v0.7) no longer exists — write \'template\' (singular)',
+  PARSE_TEMPLATE_RANK_IS_AN_INTEGER:
+    'the rank of a catalog entry is an INTEGER between brackets — \'[3]\'. Received \'{p1}\'. The '
+    + 'native engine does not reject this: it reads the rank digit by digit, turns every '
+    + 'non-digit into a zero and keeps accumulating, so \'[1z]\' silently becomes rank 10 and '
+    + '\'[zzz]\' becomes rank 0 — two entries can end up sharing a rank with nothing to say so.',
   PARSE_TEMPLATE_LINE_NOT_A_CATALOG_ENTRY:
     'in the \'template\' section, every line is a catalog entry and opens with its rank in '
     + 'brackets — \'[1] /1 ??\'. This line ({p1}) opens with something else, so it belongs to no '

@@ -10,7 +10,7 @@ def audio(
 )
 
 // @description Oscillator waveform (Web Audio)
-control wave(
+audio wave(
   args(type),
   values(sine, triangle, square, sawtooth),
   value:triangle,
@@ -18,7 +18,7 @@ control wave(
 )
 
 // @description Envelope attack in ms (Web Audio)
-control attack(
+audio attack(
   args(ms),
   range(1, 5000),
   unit:"ms",
@@ -27,7 +27,7 @@ control attack(
 )
 
 // @description Envelope release in ms (Web Audio)
-control release(
+audio release(
   args(ms),
   range(1, 5000),
   unit:"ms",
@@ -36,7 +36,7 @@ control release(
 )
 
 // @description Detune in cents (Web Audio)
-control detune(
+audio detune(
   args(cents),
   range(-1200, 1200),
   unit:"cents",
@@ -45,7 +45,7 @@ control detune(
 )
 
 // @description Lowpass filter cutoff Hz (Web Audio)
-control filter(
+audio filter(
   args(freq),
   range(20, 20000),
   unit:"Hz",
@@ -54,7 +54,7 @@ control filter(
 )
 
 // @description Filter resonance Q (Web Audio)
-control filterQ(
+audio filterQ(
   args(value),
   range(0, 30),
   value:1,
@@ -63,7 +63,7 @@ control filterQ(
 
 // @description Actor gain — a permanent stage between an actor's voices and the master. The audio runtime converts this value into linear
 // gain.
-control volume(
+audio volume(
   implements:expression.volume,
   args(value),
   range(0, 127),

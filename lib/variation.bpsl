@@ -14,110 +14,110 @@ def variation(
 )
 
 // @description Velocity in FIXED mode — the written value holds until the next one, clean jump.
-control velfixed(
+variation velfixed(
   bp3:_velfixed,
   scope(symbol, group, rule, flow)
 )
 
 // @description Velocity BY STEPS — the value glides from note to note between two written values.
-control velstep(
+variation velstep(
   bp3:_velstep,
   scope(symbol, group, rule, flow)
 )
 
 // @description Modulation in FIXED mode — the written value holds until the next one, clean jump.
-control modfixed(
+variation modfixed(
   bp3:_modfixed,
   scope(symbol, group, rule, flow)
 )
 
 // @description Modulation BY STEPS — the value glides from note to note between two written values.
-control modstep(
+variation modstep(
   bp3:_modstep,
   scope(symbol, group, rule, flow)
 )
 
 // @description Pitchbend in FIXED mode — the written value holds until the next one, clean jump.
-control pitchfixed(
+variation pitchfixed(
   bp3:_pitchfixed,
   scope(symbol, group, rule, flow)
 )
 
 // @description Pitchbend BY STEPS — the value glides from note to note between two written values.
-control pitchstep(
+variation pitchstep(
   bp3:_pitchstep,
   scope(symbol, group, rule, flow)
 )
 
 // @description Pressure in FIXED mode — the written value holds until the next one, clean jump.
-control pressfixed(
+variation pressfixed(
   bp3:_pressfixed,
   scope(symbol, group, rule, flow)
 )
 
 // @description Pressure BY STEPS — the value glides from note to note between two written values.
-control presstep(
+variation presstep(
   bp3:_presstep,
   scope(symbol, group, rule, flow)
 )
 
 // @description Volume in FIXED mode — the written value holds until the next one, clean jump.
-control volumefixed(
+variation volumefixed(
   bp3:_volumefixed,
   scope(symbol, group, rule, flow)
 )
 
 // @description Volume BY STEPS — the value glides from note to note between two written values.
-control volumestep(
+variation volumestep(
   bp3:_volumestep,
   scope(symbol, group, rule, flow)
 )
 
 // @description Articulation in FIXED mode — the written value holds until the next one, clean jump. Articulation is set by legato and
 // staccato.
-control articulfixed(
+variation articulfixed(
   bp3:_articulfixed,
   scope(symbol, group, rule, flow)
 )
 
 // @description Articulation BY STEPS — the value glides from note to note between two written values.
-control articulstep(
+variation articulstep(
   bp3:_articulstep,
   scope(symbol, group, rule, flow)
 )
 
 // @description Panning in FIXED mode — the written value holds until the next one, clean jump.
-control panfixed(
+variation panfixed(
   bp3:_panfixed,
   scope(symbol, group, rule, flow)
 )
 
 // @description Panning BY STEPS — the value glides from note to note between two written values.
-control panstep(
+variation panstep(
   bp3:_panstep,
   scope(symbol, group, rule, flow)
 )
 
 // @description Key map in FIXED mode — the written map holds until the next one, clean jump.
-control mapfixed(
+variation mapfixed(
   bp3:_mapfixed,
   scope(symbol, group, rule, flow)
 )
 
 // @description Key map BY STEPS — the map glides from note to note between two written maps.
-control mapstep(
+variation mapstep(
   bp3:_mapstep,
   scope(symbol, group, rule, flow)
 )
 
 // @description Transposition in FIXED mode — the written value holds until the next one, clean jump.
-control transposefixed(
+variation transposefixed(
   bp3:_transposefixed,
   scope(symbol, group, rule, flow)
 )
 
 // @description Transposition BY STEPS — the value glides from note to note between two written values.
-control transposestep(
+variation transposestep(
   bp3:_transposestep,
   scope(symbol, group, rule, flow)
 )

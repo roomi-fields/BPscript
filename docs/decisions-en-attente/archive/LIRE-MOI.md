@@ -19,7 +19,7 @@ contrôles, elle se repose depuis la décision, pas depuis ce texte.
 
 ## `MARQUEURS_STRUCTURELS.md` — RETIRÉ le 2026-07-19
 
-Clos par la décision `hub/decisions/2026-07-19-marqueurs-structurels-aucun-travail-langage.md`
+Clos par la décision `hub/decisions/TABLE-DE-LA-LOI.md § langage`
 (RATIFIÉ, autorité Romain) : **les cinq marqueurs `+ : ; = \` ne demandent aucun travail de
 langage.** Chacun est déjà exprimé, déjà décidé, ou éteint dans le moteur :
 

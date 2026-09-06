@@ -71,11 +71,17 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 // Mesuré le 2026-09-06 — un rang oublié (`/1 ??`) et une ligne de texte quelconque rendaient
 // toutes deux un catalogue vide et zéro refus.
 //
-// ⚠️ CE QUE CE VOLET NE JUGE PAS, ET C'EST DÉLIBÉRÉ : le CONTENU d'une entrée. Un rang sans
-// forme et un rang non numérique sont ACCEPTÉS, et ils ont leur témoin ci-dessous pour que ce
-// fait reste visible — le corps est lu par le moteur (forme ratifiée le 2026-08-10), le juger
-// ici serait décider à sa place. Ce qui se vérifie est la seule chose que la section connaisse
-// d'elle-même : qu'une ligne SOIT une entrée.
+// ⚠️ CE QUE CE VOLET NE JUGE PAS, ET C'EST DÉLIBÉRÉ : le CORPS d'une entrée. Un rang SANS forme
+// reste accepté, et il a son témoin ci-dessous — le corps est lu par le moteur (forme ratifiée le
+// 2026-08-10), le juger ici serait décider à sa place.
+//
+// ⛔ LE RANG, LUI, EST UN ENTIER — décision de Romain, 2026-09-06, prise sur la mesure du moteur
+// natif rendue par bp3-engine : il n'en refuse AUCUN. `ProduceItems.c:1370-1377` lit le rang
+// chiffre par chiffre, remplace tout caractère fautif par zéro et l'accumule quand même, écrit un
+// message qu'il n'inscrit PAS à son compteur d'erreurs, et rend 0. ⇒ `[1z]` devient le rang 10,
+// `[zzz]` le rang 0, et deux entrées peuvent partager un rang sans que rien ne le dise.
+// *Accepter ici, c'est laisser fabriquer un rang que personne n'a écrit.* Le refus est donc un
+// AJOUT au comportement natif, et il est assumé comme tel.
 {
   const S = 'core\nalphabet.western\n-----\nS -> C4\ntemplate\n';
   const codes = (corps) => (compileToBPxAST(S + corps).errors || []).map((x) => String(x.code || ''));
@@ -106,7 +112,6 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
     ['trois entrées',          '[1] /1 ??\n[2] /1 ??\n[3] a b\n', 3],
     ['une section vide',       '',                                0],
     ['un rang sans forme',     '[1]\n',                           1],
-    ['un rang non numérique',  '[zzz] /1 ??\n',                   1],
   ];
   for (const [nom, corps, attendu] of PASSENT) {
     const c = codes(corps);
@@ -114,8 +119,33 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
     ok(entrees(corps) === attendu,
       `3. TÉMOIN « ${nom} » — ${attendu} entrée(s) attendue(s), ${entrees(corps)} reçue(s)`);
   }
-  ok(REFUSES.length + PASSENT.length >= 9,
-    `3. SOCLE — la matrice s'est vidée : ${REFUSES.length + PASSENT.length} cas exercés.`);
+  // ── LE RANG EST UN ENTIER — chaque forme que le moteur dégrade en silence est refusée ici.
+  // Les graphies viennent de la mesure de bp3-engine, avec le rang que le natif FABRIQUE.
+  const RANGS = [
+    ['tout en lettres — le natif en fait le rang 0',  '[zzz] /1 ??\n'],
+    ['chiffre puis lettre — le natif en fait 10',     '[1z] /1 ??\n'],
+    ['lettre puis chiffre',                           '[z1] /1 ??\n'],
+    ['crochets vides',                                '[] /1 ??\n'],
+    ['un décimal, qui n est pas un entier',           '[1.5] /1 ??\n'],
+  ];
+  for (const [nom, corps] of RANGS) {
+    const c = codes(corps);
+    ok(c.includes('PARSE_TEMPLATE_RANK_IS_AN_INTEGER'),
+      `3bis. « ${nom} » doit être REFUSÉ — reçu ${c.length ? c.join(', ') : 'AUCUNE erreur'}. `
+      + `Le moteur natif ne refuse rien : il fabrique un rang que personne n'a écrit.`);
+  }
+  // ⚠️ ET LE TÉMOIN QUI EMPÊCHE LE REFUS DE TOUT MANGER : les entiers passent, à plusieurs chiffres.
+  for (const [nom, corps] of [['un rang à un chiffre', '[7] /1 ??\n'],
+                              ['un rang à deux chiffres', '[42] /1 ??\n'],
+                              ['un rang à trois chiffres', '[100] /1 ??\n']]) {
+    ok(codes(corps).length === 0 && entrees(corps) === 1,
+      `3bis. TÉMOIN « ${nom} » doit passer et faire UNE entrée — reçu ${codes(corps).join(', ')} / ${entrees(corps)}`);
+  }
+
+  // ⛔ LE SOCLE COMPTE LES TROIS MATRICES, et il est posé APRÈS elles — placé avant, il ne
+  // comptait que ce qui le précédait et rougissait le jour où une matrice naissait plus bas.
+  ok(REFUSES.length + PASSENT.length + RANGS.length >= 13,
+    `3. SOCLE — les matrices se sont vidées : ${REFUSES.length + PASSENT.length + RANGS.length} cas exercés.`);
 }
 
 if (echecs.length) {

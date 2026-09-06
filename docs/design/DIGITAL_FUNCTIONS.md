@@ -143,7 +143,7 @@ Pureté/déterminisme exigés (rejouable, embarquable, pas d'I/O ni d'aléatoire
 - Chargée par `@directive` via `loadLib(name, subkey)` (`libs.js:86-102`).
 - **3 provenances** (fournie lecture-seule / perso / communautaire) : l'hôte injecte/surcharge via
   `registerLib`/`registerAll` (`libs.js:32-45`, commentaire `libs.js:14-15`). Conforme à la décision
-  `hub/decisions/2026-06-29-tout-par-librairies.md` (l'hôte FOURNIT, Kairos RÉSOUT).
+  `hub/decisions/TABLE-DE-LA-LOI.md § librairies` (l'hôte FOURNIT, Kairos RÉSOUT).
 
 ## 6. Alignement avec Kairos (KAI-B03) — SCELLÉ (Romain GO [207]) vs PAS 4
 
@@ -172,7 +172,7 @@ Pureté/déterminisme exigés (rejouable, embarquable, pas d'I/O ni d'aléatoire
 ## 7. Surface d'invocation — ⚠️ MÉCANISME **SUPERSEDED** le 2026-07-26 (motif conservé)
 
 > **Le MÉCANISME décrit ici — la « valeur-groupe » `keyxpand:(pivot:B3, factor:-1)` — n'est plus le
-> canon.** Il est remplacé par `hub/decisions/2026-07-26-ecriture-des-controles-virgule-espace-deux-points-point.md`
+> canon.** Il est remplacé par `hub/decisions/TABLE-DE-LA-LOI.md § langage`
 > (RATIFIÉE, Romain) : l'**espace** sépare les parties d'une valeur, la **virgule** sépare les
 > éléments du sac. Écriture actuelle : `(keyxpand: B3 -1)`.
 >

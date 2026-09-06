@@ -15,10 +15,10 @@
 ---
 
 > ⚠️ **`@scene` SUPPRIMÉE DU LANGAGE (2026-07-29/30).** Romain : « on n'a ni la maturité ni le
-> besoin de déclarer des sous-scènes » (`hub/decisions/2026-07-29-les-formes-declaratives-de-bpscript.md`
+> besoin de déclarer des sous-scènes » (`hub/decisions/TABLE-DE-LA-LOI.md § langage`
 > §4, « @scene DISPARAÎT »). Le compilateur **REFUSE** désormais toute scène qui déclare `@scene` —
 > ce n'est plus une intention mais un état déjà en vigueur, vérifié de bout en bout
-> (`hub/decisions/2026-07-30-les-scenes-sortent-de-l-ui-alt-chiffres-vise-les-acteurs.md` : « le banc
+> (`hub/decisions/TABLE-DE-LA-LOI.md § hote` : « le banc
 > de bout en bout verrouille désormais l'absence »). Le mécanisme de hiérarchie de sous-scènes décrit
 > par ce document (§1-§2, §3.3, §4, §5, §8-§10, §12) n'existe plus aujourd'hui ; conservé pour
 > l'intention de design historique, il ne décrit plus le dépôt.
@@ -103,7 +103,7 @@ Session détruite quand :
 
 ### 3.1 Une scène = des acteurs ; un acteur = une voix
 
-Une scène déclare un ou plusieurs **acteurs**. Un acteur **est** une voix — le niveau « voix » intermédiaire des versions antérieures a été **supprimé**. Un acteur lie sept propriétés : `alphabet`, `tuning`, `octaves`, `sound`, `transport`, `eval`, `voice` (`hub/decisions/2026-06-16-cles-acteur-six.md` + `voice` ajoutée le 2026-07-16 — cf. `BPscript/docs/spec/EBNF.md:179-184`, `BPscript/src/transpiler/parser.js:40`).
+Une scène déclare un ou plusieurs **acteurs**. Un acteur **est** une voix — le niveau « voix » intermédiaire des versions antérieures a été **supprimé**. Un acteur lie sept propriétés : `alphabet`, `tuning`, `octaves`, `sound`, `transport`, `eval`, `voice` (`hub/decisions/TABLE-DE-LA-LOI.md § hauteur` + `voice` ajoutée le 2026-07-16 — cf. `BPscript/docs/spec/EBNF.md:179-184`, `BPscript/src/transpiler/parser.js:40`).
 
 ```bpscript
 @actor sitar
@@ -241,7 +241,7 @@ Depuis JS : `instance.emitTrigger(name, payload?)`. Permet à l'UI, à un messag
 ## 6. `@alias` — DÉSIGNER : un nom, puis ce qu'il désigne
 
 > ⚠️ **La directive de correspondance est ABANDONNÉE depuis le 2026-07-27 au soir**
-> (`hub/decisions/2026-07-27-map-abandonne-alias-revient-le-cablage-passe-par-les-chevrons.md`).
+> (`hub/decisions/TABLE-DE-LA-LOI.md § langage`).
 > Ce qui BRANCHE passe par les chevrons `>>` / `\>>` (§6.3) ; ce qui DÉSIGNE reste ici, sous
 > `@alias`. Deux corollaires qui tiennent depuis le matin même : le signe `=` a disparu de tout le
 > langage, `@macro` comprise, et la flèche `->` est redevenue **exclusivement une règle de

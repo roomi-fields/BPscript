@@ -31,6 +31,18 @@ def enum
 def flag
 def symbol
 
+// LES CONTENANTS DE CONTROLES — un controle s ecrit prefixe par son contenant, `audio.wave:sine`
+// autant que `wave:sine`, et le contenant est un OBJET. Les entrees de chaque catalogue derivent
+// du contenant qu il sert, plus du type `control` : c est ce qui fait remonter la chaine au mot.
+// ⚠️ `audio` et `midi` NE SONT PAS ICI : ils existent deja comme destinations, plus bas, et une
+// destination qui porte des controles est le meme contenant vu de l autre cote. En creer un second
+// aurait rendu leur nom ambigu pour toute la tour.
+def expression
+def time
+def transpo
+def variation
+def engine
+
 def destination
 destination audio(out:true, writable:true, params(gain:1))
 destination midi(in:true, out:true, writable:true, params(ch:1))

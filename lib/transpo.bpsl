@@ -16,7 +16,7 @@ def transpo(
 // @description Real (chromatic) transposition — shift the alphabet anchor by a fixed interval (fraction 3/2, cents 700c, decimal 1.5).
 // Preserves intervals AND note names; works in any tuning. A bare integer is a ratio N:1 (N-th harmonic): 2/4/8 = octaves; for semitones
 // use cents (12 semitones = 1200c). The old grid-step regime is removed.
-control transpose(
+transpo transpose(
   args(interval),
   argType:interval,
   scope(symbol, group, rule, flow, scene),
@@ -38,7 +38,7 @@ control transpose(
 
 // @description Microtonal scale — name + base note. (scale:0 0) returns to equal temperament. The name and the base note are TWO values,
 // separated by a comma in the declarative part and by a space in the flow.
-control scale(
+transpo scale(
   bp3:_scale,
   args(name, blockkey),
   value(name:0, blockkey:0),
@@ -47,7 +47,7 @@ control scale(
 
 // @description Scalar (diatonic) transposition — shift N degrees in the alphabet. (scaleshift:2): Sa->Ga, etc. Preserves degrees, not
 // intervals (in unequal scales). Acts on PITCH; the ![rotate] STRUCTURE control rotates a sequence.
-control scaleshift(
+transpo scaleshift(
   args(degrees),
   value:0,
   scope(symbol, group, rule, flow),
@@ -64,7 +64,7 @@ control scaleshift(
 
 // @description Chromatic transposition on the 12-key grid — shift N chromatic keys (semitones), rename to target key + its tuning. Image of
 // BP3 _transpose. Shifts CHROMATIC keys; scaleshift shifts diatonic degrees, transpose preserves note names.
-control chromashift(
+transpo chromashift(
   bp3:_transpose,
   args(keys),
   value:0,
@@ -81,7 +81,7 @@ control chromashift(
 )
 
 // @description Interval expansion/contraction around a pivot. factor=2 doubles, factor=-1 inverts, factor=0.5 contracts.
-control keyxpand(
+transpo keyxpand(
   bp3:_keyxpand,
   args(pivot, factor),
   value(pivot:0, factor:1),
@@ -106,7 +106,7 @@ control keyxpand(
 // @description Transposition in CONTINUOUS mode — the value glides DURING notes. Its two discrete siblings, transposefixed and
 // transposestep, live in the variation library. It names its own resolver, the one that realizes its parameter. On the native engine,
 // continuous transposition yields bytes identical to steps.
-control transposecont(
+transpo transposecont(
   bp3:_transposecont,
   resolvedBy:"toutes les sorties",
   scope(symbol, group, rule, flow)

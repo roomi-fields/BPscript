@@ -91,7 +91,7 @@ notre `transport`. **Abandonné** par le modèle producteur/canal : un `eval.<X>
 embarqué autonome qui **sort en natif** (audio/canvas propres) — on ne reroute pas ses sorties déjà
 synthétisées (usine à gaz). Seul le producteur défaut `js` produit dans notre environnement et utilise
 notre `transport`. `getValue()` (capture d'une **valeur** calculée) reste, lui, valide. Cf.
-`docs/design/ACTOR.md` §1-2 et `hub/decisions/2026-07-14-modele-producteur-canal-eval-transport.md`.
+`docs/design/ACTOR.md` §1-2 et `hub/decisions/TABLE-DE-LA-LOI.md § langage`.
 
 ### 4. Erreurs
 
