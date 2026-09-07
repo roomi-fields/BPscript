@@ -60,14 +60,38 @@ ok(sources.every(([, t]) => t.length > 1000), `SOCLE : un fichier source n'a pas
 // UN DOUBLE, C'EST QUOI : un ensemble ou tableau littéral qui contient TOUS les membres d'une
 // liste déclarée. Deux membres communs ne suffisent pas — `ch` peut apparaître ailleurs ; c'est
 // la liste ENTIÈRE reproduite qui trahit la copie.
-const litteraux = [];
-for (const [f, t] of sources) {
-  for (const m of t.matchAll(/(?:new Set\(\[|\[)((?:\s*['"][a-z_][\w-]*['"]\s*,?)+)\]/gi)) {
-    const membres = [...m[1].matchAll(/['"]([a-z_][\w-]*)['"]/gi)].map((x) => x[1]);
-    if (membres.length >= 2) litteraux.push({ f, membres: new Set(membres), n: membres.length });
+const lireLesLitteraux = (textes) => {
+  const out = [];
+  for (const [f, t] of textes) {
+    for (const m of t.matchAll(/(?:new Set\(\[|\[)((?:\s*['"][a-z_][\w-]*['"]\s*,?)+)\]/gi)) {
+      const membres = [...m[1].matchAll(/['"]([a-z_][\w-]*)['"]/gi)].map((x) => x[1]);
+      if (membres.length >= 2) out.push({ f, membres: new Set(membres), n: membres.length });
+    }
   }
+  return out;
+};
+const litteraux = lireLesLitteraux(sources);
+
+// ⛔ CE SOCLE COMPTAIT LA POPULATION, ET IL NE POUVAIT PAS DISTINGUER DEUX CHOSES OPPOSÉES. Il
+// exigeait « au moins 5 littéraux trouvés », en disant « le lecteur ne voit plus le code » — mais
+// le compte descend AUSSI quand on RETIRE un littéral, ce qui est le but même de ce garde. Mesuré
+// le 2026-09-07 : le retrait de `macro`, code mort, a emporté le cinquième et fait rougir le socle
+// sur une amélioration. *Un plancher calé sur la population confond une réparation et une cécité.*
+//
+// ⇒ CE QUI LE REMPLACE ÉPROUVE LE LECTEUR, PAS LA POPULATION : on lui FABRIQUE un cas et on regarde
+//   s'il le voit. L'absence ne se distingue de l'inactivité qu'en fabriquant le cas — un compte ne
+//   le fera jamais, quel que soit son seuil.
+{
+  const temoin = [['(témoin fabriqué)', "const x = ['aaa', 'bbb', 'ccc'];"]];
+  const vu = lireLesLitteraux(temoin);
+  ok(vu.length === 1 && vu[0].n === 3,
+     `SOCLE : le lecteur de littéraux ne retrouve pas un littéral FABRIQUÉ (${vu.length} vu(s)) — `
+     + `il est cassé, et un compte bas ne l'aurait pas dit.`);
+  ok(lireLesLitteraux([['(témoin)', 'const y = [1, 2, 3];']]).length === 0,
+     `SOCLE : le lecteur prend une liste de NOMBRES pour une liste de mots — il dirait oui à tout.`);
+  console.log(`[listes] lecteur éprouvé sur un cas fabriqué · ${litteraux.length} littéral(aux) `
+    + `dans les sources — ce compte est un CONSTAT, jamais un seuil.`);
 }
-ok(litteraux.length >= 5, `SOCLE : ${litteraux.length} littéral(aux) trouvé(s) — le lecteur ne voit plus le code`);
 
 for (const [nom, valeurs] of listes) {
   const copies = litteraux.filter((l) => valeurs.every((v) => l.membres.has(v)));

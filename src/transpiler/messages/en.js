@@ -317,11 +317,6 @@ export const MESSAGES = {
   PARSE_KEY_SPACE_AFTER_COLON_2:
     '\'{key}: \' — no space after the colon: the value begins immediately (\'{key}:{p1}…\'). The '
     + 'space only separates the PARTS of a value',
-  PARSE_MACRO_MACRONAME_PARAMETER_DECLARED:
-    'Macro \'{macroName}\': parameter(s) declared but absent from the body: {p1}. A macro is a '
-    + 'textual substitution (EBNF §macro l.59/273) — each parameter MUST appear in the body (e.g. '
-    + 'accent(x) = x(vel:120)). A declaration name(target, transport) = curve (CV/signal form) is '
-    + 'not a valid macro: syntax pending arbitration.',
   PARSE_MALFORMED_CONTROL_ARGUMENT_NAME:
     'malformed control argument in \'{name}(…)\': \'{arg} {p1}\' — two values follow each other '
     + 'without a separator. A control takes arguments separated by \',\'; it does not take a '

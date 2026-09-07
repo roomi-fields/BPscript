@@ -1,5 +1,5 @@
 {
- "assertions": 20204,
+ "assertions": 20192,
  "gardes": [
   "alias_est_sorti_du_langage.mjs",
   "anti-vacuité [interne]",
@@ -77,7 +77,6 @@
   "le_compilateur_ne_nomme_aucune_librairie.mjs",
   "le_corpus_ne_rougit_que_la_ou_c_est_ecrit.mjs",
   "le_couple_ne_vient_que_de_la_table.mjs",
-  "le_crochet_de_poussee_garde_le_courrier.mjs",
   "le_delimiteur_dit_dans_quel_monde_on_est.mjs",
   "le_destinataire_se_surcharge_a_l_entree.mjs",
   "le_deux_points_tranche_declaration_et_propriete.mjs",
