@@ -203,9 +203,10 @@ qui écrit : ce qui change, ce qu'il **périme chez lui**, une prédiction falsi
   pas « hors d'usage »**. **Je mesure qui me lie et par quelle porte** — le lien dit qu'il m'atteint,
   son champ d'exports si c'est ma source ou mon paquet.
 - Qui compile publie **deux instances**, développement et production ; qui expose sa source en publie
-  **une seule**. **La propreté de ce que je publie conditionne le démarrage de Kanopi**, qui refuse la
-  production quand un dépôt lié porte des modifications non enregistrées **entrant dans son paquet** :
-  j'enregistre **au fil**. Documentation, backlog et outillage n'y entrent pas.
+  **une seule**. **J'enregistre au fil**, parce que ma source est consommée VIVANTE : le non-enregistré
+  atteint déjà mes lecteurs. Documentation, backlog et outillage n'y entrent pas. ⚠️ **Kanopi ne lit
+  PAS mon empreinte** — son voyant ouvre celle de kairos et allume un niveau, il ne refuse aucun
+  démarrage : ma charte a justifié la bonne règle par une raison fausse, et rien ne l'a jamais dit.
 - **La frontière se règle par usage** : qui lit ma **source** est atteint à ma frappe, qui exécute mon
   **paquet publié** l'est à ma publication — je préviens avec les sites à changer chez lui et je
   **vérifie qu'il a basculé avant de pousser**.
