@@ -37,6 +37,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 
 const ICI = path.dirname(new URL(import.meta.url).pathname);
+import { ESPACE_PUBLIE } from './artefact_voisin.mjs';
 const MOI = path.resolve(ICI, '..');
 /**
  * ⛔ CE QUE JE PEUX LIRE D'UN VOISIN EST SON ÉTAT PUBLIÉ — arbitrage de l'architecte, 2026-09-04,
@@ -51,7 +52,8 @@ const MOI = path.resolve(ICI, '..');
  *   ANNULÉ : le garde serait devenu vert en mesurant autre chose — un lecteur ne se déclare pas par
  *   une archive extraite. Ce qui manquait n'était pas un autre atelier, c'était l'autre question.
  */
-const ATELIER = path.resolve(MOI, '..', '.publie');
+// ⛔ La cour se CHERCHE : une remontée comptée mesure la POSITION de ce fichier, jamais la cour.
+const ATELIER = ESPACE_PUBLIE;
 
 /**
  * LE RELEVÉ DE LA TOUR — l'autorité sur QUI me lit, et le seul instrument qui voie tous les dépôts.

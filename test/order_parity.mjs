@@ -45,6 +45,7 @@ import { fileURLToPath } from 'node:url';
 import { tokenizeOrder } from '../src/transpiler/orderTokens.js';
 import { coupleDe, metaTable } from './correspondance.mjs';
 import { createHash } from 'node:crypto';
+import { racineVoisinPubliee } from './artefact_voisin.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -63,7 +64,8 @@ const ROOT = path.resolve(__dirname, '..');
  *   rejoue pas : elle ne devient pas fausse, elle devient invérifiable, ce qui est pire parce que
  *   rien ne le signale »*. La phrase était juste et rien ne la tenait.
  */
-const BP3_DIR = path.resolve(ROOT, '..', '.publie', 'bp3-engine');
+// ⛔ La cour se CHERCHE : une remontée comptée donne `.publie/.publie` depuis mon espace publié.
+const BP3_DIR = racineVoisinPubliee('bp3-engine');
 const TD = path.resolve(BP3_DIR, 'test-data');
 /**
  * L'ORACLE DE LA CAMPAGNE EST UN BINAIRE ARCHIVÉ, PAS LE BINAIRE DE TRAVAIL.

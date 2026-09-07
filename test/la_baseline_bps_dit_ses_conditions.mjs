@@ -26,11 +26,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { racineVoisinPubliee } from './artefact_voisin.mjs';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const RACINE = path.resolve(ICI, '..');
 const FICHIER = path.join(ICI, 'baseline-bps', 'baseline.json');
-const SCELLE_NATIF = path.resolve(RACINE, '..', '.publie', 'bp3-engine', 'baseline-native', 'SCELLE.json');
+// ⛔ La cour se CHERCHE, elle ne se compte pas en remontées.
+const SCELLE_NATIF = path.join(racineVoisinPubliee('bp3-engine'), 'baseline-native', 'SCELLE.json');
 
 let passe = 0;
 const echecs = [];

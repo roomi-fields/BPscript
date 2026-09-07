@@ -61,6 +61,13 @@ function trouverLAtelier(depart) {
 const ATELIER = trouverLAtelier(dirname(fileURLToPath(import.meta.url)));
 
 /**
+ * L'ESPACE PUBLIÉ lui-même — la cour, CHERCHÉE et non comptée en remontées.
+ * Pour qui a l'atelier POUR SUJET : qui me lit, quel voisin y est posé. Un voisin nommé passe par
+ * `racineVoisinPubliee`, qui refuse un nom non déclaré.
+ */
+export const ESPACE_PUBLIE = ATELIER;
+
+/**
  * LES VOISINS QUI PUBLIENT UN ARTEFACT CONSTRUIT, et le chemin de leur entrée DANS LEUR arbre.
  * ⛔ Une ligne s'ajoute ici le jour où un voisin de plus en publie un — et le garde
  * `la_porte_du_voisin_est_unique` refuse alors tout autre site qui le nommerait.
@@ -91,7 +98,33 @@ const ARTEFACTS = {
 const SOURCES = {
   'bp3-engine': ['bp3-engine'],
   'bp3-frontend': ['bp3-frontend'],
+  kanopi: ['kanopi'],
 };
+
+/**
+ * La RACINE publiée d'un voisin, dérivée en CHERCHANT la cour — sans contrôle de présence.
+ *
+ * ⛔ POUR QUI A DÉJÀ UN JUGE PLUS FORT, ET SEULEMENT POUR LUI. `corpus.mjs` ne se contente pas de
+ * vérifier que la bibliothèque de Kanopi existe : `exigerCorpus()` COMPTE les scènes et refuse
+ * d'avoir lu zéro — deux dossiers vides passaient un test de présence, et sept gardes rendaient
+ * vert sans rien avoir lu (mesuré le 2026-07-27). Un contrôle de présence posé ici affaiblirait ce
+ * juge en le doublant d'un plus faible.
+ *
+ * ⇒ CE QUE CETTE PORTE APPORTE ALORS N'EST PAS LE CONTRÔLE, C'EST LA DÉRIVATION. La cour se
+ * CHERCHE, elle ne se compte pas en remontées : `path.resolve(ICI, '..', '..', '.publie')` donne la
+ * cour depuis mon ARBRE et `.publie/.publie` depuis mon espace PUBLIÉ — le défaut qui a fait passer
+ * 65 grammaires sur 98 à « plante » chez bp3-frontend.
+ */
+export function racineVoisinPubliee(voisin) {
+  const racine = SOURCES[voisin];
+  if (!racine) {
+    throw new Error(
+      `VOISIN INCONNU — '${voisin}' n'a pas de source déclarée dans cette porte.\n`
+      + `  Déclarés : ${Object.keys(SOURCES).join(', ')}.`,
+    );
+  }
+  return join(ATELIER, ...racine);
+}
 
 /**
  * Le chemin d'une SOURCE publiée par un voisin, dérivé de ma racine — et il ÉCHOUE si elle manque.

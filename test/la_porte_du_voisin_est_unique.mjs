@@ -106,6 +106,36 @@ for (const { voisin, motif, porte } of PORTES) {
     + `dehors se lit à l'état PUBLIÉ, par \`cheminSourceVoisin\`, qui ÉCHOUE en nommant le voisin.`);
 }
 
+// ⛔⛔ ET UN CHEMIN ASSEMBLÉ ÉCHAPPE À TOUTE RECHERCHE PAR GRAPHIE — rendu par le hub le 2026-09-07,
+// mesuré par bp3-frontend chez lui. Le volet ci-dessus ne ferme que l'ABSOLU ; trois de mes sites
+// composaient la cour par REMONTÉES COMPTÉES — `path.resolve(ICI, '..', '..', '.publie', …)` —
+// et lui échappaient entièrement.
+//
+// ⛔ CE N'EST PAS UN DÉTAIL DE STYLE : deux remontées donnent la cour depuis mon ARBRE et
+// `.publie/.publie` depuis mon ESPACE PUBLIÉ. C'est la faute qui a fait passer 65 grammaires sur 98
+// à « plante » chez bp3-frontend, sans qu'aucune n'ait changé. *Un compte de remontées mesure la
+// POSITION du fichier, jamais la cour.*
+//
+// ⇒ Ce volet refuse donc le SEGMENT, sous quelle que forme qu'il s'écrive : nul site hors de la
+//   porte ne nomme `.publie`. La porte, elle, le CHERCHE — elle remonte jusqu'au dossier qui le
+//   porte, ce qui donne le même résultat des deux positions.
+{
+  const composants = [];
+  for (const [rel, abs] of fichiers) {
+    if (rel === PORTE || EXEMPTES.has(rel)) continue;
+    readFileSync(abs, 'utf8').split('\n').forEach((l, i) => {
+      const t = l.trimStart();
+      if (t.startsWith('*') || t.startsWith('//') || t.startsWith('#')) return;
+      if (/['"`]\.publie['"`]|\.publie\//.test(l)) composants.push(`${rel}:${i + 1}  ${l.trim().slice(0, 90)}`);
+    });
+  }
+  ok(composants.length === 0,
+    `${composants.length} site(s) composent le chemin de l'espace publié hors de la porte `
+    + `\`${PORTE}\` : ${composants.slice(0, 4).join(' · ')}. Un chemin assemblé échappe à la `
+    + `recherche par graphie ET se trompe de cour selon d'où le fichier est lu. La porte CHERCHE la `
+    + `cour — \`racineVoisinPubliee\` pour la racine, \`cheminSourceVoisin\` quand l'absence doit mordre.`);
+}
+
 // ⛔ ET LA PORTE DOIT ÊTRE UTILISÉE, sinon « aucun site hors de la porte » se vérifierait aussi
 // bien sur un dépôt qui ne consomme plus rien du voisin.
 {

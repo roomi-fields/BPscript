@@ -22,6 +22,7 @@
  */
 import path from 'node:path';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { racineVoisinPubliee } from './artefact_voisin.mjs';
 
 const ICI = path.dirname(new URL(import.meta.url).pathname);
 
@@ -40,9 +41,13 @@ const ICI = path.dirname(new URL(import.meta.url).pathname);
  * ⚠️ Le publié porte le corpus entier — 177 scènes BPScript et 113 grammaires BP3, mesurées le jour
  *   de la bascule. Ce n'est pas un sous-ensemble.
  */
+// ⛔ ET LA COUR SE CHERCHE, ELLE NE SE COMPTE PAS EN REMONTÉES. Deux remontées donnaient la cour
+// depuis MON ARBRE et `.publie/.publie` depuis mon espace PUBLIÉ — le corpus devenait introuvable
+// pour la mauvaise raison. La porte du voisin la trouve ; `exigerCorpus()` reste le juge du cas zéro,
+// et il est plus fort qu'un contrôle de présence puisqu'il COMPTE.
 export const LIBRARY = process.env.KANOPI_LIBRARY
   ? path.resolve(process.env.KANOPI_LIBRARY)
-  : path.resolve(ICI, '..', '..', '.publie', 'kanopi', 'packages', 'library');
+  : path.join(racineVoisinPubliee('kanopi'), 'packages', 'library');
 
 /**
  * ⛔ TOUT CE QUI VIT DANS LA BIBLIOTHÈQUE SE DÉCLARE ICI, et pas seulement les deux répertoires des
