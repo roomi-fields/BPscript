@@ -46,8 +46,25 @@ const RACINE = path.join(ICI, '..');
 // Plafonds : larges pour le travail normal, étroits devant un emballement. Le corpus mesuré
 // tient en ~150 Mo et quelques secondes ; un fils qui touche ces bornes ne ralentit pas, il
 // s'emballe.
+//
+// ⛔ LE TEMPS SE MESURE EN CPU, JAMAIS À L'HORLOGE MURALE. Ce garde a rougi le 2026-09-07 sous
+// une borne murale de 120 s : le portillon lance DOUZE gardes en parallèle, et le fils a mis
+// 129 s d'horloge sans consommer une seconde de plus qu'à l'ordinaire. *Un emballement consomme
+// du processeur sans fin ; une contention ATTEND.* Borner l'horloge, c'est mesurer la charge de
+// la machine et l'appeler « emballement » — et la parade tentante, relever la borne, ajuste
+// l'instrument à ce qui sort au lieu de mesurer la bonne grandeur.
+//
+// ⇒ Le fils rend son PROPRE temps processeur, et c'est lui qui est borné. L'horloge garde un
+//   filet, cinq fois plus large : il n'attrape plus qu'un fils qui ne rendrait JAMAIS la main —
+//   une attente, pas une boucle, que le compteur CPU ne verrait pas.
 const PLAFOND_MO = 1024;
-const PLAFOND_S = 120;
+const PLAFOND_CPU_S = 120;
+// ⚠️ LE FILET MURAL EST UNE CONSTANTE PROPRE, PAS UN MULTIPLE DE L'AUTRE. Il l'était, et mon
+// injection dans la borne CPU resserrait le filet du même coup : le fils mourait de l'horloge et
+// je lisais ça comme « le compteur CPU a mordu ». *Deux bornes dérivées l'une de l'autre ne se
+// distinguent pas sous injection.* Celle-ci se dimensionne sur ce qu'elle attrape — un fils qui ne
+// rend JAMAIS la main —, jamais sur le travail normal, qui tient en ~37 s de processeur.
+const FILET_MURAL_S = 600;
 
 let rouge = false;
 const dire = (ok, texte) => { console.log(`${ok ? '✅' : '❌'} ${texte}`); if (!ok) rouge = true; };
@@ -61,22 +78,33 @@ const scriptCorpus = `
   let n = 0;
   for (const [, src] of toutesLesScenes()) { try { compileToBPxAST(src); } catch {} n++; }
   if (n < 150) { console.error('SOCLE:' + n); process.exit(2); }
+  // Le temps PROCESSEUR de ce fils — insensible à ce que la machine fait par ailleurs.
+  const u = process.cpuUsage();
   console.log('SCENES:' + n);
+  console.log('CPU:' + Math.round((u.user + u.system) / 1000));
 `;
 const fils = spawnSync(process.execPath,
   ['--max-old-space-size=' + PLAFOND_MO, '--input-type=module', '-e', scriptCorpus],
-  { encoding: 'utf-8', timeout: PLAFOND_S * 1000, cwd: RACINE });
+  { encoding: 'utf-8', timeout: FILET_MURAL_S * 1000, cwd: RACINE });
 
 const compte = /SCENES:(\d+)/.exec(fils.stdout || '');
+const cpuMs = Number(/CPU:(\d+)/.exec(fils.stdout || '')?.[1] ?? NaN);
 if (fils.signal === 'SIGTERM') {
-  dire(false, `le corpus n'a pas fini de compiler en ${PLAFOND_S} s — une scène fait boucler le compilateur.`);
+  dire(false, `le corpus n'a pas rendu la main en ${FILET_MURAL_S} s d'horloge — il ne compile plus, il attend.`);
 } else if (fils.status === 2) {
   dire(false, `SOCLE : le fils n'a vu que ${/SOCLE:(\d+)/.exec(fils.stderr || '')?.[1] ?? '0'} scènes — le corpus est absent, ce garde ne prouverait rien.`);
 } else if (fils.status !== 0) {
   dire(false, `le compilateur s'est effondré sur le corpus sous ${PLAFOND_MO} Mo (code ${fils.status}, `
             + `signal ${fils.signal ?? 'aucun'}) — emballement, pas une simple erreur de compilation.`);
+} else if (!Number.isFinite(cpuMs)) {
+  dire(false, `le fils n'a pas rendu son temps processeur — sans lui ce volet ne mesure plus rien, `
+            + `et un emballement passerait pour un succès.`);
+} else if (cpuMs > PLAFOND_CPU_S * 1000) {
+  dire(false, `le corpus a consommé ${(cpuMs / 1000).toFixed(1)} s de PROCESSEUR, plafond ${PLAFOND_CPU_S} s — `
+            + `une scène fait boucler le compilateur. Ce compte ne dépend pas de la charge de la machine.`);
 } else {
-  dire(true, `${compte?.[1] ?? '?'} scènes compilées sous ${PLAFOND_MO} Mo et ${PLAFOND_S} s — aucun emballement.`);
+  dire(true, `${compte?.[1] ?? '?'} scènes compilées sous ${PLAFOND_MO} Mo et ${(cpuMs / 1000).toFixed(1)} s `
+           + `de PROCESSEUR (plafond ${PLAFOND_CPU_S} s) — aucun emballement.`);
 }
 
 // ────────────────────────────────────────────────────────────────────────────
