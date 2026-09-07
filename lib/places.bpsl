@@ -1,0 +1,99 @@
+types
+
+// @documented
+// @description A position of the grammar: the type of its `admet` member says what a name written there must resolve to.
+def place(
+  symbol admet,
+  scope(rule, scene, registry)
+)
+
+// ── LE FLUX ──────────────────────────────────────────────────────────────────────────────────
+
+// @description Right of the arrow: what the rule produces.
+place fluxDroite(
+  symbol admet,
+  scope:scene
+)
+
+// @description Inside the body a `def` binds to its name — the same place, another depth.
+place corpsDeDef(
+  symbol admet,
+  scope:scene
+)
+
+// ── LES DRAPEAUX ─────────────────────────────────────────────────────────────────────────────
+
+// @description The guard of a rule: `[section==1]`.
+place gardeDeRegle(
+  flag admet,
+  scope:scene
+)
+
+// @description The mutation written after an element: `[section=2]`.
+place mutationDeDrapeau(
+  flag admet,
+  scope:scene
+)
+
+// ── LES OBJETS ───────────────────────────────────────────────────────────────────────────────
+
+// @description The key of a settings bag: `C4(vel:64)`.
+place cleDUnSac(
+  control admet,
+  scope:registry
+)
+
+// @description The tag of a backtick: the interpreter that runs the code.
+place tagDeBacktick(
+  eval admet,
+  scope:registry
+)
+
+// @description The channel an actor writes to: `actor a(out.midi)`.
+place sortieDActeur(
+  destination admet,
+  scope:registry
+)
+
+// ── L INVOCATION ─────────────────────────────────────────────────────────────────────────────
+
+// Left of the dot: `alphabet.western`. It names a family of the registry.
+// ⛔ `famille` IS NOT DECLARED IN types.bpsl — proposed name, awaiting Romain.
+// place axeDInvocation(
+//   famille admet,
+//   scope:registry
+// )
+
+// Right of the dot: an entry of THAT family, never of another.
+// place entreeDInvocation(
+//   famille admet,
+//   scope:registry
+// )
+
+// ── LES GABARITS ─────────────────────────────────────────────────────────────────────────────
+
+// The slave `&x` replays the master `$x` — of the SAME rule, the narrowest scope.
+// ⛔ `gabarit` IS NOT DECLARED IN types.bpsl — proposed name, awaiting Romain.
+// place rejeuDeGabarit(
+//   gabarit admet,
+//   scope:rule
+// )
+
+// ── LE POINT D ATTENTE — DEUX PLACES ─────────────────────────────────────────────────────────
+
+// `<!touches.Space` — left of the dot, the input role that can fire.
+// ⛔ `entree` IS NOT DECLARED IN types.bpsl — the input counterpart of `destination`,
+// proposed name, awaiting Romain.
+// place roleDAttente(
+//   entree admet,
+//   scope:scene
+// )
+
+// Son union DERIVE du canal que le role ouvre : une frappe, une note qualifiee d un canal et lue
+// dans la convention active, ou un message de transport. BP3 ecrit aussi `Wait forever` ; il ne
+// passe pas ici (Romain, 2026-09-07).
+// @description What arrives on that role — a keystroke, a note with its channel, or a transport message.
+place occurrenceDAttente(
+  destination admet,
+  scope:scene
+)
