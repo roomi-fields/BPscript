@@ -32,14 +32,58 @@ import { validateControls } from './controlValidation.js';
 import { joindreLesLibrairies } from './librairies-jointes.js';
 
 /**
- * L'ARBRE D'UNE SCÈNE RÉSOLUE — les axes de premier niveau que cet étage écrit et relit.
+ * L'ARBRE D'UNE SCÈNE RÉSOLUE — les axes de premier niveau, et la FORME DE SES NŒUDS reste ouverte.
  *
- * ⛔ LA FORME RESTE OUVERTE, ET C'EST UNE MESURE, PAS UNE PRUDENCE. `AST.md` porte la taxonomie
- * complète des nœuds ; ce qui se DÉRIVE ici est ce que ce fichier touche. Fermer la forme sur ces
- * seuls axes ferait de cette description une seconde autorité, plus pauvre que la première, et
- * l'écart ne rougirait nulle part.
+ * ⛔ CE TYPE ÉTAIT `{ [axe: string]: any }`, ET IL ÉTAIT PLUS PAUVRE QUE MON PROPRE CODE. Sa prose
+ * disait « la forme reste ouverte, et c'est une mesure, pas une prudence » — l'argument était juste
+ * pour la TAXONOMIE DES NŒUDS, que `AST.md` porte seul, et il ne l'était pas pour les AXES : un
+ * index ouvert ne garantit AUCUNE propriété, donc mon arbre n'était assignable à rien.
  *
- * @typedef {{ [axe: string]: any }} ArbreDeScene
+ * ⇒ CE QUE ÇA A COÛTÉ, mesuré chez kanopi le 2026-09-07 : six de ses bancs refusaient au typage —
+ * « Type 'ArbreDeScene' is missing the following properties from type 'SceneAST': type, directives,
+ * subgrammars ». Son `ArbreDeScene` est un alias local de `NonNullable<Compilation['ast']>`, donc de
+ * CE type. Elle n'a pas comblé l'écart par un `as` : *une conversion ne cache pas l'écart, elle
+ * cache lequel.* Ses vingt-deux commits ne sortaient pas, et elle est le témoin d'arrivée du
+ * chantier « un seul espace ».
+ *
+ * ⛔ LES QUINZE AXES CI-DESSOUS SONT UNE DÉRIVATION, PAS UNE LISTE. Ils sont ceux d'un SEUL LITTÉRAL
+ * — `parser.js:705`, l'objet que `parseScene` construit — donc leur présence est structurelle et non
+ * statistique. Éprouvé sur le corpus : 172 arbres non nuls sur 177 scènes, et les quinze présents
+ * sur 172.
+ *
+ * ⚠️ ET L'INDEX RESTE, DÉLIBÉRÉMENT. Les axes posés en AVAL — `template`, `noteTerminals`,
+ * `alphabetTerminals`, `librairies`, `libRefs` — ne viennent pas de ce littéral : je ne peux pas
+ * dire de la même façon qu'ils sont toujours là, et `libRefs` ne l'est pas (11 arbres sur 172). Ce
+ * qui est promis est ce qui est prouvé ; le reste passe par l'index, comme avant.
+ *
+ * ⛔ ET L'ÉLÉMENT SE NOMME `Noeud`, IL NE SE RÉPÈTE PAS EN `any`. Quinze `any` auraient dit quinze
+ * fois « je ne sais pas » ; un nom dit une fois « c'est un nœud, et sa taxonomie vit dans `AST.md`,
+ * qui en est la seule autorité ». ⚠️ Mon garde `une_porte_publiee_se_decrit` compte les `any` de ma
+ * description publiée, plafond 40 — la forme répétée l'aurait porté à 54. Lever le plafond aurait
+ * été *optimiser un compteur contre la grandeur qu'il mesure* : le compte serait passé, et la
+ * description n'aurait rien dit de plus. Le nom, lui, en dit plus ET compte moins.
+ *
+ * @typedef {any} Noeud   Un nœud de l'arbre — `AST.md` porte seul sa taxonomie.
+ */
+/**
+ * @typedef {{
+ *   type: 'Scene',
+ *   directives: Noeud[],
+ *   defs: Noeud[],
+ *   init: Noeud[] | null,
+ *   actors: Noeud[],
+ *   scenes: Noeud[],
+ *   exposes: Noeud[],
+ *   vars: Noeud[],
+ *   inputs: Noeud[],
+ *   declarations: Noeud[],
+ *   backticks: Noeud[],
+ *   subgrammars: Noeud[],
+ *   soundPrototypes: Noeud,
+ *   soundAssignments: Noeud,
+ *   homomorphisms: Noeud[],
+ *   [axe: string]: Noeud,
+ * }} ArbreDeScene
  */
 
 /**

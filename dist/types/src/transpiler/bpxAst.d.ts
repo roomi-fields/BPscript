@@ -30,15 +30,26 @@ export function resoudreSource(source: any, environnement: any): {
 export function compileToBPxAST(source: string, environnement?: Environnement): ResultatDeCompilation;
 export default compileToBPxAST;
 /**
- * L'ARBRE D'UNE SCÈNE RÉSOLUE — les axes de premier niveau que cet étage écrit et relit.
- *
- * ⛔ LA FORME RESTE OUVERTE, ET C'EST UNE MESURE, PAS UNE PRUDENCE. `AST.md` porte la taxonomie
- * complète des nœuds ; ce qui se DÉRIVE ici est ce que ce fichier touche. Fermer la forme sur ces
- * seuls axes ferait de cette description une seconde autorité, plus pauvre que la première, et
- * l'écart ne rougirait nulle part.
+ * Un nœud de l'arbre — `AST.md` porte seul sa taxonomie.
  */
+export type Noeud = any;
 export type ArbreDeScene = {
-    [axe: string]: any;
+    type: "Scene";
+    directives: Noeud[];
+    defs: Noeud[];
+    init: Noeud[] | null;
+    actors: Noeud[];
+    scenes: Noeud[];
+    exposes: Noeud[];
+    vars: Noeud[];
+    inputs: Noeud[];
+    declarations: Noeud[];
+    backticks: Noeud[];
+    subgrammars: Noeud[];
+    soundPrototypes: Noeud;
+    soundAssignments: Noeud;
+    homomorphisms: Noeud[];
+    [axe: string]: Noeud;
 };
 /**
  * LES DÉFAUTS QUE L'HÔTE PORTE — ce que la scène ne dit pas, et qu'il pose à sa place.
