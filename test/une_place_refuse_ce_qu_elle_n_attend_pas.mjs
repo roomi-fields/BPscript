@@ -25,6 +25,10 @@
  *     contexte de règle        `zzz S -> C4`       le côté GAUCHE de la flèche : un non-terminal
  *     contexte négatif         `#zzz M -> C4`      y NAÎT de son apparition, il ne se déclare jamais
  *
+ * ⛔ DEUX PLACES ONT QUITTÉ CET INVENTAIRE LE 2026-09-07, avec leur forme : le sujet et la cible
+ * d'une affectation de son. Romain : « la forme sort du langage ». Une place n'existe que tant
+ * qu'une graphie l'ouvre — ce qui ne s'écrit plus n'a plus de place à garder.
+ *
  * ⛔ ET C'EST POURQUOI CE GARDE POSE LES DEUX CÔTÉS DE LA FLÈCHE. Le juge des terminaux ne porte
  * que sur le côté DROIT, et c'est juste — mais rien ne le disait, et l'instrument qui mesurait
  * lisait l'acceptation à gauche comme un trou. La portée ET son complément, écrits tous les deux.
@@ -124,6 +128,7 @@ ok(decls >= 6,
 // L assertion est inversée : le jour où l une se ferme, il rougit et demande qu on la remonte
 // au tableau ci-dessus. Une dette qui pourrit dans un sens comme dans l autre est une dette
 // qu on ne mesure plus.
+let nbOuvertes = 0;
 {
   const OUVERTES = [
     ['valeur d un sac', `${S}-----\nS -> C4(vel:zzz)\n`,
@@ -131,20 +136,27 @@ ok(decls >= 6,
       + "(`controlValidation.js`), et la plage est rattachée au CONTRÔLE au lieu de son ARGUMENT — "
       + "arbitrage de Romain rendu le 2026-09-06, pas encore posé (BACKLOG BPS-116). Trois formes "
       + "du corpus en vivent : keymap:C3, ins:Vina, pan:sweep."],
-    ['sujet d une affectation de son', `${S}zzz:sound.bell\n-----\nS -> C4\n`,
-      "forme MORTE à l usage : ZÉRO affectation de son sur les 321 scènes du corpus, mesuré à "
-      + "l exécution (321/321 compilées). Le refus n y protégerait personne."],
-    ['cible d une affectation de son', `${S}C4:sound.zzz\n-----\nS -> C4\n`,
-      "même forme morte, et sa lecture porte un NOM EN DUR (`sound`) plus une voie parallèle "
-      + "rétrocompatible v0.7 (`C4:bell` nu) — deux défauts à trancher avant d y poser un juge."],
+    // ⛔ TROUVÉE PAR LE RETRAIT, PAS PAR L INVENTAIRE. Une clé quelconque dans un corps d acteur
+    // pose une PROPRIÉTÉ du même nom, en silence : `Sa:drum_kick` rend `properties.Sa`. Les clés
+    // d un acteur sont pourtant DÉCLARÉES — les membres typés du prototype `actor` de `types` —
+    // et ce qui n en est pas une devrait se refuser. La place n était dans aucun des deux comptes.
+    ['clé d un corps d acteur', `${S}actor a\n  zzz:quelconque\n-----\nS -> C4\n`,
+      "une clé hors des membres déclarés du prototype `actor` devient une propriété silencieuse. "
+      + "Découverte le 2026-09-07 en sortant l affectation de son : la forme nue v0.7 `Sa:X` ne "
+      + "disparaissait pas avec elle, parce qu une AUTRE place la recueillait."],
   ];
   for (const [nom, src, cause] of OUVERTES) {
     ok(refus(src) === null,
       `D. « ${nom} » est inscrite OUVERTE et elle REFUSE désormais — c est une bonne nouvelle : `
       + `remonte-la au tableau des places d USAGE et retire-la d ici. Cause inscrite : ${cause}`);
   }
-  ok(OUVERTES.length === 3,
-    `D. SOCLE : ${OUVERTES.length} place(s) ouverte(s) inscrite(s) — le compte ne peut que descendre.`);
+  // ⚠️ DEUX, ET LE COMPTE A BOUGÉ DANS LES DEUX SENS le 2026-09-07 : les deux places d une
+  // affectation de son sont sorties avec leur forme, et la clé d un corps d acteur est ENTRÉE —
+  // découverte par ce retrait même. Un compte qui ne peut que descendre suppose qu on connaît
+  // déjà toutes les places ; celui-ci les cherche encore.
+  nbOuvertes = OUVERTES.length;
+  ok(OUVERTES.length === 2,
+    `D. SOCLE : ${OUVERTES.length} place(s) ouverte(s) inscrite(s).`);
 }
 
 // ── C. LE TÉMOIN QUI MORD — l instrument voit-il une place ouverte quand il y en a une ? ──────
@@ -161,5 +173,5 @@ if (e.length) {
   process.exit(1);
 }
 console.log(`[places] ${p} PASS / 0 FAIL — ${PLACES.length} place(s) : ${usages} d USAGE qui refusent `
-  + `un nom inconnu, ${decls} de DÉCLARATION qui l accueillent, 3 encore OUVERTES et inscrites`
+  + `un nom inconnu, ${decls} de DÉCLARATION qui l accueillent, ${nbOuvertes} encore OUVERTE(S) et inscrite(s)`
   + (ouvertes.length ? ` · ⛔ OUVERTES : ${ouvertes.join(', ')}` : ''));

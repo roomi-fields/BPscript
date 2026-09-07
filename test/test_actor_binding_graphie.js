@@ -114,14 +114,18 @@ console.log('\n=== `transport` NE MARCHE PLUS sur un acteur, `.` comme `:` ===')
   assert('et il n\'ÉCRIT PAS le mot sorti', !msg.includes('transport'), msg);
 }
 
-console.log('\n=== NON-RÉGRESSION : le `:` reste valide pour AFFECTER une valeur ===');
+console.log('\n=== L AFFECTATION D UN SON EST SORTIE DU LANGAGE(Romain, 2026-09-07) ===');
 {
-  // `sujet:sound.X` (une note reçoit un son) : le `:` affecte une valeur → toujours accepté.
-  // Les affectations sont hoistées top-level en `scene.soundAssignments` (parser.js:181-189).
-  const scene = parse(tokenize('core\nactor voice alphabet.sargam out.audio\n  sa:sound.piano\n-----\nS -> sa\n'));
-  assert('sa:sound.piano (affectation de valeur à un sujet) accepté',
-    Array.isArray(scene.soundAssignments) && scene.soundAssignments.some((s) => s.subject === 'sa'),
-    JSON.stringify(scene.soundAssignments));
+  // Ce banc gardait `sujet:sound.X` comme la preuve que le `:` affecte une valeur. La forme est
+  // sortie ; ce que le `:` fait par ailleurs se garde AILLEURS, sur des formes vivantes.
+  let refuse = false;
+  try {
+    parse(tokenize('core\nactor voice alphabet.sargam out.audio\n  sa:sound.piano\n-----\nS -> sa\n'));
+  } catch { refuse = true; }
+  assert('sa:sound.piano est REFUSÉ — la forme est sortie', refuse);
+  // TÉMOIN POSITIF : le même acteur, sans la forme sortie, compile.
+  const scene = parse(tokenize('core\nactor voice alphabet.sargam out.audio\n-----\nS -> sa\n'));
+  assert('et l acteur ordinaire compile toujours', scene.actors.length === 1);
 }
 
 console.log('\n=== BYTE-ID BP3 : les deux graphies dot canon = grammaire identique ===');

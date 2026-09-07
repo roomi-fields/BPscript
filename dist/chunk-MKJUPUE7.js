@@ -6962,11 +6962,6 @@ function parse(tokens, opts = {}) {
         } else if (dir.type === "ActorDirective") {
           scene.actors.push(dir);
           if (dir.name) acteursDeclares.add(dir.name);
-          if (dir.soundAssignments && dir.soundAssignments.length > 0) {
-            scene.soundAssignments = scene.soundAssignments || [];
-            for (const sa of dir.soundAssignments) scene.soundAssignments.push(sa);
-          }
-          delete dir.soundAssignments;
         } else if (dir.type === "SoundSection") {
           scene.soundPrototypes = scene.soundPrototypes || [];
           for (const p of dir.prototypes) scene.soundPrototypes.push(p);
@@ -6983,10 +6978,6 @@ function parse(tokens, opts = {}) {
               line: dir.line
             });
           }
-        } else if (dir.type === "AlphabetSoundAssignments") {
-          scene.directives.push(dir.directive);
-          scene.soundAssignments = scene.soundAssignments || [];
-          for (const sa of dir.assignments) scene.soundAssignments.push(sa);
         } else if (dir.type === "LibRef") {
           (scene.libRefs || (scene.libRefs = [])).push(dir.address);
         } else if (dir.type === "Declaration") {
@@ -7974,7 +7965,6 @@ function parse(tokens, opts = {}) {
       const corpsParenthese = at(T.LPAREN);
       if (corpsParenthese) advance();
       const properties = {};
-      const soundAssignments = [];
       const parseRefParams = () => {
         expect(T.LPAREN);
         const params = {};
@@ -8013,20 +8003,6 @@ function parse(tokens, opts = {}) {
         if (corpsParenthese && at(T.RPAREN)) break;
         if (corpsParenthese && at(T.COMMA)) {
           advance();
-          continue;
-        }
-        if (at(T.STAR) && peek(1).type === T.COLON) {
-          advance();
-          advance();
-          const target = parseSoundAssignmentTarget();
-          soundAssignments.push({
-            type: "SoundAssignment",
-            scope: "actor",
-            actor: actorName,
-            subject: "*",
-            target,
-            line: tok.line
-          });
           continue;
         }
         if (at(T.AT) && peek(1).type === T.IDENT && peek(1).value === "alphabet" && peek(2).type === T.PERIOD && !peek(2).spaceBefore) {
@@ -8069,23 +8045,6 @@ function parse(tokens, opts = {}) {
           continue;
         }
         if (next === T.COLON && !peek(1).spaceBefore) {
-          const t3 = peek(2);
-          const t4 = peek(3);
-          const isSubjectSoundAssign = t3.type === T.IDENT && t3.value === "sound" && t4.type === T.PERIOD || t3.type === T.LBRACE;
-          if (isSubjectSoundAssign) {
-            const subject = advance().value;
-            advance();
-            const target = parseSoundAssignmentTarget();
-            soundAssignments.push({
-              type: "SoundAssignment",
-              scope: "actor",
-              actor: actorName,
-              subject,
-              target,
-              line: tok.line
-            });
-            continue;
-          }
           if (actorKeysData().toutes.has(key)) {
             const canon = key === "sounds" ? "sound" : key;
             throw new ParseError(
@@ -8156,7 +8115,6 @@ function parse(tokens, opts = {}) {
         name: actorName,
         properties,
         references,
-        soundAssignments: soundAssignments.length > 0 ? soundAssignments : null,
         line: tok.line
       };
     }
@@ -8250,43 +8208,9 @@ function parse(tokens, opts = {}) {
       expect(T.RPAREN);
     }
     if (name === "alphabet" && subkey) {
-      const assignments = [];
       while (!atEnd()) {
         while (at(T.NEWLINE) || at(T.COMMENT)) advance();
-        if (at(T.STAR) && peek(1).type === T.COLON) {
-          const line = current().line;
-          advance();
-          advance();
-          const target = parseSoundAssignmentTarget();
-          assignments.push({
-            type: "SoundAssignment",
-            scope: "alphabet",
-            alphabet: subkey,
-            subject: "*",
-            target,
-            line
-          });
-          continue;
-        }
         if (at(T.IDENT) && peek(1).type === T.COLON) {
-          const t3 = peek(2);
-          const t4 = peek(3);
-          const isSoundAssign = t3.type === T.IDENT && t3.value === "sound" && t4.type === T.PERIOD || t3.type === T.LBRACE;
-          if (isSoundAssign) {
-            const line = current().line;
-            const subject = advance().value;
-            advance();
-            const target = parseSoundAssignmentTarget();
-            assignments.push({
-              type: "SoundAssignment",
-              scope: "alphabet",
-              alphabet: subkey,
-              subject,
-              target,
-              line
-            });
-            continue;
-          }
           if (current().value === "notes") {
             advance();
             advance();
@@ -8310,14 +8234,6 @@ function parse(tokens, opts = {}) {
         ...libDuPrefixe ? { lib: libDuPrefixe } : {},
         line: tok.line
       };
-      if (assignments.length > 0) {
-        return {
-          type: "AlphabetSoundAssignments",
-          directive: dirNode,
-          assignments,
-          line: tok.line
-        };
-      }
       return dirNode;
     }
     refuserCanalDeSortieInconnu(name, subkey, tok);
@@ -8470,21 +8386,6 @@ function parse(tokens, opts = {}) {
     }
     return props;
   }
-  function parseSoundAssignmentTarget() {
-    if (at(T.LBRACE)) {
-      advance();
-      const props = parsePropPairs();
-      expect(T.RBRACE);
-      return { kind: "inline-props", props };
-    }
-    const first = expect(T.IDENT).value;
-    if (first === "sound" && at(T.PERIOD)) {
-      advance();
-      const name = expect(T.IDENT).value;
-      return { kind: "named-ref", name };
-    }
-    return { kind: "named-ref", name: first };
-  }
   function parseSoundSection(line, lib, libVariant) {
     const prototypes = [];
     while (at(T.NEWLINE) || at(T.COMMENT)) advance();
@@ -8515,16 +8416,6 @@ function parse(tokens, opts = {}) {
       prototypes,
       line
     };
-  }
-  function parseSoundAssignmentLocal(line) {
-    let subject;
-    if (at(T.STAR)) {
-      advance();
-      subject = "*";
-    } else subject = expect(T.IDENT).value;
-    expect(T.COLON);
-    const target = parseSoundAssignmentTarget();
-    return { type: "SoundAssignment", subject, target, line };
   }
   function parseSubgrammars(initialMode, initialModifiers) {
     const subs = [];

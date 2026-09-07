@@ -851,17 +851,6 @@ function parse(tokens, opts = {}) {
         } else if (dir.type === 'ActorDirective') {
           scene.actors.push(dir);
           if (dir.name) acteursDeclares.add(dir.name);
-          // v0.8: soundAssignments collectées dans le bloc @actor sont remontées
-          // top-level avec scope { kind:"actor", name:<actorName> }.
-          if (dir.soundAssignments && dir.soundAssignments.length > 0) {
-            scene.soundAssignments = scene.soundAssignments || [];
-            for (const sa of dir.soundAssignments) scene.soundAssignments.push(sa);
-          }
-          // Frontière AST (Palier 3) : `soundAssignments` est un porteur TRANSITOIRE
-          // (hoisté top-level ci-dessus) ; on le retire TOUJOURS de l'ActorDirective.
-          // Canonique = `assignments?` OPTIONNEL, jamais `soundAssignments:null`.
-          // décision PM : pas de duplication.
-          delete dir.soundAssignments;
         } else if (dir.type === 'SoundSection') {
           // v0.8 — @sound { ... } / @sound bell { ... } / @sound.libname[:variant]
           scene.soundPrototypes = scene.soundPrototypes || [];
@@ -874,13 +863,6 @@ function parse(tokens, opts = {}) {
               aliases: null, modifiers: null, line: dir.line,
             });
           }
-        } else if (dir.type === 'AlphabetSoundAssignments') {
-          // v0.8 — affectations sujet→son collectées dans un @alphabet.X.
-          // Le wrapper contient la Directive d'origine (à pousser comme d'hab)
-          // et les affectations (à pousser top-level dans soundAssignments).
-          scene.directives.push(dir.directive);
-          scene.soundAssignments = scene.soundAssignments || [];
-          for (const sa of dir.assignments) scene.soundAssignments.push(sa);
         } else if (dir.type === 'LibRef') {
           // Canal NEUTRE des invocations par provenance (@factory.*/@mine.*).
           // Adresse canonique opaque ; ordre source préservé ; dédup en fin de parseScene ;
@@ -3262,7 +3244,6 @@ function parse(tokens, opts = {}) {
       const corpsParenthese = at(T.LPAREN);
       if (corpsParenthese) advance();
       const properties = {};
-      const soundAssignments = [];
       // ⛔ CE QUE CETTE TABLE TIENT : la LIGNE de chaque clé déjà écrite sur cet acteur, pour que le
       // refus d'un doublon nomme LES DEUX déclarations. `properties` ne suffit pas — `out` s'y range
       // sous `transport`, et aucune ligne n'y survit.
@@ -3339,10 +3320,10 @@ function parse(tokens, opts = {}) {
         // ⚠️ MESURE AVANT LE RETRAIT, DEUX FOIS. D abord le PRODUCTEUR : `properties.sound` n avait
         // que cet ecrivain, et ses deux chemins d acces sont refuses en amont (`sound.X` par la cle
         // d acteur retiree, `sound:X` parce que le deux-points n affecte pas un composant). Ensuite
-        // le CHAMP QU ELLE ALIMENTAIT : `soundAssignments` garde DEUX producteurs vivants —
-        // `*:sound.X` sur un ACTEUR et sur un ALPHABET, verifies tous deux. Le champ reste donc
-        // rempli, et l aval ne voit aucun changement : c est ce qui distingue cet elagage d un
-        // retrait de surface.
+        // le CHAMP QU ELLE ALIMENTAIT : `soundAssignments` avait alors DEUX producteurs vivants,
+        // `*:sound.X` sur un ACTEUR et sur un ALPHABET. Ils sont partis avec la graphie le
+        // 2026-09-07 : le champ existe encore dans l arbre, a `null`, parce que le NŒUD reste au
+        // contrat partage — bp3-frontend en produit, BPx le valide, kanopi le lit.
         } else {
           // alphabet, tuning, eval — référence simple
           properties[key] = value;
@@ -3370,20 +3351,6 @@ function parse(tokens, opts = {}) {
         // corps nu, lui, sépare par l'espace, et il ne change pas.
         if (corpsParenthese && at(T.COMMA)) { advance(); continue; }
 
-        // Affectation `*:sound.X` (défaut acteur)
-        if (at(T.STAR) && peek(1).type === T.COLON) {
-          advance(); // *
-          advance(); // :
-          const target = parseSoundAssignmentTarget();
-          soundAssignments.push({
-            type: 'SoundAssignment',
-            scope: 'actor', actor: actorName,
-            subject: '*',
-            target,
-            line: tok.line,
-          });
-          continue;
-        }
 
         // LAN-8 (canon graphie bindings d'acteur — décision hub 2026-06-26 + invocation
         // 2026-07-13) : l'alphabet SUR LA LIGNE D'ACTEUR s'écrit `alphabet.<nom>` — le `.`
@@ -3463,30 +3430,10 @@ function parse(tokens, opts = {}) {
         }
 
         if (next === T.COLON && !peek(1).spaceBefore) {
-          // Affectation : `Sa:sound.X` ou `Sa:{ ... }`. Détection : le 3e token
-          // est IDENT "sound" PERIOD IDENT (affectation), ou LBRACE (inline).
-          // Ici `:` AFFECTE une valeur à un SUJET (une note) — forme légitime, conservée.
-          const t3 = peek(2);
-          const t4 = peek(3);
-          const isSubjectSoundAssign =
-              (t3.type === T.IDENT && t3.value === 'sound' &&
-               t4.type === T.PERIOD)
-            || (t3.type === T.LBRACE);
-
-          if (isSubjectSoundAssign) {
-            // C'est `Sa:sound.X` ou `Sa:{...}` → SoundAssignment
-            const subject = advance().value; // Sa
-            advance(); // :
-            const target = parseSoundAssignmentTarget();
-            soundAssignments.push({
-              type: 'SoundAssignment',
-              scope: 'actor', actor: actorName,
-              subject,
-              target,
-              line: tok.line,
-            });
-            continue;
-          }
+          // ⛔ L'AFFECTATION D'UN SON À UN SUJET EST SORTIE DU LANGAGE — Romain, 2026-09-07.
+          // `Sa:sound.X` et `Sa:{…}` se lisaient ici. La forme était MORTE à l'usage : ZÉRO
+          // occurrence sur les 321 scènes du corpus, mesuré à l'exécution ; et sa lecture portait
+          // le nom `sound` ÉCRIT EN DUR plus une voie parallèle rétrocompatible v0.7 (`Sa:X` nu).
 
           // CUTOVER graphie (Romain GO 2026-07-14, tour [411] ; décision hub 2026-06-26) :
           // une référence d'ENTITÉ (composant : alphabet, tuning, octaves, out, sound,
@@ -3608,7 +3555,6 @@ function parse(tokens, opts = {}) {
         name: actorName,
         properties,
         references,
-        soundAssignments: soundAssignments.length > 0 ? soundAssignments : null,
         line: tok.line,
       };
     }
@@ -3769,54 +3715,18 @@ function parse(tokens, opts = {}) {
       expect(T.RPAREN);
     }
 
-    // v0.8 — corps de `alphabet.X` : peut contenir des `*:sound.X` et
-    // `Sa:sound.X` (sound_assignment) et le binding `notes: Sa Re ga ...`.
-    // EBNF Couche 1 § alphabet_section (étendu v0.8).
-    // Sortie : tableau d'AlphabetSoundAssignments si présents.
+    // Corps de `alphabet.X` : le binding `notes: Sa Re ga …`.
+    // ⛔ IL PORTAIT AUSSI L'AFFECTATION D'UN SON — `*:sound.X`, `Sa:sound.X` — sortie du langage le
+    // 2026-09-07 (Romain). Le nœud composite qu'il rendait alors n'a plus de producteur, et il est
+    // parti avec elle : une branche sans appelant vivant sort dans le mouvement qui la tue.
     if (name === 'alphabet' && subkey) {
-      const assignments = [];
       while (!atEnd()) {
         while (at(T.NEWLINE) || at(T.COMMENT)) advance();
 
-        // *:sound.X
-        if (at(T.STAR) && peek(1).type === T.COLON) {
-          const line = current().line;
-          advance(); advance(); // * :
-          const target = parseSoundAssignmentTarget();
-          assignments.push({
-            type: 'SoundAssignment',
-            scope: 'alphabet', alphabet: subkey,
-            subject: '*',
-            target,
-            line,
-          });
-          continue;
-        }
 
-        // IDENT:sound.X (affectation par note) — distinguer d'un terminal LHS de règle.
-        // Heuristique : `IDENT:` n'est PAS une affectation sound si le 3e
-        // token n'est pas `sound` ou `{`. (Une règle commence par `IDENT IDENT* ARROW`,
-        // or aucun IDENT ne peut être suivi de COLON dans une LHS de règle.)
+        // ⛔ `IDENT:sound.X` DANS UN CORPS D'ALPHABET EST SORTI — Romain, 2026-09-07, avec les
+        // trois autres graphies de l'affectation. Ce qui suit lit les autres formes de `IDENT:`.
         if (at(T.IDENT) && peek(1).type === T.COLON) {
-          const t3 = peek(2);
-          const t4 = peek(3);
-          const isSoundAssign =
-              (t3.type === T.IDENT && t3.value === 'sound' && t4.type === T.PERIOD)
-            || (t3.type === T.LBRACE);
-          if (isSoundAssign) {
-            const line = current().line;
-            const subject = advance().value;
-            advance(); // :
-            const target = parseSoundAssignmentTarget();
-            assignments.push({
-              type: 'SoundAssignment',
-              scope: 'alphabet', alphabet: subkey,
-              subject,
-              target,
-              line,
-            });
-            continue;
-          }
           // notes: Sa Re ga ma Pa dha ni — déclaration de notes (v0.8 EBNF).
           // Pas porté en ce milestone (les notes sont calculées via lib JSON) :
           // on consomme silencieusement la ligne pour ne pas casser le flow.
@@ -3834,16 +3744,6 @@ function parse(tokens, opts = {}) {
       const dirNode = { type: 'Directive', name, subkey, runtime, value, aliases, modifiers,
                         ...(directiveParams ? { params: directiveParams } : {}),
                         ...(libDuPrefixe ? { lib: libDuPrefixe } : {}), line: tok.line };
-      if (assignments.length > 0) {
-        // On retourne un nœud composite : le caller détecte AlphabetSoundAssignments
-        // et l'ajoute à scene.soundAssignments tout en gardant la Directive.
-        return {
-          type: 'AlphabetSoundAssignments',
-          directive: dirNode,
-          assignments,
-          line: tok.line,
-        };
-      }
       return dirNode;
     }
 
@@ -4069,29 +3969,6 @@ function parse(tokens, opts = {}) {
     return props;
   }
 
-  /**
-   * Parse une cible d'affectation son : `sound.NAME` ou `{ props }`.
-   * Référence EBNF v0.8 § sound_assignment, sound_target.
-   */
-  function parseSoundAssignmentTarget() {
-    // Bloc inline anonyme : `Sa:{ dur:300 }`
-    if (at(T.LBRACE)) {
-      advance();
-      const props = parsePropPairs();
-      expect(T.RBRACE);
-      return { kind: 'inline-props', props };
-    }
-    // Référence nommée : `Sa:sound.bell_short` (v0.8 canonique).
-    // Rétrocompat v0.7 : on accepte aussi `Sa:NAME` nu (sucre = sound.NAME).
-    const first = expect(T.IDENT).value;
-    if (first === 'sound' && at(T.PERIOD)) {
-      advance();
-      const name = expect(T.IDENT).value;
-      return { kind: 'named-ref', name };
-    }
-    // Cas rétrocompat : `Sa:bell_short` (forme v0.7 sans namespace explicite).
-    return { kind: 'named-ref', name: first };
-  }
 
   /**
    * Parse la section `sound` (ou `sound.libname[:variant]`).
@@ -4150,22 +4027,6 @@ function parse(tokens, opts = {}) {
     };
   }
 
-  /**
-   * Parse une affectation `subject:sound_target` ou `*:sound_target`
-   * dans un corps d'alphabet ou d'acteur. Retourne le nœud
-   * SoundAssignmentAST sans champ `scope` (rempli par l'appelant).
-   *
-   * Le cas particulier `Sa:sound.X` est distingué d'un terminal `Sa` suivi
-   * d'une déclaration de type — l'appelant doit faire le lookahead.
-   */
-  function parseSoundAssignmentLocal(line) {
-    let subject;
-    if (at(T.STAR)) { advance(); subject = '*'; }
-    else subject = expect(T.IDENT).value;
-    expect(T.COLON);
-    const target = parseSoundAssignmentTarget();
-    return { type: 'SoundAssignment', subject, target, line };
-  }
 
   // ============================================================
   // Couche 2 — Subgrammars

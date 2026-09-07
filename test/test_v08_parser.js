@@ -265,32 +265,32 @@ template
 // 10. SoundAssignment dans actor — *:sound.X et Sa:sound.Y
 // ============================================================
 
-section('SoundAssignment dans actor');
+section('affectation de son dans un ACTEUR — SORTIE du langage');
 
+// ⛔ ROMAIN, 2026-09-07 : « la forme sort du langage ». Ce banc exerçait les deux graphies et
+// comptait leurs nœuds ; il exerce maintenant leur REFUS, aux mêmes places. La forme était MORTE à
+// l'usage — zéro occurrence sur les 321 scènes du corpus, mesuré à l'exécution — et sa lecture
+// portait le nom `sound` ÉCRIT EN DUR plus une voie parallèle rétrocompatible v0.7 (`Sa:X` nu).
 {
-  const ast = parseSource(`core
-actor tabla
-  alphabet.tabla
-  out.midi(ch:10)
-  *:sound.tabla_perc
-  Sa:sound.drum_kick
------
-S -> A`);
-  assert('soundAssignments top-level', Array.isArray(ast.soundAssignments));
-  assert('2 assignments', ast.soundAssignments.length === 2);
-  const [sa1, sa2] = ast.soundAssignments;
-  // Forme PLATE (`scope` est une chaîne, le nom vit dans `alphabet`/`actor`) : c'est ce que
-  // le transpileur émet ET ce que BPx consomme (findAssignment compare `a.scope` puis lit
-  // `a.actor`). Ce test attendait `scope.kind`, la forme d'AVANT 498a311 — la spec l'a
-  // décrite jusqu'au 2026-07-19, et personne ne l'implémentait plus.
-  assert('1st scope=actor', sa1.scope === 'actor');
-  assert('1st actor=tabla', sa1.actor === 'tabla');
-  assert('1st subject=*', sa1.subject === '*');
-  assert('1st target named-ref tabla_perc', sa1.target.kind === 'named-ref' && sa1.target.name === 'tabla_perc');
-  assert('2nd subject=Sa', sa2.subject === 'Sa');
-  assert('2nd target=drum_kick', sa2.target.name === 'drum_kick');
-  // Pas de duplication sur l'ActorDirective (décision PM 1).
-  assert('ActorDirective sans soundAssignments(PM décision 1)', !ast.actors[0].soundAssignments);
+  for (const graphie of ['*:sound.tabla_perc', 'Sa:sound.drum_kick', 'Sa:{ dur:300 }']) {
+    let refuse = false;
+    try {
+      parseSource(`core\nactor tabla\n  alphabet.tabla\n  ${graphie}\n-----\nS -> A`);
+    } catch { refuse = true; }
+    assert(`« ${graphie} » dans un acteur est REFUSÉ`, refuse);
+  }
+  // ⛔ ET LA FORME NUE v0.7 NE DISPARAÎT PAS AVEC ELLE — `Sa:drum_kick` est toujours ACCEPTÉ dans un
+  // corps d'acteur, où il pose une PROPRIÉTÉ `Sa` en silence. Ce n'est pas un reste de l'affectation
+  // de son : c'est une AUTRE place, la clé d'un corps d'acteur, qui n'exige rien. Elle n'était pas
+  // dans l'inventaire des places, et c'est le retrait qui l'a montrée. Mesuré, inscrit, pas refermé
+  // ici : fermer une place que Romain n'a pas tranchée élargirait le geste qu'il a demandé.
+  const nu = parseSource(`core\nactor tabla\n  alphabet.tabla\n  Sa:drum_kick\n-----\nS -> A`);
+  assert('`Sa:drum_kick` pose une propriété d acteur — place OUVERTE, inscrite',
+    nu.actors[0].properties.Sa === 'drum_kick');
+  // TÉMOIN POSITIF — sans lui, un acteur qui refuserait TOUT passerait la boucle ci-dessus.
+  const sain = parseSource(`core\nactor tabla\n  alphabet.tabla\n  out.midi(ch:10)\n-----\nS -> A`);
+  assert('un acteur ordinaire compile toujours', sain.actors.length === 1);
+  assert('et il ne porte aucune affectation', !sain.soundAssignments);
 }
 
 // ============================================================
@@ -322,23 +322,16 @@ S -> A`);
 // 12. SoundAssignment dans alphabet.X
 // ============================================================
 
-section('SoundAssignment dans alphabet.X');
+section('affectation de son dans un corps d ALPHABET — SORTIE du langage');
 
 {
-  const ast = parseSource(`core
-alphabet.tabla
-  *:sound.bell_short
-  Sa:sound.drum_kick
-  Re:sound.bell_long
------
-S -> Sa Re Sa`);
-  assert('3 assignments', ast.soundAssignments?.length === 3);
-  const [a1, a2, a3] = ast.soundAssignments;
-  assert('scope=alphabet', a1.scope === 'alphabet');
-  assert('alphabet=tabla', a1.alphabet === 'tabla');
-  assert('* subject', a1.subject === '*');
-  assert('Sa subject', a2.subject === 'Sa');
-  assert('Re subject', a3.subject === 'Re');
+  for (const graphie of ['*:sound.bell_short', 'Sa:sound.drum_kick']) {
+    let refuse = false;
+    try { parseSource(`core\nalphabet.tabla\n  ${graphie}\n-----\nS -> Sa`); } catch { refuse = true; }
+    assert(`« ${graphie} » dans un corps d alphabet est REFUSÉ`, refuse);
+  }
+  const ast = parseSource(`core\nalphabet.tabla\n-----\nS -> Sa`);
+  assert('TÉMOIN — l invocation d alphabet compile toujours', ast.directives.some((d) => d.subkey === 'tabla'));
   assert('alphabet directive aussi présent', ast.directives.some(d => d.name === 'alphabet' && d.subkey === 'tabla'));
 }
 
@@ -390,21 +383,14 @@ S -> Sa(vel:80, sound.bell, pan:64)`);
 // 15. Inline anonyme — Sa:{ dur:300 } dans actor
 // ============================================================
 
-section('SoundAssignment inline-props dans actor');
+section('cible en propriétés inline — SORTIE avec le reste de la forme');
 
 {
-  const ast = parseSource(`core
-actor x
-  alphabet.tabla
-  Sa:{ dur:300, sample:"x.wav" }
------
-S -> Sa`);
-  const sa = ast.soundAssignments?.[0];
-  assert('1 assignment', ast.soundAssignments?.length === 1);
-  assert('subject=Sa', sa?.subject === 'Sa');
-  assert('target.kind=inline-props', sa?.target?.kind === 'inline-props');
-  assert('inline dur=300', sa?.target?.props?.dur === 300);
-  assert('inline sample=x.wav', sa?.target?.props?.sample === 'x.wav');
+  let refuse = false;
+  try {
+    parseSource(`core\nactor x\n  alphabet.tabla\n  Sa:{ dur:300, sample:"x.wav" }\n-----\nS -> Sa`);
+  } catch { refuse = true; }
+  assert('« Sa:{ … } » est REFUSÉ — la cible inline part avec la forme', refuse);
 }
 
 // ============================================================
@@ -449,27 +435,16 @@ S -> A`);
 // 18. Espacement variable : `*:sound.X` vs `* : sound . X`
 // ============================================================
 
-section('Espacement cohérent — *:sound.X');
+section('les DEUX espacements de `*:sound.X` sont sortis, pas seulement le collé');
 
+// ⛔ UNE FORME QUI SORT SORT À TOUTES SES GRAPHIES. Ce banc gardait l'équivalence collé/espacé ;
+// il garde maintenant que le retrait vaut pour les deux — fermer une seule laisserait l'autre.
 {
-  const noSpace = parseSource(`core
-actor a
-  alphabet.tabla
-  *:sound.bell
------
-S -> A`);
-  const withSpace = parseSource(`core
-actor a
-  alphabet.tabla
-  * : sound . bell
------
-S -> A`);
-  assert('no-space: 1 assignment', noSpace.soundAssignments?.length === 1);
-  assert('with-space: 1 assignment', withSpace.soundAssignments?.length === 1);
-  assert('no-space subject=*', noSpace.soundAssignments?.[0]?.subject === '*');
-  assert('with-space subject=*', withSpace.soundAssignments?.[0]?.subject === '*');
-  assert('no-space target.name=bell', noSpace.soundAssignments?.[0]?.target?.name === 'bell');
-  assert('with-space target.name=bell', withSpace.soundAssignments?.[0]?.target?.name === 'bell');
+  for (const graphie of ['*:sound.bell', '* : sound . bell']) {
+    let refuse = false;
+    try { parseSource(`core\nactor a\n  alphabet.tabla\n  ${graphie}\n-----\nS -> A`); } catch { refuse = true; }
+    assert(`« ${graphie} » est REFUSÉ`, refuse);
+  }
 }
 
 // ============================================================
@@ -485,14 +460,12 @@ alphabet.tabla:midi
 actor tabla
   alphabet.tabla
   out.midi(ch:10)
-  *:sound.tabla_perc
 -----
 S -> tabla.dhin tabla.dha
 template
 [1] /1 ???`);
   assert('actor parsed', ast.actors.length === 1);
   assert('template parsed', ast.template?.entrees?.length === 1);
-  assert('soundAssignments OK', ast.soundAssignments?.length === 1);
   assert('directives OK', ast.directives.some(d => d.name === 'alphabet' && d.subkey === 'tabla'));
 }
 
