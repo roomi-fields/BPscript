@@ -26,6 +26,7 @@
 | Document | Contenu | Quand le lire |
 |----------|---------|---------------|
 | [ARCHITECTURE.md](design/ARCHITECTURE.md) | Pipeline de compilation : source → tokenizer → parser → encoder → grammaire BP3 + alphabet + prototypes → moteur WASM → timed tokens. Acteurs, control table, CV table | Vue d'ensemble du système, comprendre le flux de données de bout en bout |
+| [LES_PLACES.md](design/LES_PLACES.md) | Les positions où l'auteur écrit un nom, et la SORTE que chacune admet — inventaire mesuré des 23 places, les 8 typées, les 4 où le drapeau fuit, et l'union du point d'attente relevée sur le moteur natif | Savoir ce qui a le droit d'être écrit à une place, poser un refus positionnel, écrire lib/places.bpsl |
 | [PITCH.md](design/PITCH.md) | Résolution pitch 6 couches : Layer 0 Actor (binding) → Layer 1 Alphabet → Layer 2 Octaves → Layer 3 Temperament → Layer 4 Tuning → Layer 5 Resolver. Annexe transposition multi-tempéraments | Comprendre comment un token "C#4" devient une fréquence, coder le resolver, ajouter un alphabet/tuning |
 | [SOUNDS.md](design/SOUNDS.md) | Résolution terminaux unifiée : 3 échelles (spec < CT < CV), formats JSON (table, template, paramétrique, par registre, samples), résolution par transport (Web Audio/MIDI/OSC), dégradation gracieuse, implémentation (ActorRegistry, SoundsResolver) | Ajouter un instrument, comprendre le cascading spec/CT/CV, coder un transport |
 | [CV.md](archive/CV.md) | ⛔ ARCHIVÉ — objets CV, sortis du langage le 2026-08-08 | Comprendre comment la modulation était pensée avant son retrait |
