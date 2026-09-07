@@ -6,17 +6,19 @@
 # la même dérive que la doc qui ment, appliquée au garde-fou lui-même.
 set -e
 cd "$(git rev-parse --show-toplevel)"
-# ⛔ EN TETE, AVANT LE PORTILLON : on ne pousse pas sur un etat qu'on n'a pas fini de lire. Un geste
-# qui sort d'ici part alors sur du courrier qu'on n'a pas vu — et « 0 non-lu » est le seul verdict,
-# jamais l'ecran : le lot d'affichage est borne a quatre, donc une boite a six en montre quatre et
-# une discipline juste devient un geste faux, en silence.
-# ⇒ Ce garde REMPLACE l'appel a `garde-fenetre.sh`, retire le 2026-09-05 avec les fenetres de gel.
-#   Ce script-la portait DEUX refus — la fenetre, et le courrier — et retirer le premier emportait le
-#   second, qui n'a aucun rapport. *Deux refus dans un meme script sont DEUX gardes, et ils se
-#   retirent separement.* Il vit au crochet de POUSSEE et nulle part ailleurs : pose a un site de
-#   bascule, il mesure la fin d'un portillon de plusieurs minutes au lieu du geste.
-# Garde partage, unique implementation dans le hub, laisse passer si la tour est injoignable.
-BP_AGENT=bpscript bash "$HOME/dev/bp/hub/tools/garde-courrier-non-lu.sh" || exit 1
+# ⛔ LE REFUS SUR COURRIER NON LU EST RETIRE — Romain, 2026-09-07 : « il a un crochet qui lui interdit
+# de publier tant qu'il a des mails non lus, je trouve ca stupide, je lui dis de le retirer ». Le hub
+# l'applique aux seize.
+# ⇒ TROIS RAISONS, ET LA TROISIEME EST LA MIENNE. Son objet fondateur — pousser dans la fenetre de gel
+#   d'un voisin — est mort avec les fenetres le 2026-09-04. Il retenait un travail FAIT sur un
+#   evenement SANS RAPPORT : une lettre arrivee pendant le travail bloquait sa publication en ne
+#   disant rien de ce travail. ⛔ Et il PRODUISAIT le defaut qu'il pretendait empecher — mesure ici le
+#   2026-09-07, quatre lots consecutifs et deux commits retenus une heure : acule a pousser, on
+#   acquitte sans lire. *Un garde qui rend l'acquittement aveugle moins cher que la lecture enseigne
+#   l'acquittement aveugle.*
+# ⇒ Ce que le besoin garde de juste tient au REVEIL : une demande reveille, et la charte impose
+#   `tour inbox` a chaque tour. Lire son courrier se declenche a l'ARRIVEE du courrier, jamais au
+#   depart d'une poussee.
 export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" >/dev/null 2>&1
 maj=$(node -v 2>/dev/null | sed "s/v\([0-9]*\).*/\1/")
 if [ "${maj:-0}" -lt 20 ]; then nvm use 20 >/dev/null 2>&1 || nvm use 22 >/dev/null 2>&1; fi
