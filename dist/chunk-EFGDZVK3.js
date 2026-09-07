@@ -23,13 +23,13 @@ import {
   resolveActorAlphabetSource,
   universeControlNames,
   versionDuRegistre
-} from "./chunk-MKJUPUE7.js";
+} from "./chunk-SLXVTUL5.js";
 import {
   LexError,
   diagnostic,
   texteDuDiagnostic,
   tokenize
-} from "./chunk-HFGT4PDV.js";
+} from "./chunk-KYH3UHFE.js";
 import {
   SYNTAXE
 } from "./chunk-ETUISLOG.js";

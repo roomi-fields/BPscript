@@ -96,7 +96,6 @@ var MESSAGES = {
   PARSE_KEY_NAMES_NUMBERED_COMPONENT: "'{key}.\u2026' names a NUMBERED component: it expects a number, not '{p1}' (example: '({key}.98:45)'). Controllers that have a name are written by their name",
   PARSE_KEY_SPACE_AFTER_COLON: "'{key}: ' \u2014 no space after the colon: the value begins immediately ('{key}:{p1}\u2026'). The space only separates the PARTS of a value",
   PARSE_KEY_SPACE_AFTER_COLON_2: "'{key}: ' \u2014 no space after the colon: the value begins immediately ('{key}:{p1}\u2026'). The space only separates the PARTS of a value",
-  PARSE_MACRO_MACRONAME_PARAMETER_DECLARED: "Macro '{macroName}': parameter(s) declared but absent from the body: {p1}. A macro is a textual substitution (EBNF \xA7macro l.59/273) \u2014 each parameter MUST appear in the body (e.g. accent(x) = x(vel:120)). A declaration name(target, transport) = curve (CV/signal form) is not a valid macro: syntax pending arbitration.",
   PARSE_MALFORMED_CONTROL_ARGUMENT_NAME: "malformed control argument in '{name}(\u2026)': '{arg} {p1}' \u2014 two values follow each other without a separator. A control takes arguments separated by ','; it does not take a sentence (the generic function 'script(\u2026)' has been removed from the language)",
   PARSE_MALFORMED_INTERVAL_CTRLNAME_EXPECTED: "Malformed interval for '{ctrlName}'{p1} \u2014 expected a fraction (3/2), cents (700c) or a decimal (1.5)",
   PARSE_MODE_ECRIT_ECRIT_DERIVATION: "'mode:{ecrit}': '{ecrit}' is not a derivation mode \u2014 the modes are {p1}. The list is CLOSED.",
