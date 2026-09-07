@@ -46,9 +46,9 @@ const compiler = (src) => { const r = compileToBPxAST(src, {}); return { ok: !!r
 // ── 3 et 4. l'homonymie FABRIQUÉE : deux librairies déclarent 'zzduo' avec des portées différentes ─
 {
   const registre = leRegistre();
-  const gabarit = (scope) => ({ resolves: null, resolvedBy: 'BPx', controls: { zzduo: { args: ['value'], description: 'témoin', scope } } });
-  registerLib('zzlibA', { ...gabarit(['symbol', 'rule']), resolves: 'zzlibA' });
-  registerLib('zzlibB', { ...gabarit(['scene']), resolves: 'zzlibB' });
+  const gabarit = (scope) => ({ resolvedBy: 'BPx', controls: { zzduo: { args: ['value'], description: 'témoin', scope } } });
+  registerLib('zzlibA', gabarit(['symbol', 'rule']));
+  registerLib('zzlibB', gabarit(['scene']));
   try {
     const deux = compiler('core\nzzlibA\nzzlibB\n-----\nS -> C4(zzduo:1)\n');
     ok(!deux.ok && deux.msgs.some((m) => /zzduo.*is declared by 2 libraries.*'zzlibA\.zzduo:…'.*'zzlibB\.zzduo:…'/.test(m)),

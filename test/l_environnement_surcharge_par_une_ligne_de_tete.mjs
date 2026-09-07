@@ -53,7 +53,7 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 
 // ── 3. la ligne de tête d'une librairie n'est pas jugée par sa place ───────────────────────────
 {
-  const r = compileToBPxAST('types\nmidi\npitchbend:0\nmod:0\ndef zzenv(resolvedBy:x, resolves:zzenv, name:zzenv)\n', { librairie: true });
+  const r = compileToBPxAST('types\nmidi\npitchbend:0\nmod:0\ndef zzenv(resolvedBy:x, version:1, name:zzenv)\n', { librairie: true });
   ok((r.errors || []).length === 0, `3. 'pitchbend:0' (sans portée scène) en tête d'une LIBRAIRIE compile — reçu ${JSON.stringify((r.errors || []).map((e) => e.message))}`);
   const scene = compileToBPxAST('core\npitchbend:0\n-----\nS -> C4\n');
   ok((scene.errors || []).some((e) => /pitchbend.*cannot be written at the top/.test(e.message)),
@@ -63,8 +63,8 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 // ── 4. une librairie d'environnement fabriquée ─────────────────────────────────────────────────
 {
   const registre = leRegistre();
-  registerLib('zzenvA', { resolves: 'zzenvA', resolvedBy: 'témoin', reglages: { volume: 11 } });
-  registerLib('zzenvB', { resolves: 'zzenvB', resolvedBy: 'témoin', reglages: { volume: 22 } });
+  registerLib('zzenvA', { resolvedBy: 'témoin', reglages: { volume: 11 } });
+  registerLib('zzenvB', { resolvedBy: 'témoin', reglages: { volume: 22 } });
   try {
     ok(loadLibsFromDirectives([{ name: 'midi' }, { name: 'zzenvA' }]).controls.volume.value === 11, '4. une librairie d\'environnement invoquée surcharge volume');
     ok(loadLibsFromDirectives([{ name: 'midi' }]).controls.volume.value !== 11, '4. non invoquée, elle ne surcharge rien(principe 1)');

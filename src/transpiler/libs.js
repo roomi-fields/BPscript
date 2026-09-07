@@ -191,9 +191,9 @@ function universeControlNames() {
 /**
  * LE MOT SOUS LEQUEL UNE LIBRAIRIE S'INVOQUE — lu dans SA donnee, jamais ecrit ici.
  *
- * Chaque fichier declare son mot par `resolves`. La table qui suit est DERIVEE de ces
- * declarations, reconstruite a chaque appel : ajouter une librairie qui declare son mot la rend
- * invocable le jour meme, sans toucher au code.
+ * Chaque fichier DERIVE son mot de la chaine de prototypes de ses entrees (`motDuFichier`). La
+ * table qui suit en est tiree, reconstruite a chaque appel : ajouter une librairie dont les
+ * entrees derivent d un prototype la rend invocable le jour meme, sans toucher au code.
  *
  * ⛔ ELLE ETAIT ECRITE EN DUR, ET QUATRE LIGNES DECIDAIENT DE TOUT. `alphabet: 'alphabets'`,
  * `tuning: 'tunings'`, `scale: 'scales'`, `sound: 'sounds'` — et rien d'autre. `temperament`,

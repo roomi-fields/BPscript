@@ -85,7 +85,7 @@ const paires = (decl) => {
   // « sans terminaux propres » se FABRIQUE : un alphabet vide hérite l'exemplaire typé du prototype,
   // et le lecteur des terminaux lui en trouve zéro — jamais un terminal nommé « sound ».
   const registre = leRegistre();
-  registerLib('zzalph', { resolves: 'alphabet', resolvedBy: 'témoin', zzvide: { description: 'alphabet témoin sans terminaux', _derive: 'alphabet' } });
+  registerLib('zzalph', { resolvedBy: 'témoin', zzvide: { description: 'alphabet témoin sans terminaux', _derive: 'alphabet' } });
   try {
     const vide = objet('alphabet.zzvide');
     ok(vide && vide.membres && vide.membres.terminals && vide.membres.terminals._derive === 'sound' && nomsDeTerminaux(vide.membres).length === 0,

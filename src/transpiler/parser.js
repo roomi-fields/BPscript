@@ -220,8 +220,8 @@ const outChannels = memoDuRegistre(() => {
  *
  * ⚠️ CE QUI L'A RÉVÉLÉ N'EST PAS CE QU'ON M'A SIGNALÉ. BPx a remonté « une scène invoque une entrée
  * de librairie absente et rien ne le dit », avec trois références. Rejouées chez moi, les trois
- * EXISTENT — son instrument lisait `LIBS.<axe>` à la racine, alors qu'une section sert un axe par
- * son champ `resolves` (`sounds` sert `sound`) et que les homomorphismes vivent sous `tables`.
+ * EXISTENT — son instrument lisait `LIBS.<axe>` à la racine, alors qu'un fichier sert un axe par le
+ * MOT qu'il dérive (`sounds` sert `sound`) et que les homomorphismes vivent sous `tables`.
  * Les six axes de catalogue refusaient déjà une entrée inventée, nommément. En fabriquant le cas
  * pour le vérifier, c'est CETTE case-ci qui s'est ouverte.
  *

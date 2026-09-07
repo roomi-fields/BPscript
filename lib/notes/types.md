@@ -7,9 +7,10 @@ borne d'une mesure. La source porte ce qui EST, cette note porte le reste.
 
 LES PROTOTYPES DES CATALOGUES.
 
-⛔ CE FICHIER DÉCLARE SON MOT — `resolves:types`. Décision Romain, 2026-08-21 : « je comprends
-qu'il faut mettre des `resolves` dans toutes les librairies, parce que MÊME `types` peut être
-invoqué en déclaratif ». `lib/scales.bpsl` l'écrit d'ailleurs en tête depuis sa conversion.
+⛔ CE FICHIER PORTE UN MOT D'INVOCATION, et c'est `types`. Décision Romain, 2026-08-21 : MÊME
+`types` peut être invoqué en déclaratif. Le mot ne se déclare plus depuis le 2026-09-06 (retrait
+de `resolves`) : il se DÉRIVE de la chaîne de prototypes des entrées, et ici aucune entrée ne
+dérive d'un prototype commun — le mot retombe donc sur le nom du fichier.
 
 ⚠️ ET L'EN-TÊTE DISAIT L'INVERSE — « ce fichier ne déclare AUCUN mot d'invocation : rien de ce
 qu'il porte n'est adressable par un axe ». MESURÉ LE 2026-08-21, LES DEUX MOITIÉS ÉTAIENT

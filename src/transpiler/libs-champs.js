@@ -2,7 +2,7 @@
  * LES CHAMPS DE FICHIER D'UNE LIBRAIRIE — déclarés UNE FOIS, pour tous mes lecteurs.
  *
  * Un catalogue mêle, à la même profondeur, ce qui parle DU FICHIER et ce qui EST une entrée :
- * `alphabets` porte `resolves` à côté de `western`. Tout lecteur qui énumère les entrées doit donc
+ * `alphabets` porte `resolvedBy` à côté de `western`. Tout lecteur qui énumère les entrées doit donc
  * écarter les champs de fichier, et chacun le faisait avec SA liste.
  *
  * ⛔ CE QUI A COÛTÉ CE FICHIER, LE 2026-08-24. En posant `documented` — décision Romain,

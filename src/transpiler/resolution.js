@@ -2764,7 +2764,7 @@ export function validateReferences(ast, libCtx = {}, environnement = {}) {
   // scinde ou s'ajoute sans qu'aucune scène change »*. Quatre places conformes ne protègent rien
   // tant que la cinquième est ouverte.
   //
-  // ⚠️ RIEN N'EST ÉCRIT EN DUR : le juge compare le nom au champ `resolves` de la librairie que ce
+  // ⚠️ RIEN N'EST ÉCRIT EN DUR : le juge compare le nom au MOT DÉRIVÉ de la librairie que ce
   // nom désigne. Un fichier dont le nom ÉGALE son mot déclaré n'est pas touché, et un fichier
   // ajouté demain l'est le jour même.
   for (const d of ast.directives || []) {

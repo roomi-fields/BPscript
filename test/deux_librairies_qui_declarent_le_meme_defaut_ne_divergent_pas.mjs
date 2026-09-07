@@ -24,7 +24,7 @@ import '../src/transpiler/index.js';   // la porte : elle branche le compilateur
 import '../src/transpiler/index.js';
 import { leRegistre } from '../src/transpiler/libs.js';
 const LIBS = leRegistre();
-import { objets } from '../src/transpiler/index-des-objets.js';
+import { objets, motDuFichier } from '../src/transpiler/index-des-objets.js';
 
 let passe = 0;
 const echecs = [];
@@ -50,8 +50,8 @@ for (const nom of MANIPULATIONS) {
 // ── 2. LA LIBRAIRIE DES FONCTIONS EST SORTIE, ET AVEC ELLE LE SECOND DOMICILE ────────────────
 ok(LIBS.digital === undefined,
    `2. 'digital' ne doit plus exister — une manipulation est un contrôle, pas une entrée à part`);
-ok(!Object.values(LIBS).some((l) => l && typeof l === 'object' && l.resolves === 'function'),
-   `2. aucune librairie ne déclare le mot 'function' — la famille a disparu avec la forme`);
+ok(!Object.keys(LIBS).some((n) => !n.includes('/') && motDuFichier(n) === 'function'),
+   `2. aucune librairie ne PORTE le mot 'function' — la famille a disparu avec la forme`);
 
 // ── 3. LE DOUBLE NE REVIENT PAS — mesuré sur TOUT le registre, pas sur deux noms ─────────────
 // Un second objet qui porterait le même nom ET un défaut serait le silence d'avant, revenu.

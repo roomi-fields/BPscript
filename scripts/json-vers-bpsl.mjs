@@ -203,7 +203,7 @@ function ecrireEntree(nom, lignesDeCles) {
   // graphie de la tete de scene, et la tete de scene ne la porte plus.
   //
   // ⛔ LA FORME EST CELLE DU DÉPÔT, ET CE FICHIER EN ÉCRIVAIT UNE AUTRE. Les dix `.bpsl` suivis sont
-  // tous en UNE LIGNE à parenthèse séparée — `def scales (resolvedBy:"Kairos", resolves:scale)` ;
+  // tous en UNE LIGNE à parenthèse séparée — `def scales (resolvedBy:"Kairos", version:1)` ;
   // cet outil rendait un corps multi-ligne que rien d'autre n'emploie, et ce corps REFUSE l'objet
   // imbriqué que la forme à parenthèse accepte. La divergence de graphie de l'outil se lisait comme
   // une limite du langage — pendant six jours, et sur 82 valeurs.
@@ -467,7 +467,7 @@ export function convertir(nom, j) {
   // ⛔ TOUT SE REPOSE AU RANG DE LA SOURCE — les champs de fichier ET les places. C'est le seul
   // endroit qui décide de l'ordre publié, et il a fallu deux mesures pour l'écrire :
   //     [wobble, fatbass, fatbass for:sub37, …]   →   [fatbass for:sub37, wobble, fatbass, …]
-  //     [documented, resolvedBy, name, objects…]  →   [resolvedBy, resolves, name, documented…]
+  //     [documented, resolvedBy, name, objects…]  →   [resolvedBy, version, name, documented…]
   // Le rang d'une clé n'est pas de la mise en page : c'est lui qui a fait du catalogue de TEST
   // l'autorité de l'axe `alphabet` le 2026-08-23, et sept gardes sont tombés d'un coup. Une preuve
   // d'égalité qui compare les VALEURS ne le voit pas.

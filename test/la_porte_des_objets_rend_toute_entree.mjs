@@ -25,7 +25,7 @@ const ok = (cond, quoi) => { if (cond) passe++; else echecs.push(quoi); };
 // ── 0. LE SOCLE — l'assiette vient du paquet, la porte doit la couvrir entièrement ──────────────
 const attendues = [];   // [clé de paquet, place|null, nom]
 const sousDossiers = [];   // [clé de paquet] — un catalogue de sous-dossier est UNE entrée de son dossier
-// Le mot d'une clé du paquet : `resolves`, sinon la clé ; pour `settings/test1`, le mot de `settings`.
+// Le mot d'une clé du paquet — DÉRIVÉ ; pour `settings/test1`, le mot de `settings`.
 const motDe = (cle) => {
   const barre = cle.indexOf('/');
   const tete = barre > 0 ? cle.slice(0, barre) : cle;
@@ -96,7 +96,7 @@ ok(objet('zorglubinvente.western') === null, '2. une chaîne dont la famille est
 // ── 3. LA PORTE N'EXPOSE NI LES CLÉS DE FICHIER, NI LES CHAMPS DU PAQUET ────────────────────────
 for (const m of familles()) {
   const f = famille(m);
-  ok(!('resolves' in f.membres) && !('name' in f.membres) && !('section' in f.membres) && !('type' in f.membres) && !('version' in f.membres),
+  ok(!('name' in f.membres) && !('section' in f.membres) && !('type' in f.membres) && !('version' in f.membres),
      `3. la racine '${m}' expose un champ du paquet : ${JSON.stringify(Object.keys(f.membres))}`);
 }
 ok(familles().includes('scale') && familles().includes('alphabet') && familles().includes('sound') && !familles().includes('scales') && !familles().includes('sounds'),

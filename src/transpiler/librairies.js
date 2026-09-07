@@ -27,7 +27,7 @@ import { CHAMPS_DE_FICHIER } from './libs-champs.js';
 // ⛔ LES PLACES — les clés qui CONTIENNENT des entrées, par opposition aux entrées elles-mêmes.
 //
 // Un catalogue mêle les deux à la même profondeur : `voices` porte `objects` (une place) à côté de
-// `resolves` (un champ de fichier), et `alphabets` porte ses entrées à sa racine. Un consommateur qui
+// `resolvedBy` (un champ de fichier), et `alphabets` porte ses entrées à sa racine. Un consommateur qui
 // énumère le sommet d'un sac doit écarter les champs de fichier ET descendre dans les places.
 //
 // ⚠️ LA FORME NE SUFFIT PAS À LES SÉPARER, et c'est une mesure qui le dit : la règle « tous les

@@ -53,6 +53,8 @@ import path from 'node:path';
 import { importerArtefact } from './artefact_voisin.mjs';
 
 const require = createRequire(import.meta.url);
+// Le mot d'invocation d'un fichier, par la porte des objets — il se DÉRIVE, il ne se déclare plus.
+const motDuFichier = (n) => require('../src/transpiler/index-des-objets.js').motDuFichier(n);
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 
 /**
@@ -137,14 +139,16 @@ const LIBS = require('../src/transpiler/libs.js').leRegistre();
   // première réparation ne posait que `homomorphism`, parce que c'est le nom que le refus m'avait
   // montré ; la campagne suivante a fait tomber `settings.notreich` et `sound.tabla_perc` par le
   // MÊME mécanisme. Le trou n'est pas un fichier, c'est l'ADRESSAGE — d'où un critère et non une
-  // liste : est un fichier de la fabrique de Kairos celui qui DÉCLARE l'axe qu'il alimente
-  // (`resolves`). Offrir les autres est pire que ne rien offrir : `settings` est résolue par BPx,
-  // et la présenter change le refus « fichier introuvable » en « champ resolves ABSENT ». Kairos ne
+  // liste : est un fichier de la fabrique de Kairos celui qui PORTE un mot d'invocation — le
+  // prototype dérivé de sa chaîne, rendu par la porte des objets. Offrir les autres est pire que ne
+  // rien offrir : `settings` est résolue par BPx, et la présenter change le refus « fichier
+  // introuvable » en un défaut de FORME imputé à qui n'a rien prétendu. Kairos ne
   // parse que ce qui est réellement invoqué, donc les fichiers non sollicités ne coûtent rien.
   // Les six AXES gardent leur contenu de catalogue : ils sont posés à part, et ce sont eux qui font foi.
   const axes = new Set(FICHIERS_HAUTEUR);
   for (const [nom, fichier] of Object.entries(LIBS)) {
-    if (!axes.has(nom) && fichier && typeof fichier === 'object' && fichier.resolves) pitchLib[nom] = fichier;
+    const mot = nom.includes('/') ? null : motDuFichier(nom);
+    if (!axes.has(nom) && fichier && typeof fichier === 'object' && mot) pitchLib[nom] = fichier;
   }
   // REGISTRE D'HOMOMORPHISME — jumeau structurel de `digitalLib`, et il manquait.
   //

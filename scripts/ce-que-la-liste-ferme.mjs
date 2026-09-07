@@ -67,16 +67,15 @@ const LIBS = (await import(`${bac}/src/transpiler/libs.js`)).leRegistre();
     + `${Object.entries(BASE).filter(([, n]) => n).map(([k, n]) => `${k}=${n}`).join(' ')}`);
 
   // ── LE BALAYAGE : chaque clé que la liste fermait, une par une ────────────────────────────
-  // ⚠️ `resolves` SORT du paquet à l'état E : il ne devient pas invocable, il disparaît. Le
-  // compter parmi les ouvertures gonflerait le chiffre d'un cinquième.
-  let ferme = 0; let sortent = 0; let invocables = 0;
+  // ⚠️ `resolves` A QUITTÉ LE PAQUET le 2026-09-06 : la branche qui l'écartait du compte est
+  // partie avec lui, dans le mouvement qui l'a rendue morte.
+  let ferme = 0; let invocables = 0;
   const parChamp = {}; const refuses = {}; const portent = [];
   for (const [cat, contenu] of Object.entries(LIBS)) {
     if (!contenu || typeof contenu !== 'object') continue;
     for (const cle of Object.keys(contenu)) {
       if (!noms.includes(cle)) continue;
       ferme++;
-      if (cle === 'resolves') { sortent++; continue; }
       const r = ecart(`${cat}.${cle}`);
       if (r.refus) {
         const motif = /NOM DU FICHIER/.test(r.refus) ? 'le mot du fichier, refusé depuis le 2026-08-20'
@@ -95,10 +94,9 @@ const LIBS = (await import(`${bac}/src/transpiler/libs.js`)).leRegistre();
   }
 
   console.log(`\nCLÉS DU PAQUET FERMÉES PAR LA LISTE            ${ferme}`);
-  console.log(`   dont 'resolves', qui SORT du paquet          ${sortent}  ⇒ disparaît, ne s'ouvre pas`);
   console.log(`   ⇒ INVOCABLES une fois la liste vidée         ${invocables}`);
   console.log(`      ${Object.entries(parChamp).sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c} ${n}`).join(' · ')}`);
-  console.log(`   ⇒ encore refusées, par un AUTRE mécanisme    ${ferme - sortent - invocables}`);
+  console.log(`   ⇒ encore refusées, par un AUTRE mécanisme    ${ferme - invocables}`);
   for (const [motif, n] of Object.entries(refuses)) console.log(`      ${String(n).padStart(3)}  ${motif}`);
   console.log(`\n   ⇒ QUI METTENT QUELQUE CHOSE EN PORTÉE       ${portent.length}`);
   for (const l of portent.slice(0, 10)) console.log(`      ⚠️ ${l}`);
