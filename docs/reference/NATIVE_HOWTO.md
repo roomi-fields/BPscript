@@ -8,25 +8,22 @@ du MIDI et du texte a partir de grammaires BP3. On l'utilise pour :
 - **Comparaison** avec le WASM (validation du portage)
 - **Production MIDI** directe
 
-Binaire : `/home/romi/dev/bp/bp3-engine/bp3` (Linux ELF x86-64)
+Binaire : `<cour>/.publie/bp3-engine/builds/<LAST>/bp3` (Linux ELF x86-64) — ou `<LAST>` est le
+contenu du fichier `builds/LAST`, qui nomme le build courant. Mesure le 2026-09-07 : `v3.5.1-iso.2`,
+qui repond `Bol Processor console app — Version 3.5.1`.
+
+Le binaire se lit dans l'ESPACE PUBLIE de bp3-engine. Son arbre de travail n'est pas a lire : il
+n'existe pas a cote du mien, et quatre de mes lecteurs ont pointe le vide sans qu'un garde rougisse.
+Le fichier `bp` pose a la racine de son espace publie est un executable **arm64 Mach-O** : il ne
+s'execute pas ici, et ce n'est pas l'oracle.
 
 ---
 
 ## Build
 
-```bash
-cd /home/romi/dev/bp/bp3-engine
-make clean && make
-# Produit: bp3 (Linux ELF)
-```
+Le build appartient a bp3-engine et se declenche chez lui — je consomme le resultat publie dans
+`builds/`, je ne compile pas son code.
 
-Le Makefile utilise `source/BP3/*.c`. Nos modifications (PolyExpand iteratif,
-`<inf>`) doivent etre dans `source/BP3/`, pas seulement dans `csrc/bp3/` :
-```bash
-cp csrc/bp3/Polymetric.c source/BP3/Polymetric.c
-cp csrc/bp3/CompileProcs.c source/BP3/CompileProcs.c
-make clean && make
-```
 
 ---
 

@@ -71,6 +71,58 @@ const ARTEFACTS = {
   kronos: ['kronos', 'dist', 'index.js'],
 };
 
+/**
+ * LES VOISINS DONT JE LIS UNE SOURCE — et la racine de leur arbre DANS l'espace publié.
+ *
+ * ⛔ POURQUOI CETTE SECONDE NATURE EXISTE, ET CE QU'ELLE A COÛTÉ. La porte ci-dessus ne couvrait que
+ * l'artefact CONSTRUIT — `<voisin>/dist`. Quatre sites lisaient une SOURCE d'un voisin par chemin
+ * absolu vers son ARBRE DE TRAVAIL, et le 2026-09-07 cet arbre n'existait plus : mesuré,
+ * `/home/romi/dev/bp/bp3-engine` est ABSENT, seul `.publie/bp3-engine` demeure.
+ *
+ * ⇒ ET LES GARDES QUI LES PORTAIENT ÉTAIENT VERTS. Deux volets de `un_controle_dit_sa_graphie_native`
+ * testaient la présence du fichier et se RÉTRÉCISSAIENT quand il manquait — l'un annonçant « volet 3
+ * NON MESURÉ », l'autre comptant un `ok(true)` par contrôle non départagé. Le portillon passait au
+ * vert sur une contre-épreuve qui n'avait rien lu, et rien ne disait depuis quand.
+ *
+ * ⇒ UNE PORTE QUI ÉCHOUE TUE LA BRANCHE DE REPLI. C'est la raison d'être de la nature « source » :
+ * le chemin ne s'écrit plus, donc il ne peut plus pointer un arbre disparu ; et son absence NOMME le
+ * voisin au lieu de rendre un vert vide. « Un garde qui peut se sauter doit ÉCHOUER, jamais avertir. »
+ */
+const SOURCES = {
+  'bp3-engine': ['bp3-engine'],
+  'bp3-frontend': ['bp3-frontend'],
+};
+
+/**
+ * Le chemin d'une SOURCE publiée par un voisin, dérivé de ma racine — et il ÉCHOUE si elle manque.
+ * @param {string} voisin  le dépôt, tel que déclaré dans `SOURCES`
+ * @param {...string} segments  le chemin du fichier DANS son arbre
+ */
+export function cheminSourceVoisin(voisin, ...segments) {
+  const racine = SOURCES[voisin];
+  if (!racine) {
+    throw new Error(
+      `VOISIN INCONNU — '${voisin}' n'a pas de source déclarée dans cette porte.\n`
+      + `  Déclarés : ${Object.keys(SOURCES).join(', ')}.\n`
+      + '  Un voisin dont on lit une source s\'ajoute ICI, jamais par un chemin écrit ailleurs.',
+    );
+  }
+  const chemin = join(ATELIER, ...racine, ...segments);
+  if (!existsSync(chemin)) {
+    throw new Error(
+      `SOURCE PUBLIÉE DU VOISIN ABSENTE — ${chemin} n'existe pas.\n`
+      + `  C'est une source que ${voisin} PUBLIE, pas un fichier de ce dépôt, et pas son arbre de\n`
+      + '  travail : ce rouge ne dit RIEN sur le code d\'ici.\n'
+      + `  Cause probable : ${voisin} n'a pas encore publié, ou le fichier a changé de place chez\n`
+      + '  lui. ⛔ NE PAS contourner en sautant le volet : un volet qui se saute rend un vert vide.',
+    );
+  }
+  return chemin;
+}
+
+/** Les voisins dont une source est lue — lus par le garde de porte unique, jamais recopiés. */
+export const VOISINS_A_SOURCE = Object.keys(SOURCES);
+
 /** Le chemin de l'artefact d'un voisin, dérivé de ma racine. */
 export function cheminArtefact(voisin) {
   const segments = ARTEFACTS[voisin];

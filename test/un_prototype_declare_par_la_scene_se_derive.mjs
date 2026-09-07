@@ -1,4 +1,4 @@
-import { compileToBPxAST } from '/home/romi/dev/bp/BPscript/src/transpiler/index.js';
+import { compileToBPxAST } from '../src/transpiler/index.js';
 let p = 0; const e = [];
 const ok = (c, q) => { if (c) p++; else e.push(q); };
 const T = 'core\nalphabet.western\n';

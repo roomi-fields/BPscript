@@ -28,17 +28,23 @@ import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { DIR_BPS, bpsPath, nomsBps, exigerCorpus } from './corpus.mjs';
+import { cheminSourceVoisin } from './artefact_voisin.mjs';
 
 const require = createRequire(import.meta.url);
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const GRAMMARS = DIR_BPS;  // corpus emprunté à la bibliothèque Kanopi (test/corpus.mjs)
-const NATIF = '/home/romi/dev/bp/bp3-engine/test-data';
+// ⛔ CE CHEMIN VISAIT L'ARBRE DE TRAVAIL DU VOISIN, qui n'existe plus (mesuré le 2026-09-07). La
+// porte le prend dans l'espace publié et ÉCHOUE en nommant bp3-engine si la source manque.
+const NATIF = cheminSourceVoisin('bp3-engine', 'test-data');
 
 const { compileToBPxAST } = require('../src/transpiler/index.js');
 
 let parseBP3;
 try {
-  ({ parseBP3 } = await import(new URL('../../.publie/bp3-frontend/src/index.ts', import.meta.url).pathname));
+  // ⛔ CE CHEMIN ÉTAIT COMPTÉ EN REMONTÉES depuis ma position — deux, qui donnent la cour depuis mon
+  // ARBRE et `.publie/.publie` depuis mon espace PUBLIÉ. La porte cherche la cour au lieu de la
+  // compter, et c'est la faute qui a fait passer 65 grammaires sur 98 à « plante » chez bp3-frontend.
+  ({ parseBP3 } = await import(cheminSourceVoisin('bp3-frontend', 'src', 'index.ts')));
 } catch (e) {
   console.error('SONDE INUTILISABLE — la Voie A (bp3-frontend/src/index.ts) ne se charge pas :');
   console.error(`  ${e.message}`);

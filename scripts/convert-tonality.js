@@ -21,8 +21,12 @@
 
 import { readFileSync, writeFileSync, readdirSync } from 'fs';
 import { join } from 'path';
+import { cheminSourceVoisin } from '../test/artefact_voisin.mjs';
 
-const TD = '/home/romi/dev/bp/bp3-engine/test-data';
+// ⛔ LA TRACE D'AUDIT DOIT RESTER RÉ-EXÉCUTABLE, et son chemin visait l'arbre de travail de
+// bp3-engine, absent depuis la séparation (mesuré le 2026-09-07). Une provenance qui ne se rejoue
+// plus n'est plus une provenance : elle passe par la porte, comme tout ce qui lit chez un voisin.
+const TD = cheminSourceVoisin('bp3-engine', 'test-data');
 const files = readdirSync(TD).filter(f => f.startsWith('-to.'));
 
 const scales = {};

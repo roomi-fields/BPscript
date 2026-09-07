@@ -25,8 +25,8 @@ cette forme.
 ## Comment relancer la mesure
 
 ```
-cd /home/romi/dev/bp/bp3-engine
-for f in /home/romi/dev/bp/BPscript/test/gabarit-bp3/*.bpgr; do ./bp3 produce-all -gr "$f"; done
+BP3=/home/romi/dev/bp/.publie/bp3-engine/builds/$(cat /home/romi/dev/bp/.publie/bp3-engine/builds/LAST)/bp3
+for f in "$(git rev-parse --show-toplevel)"/test/gabarit-bp3/*.bpgr; do "$BP3" produce-all -gr "$f"; done
 ```
 
 ⚠️ **Le moteur doit être lancé depuis SON dossier** : il y cherche `console_strings.json` et sort

@@ -18,7 +18,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { VOISINS_A_ARTEFACT } from './artefact_voisin.mjs';
+import { VOISINS_A_ARTEFACT, VOISINS_A_SOURCE } from './artefact_voisin.mjs';
 
 let passe = 0;
 const echecs = [];
@@ -75,11 +75,43 @@ for (const { voisin, motif, porte } of PORTES) {
     + `intermittence s'est racontée deux fois sans jamais être nommée.`);
 }
 
+// ⛔⛔ ET LE PREMIER VOLET NE FERMAIT QUE `dist` — L'ENDROIT OÙ LE DÉFAUT S'ÉTAIT MONTRÉ, PAS
+// L'ESPACE OÙ IL VIT. Un chemin absolu vers l'ARBRE DE TRAVAIL d'un voisin lui échappait entièrement,
+// et quatre en vivaient. Mesuré le 2026-09-07 : `/home/romi/dev/bp/bp3-engine` n'existe plus, ces
+// quatre lecteurs pointaient le vide, et LEURS GARDES ÉTAIENT VERTS — deux volets se rétrécissaient
+// en silence quand le fichier manquait.
+//
+// ⇒ Ce volet-ci ferme la NATURE, pas le voisin : aucun site hors de la porte n'écrit un chemin
+//   absolu vers `<la cour>/<un dépôt>`. Il ne connaît pas de liste de voisins — c'est la FORME du
+//   chemin qu'il refuse, donc un dépôt de plus est gardé sans qu'une ligne bouge ici.
+{
+  // La cour, dérivée comme la porte la dérive : le dossier qui porte l'espace publié.
+  const COUR = '/home/romi/dev/bp/';
+  const enDur = [];
+  for (const [rel, abs] of fichiers) {
+    if (rel === PORTE || EXEMPTES.has(rel)) continue;
+    readFileSync(abs, 'utf8').split('\n').forEach((l, i) => {
+      const t = l.trimStart();
+      if (t.startsWith('*') || t.startsWith('//') || t.startsWith('#')) return;
+      const m = l.match(new RegExp(`${COUR}([\\w.-]+)`));
+      // `.publie`, `.paquets`, `.last` sont les ESPACES, pas un arbre de dépôt : ils ont leurs
+      // propres règles et leur propre chantier. Ce volet ne juge que l'arbre d'un voisin.
+      if (m && !m[1].startsWith('.')) enDur.push(`${rel}:${i + 1}  ${l.trim().slice(0, 90)}`);
+    });
+  }
+  ok(enDur.length === 0,
+    `${enDur.length} site(s) écrivent un chemin absolu vers l'ARBRE DE TRAVAIL d'un voisin, hors de `
+    + `la porte \`${PORTE}\` : ${enDur.slice(0, 4).join(' · ')}. Un arbre de voisin peut ne pas `
+    + `exister — le mien a disparu sous quatre lecteurs sans qu'un seul garde rougisse. Ce qui se lit `
+    + `dehors se lit à l'état PUBLIÉ, par \`cheminSourceVoisin\`, qui ÉCHOUE en nommant le voisin.`);
+}
+
 // ⛔ ET LA PORTE DOIT ÊTRE UTILISÉE, sinon « aucun site hors de la porte » se vérifierait aussi
 // bien sur un dépôt qui ne consomme plus rien du voisin.
 {
   const usagers = fichiers.filter(([rel, abs]) =>
-    rel !== PORTE && /importerArtefact|cheminArtefact|VOISINS_A_ARTEFACT/.test(readFileSync(abs, 'utf8')));
+    rel !== PORTE
+    && /importerArtefact|cheminArtefact|cheminSourceVoisin|VOISINS_A_(ARTEFACT|SOURCE)/.test(readFileSync(abs, 'utf8')));
   // ⛔ CE SEUIL ÉTAIT À 8 POUR UN COMPTE DE 10 — deux bancs pouvaient cesser de passer par la porte
   // sans un mot, sous un message qui dit « ne prouve plus rien ». Le propos, écrit deux lignes plus
   // haut, est la NON-NULLITÉ : « il serait vert sur un dépôt qui a cessé de lire le voisin ».
@@ -88,8 +120,8 @@ for (const { voisin, motif, porte } of PORTES) {
   ok(usagers.length > 0,
     `AUCUN banc ne passe par la porte — le compte de sites hors de la porte ne prouve plus rien : il `
     + `serait vert sur un dépôt qui a cessé de lire le voisin.`);
-  console.log(`[porte voisin] ${fichiers.length} fichiers balayés · ${PORTES.length} voisin(s) gardé(s) : `
-    + `${VOISINS_A_ARTEFACT.join(', ')} · ${usagers.length} banc(s) passent par la porte`);
+  console.log(`[porte voisin] ${fichiers.length} fichiers balayés · artefact : ${VOISINS_A_ARTEFACT.join(', ')}`
+    + ` · source : ${VOISINS_A_SOURCE.join(', ')} · ${usagers.length} banc(s) passent par la porte`);
 }
 
 if (echecs.length) {

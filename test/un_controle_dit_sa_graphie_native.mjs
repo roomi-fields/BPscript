@@ -46,11 +46,12 @@
  * rejouée isolée).
  */
 import '../src/transpiler/index.js';   // la porte : elle branche le compilateur sur son chargeur (2026-09-02)
-import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 // La porte des gabarits de réglages natifs — l'inventaire des clés que le fichier `-se` accepte.
 import { GABARITS } from '../src/transpiler/gabarits-data.js';
+import { cheminSourceVoisin } from './artefact_voisin.mjs';
 
 // Le bundle que TOUS les consommateurs chargent — la seule assiette qui dise le vocabulaire réel.
 const _req = createRequire(import.meta.url);
@@ -246,14 +247,15 @@ for (const { nom, def, ou } of controles) {
 }
 
 // ─── 3. CONTRE-ÉPREUVE SUR LA TABLE DES MOTS DU MOTEUR ───────────────────────────────────────
-// ⚠️ UN GARDE QUI SE SAUTE EN SILENCE EST UN MENSONGE : si la table n'est pas atteignable, le
-// volet le DIT au lieu de passer au vert sans avoir rien lu. Les volets 1 et 2 restent tenus par
-// le complément écrit ici, qui ne dépend d'aucun dépôt voisin.
+// ⛔ CE VOLET SE SAUTAIT EN SILENCE, ET IL L'A FAIT PENDANT QUE LE PORTILLON ÉTAIT VERT. Il testait
+// la présence du fichier et annonçait « volet 3 NON MESURÉ » sur un `console.log`, donc sans faire
+// rougir personne. Mesuré le 2026-09-07 : le chemin visait l'ARBRE DE TRAVAIL de bp3-engine, qui
+// n'existe plus — la contre-épreuve ne lisait RIEN, et rien ne disait depuis quand.
+// ⇒ La table se prend maintenant par la porte du voisin, qui ÉCHOUE en le nommant quand la source
+//   publiée manque. La branche de repli disparaît avec la cause qui la justifiait.
 {
-  const TABLE = '/home/romi/dev/bp/bp3-engine/source/not_used/StringLists.h';
-  if (!existsSync(TABLE)) {
-    console.log('[graphie native] ⚠️  table des mots du moteur introuvable — volet 3 NON MESURÉ.');
-  } else {
+  const TABLE = cheminSourceVoisin('bp3-engine', 'source', 'not_used', 'StringLists.h');
+  {
     const mots = new Set(
       [...readFileSync(TABLE, 'utf8').matchAll(/"\d+ \d+ (_\w+)"/g)].map((m) => m[1]));
     // TÉMOINS D'INSTRUMENT, dans les deux sens. Sans eux, une table illisible rendrait « aucun mot »
@@ -311,10 +313,9 @@ for (const { nom, def, ou } of controles) {
 
   // La table des mots du flux, relue ici : le volet 3 ne la partage pas, et le juge doit connaître
   // LES DEUX lieux pour ne pas accuser une image qui vit dans l'autre.
-  const TABLE = '/home/romi/dev/bp/bp3-engine/source/not_used/StringLists.h';
-  const flux = existsSync(TABLE)
-    ? new Set([...readFileSync(TABLE, 'utf8').matchAll(/"\d+ \d+ (_\w+)"/g)].map((m) => m[1]))
-    : null;
+  const TABLE = cheminSourceVoisin('bp3-engine', 'source', 'not_used', 'StringLists.h');
+  const flux = new Set(
+    [...readFileSync(TABLE, 'utf8').matchAll(/"\d+ \d+ (_\w+)"/g)].map((m) => m[1]));
 
   let declarees = 0, versReglage = 0;
   for (const { nom, def, ou } of controles) {
@@ -322,10 +323,10 @@ for (const { nom, def, ou } of controles) {
     declarees++;
     const estReglage = reglages.has(def.bp3);
     if (estReglage) versReglage++;
-    // ⚠️ SI LA TABLE DU FLUX EST INATTEIGNABLE, ce volet ne juge que ce qu'il peut : une image
-    // absente du gabarit passe, et le volet 3 le DIT déjà à voix haute. Un garde qui se sauterait
-    // en silence serait un mensonge ; celui-ci se rétrécit en le disant.
-    if (!flux) { ok(true, `5. (table du flux absente) '${nom}' non départagé`); continue; }
+    // ⛔ ET CE VOLET SE RÉTRÉCISSAIT AUSSI. Quand la table du flux manquait, il comptait un `ok(true)`
+    // PAR CONTRÔLE — une cinquantaine d'assertions vertes qui n'avaient départagé personne, sous un
+    // compte d'assertions inchangé. La table venant maintenant d'une porte qui échoue, il n'y a plus
+    // d'état où le juge ne connaît qu'un seul des deux lieux d'écriture.
     ok(estReglage || flux.has(def.bp3),
        `5. '${nom}' (${ou}) déclare l'image '${def.bp3}', qui n'existe NI dans les mots du flux `
        + `(${flux.size}) NI dans le gabarit de réglages(${reglages.size}) — une image inventée fait `
